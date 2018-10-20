@@ -1,17 +1,27 @@
 package com.bukhmastov.cdoitmo.util.singleton;
 
 import android.app.job.JobScheduler;
+import android.appwidget.AppWidgetManager;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.Build;
 import android.support.annotation.Keep;
 
 import com.bukhmastov.cdoitmo.activity.presenter.ScheduleLessonsWidgetConfigureActivityPresenter;
+import com.bukhmastov.cdoitmo.model.entity.Suggestions;
+import com.bukhmastov.cdoitmo.model.schedule.lessons.SDay;
+import com.bukhmastov.cdoitmo.model.schedule.lessons.added.SLessonsAdded;
+import com.bukhmastov.cdoitmo.model.schedule.lessons.reduced.SDayReduced;
+import com.bukhmastov.cdoitmo.model.schedule.lessons.reduced.SLessonsReduced;
+import com.bukhmastov.cdoitmo.model.user.UsersList;
 import com.bukhmastov.cdoitmo.object.schedule.ScheduleExams;
 import com.bukhmastov.cdoitmo.object.schedule.ScheduleLessons;
 import com.bukhmastov.cdoitmo.provider.InjectProvider;
 import com.bukhmastov.cdoitmo.util.Storage;
 import com.bukhmastov.cdoitmo.util.Thread;
+import com.bukhmastov.cdoitmo.widget.ScheduleLessonsWidget;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -22,6 +32,7 @@ import java.io.FileWriter;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -36,37 +47,32 @@ public class Migration {
     // Call migrate to initiate migration check
     // ----------------------------------------
 
-    public static void migrate(final Context context, final InjectProvider injectProvider) {
+    public static void migrate(Context context, InjectProvider injectProvider) {
         try {
             int versionCode = context.getPackageManager().getPackageInfo(context.getPackageName(), 0).versionCode;
             int lastVersionCode = injectProvider.getStoragePref().get(context, "last_version", 0);
             first_launch = lastVersionCode == 0;
-            if (lastVersionCode < versionCode) {
-                // Skip migration for first launch. Users with version <28 become deprecated and unsupported.
-                // (actually, its 10 users at the beginning of december 2017)
-                // (5 users at the start of may 2018)
-                // (3 users at the end of june 2018)
-                if (!first_launch) {
+            if (first_launch || lastVersionCode >= versionCode) {
+                return;
+            }
+            try {
+                Class<?> migration = Class.forName("com.bukhmastov.cdoitmo.util.singleton.Migration");
+                for (int version = lastVersionCode + 1; version <= versionCode; version++) {
                     try {
-                        Class<?> migration = Class.forName("com.bukhmastov.cdoitmo.util.singleton.Migration");
-                        for (int i = lastVersionCode + 1; i <= versionCode; i++) {
-                            try {
-                                Method method = migration.getDeclaredMethod("migrate" + i, Context.class, InjectProvider.class);
-                                method.invoke(null, context, injectProvider);
-                                injectProvider.getLog().i(TAG, "Migration applied for versionCode ", i);
-                            } catch (NoSuchMethodException e) {
-                                // migration not needed
-                            } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException | ExceptionInInitializerError | SecurityException | NullPointerException e) {
-                                // migration failed
-                                injectProvider.getLog().e(TAG, "Migration failed for versionCode ", i, " | ", e.getMessage());
-                            }
-                        }
-                    } catch (Exception ignore) {
-                        // failed to get migration class
+                        Method method = migration.getDeclaredMethod("migrate" + version, Context.class, InjectProvider.class);
+                        method.invoke(null, context, injectProvider);
+                        injectProvider.getLog().i(TAG, "Migration applied for versionCode ", version);
+                    } catch (NoSuchMethodException e) {
+                        // migration not needed
+                    } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException | ExceptionInInitializerError | SecurityException | NullPointerException e) {
+                        // migration failed
+                        injectProvider.getLog().e(TAG, "Migration failed for versionCode ", version, " | ", e.getMessage());
                     }
                 }
-                injectProvider.getStoragePref().put(context, "last_version", versionCode);
+            } catch (Exception ignore) {
+                // failed to get migration class
             }
+            injectProvider.getStoragePref().put(context, "last_version", versionCode);
         } catch (PackageManager.NameNotFoundException e) {
             injectProvider.getLog().exception(e);
         }
@@ -78,11 +84,155 @@ public class Migration {
     // -----------------------------------
 
     @Keep
-    private static void migrate115(final Context context, final InjectProvider injectProvider) {
+    private static void migrate121(Context context, InjectProvider injectProvider) {
+        // Clear all cache storage
+        try {
+            String cacheRootPath = context.getCacheDir() + File.separator + "app_data";
+            getUsersFolder(cacheRootPath, (folder, login) -> deleteRecursive(folder));
+        } catch (Throwable ignore) {
+            // ignore
+        }
+        // Modify permanent storage
+        try {
+            String rootPath = context.getFilesDir() + File.separator + "app_data";
+            getUsersFolder(rootPath, (folder, login) -> {
+                if (Storage.GLOBAL.equals(login)) {
+                    return;
+                }
+                // Convert "schedule_lessons#added#" + token
+                listDir(getFile(folder.getPath(), "schedule_lessons", "added"), file -> {
+                    try {
+                        if (file == null || !file.isFile()) {
+                            return;
+                        }
+                        JSONArray json = new JSONArray(readFile(file));
+                        SLessonsAdded added = new SLessonsAdded();
+                        added.setTimestamp(injectProvider.getTime().getTimeInMillis());
+                        added.setSchedule(new ArrayList<>());
+                        for (int i = 0; i < json.length(); i++) {
+                            try {
+                                SDay sDay = new SDay().fromJson(json.getJSONObject(i));
+                                added.getSchedule().add(sDay);
+                            } catch (Throwable ignore) {
+                                // ignore
+                            }
+                        }
+                        writeFile(file, added.toJsonString());
+                    } catch (Throwable throwable) {
+                        deleteRecursive(file);
+                    }
+                });
+                // Convert "schedule_lessons#reduced#" + token
+                listDir(getFile(folder.getPath(), "schedule_lessons", "reduced"), file -> {
+                    try {
+                        if (file == null || !file.isFile()) {
+                            return;
+                        }
+                        JSONArray json = new JSONArray(readFile(file));
+                        SLessonsReduced reduced = new SLessonsReduced();
+                        reduced.setTimestamp(injectProvider.getTime().getTimeInMillis());
+                        reduced.setSchedule(new ArrayList<>());
+                        for (int i = 0; i < json.length(); i++) {
+                            try {
+                                SDayReduced sDayReduced = new SDayReduced().fromJson(json.getJSONObject(i));
+                                reduced.getSchedule().add(sDayReduced);
+                            } catch (Throwable ignore) {
+                                // ignore
+                            }
+                        }
+                        writeFile(file, reduced.toJsonString());
+                    } catch (Throwable throwable) {
+                        deleteRecursive(file);
+                    }
+                });
+                // Convert "schedule_" + getType() + "#recent"
+                readFile(getFile(folder.getPath(), "schedule_lessons", "recent"), (file, data) -> {
+                    JSONArray json = new JSONArray(data);
+                    Suggestions suggestions = new Suggestions();
+                    suggestions.setSuggestions(new ArrayList<>());
+                    for (int i = 0; i < json.length(); i++) {
+                        try {
+                            suggestions.getSuggestions().add(json.getString(i));
+                        } catch (Throwable ignore) {
+                            // ignore
+                        }
+                    }
+                    writeFile(file, suggestions.toJsonString());
+                });
+                readFile(getFile(folder.getPath(), "schedule_exams", "recent"), (file, data) -> {
+                    JSONArray json = new JSONArray(data);
+                    Suggestions suggestions = new Suggestions();
+                    suggestions.setSuggestions(new ArrayList<>());
+                    for (int i = 0; i < json.length(); i++) {
+                        try {
+                            suggestions.getSuggestions().add(json.getString(i));
+                        } catch (Throwable ignore) {
+                            // ignore
+                        }
+                    }
+                    writeFile(file, suggestions.toJsonString());
+                });
+                readFile(getFile(folder.getPath(), "schedule_attestations", "recent"), (file, data) -> {
+                    JSONArray json = new JSONArray(data);
+                    Suggestions suggestions = new Suggestions();
+                    suggestions.setSuggestions(new ArrayList<>());
+                    for (int i = 0; i < json.length(); i++) {
+                        try {
+                            suggestions.getSuggestions().add(json.getString(i));
+                        } catch (Throwable ignore) {
+                            // ignore
+                        }
+                    }
+                    writeFile(file, suggestions.toJsonString());
+                });
+            });
+        } catch (Throwable ignore) {
+            // ignore
+        }
+        // Convert "users#list"
+        try {
+            String accounts = injectProvider.getStorage().get(context, Storage.PERMANENT, Storage.GLOBAL, "users#list", "");
+            if (StringUtils.isNotBlank(accounts)) {
+                UsersList usersList = new UsersList();
+                usersList.setLogins(new ArrayList<>());
+                JSONArray json = new JSONArray(accounts);
+                for (int i = 0; i < json.length(); i++) {
+                    try {
+                        usersList.getLogins().add(json.getString(i));
+                    } catch (Throwable ignore) {
+                        // ignore
+                    }
+                }
+                injectProvider.getStorage().put(context, Storage.PERMANENT, Storage.GLOBAL, "users#list", usersList.toJsonString());
+            }
+        } catch (Throwable ignore) {
+            // ignore
+        }
+        // Reset widgets cache
+        List<String> appWidgetIds = injectProvider.getStorage().list(context, Storage.PERMANENT, Storage.GLOBAL, "widget_schedule_lessons");
+        for (String appWidgetId : appWidgetIds) {
+            try {
+                injectProvider.getStorage().delete(context, Storage.PERMANENT, Storage.GLOBAL, "widget_schedule_lessons#" + appWidgetId + "#cache");
+                injectProvider.getStorage().delete(context, Storage.PERMANENT, Storage.GLOBAL, "widget_schedule_lessons#" + appWidgetId + "#cache_converted");
+                Intent intent = new Intent(context, ScheduleLessonsWidget.class);
+                intent.setAction(ScheduleLessonsWidget.ACTION_WIDGET_UPDATE);
+                intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, Integer.parseInt(appWidgetId));
+                intent.setData(Uri.parse(intent.toUri(Intent.URI_INTENT_SCHEME)));
+                context.sendBroadcast(intent);
+            } catch (Throwable ignore) {
+                // ignore
+            }
+        }
+        // Reset protocol tracker
+        injectProvider.getThread().run(Thread.BACKGROUND, () -> injectProvider.getProtocolTracker().reset(context));
+    }
+
+    @Keep
+    private static void migrate115(Context context, InjectProvider injectProvider) {
         injectProvider.getThread().run(Thread.BACKGROUND, () -> injectProvider.getProtocolTracker().reset(context));
         try {
             final String rootPath = context.getCacheDir() + File.separator + "app_data";
-            getUsersFolder(context, rootPath, (file, user) -> {
+            getUsersFolder(rootPath, (file, user) -> {
                 try {
                     if (!user.equals("general")) return;
                     File exams = new File(rootPath + File.separator + user + File.separator + "schedule_exams" + File.separator + "lessons");
@@ -95,7 +245,7 @@ public class Migration {
     }
 
     @Keep
-    private static void migrate111(final Context context, final InjectProvider injectProvider) {
+    private static void migrate111(Context context, InjectProvider injectProvider) {
         ArrayList<String> appWidgetIds = injectProvider.getStorage().list(context, Storage.PERMANENT, Storage.GLOBAL, "widget_schedule_lessons");
         for (String appWidgetId : appWidgetIds) {
             String settings = injectProvider.getStorage().get(context, Storage.PERMANENT, Storage.GLOBAL, "widget_schedule_lessons#" + appWidgetId + "#settings", "");
@@ -120,10 +270,10 @@ public class Migration {
     }
 
     @Keep
-    private static void migrate109(final Context context, final InjectProvider injectProvider) {
+    private static void migrate109(Context context, InjectProvider injectProvider) {
         try {
             final String rootPath = context.getFilesDir() + File.separator + "app_data";
-            getUsersFolder(context, rootPath, (file, user) -> {
+            getUsersFolder(rootPath, (file, user) -> {
                 try {
                     if (user.equals("general")) return;
                     File lessonsRecent = new File(rootPath + File.separator + user + File.separator + "schedule_lessons" + File.separator + "recent.txt");
@@ -144,13 +294,13 @@ public class Migration {
     }
 
     @Keep
-    private static void migrate106(final Context context, final InjectProvider injectProvider) {
+    private static void migrate106(Context context, InjectProvider injectProvider) {
         injectProvider.getStoragePref().put(context, "pref_notify_type", Build.VERSION.SDK_INT <= Build.VERSION_CODES.M ? "0" : "1");
         injectProvider.getThread().run(Thread.BACKGROUND, () -> injectProvider.getProtocolTracker().reset(context));
     }
 
     @Keep
-    private static void migrate103(final Context context, final InjectProvider injectProvider) {
+    private static void migrate103(Context context, InjectProvider injectProvider) {
         migrate103convertERegister(context);
         migrate103moveCacheToGeneral(context);
         String pref_e_journal_term = injectProvider.getStoragePref().get(context, "pref_e_journal_term", "0");
@@ -159,10 +309,10 @@ public class Migration {
         }
     }
     @Keep
-    private static void migrate103convertERegister(final Context context) {
+    private static void migrate103convertERegister(Context context) {
         try {
             final String rootPath = context.getCacheDir() + File.separator + "app_data";
-            getUsersFolder(context, rootPath, (file, user) -> {
+            getUsersFolder(rootPath, (file, user) -> {
                 try {
                     if (user.equals("general")) return;
                     String eregisterCorePath = rootPath + File.separator + user + File.separator + "eregister" + File.separator + "core.txt";
@@ -203,11 +353,11 @@ public class Migration {
         } catch (Exception ignore) {/* ignore */}
     }
     @Keep
-    private static void migrate103moveCacheToGeneral(final Context context) {
+    private static void migrate103moveCacheToGeneral(Context context) {
         try {
             final String rootPath = context.getCacheDir() + File.separator + "app_data";
             final String destinationPath = rootPath + File.separator + "general" + File.separator;
-            getUsersFolder(context, rootPath, (file, user) -> {
+            getUsersFolder(rootPath, (file, user) -> {
                 try {
                     if (user.equals("general")) return;
                     // move schedule_lessons
@@ -295,7 +445,7 @@ public class Migration {
     }
 
     @Keep
-    private static void migrate97(final Context context, final InjectProvider injectProvider) {
+    private static void migrate97(Context context, InjectProvider injectProvider) {
         if (!first_launch) {
             injectProvider.getStoragePref().put(context, "pref_default_values_applied", true);
         }
@@ -439,7 +589,7 @@ public class Migration {
         } catch (Exception ignore) {/* ignore */}
     }
     @Keep
-    private static void migrate97convertLesson(final File lesson, final String lessonsPath, final String token, final String type) throws Exception {
+    private static void migrate97convertLesson(File lesson, String lessonsPath, String token, String type) throws Exception {
         final Matcher m = Pattern.compile("^" + type + "(.*)\\.txt$").matcher(token);
         if (m.find()) {
             // read lesson data
@@ -493,7 +643,7 @@ public class Migration {
         }
     }
     @Keep
-    private static void migrate97convertExam(final File exam, final String examsPath, final String token, final String type) throws Exception {
+    private static void migrate97convertExam(File exam, String examsPath, String token, String type) throws Exception {
         final Matcher m = Pattern.compile("^" + type + "(.*)\\.txt$").matcher(token);
         if (m.find()) {
             // read exam data
@@ -569,7 +719,7 @@ public class Migration {
         }
     }
     @Keep
-    private static void migrate97convertAdded(final File added, final String addedPath, final String token, final String type) throws Exception {
+    private static void migrate97convertAdded(File added, String addedPath, String token, String type) throws Exception {
         final Matcher m = Pattern.compile("^" + type + "(.*)\\.txt$").matcher(token);
         if (m.find()) {
             // read added data
@@ -608,7 +758,7 @@ public class Migration {
     }
 
     @Keep
-    private static void migrate93(final Context context, final InjectProvider injectProvider) {
+    private static void migrate93(Context context, InjectProvider injectProvider) {
         // new theme
         final boolean dark_theme = injectProvider.getStoragePref().get(context, "pref_dark_theme", false);
         injectProvider.getStoragePref().delete(context, "pref_dark_theme");
@@ -706,14 +856,14 @@ public class Migration {
     }
 
     @Keep
-    private static void migrate90(final Context context, final InjectProvider injectProvider) {
+    private static void migrate90(Context context, InjectProvider injectProvider) {
         boolean compact = injectProvider.getStoragePref().get(context, "pref_schedule_lessons_compact_view_of_reduced_lesson", true);
         injectProvider.getStoragePref().delete(context, "pref_schedule_lessons_compact_view_of_reduced_lesson");
         injectProvider.getStoragePref().put(context, "pref_schedule_lessons_view_of_reduced_lesson", compact ? "compact" : "full");
     }
 
     @Keep
-    private static void migrate83(final Context context, final InjectProvider injectProvider) {
+    private static void migrate83(Context context, InjectProvider injectProvider) {
         ArrayList<String> appWidgetIds = injectProvider.getStorage().list(context, Storage.PERMANENT, Storage.GLOBAL, "widget_schedule_lessons");
         for (String appWidgetId : appWidgetIds) {
             String settings = injectProvider.getStorage().get(context, Storage.PERMANENT, Storage.GLOBAL, "widget_schedule_lessons#" + appWidgetId + "#settings", "");
@@ -734,7 +884,7 @@ public class Migration {
     }
 
     @Keep
-    private static void migrate78(final Context context, final InjectProvider injectProvider) {
+    private static void migrate78(Context context, InjectProvider injectProvider) {
         ArrayList<String> appWidgetIds = injectProvider.getStorage().list(context, Storage.PERMANENT, Storage.GLOBAL, "widget_schedule_lessons");
         for (String appWidgetId : appWidgetIds) {
             String settings = injectProvider.getStorage().get(context, Storage.PERMANENT, Storage.GLOBAL, "widget_schedule_lessons#" + appWidgetId + "#settings", "");
@@ -779,14 +929,14 @@ public class Migration {
     }
 
     @Keep
-    private static void migrate71(final Context context, final InjectProvider injectProvider) {
+    private static void migrate71(Context context, InjectProvider injectProvider) {
         injectProvider.getStoragePref().delete(context, "pref_open_drawer_at_startup");
         injectProvider.getStoragePref().put(context, "pref_first_launch", injectProvider.getStorage().get(context, Storage.PERMANENT, Storage.GLOBAL, "users#list", "").trim().isEmpty());
         injectProvider.getThread().run(Thread.BACKGROUND, () -> injectProvider.getProtocolTracker().reset(context));
     }
 
     @Keep
-    private static void migrate62(final Context context, final InjectProvider injectProvider) {
+    private static void migrate62(Context context, InjectProvider injectProvider) {
         injectProvider.getStoragePref().put(context, "pref_dynamic_refresh", injectProvider.getStoragePref().get(context, "pref_tab_refresh", "0"));
         injectProvider.getStoragePref().put(context, "pref_static_refresh", injectProvider.getStoragePref().get(context, "pref_schedule_refresh", "168"));
         injectProvider.getStoragePref().delete(context, "pref_tab_refresh");
@@ -795,7 +945,7 @@ public class Migration {
 
     // This migration no longer supported (5 users will be affected (28.06.2018))
     //@Keep
-    //private static void migrate51(final Context context, final InjectProvider injectProvider) {
+    //private static void migrate51(Context context, InjectProvider injectProvider) {
     //    injectProvider.getStorage().clear(context, Storage.CACHE, Storage.USER, "protocol#log");
     //    if (injectProvider.getStoragePref().get(context, "pref_protocol_changes_track", true)) {
     //        ProtocolTracker.setup(context, injectProvider.getStoragePref(), 0);
@@ -803,12 +953,12 @@ public class Migration {
     //}
 
     @Keep
-    private static void migrate29(final Context context, final InjectProvider injectProvider) {
+    private static void migrate29(Context context, InjectProvider injectProvider) {
         injectProvider.getStorage().delete(context, Storage.CACHE, Storage.USER, "eregister#core");
     }
 
     @Keep
-    private static void migrate26(final Context context, final InjectProvider injectProvider) {
+    private static void migrate26(Context context, InjectProvider injectProvider) {
         JobScheduler jobScheduler = (JobScheduler) context.getSystemService(Context.JOB_SCHEDULER_SERVICE);
         if (jobScheduler != null) {
             jobScheduler.cancelAll();
@@ -822,21 +972,66 @@ public class Migration {
     // ---------------------
 
     @Keep
-    private interface Callback {
-        void onUserFolder(final File file, String user);
+    private interface UserFolderCallback {
+        void onUserFolder(File folder, String login) throws Throwable;
     }
     @Keep
-    private static void getUsersFolder(final Context context, final String rootPath, final Callback callback) {
+    private interface FileCallback {
+        void onFile(File file) throws Throwable;
+    }
+    @Keep
+    private interface StringCallback {
+        void onData(File file, String data) throws Throwable;
+    }
+    @Keep
+    private static void getUsersFolder(String rootPath, UserFolderCallback callback) {
         File root = new File(rootPath);
         if (root.exists() && root.isDirectory()) {
-            File[] users = root.listFiles();
-            for (File user : users) {
+            File[] userFolders = root.listFiles();
+            for (File userFolder : userFolders) {
                 try {
-                    if (!user.isDirectory()) continue;
-                    String uLogin = user.getName();
-                    callback.onUserFolder(user, uLogin);
-                } catch (Exception ignore) {/* ignore */}
+                    if (userFolder == null || !userFolder.isDirectory()) {
+                        continue;
+                    }
+                    String login = userFolder.getName();
+                    callback.onUserFolder(userFolder, login);
+                } catch (Throwable ignore) {
+                    // ignore
+                }
             }
+        }
+    }
+    @Keep
+    private static void listDir(File dir, FileCallback callback) {
+        if (dir.exists() && dir.isDirectory()) {
+            File[] items = dir.listFiles();
+            for (File item : items) {
+                try {
+                    callback.onFile(item);
+                } catch (Throwable ignore) {
+                    // ignore
+                }
+            }
+        }
+    }
+    @Keep
+    private static File getFile(String...path) {
+        StringBuilder sb = new StringBuilder();
+        int index = 0;
+        for (String p : path) {
+            if (index++ > 0) {
+                sb.append(File.separator);
+            }
+            sb.append(p);
+        }
+        return new File(sb.toString());
+    }
+    @Keep
+    private static void readFile(File file, StringCallback callback) {
+        try {
+            callback.onData(file, readFile(file));
+        } catch (Throwable ignore) {
+            // ignore
         }
     }
     @Keep
@@ -850,7 +1045,10 @@ public class Migration {
     }
     @Keep
     private static void writeFile(String path, String data) throws Exception {
-        File file = new File(path);
+        writeFile(new File(path), data);
+    }
+    @Keep
+    private static void writeFile(File file, String data) throws Exception {
         if (!file.exists()) {
             file.getParentFile().mkdirs();
             if (!file.createNewFile()) {

@@ -12,6 +12,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.DrawableRes;
 import android.support.annotation.LayoutRes;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
@@ -33,6 +34,8 @@ import com.bukhmastov.cdoitmo.event.events.OpenIntentEvent;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.fragment.presenter.UniversityBuildingsFragmentPresenter;
+import com.bukhmastov.cdoitmo.model.university.buildings.UBuilding;
+import com.bukhmastov.cdoitmo.model.university.buildings.UBuildings;
 import com.bukhmastov.cdoitmo.network.IfmoRestClient;
 import com.bukhmastov.cdoitmo.network.handlers.RestResponseHandler;
 import com.bukhmastov.cdoitmo.network.model.Client;
@@ -44,6 +47,7 @@ import com.bukhmastov.cdoitmo.util.Theme;
 import com.bukhmastov.cdoitmo.util.Thread;
 import com.bukhmastov.cdoitmo.util.Time;
 import com.bukhmastov.cdoitmo.util.singleton.Color;
+import com.bukhmastov.cdoitmo.util.singleton.StringUtils;
 import com.bukhmastov.cdoitmo.view.CircularTransformation;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -59,10 +63,11 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import com.squareup.picasso.Picasso;
 
 import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 
 import javax.inject.Inject;
 
@@ -73,12 +78,11 @@ public class UniversityBuildingsFragmentPresenterImpl implements UniversityBuild
     private Fragment fragment = null;
     private View container;
     private Client.Request requestHandle = null;
-    private JSONObject building_map = null;
+    private UBuildings uBuildings = null;
     private GoogleMap googleMap = null;
-    private final ArrayList<Marker> markers = new ArrayList<>();
-    private boolean markers_campus = true;
-    private boolean markers_dormitory = true;
-    private long timestamp = 0;
+    private final List<Marker> markers = new ArrayList<>();
+    private boolean markersCampusEnabled = true;
+    private boolean markersDormitoryEnabled = true;
 
     @Inject
     Log log;
@@ -111,7 +115,7 @@ public class UniversityBuildingsFragmentPresenterImpl implements UniversityBuild
         if (event.isNot(ClearCacheEvent.UNIVERSITY)) {
             return;
         }
-        building_map = null;
+        uBuildings = null;
     }
 
     @Override
@@ -125,8 +129,8 @@ public class UniversityBuildingsFragmentPresenterImpl implements UniversityBuild
         thread.run(() -> {
             log.v(TAG, "Fragment created");
             firebaseAnalyticsProvider.logCurrentScreen(activity, fragment);
-            markers_campus = storagePref.get(activity, "pref_university_buildings_campus", true);
-            markers_dormitory = storagePref.get(activity, "pref_university_buildings_dormitory", true);
+            markersCampusEnabled = storagePref.get(activity, "pref_university_buildings_campus", true);
+            markersDormitoryEnabled = storagePref.get(activity, "pref_university_buildings_dormitory", true);
         });
     }
 
@@ -159,40 +163,39 @@ public class UniversityBuildingsFragmentPresenterImpl implements UniversityBuild
                 log.w(TAG, "onCreateView | fragment not added to activity");
                 return;
             }
-            try {
-                SupportMapFragment mapFragment = (SupportMapFragment) fragment.getChildFragmentManager().findFragmentById(R.id.buildings_map);
-                if (mapFragment != null) {
-                    mapFragment.getMapAsync(this);
-                }
-            } catch (Exception e) {
-                log.exception(e);
-                failed();
-                load();
-            }
-            Switch dormitory_switch = container.findViewById(R.id.dormitory_switch);
-            if (dormitory_switch != null) {
-                dormitory_switch.setChecked(markers_dormitory);
-                dormitory_switch.setOnCheckedChangeListener((buttonView, isChecked) -> thread.run(() -> {
-                    markers_dormitory = isChecked;
+            Switch dormitorySwitch = container.findViewById(R.id.dormitory_switch);
+            if (dormitorySwitch != null) {
+                dormitorySwitch.setChecked(markersDormitoryEnabled);
+                dormitorySwitch.setOnCheckedChangeListener((buttonView, isChecked) -> thread.run(() -> {
+                    markersDormitoryEnabled = isChecked;
+                    storagePref.put(activity, "pref_university_buildings_dormitory", markersDormitoryEnabled);
                     displayMarkers();
-                    storagePref.put(activity, "pref_university_buildings_dormitory", markers_dormitory);
                 }));
             }
-            Switch campus_switch = container.findViewById(R.id.campus_switch);
-            if (campus_switch != null) {
-                campus_switch.setChecked(markers_campus);
-                campus_switch.setOnCheckedChangeListener((buttonView, isChecked) -> thread.run(() -> {
-                    markers_campus = isChecked;
+            Switch campusSwitch = container.findViewById(R.id.campus_switch);
+            if (campusSwitch != null) {
+                campusSwitch.setChecked(markersCampusEnabled);
+                campusSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> thread.run(() -> {
+                    markersCampusEnabled = isChecked;
+                    storagePref.put(activity, "pref_university_buildings_campus", markersCampusEnabled);
                     displayMarkers();
-                    storagePref.put(activity, "pref_university_buildings_campus", markers_campus);
                 }));
             }
-            View view_list = container.findViewById(R.id.view_list);
-            if (view_list != null) {
-                view_list.setOnClickListener(v -> openList());
+            View list = container.findViewById(R.id.view_list);
+            if (list != null) {
+                list.setOnClickListener(v -> openList());
             }
+            SupportMapFragment mapFragment = (SupportMapFragment) fragment.getChildFragmentManager().findFragmentById(R.id.buildings_map);
+            if (mapFragment != null) {
+                mapFragment.getMapAsync(this);
+            }
+        }, throwable -> {
+            log.exception(throwable);
+            indicatorFailed();
+            load();
         });
     }
+
 
     private void load() {
         thread.run(() -> load(storagePref.get(activity, "pref_use_cache", true) && storagePref.get(activity, "pref_use_university_cache", false)
@@ -202,96 +205,83 @@ public class UniversityBuildingsFragmentPresenterImpl implements UniversityBuild
 
     private void load(final int refresh_rate) {
         thread.run(() -> {
-            log.v(TAG, "load | refresh_rate=" + refresh_rate);
-            if (storagePref.get(activity, "pref_use_cache", true) && storagePref.get(activity, "pref_use_university_cache", false)) {
-                String cache = storage.get(activity, Storage.CACHE, Storage.GLOBAL, "university#buildings").trim();
-                if (!cache.isEmpty()) {
-                    try {
-                        JSONObject cacheJson = new JSONObject(cache);
-                        building_map = cacheJson.getJSONObject("data");
-                        timestamp = cacheJson.getLong("timestamp");
-                        if (timestamp + refresh_rate * 3600000L < time.getCalendar().getTimeInMillis()) {
-                            load(true);
-                        } else {
-                            load(false);
-                        }
-                    } catch (JSONException e) {
-                        log.exception(e);
-                        load(true);
-                    }
-                } else {
-                    load(false);
-                }
+            log.v(TAG, "load | refresh_rate=", refresh_rate);
+            if (!(storagePref.get(activity, "pref_use_cache", true) && storagePref.get(activity, "pref_use_university_cache", false))) {
+                load(false);
+                return;
+            }
+            UBuildings cache = getFromCache();
+            if (cache == null) {
+                load(false);
+                return;
+            }
+            uBuildings = cache;
+            if (cache.getTimestamp() + refresh_rate * 3600000L < time.getTimeInMillis()) {
+                load(true);
             } else {
                 load(false);
             }
+        }, throwable -> {
+            indicatorLoadFailed();
         });
     }
 
     private void load(final boolean force) {
         thread.run(() -> {
-            log.v(TAG, "load | force=" + (force ? "true" : "false"));
-            if ((!force || !Client.isOnline(activity)) && building_map != null) {
+            log.v(TAG, "load | force=", force);
+            if ((!force || !Client.isOnline(activity)) && uBuildings != null) {
                 display();
                 return;
             }
-            if (!App.OFFLINE_MODE) {
-                loadProvider(new RestResponseHandler() {
-                    @Override
-                    public void onSuccess(final int statusCode, final Client.Headers headers, final JSONObject json, final JSONArray responseArr) {
-                        thread.run(() -> {
-                            if (statusCode == 200) {
-                                long now = time.getCalendar().getTimeInMillis();
-                                if (json != null && storagePref.get(activity, "pref_use_cache", true) && storagePref.get(activity, "pref_use_university_cache", false)) {
-                                    try {
-                                        storage.put(activity, Storage.CACHE, Storage.GLOBAL, "university#buildings", new JSONObject()
-                                                .put("timestamp", now)
-                                                .put("data", json)
-                                                .toString()
-                                        );
-                                    } catch (JSONException e) {
-                                        log.exception(e);
-                                    }
-                                }
-                                building_map = json;
-                                timestamp = now;
-                                display();
-                            } else {
-                                loadFailed();
-                            }
-                        });
-                    }
-                    @Override
-                    public void onFailure(final int statusCode, final Client.Headers headers, final int state) {
-                        thread.run(() -> {
-                            log.v(TAG, "forceLoad | failure " + state);
-                            switch (state) {
-                                case IfmoRestClient.FAILED_OFFLINE:
-                                    loadOffline();
-                                    break;
-                                case IfmoRestClient.FAILED_CORRUPTED_JSON:
-                                case IfmoRestClient.FAILED_SERVER_ERROR:
-                                case IfmoRestClient.FAILED_TRY_AGAIN:
-                                    loadFailed();
-                                    break;
-                            }
-                        });
-                    }
-                    @Override
-                    public void onProgress(final int state) {
-                        thread.run(() -> {
-                            log.v(TAG, "forceLoad | progress " + state);
-                            loading();
-                        });
-                    }
-                    @Override
-                    public void onNewRequest(Client.Request request) {
-                        requestHandle = request;
-                    }
-                });
-            } else {
-                loadOffline();
+            if (App.OFFLINE_MODE) {
+                indicatorLoadOffline();
+                return;
             }
+            loadProvider(new RestResponseHandler() {
+                @Override
+                public void onSuccess(final int statusCode, final Client.Headers headers, final JSONObject obj, final JSONArray arr) {
+                    thread.run(() -> {
+                        if (statusCode == 200 && obj != null) {
+                            UBuildings data = new UBuildings().fromJson(obj);
+                            data.setTimestamp(time.getTimeInMillis());
+                            if (storagePref.get(activity, "pref_use_cache", true) && storagePref.get(activity, "pref_use_university_cache", false)) {
+                                storage.put(activity, Storage.CACHE, Storage.GLOBAL, "university#buildings", data.toJsonString());
+                            }
+                            uBuildings = data;
+                            display();
+                            return;
+                        }
+                        indicatorLoadFailed();
+                    }, throwable -> {
+                        indicatorLoadFailed();
+                    });
+                }
+                @Override
+                public void onFailure(final int statusCode, final Client.Headers headers, final int state) {
+                    log.v(TAG, "forceLoad | failure ", state);
+                    switch (state) {
+                        case IfmoRestClient.FAILED_OFFLINE:
+                            indicatorLoadOffline();
+                            break;
+                        case IfmoRestClient.FAILED_CORRUPTED_JSON:
+                        case IfmoRestClient.FAILED_SERVER_ERROR:
+                        case IfmoRestClient.FAILED_TRY_AGAIN:
+                            indicatorLoadFailed();
+                            break;
+                    }
+                }
+                @Override
+                public void onProgress(final int state) {
+                    log.v(TAG, "forceLoad | progress ", state);
+                    indicatorLoading();
+                }
+                @Override
+                public void onNewRequest(Client.Request request) {
+                    requestHandle = request;
+                }
+            });
+        }, throwable -> {
+            indicatorLoadFailed();
         });
     }
 
@@ -301,18 +291,91 @@ public class UniversityBuildingsFragmentPresenterImpl implements UniversityBuild
     }
 
     private void display() {
-        if (building_map != null) {
-            loaded();
-            displayMarkers();
-        } else {
-            loadFailed();
+        if (uBuildings == null) {
+            indicatorLoadFailed();
+            return;
+        }
+        indicatorLoaded();
+        displayMarkers();
+    }
+
+    private void displayMarkers() {
+        thread.run(() -> {
+            if (uBuildings == null || googleMap == null) {
+                return;
+            }
+            if (uBuildings.getBuildings() == null) {
+                return;
+            }
+            removeAllMarkers();
+            for (UBuilding building : uBuildings.getBuildings()) {
+                try {
+                    if (building == null) {
+                        continue;
+                    }
+                    String type = null;
+                    int icon = -1;
+                    switch (building.getTypeId()) {
+                        case 1:
+                            if (!markersCampusEnabled) {
+                                continue;
+                            }
+                            type = activity.getString(R.string.campus);
+                            icon = R.drawable.location_campus;
+                            break;
+                        case 2:
+                            if (!markersDormitoryEnabled) {
+                                continue;
+                            }
+                            type = activity.getString(R.string.dormitory);
+                            icon = R.drawable.location_dormitory;
+                            break;
+                    }
+                    MarkerOptions markerOptions = new MarkerOptions();
+                    markerOptions.position(new LatLng(building.getN(), building.getE()));
+                    markerOptions.title(building.getTitle());
+                    markerOptions.zIndex((float) (building.getMajor() + 1));
+                    if (type != null) {
+                        markerOptions.snippet(type);
+                    }
+                    if (icon != -1) {
+                        markerOptions.icon(tintMarker(activity, icon));
+                    }
+                    thread.runOnUI(() -> {
+                        Marker marker = googleMap.addMarker(markerOptions);
+                        marker.setTag(building);
+                        markers.add(marker);
+                    }, throwable -> {
+                        log.exception(throwable);
+                    });
+                } catch (Exception e) {
+                    log.exception(e);
+                }
+            }
+        }, throwable -> {
+            log.exception(throwable);
+        });
+    }
+
+    private UBuildings getFromCache() {
+        thread.assertNotUI();
+        String cache = storage.get(activity, Storage.CACHE, Storage.GLOBAL, "university#buildings").trim();
+        if (StringUtils.isBlank(cache)) {
+            return null;
+        }
+        try {
+            return new UBuildings().fromJsonString(cache);
+        } catch (Exception e) {
+            storage.delete(activity, Storage.CACHE, Storage.GLOBAL, "university#buildings");
+            return null;
         }
     }
+
 
     @Override
     public void onMapReady(final GoogleMap gMap) {
         thread.run(() -> {
-            final MapStyleOptions mapStyleOptions;
+            MapStyleOptions mapStyleOptions;
             switch (theme.getAppTheme(activity)) {
                 case "light":
                 default: mapStyleOptions = MapStyleOptions.loadRawResourceStyle(activity, R.raw.google_map_light); break;
@@ -325,19 +388,23 @@ public class UniversityBuildingsFragmentPresenterImpl implements UniversityBuild
                 googleMap.setMapStyle(mapStyleOptions);
                 googleMap.setOnMarkerClickListener(this);
                 googleMap.moveCamera(CameraUpdateFactory.newCameraPosition(new CameraPosition.Builder().target(new LatLng(59.93465, 30.3138391)).zoom(10).build()));
-                if (building_map == null) {
+                if (uBuildings == null) {
                     load();
                 } else {
                     display();
                 }
+            }, throwable -> {
+                indicatorFailed();
             });
+        }, throwable -> {
+            indicatorFailed();
         });
     }
 
     @Override
     public boolean onMarkerClick(Marker marker) {
         try {
-            JSONObject building = (JSONObject) marker.getTag();
+            UBuilding building = (UBuilding) marker.getTag();
             if (building == null) {
                 throw new NullPointerException("marker's tag is null");
             }
@@ -349,68 +416,6 @@ public class UniversityBuildingsFragmentPresenterImpl implements UniversityBuild
         }
     }
 
-    private void displayMarkers() {
-        thread.run(() -> {
-            try {
-                if (building_map == null) return;
-                if (googleMap == null) return;
-                JSONArray list = building_map.getJSONArray("list");
-                if (list != null) {
-                    removeAllMarkers();
-                    for (int i = 0; i < list.length(); i++) {
-                        try {
-                            final JSONObject building = list.getJSONObject(i);
-                            if (building == null) {
-                                continue;
-                            }
-                            String type = null;
-                            int icon = -1;
-                            switch (building.getInt("type_id")) {
-                                case 1:
-                                    if (!markers_campus) {
-                                        continue;
-                                    }
-                                    type = activity.getString(R.string.campus);
-                                    icon = R.drawable.location_campus;
-                                    break;
-                                case 2:
-                                    if (!markers_dormitory) {
-                                        continue;
-                                    }
-                                    type = activity.getString(R.string.dormitory);
-                                    icon = R.drawable.location_dormitory;
-                                    break;
-                            }
-                            final MarkerOptions markerOptions = new MarkerOptions();
-                            markerOptions.position(new LatLng(building.getDouble("N"), building.getDouble("E")));
-                            markerOptions.title(building.getString("title"));
-                            markerOptions.zIndex((float) (building.getInt("major") + 1));
-                            if (type != null) {
-                                markerOptions.snippet(type);
-                            }
-                            if (icon != -1) {
-                                markerOptions.icon(tintMarker(activity, icon));
-                            }
-                            thread.runOnUI(() -> {
-                                try {
-                                    Marker marker = googleMap.addMarker(markerOptions);
-                                    marker.setTag(building);
-                                    markers.add(marker);
-                                } catch (Exception e) {
-                                    log.exception(e);
-                                }
-                            });
-                        } catch (Exception e) {
-                            log.exception(e);
-                        }
-                    }
-                }
-            } catch (Exception e) {
-                log.exception(e);
-            }
-        });
-    }
-
     private void removeAllMarkers() {
         thread.runOnUI(() -> {
             for (Marker marker : markers) {
@@ -420,25 +425,24 @@ public class UniversityBuildingsFragmentPresenterImpl implements UniversityBuild
         });
     }
 
-    private boolean openMarkerInfo(JSONObject building) {
+    private boolean openMarkerInfo(UBuilding building) {
         try {
             closeMarkerInfo();
             closeList();
-            ViewGroup marker_info_container = container.findViewById(R.id.marker_info_container);
-            if (marker_info_container != null) {
-                View marker_info = inflate(R.layout.layout_university_buildings_marker_info);
-                final String title = escapeText(building.getString("title"));
-                final int id = building.getInt("id");
-                final String image = building.getString("image");
-                ((TextView) marker_info.findViewById(R.id.marker_text)).setText(title);
-                marker_info.findViewById(R.id.web).setOnClickListener(view -> eventBus.fire(new OpenIntentEvent(new Intent(Intent.ACTION_VIEW, Uri.parse("http://www.ifmo.ru/ru/map/" + id + "/")))));
+            ViewGroup markerContainer = container.findViewById(R.id.marker_info_container);
+            if (markerContainer != null) {
+                View marker = inflate(R.layout.layout_university_buildings_marker_info);
+                ((TextView) marker.findViewById(R.id.marker_text)).setText(escapeText(building.getTitle()));
+                marker.findViewById(R.id.web).setOnClickListener(view -> thread.run(() -> {
+                    eventBus.fire(new OpenIntentEvent(new Intent(Intent.ACTION_VIEW, Uri.parse("http://www.ifmo.ru/ru/map/" + building.getId() + "/"))));
+                }));
                 Picasso.with(activity)
-                        .load(image)
+                        .load(building.getImage())
                         .error(R.drawable.ic_sentiment_very_satisfied)
                         .transform(new CircularTransformation())
-                        .into((ImageView) marker_info.findViewById(R.id.marker_image));
-                marker_info.findViewById(R.id.marker_close).setOnClickListener(v -> closeMarkerInfo());
-                marker_info_container.addView(marker_info);
+                        .into((ImageView) marker.findViewById(R.id.marker_image));
+                marker.findViewById(R.id.marker_close).setOnClickListener(v -> closeMarkerInfo());
+                markerContainer.addView(marker);
             }
             return true;
         } catch (Exception e) {
@@ -449,95 +453,87 @@ public class UniversityBuildingsFragmentPresenterImpl implements UniversityBuild
 
     private void closeMarkerInfo() {
         thread.runOnUI(() -> {
-            try {
-                View marker_info_container = container.findViewById(R.id.marker_info_container);
-                if (marker_info_container != null) {
-                    View marker_info = marker_info_container.findViewById(R.id.marker_info);
-                    if (marker_info != null) {
-                        staticUtil.removeView(marker_info);
-                    }
+            View markerContainer = container.findViewById(R.id.marker_info_container);
+            if (markerContainer != null) {
+                View marker = markerContainer.findViewById(R.id.marker_info);
+                if (marker != null) {
+                    staticUtil.removeView(marker);
                 }
-            } catch (Exception e) {
-                log.exception(e);
             }
+        }, throwable -> {
+            log.exception(throwable);
         });
     }
 
     private void openList() {
         thread.runOnUI(() -> {
-            try {
-                closeMarkerInfo();
-                closeList();
-                ViewGroup marker_info_container = container.findViewById(R.id.marker_info_container);
-                if (building_map == null) return;
-                JSONArray list = building_map.getJSONArray("list");
-                if (marker_info_container != null && list != null) {
-                    View layout_university_buildings_list = inflate(R.layout.layout_university_buildings_list);
-                    layout_university_buildings_list.findViewById(R.id.list_close).setOnClickListener(v -> closeList());
-                    ViewGroup list_container = layout_university_buildings_list.findViewById(R.id.list_container);
-                    for (int i = 0; i < list.length(); i++) {
-                        try {
-                            JSONObject building = list.getJSONObject(i);
-                            if (building == null) {
-                                continue;
-                            }
-                            final String title = building.getString("title");
-                            View item = inflate(R.layout.layout_university_faculties_divisions_list_item);
-                            ((TextView) item.findViewById(R.id.title)).setText(title);
-                            item.setOnClickListener(v -> {
-                                for (Marker marker : markers) {
-                                    try {
-                                        JSONObject building1 = (JSONObject) marker.getTag();
-                                        if (building1 == null) {
-                                            continue;
-                                        }
-                                        if (title.equals(building1.getString("title"))) {
-                                            closeList();
-                                            onMarkerClick(marker);
-                                            break;
-                                        }
-                                    } catch (Exception ignore) {
-                                        // ignore
-                                    }
-                                }
-                            });
-                            list_container.addView(item);
-                        } catch (Exception e) {
-                            log.exception(e);
-                        }
-                    }
-                    marker_info_container.addView(layout_university_buildings_list);
-                }
-            } catch (Exception e) {
-                log.exception(e);
+            closeMarkerInfo();
+            closeList();
+            if (uBuildings == null) {
+                return;
             }
+            ViewGroup markerContainer = container.findViewById(R.id.marker_info_container);
+            if (markerContainer == null || uBuildings.getBuildings() == null) {
+                return;
+            }
+            View list = inflate(R.layout.layout_university_buildings_list);
+            list.findViewById(R.id.list_close).setOnClickListener(v -> closeList());
+            ViewGroup listContainer = list.findViewById(R.id.list_container);
+            for (UBuilding building : uBuildings.getBuildings()) {
+                try {
+                    if (building == null) {
+                        continue;
+                    }
+                    View item = inflate(R.layout.layout_university_faculties_divisions_list_item);
+                    ((TextView) item.findViewById(R.id.title)).setText(building.getTitle());
+                    item.setOnClickListener(v -> {
+                        thread.run(() -> {
+                            for (Marker marker : markers) {
+                                UBuilding building1 = (UBuilding) marker.getTag();
+                                if (building1 == null) {
+                                    continue;
+                                }
+                                if (Objects.equals(building.getTitle(), building1.getTitle())) {
+                                    closeList();
+                                    onMarkerClick(marker);
+                                    break;
+                                }
+                            }
+                        });
+                    });
+                    listContainer.addView(item);
+                } catch (Exception e) {
+                    log.exception(e);
+                }
+            }
+            markerContainer.addView(list);
+        }, throwable -> {
+            log.exception(throwable);
         });
     }
 
     private void closeList() {
         thread.runOnUI(() -> {
-            try {
-                View marker_info_container = container.findViewById(R.id.marker_info_container);
-                if (marker_info_container != null) {
-                    View list = marker_info_container.findViewById(R.id.list);
-                    if (list != null) {
-                        staticUtil.removeView(list);
-                    }
+            View markerContainer = container.findViewById(R.id.marker_info_container);
+            if (markerContainer != null) {
+                View list = markerContainer.findViewById(R.id.list);
+                if (list != null) {
+                    staticUtil.removeView(list);
                 }
-            } catch (Exception e) {
-                log.exception(e);
             }
+        }, throwable -> {
+            log.exception(throwable);
         });
     }
 
-    private void zoomToMarker(final Marker marker) {
+    private void zoomToMarker(Marker marker) {
         thread.runOnUI(() -> {
             CameraPosition cameraPosition = new CameraPosition.Builder().target(marker.getPosition()).zoom(15).build();
             googleMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition), 1000, null);
         });
     }
 
-    private BitmapDescriptor tintMarker(final Context context, @DrawableRes final int icon) {
+    private BitmapDescriptor tintMarker(Context context, @DrawableRes int icon) {
         try {
             Paint markerPaint = new Paint();
             Bitmap markerBitmap = BitmapFactory.decodeResource(context.getResources(), icon);
@@ -550,6 +546,77 @@ public class UniversityBuildingsFragmentPresenterImpl implements UniversityBuild
             return BitmapDescriptorFactory.fromResource(icon);
         }
     }
+
+
+    private void indicatorLoading() {
+        thread.runOnUI(() -> {
+            ViewGroup vg = container.findViewById(R.id.status);
+            if (vg != null) {
+                vg.removeAllViews();
+                vg.addView(inflate(R.layout.layout_university_buildings_status_loading));
+            }
+        }, throwable -> {
+            log.exception(throwable);
+        });
+    }
+
+    private void indicatorLoadFailed() {
+        thread.runOnUI(() -> {
+            View view = inflate(R.layout.layout_university_buildings_status_image);
+            view.setOnClickListener(v -> load());
+            ImageView image = view.findViewById(R.id.image);
+            image.setImageResource(R.drawable.ic_warning);
+            ViewGroup vg = container.findViewById(R.id.status);
+            if (vg != null) {
+                vg.removeAllViews();
+                vg.addView(view);
+            }
+        }, throwable -> {
+            log.exception(throwable);
+        });
+    }
+
+    private void indicatorLoadOffline() {
+        thread.runOnUI(() -> {
+            View view = inflate(R.layout.layout_university_buildings_status_image);
+            ImageView image = view.findViewById(R.id.image);
+            image.setImageResource(R.drawable.ic_disconnected);
+            ViewGroup vg = container.findViewById(R.id.status);
+            if (vg != null) {
+                vg.removeAllViews();
+                vg.addView(view);
+            }
+        }, throwable -> {
+            log.exception(throwable);
+        });
+    }
+
+    private void indicatorFailed() {
+        thread.runOnUI(() -> {
+            View view = inflate(R.layout.layout_university_buildings_status_image);
+            ImageView image = view.findViewById(R.id.image);
+            image.setImageResource(R.drawable.ic_warning);
+            ViewGroup vg = container.findViewById(R.id.status);
+            if (vg != null) {
+                vg.removeAllViews();
+                vg.addView(view);
+            }
+        }, throwable -> {
+            log.exception(throwable);
+        });
+    }
+
+    private void indicatorLoaded() {
+        thread.runOnUI(() -> {
+            ViewGroup vg = container.findViewById(R.id.status);
+            if (vg != null) {
+                vg.removeAllViews();
+            }
+        }, throwable -> {
+            log.exception(throwable);
+        });
+    }
+
 
     @SuppressWarnings("deprecation")
     private String escapeText(String text) {
@@ -565,106 +632,31 @@ public class UniversityBuildingsFragmentPresenterImpl implements UniversityBuild
         return text.trim();
     }
 
-    private void loading() {
-        thread.runOnUI(() -> {
-            try {
-                ViewGroup vg = container.findViewById(R.id.status);
-                if (vg != null) {
-                    vg.removeAllViews();
-                    vg.addView(inflate(R.layout.layout_university_buildings_status_loading));
-                }
-            } catch (Exception e) {
-                log.exception(e);
-            }
-        });
-    }
-
-    private void loadFailed() {
-        thread.runOnUI(() -> {
-            try {
-                View view = inflate(R.layout.layout_university_buildings_status_image);
-                ImageView imageView = view.findViewById(R.id.image);
-                imageView.setImageResource(R.drawable.ic_warning);
-                view.setOnClickListener(view1 -> load());
-                ViewGroup vg = container.findViewById(R.id.status);
-                if (vg != null) {
-                    vg.removeAllViews();
-                    vg.addView(view);
-                }
-            } catch (Exception e) {
-                log.exception(e);
-            }
-        });
-    }
-
-    private void loadOffline() {
-        thread.runOnUI(() -> {
-            try {
-                View view = inflate(R.layout.layout_university_buildings_status_image);
-                ImageView imageView = view.findViewById(R.id.image);
-                imageView.setImageResource(R.drawable.ic_disconnected);
-                ViewGroup vg = container.findViewById(R.id.status);
-                if (vg != null) {
-                    vg.removeAllViews();
-                    vg.addView(view);
-                }
-            } catch (Exception e) {
-                log.exception(e);
-            }
-        });
-    }
-
-    private void loaded() {
-        thread.runOnUI(() -> {
-            try {
-                ViewGroup vg = container.findViewById(R.id.status);
-                if (vg != null) {
-                    vg.removeAllViews();
-                }
-            } catch (Exception e) {
-                log.exception(e);
-            }
-        });
-    }
-
-    private void failed() {
-        thread.runOnUI(() -> {
-            try {
-                View view = inflate(R.layout.layout_university_buildings_status_image);
-                ImageView imageView = view.findViewById(R.id.image);
-                imageView.setImageResource(R.drawable.ic_warning);
-                ViewGroup vg = container.findViewById(R.id.status);
-                if (vg != null) {
-                    vg.removeAllViews();
-                    vg.addView(view);
-                }
-            } catch (Exception e) {
-                log.exception(e);
-            }
-        });
-    }
-
     private boolean isNotAddedToActivity() {
-        if (!thread.assertUI()) {
-            return true;
+        try {
+            if (!thread.assertUI()) {
+                return true;
+            }
+            if (fragment == null) {
+                return true;
+            }
+            FragmentManager fragmentManager = fragment.getFragmentManager();
+            if (fragmentManager == null) {
+                return true;
+            }
+            fragmentManager.executePendingTransactions();
+            return !fragment.isAdded();
+        } catch (Throwable throwable) {
+            if (!(throwable instanceof IllegalStateException)) {
+                log.exception(throwable);
+            }
+            return false;
         }
-        if (fragment == null) {
-            return true;
-        }
-        FragmentManager fragmentManager = fragment.getFragmentManager();
-        if (fragmentManager == null) {
-            return true;
-        }
-        fragmentManager.executePendingTransactions();
-        return !fragment.isAdded();
     }
 
+    @NonNull
     private View inflate(@LayoutRes int layout) throws InflateException {
         LayoutInflater inflater = (LayoutInflater) activity.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        if (inflater == null) {
-            log.e(TAG, "Failed to inflate layout, inflater is null");
-            return null;
-        }
         return inflater.inflate(layout, null);
     }
 }

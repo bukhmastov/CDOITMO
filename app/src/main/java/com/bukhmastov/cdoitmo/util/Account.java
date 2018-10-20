@@ -4,7 +4,7 @@ import android.content.Context;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
-import com.bukhmastov.cdoitmo.interfaces.Callable;
+import com.bukhmastov.cdoitmo.function.Callable;
 import com.bukhmastov.cdoitmo.network.model.Client;
 
 public interface Account {

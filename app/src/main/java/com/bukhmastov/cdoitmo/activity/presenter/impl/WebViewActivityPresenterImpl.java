@@ -116,14 +116,12 @@ public class WebViewActivityPresenterImpl implements WebViewActivityPresenter {
                         eventBus.fire(new OpenIntentEvent(new Intent(Intent.ACTION_VIEW, request.getUrl())));
                         return true;
                     }
-
                     @Override
                     public void onPageStarted(WebView view, String url, Bitmap favicon) {
                         if (webviewProgressBar != null) {
                             webviewProgressBar.setVisibility(View.VISIBLE);
                         }
                     }
-
                     @Override
                     public void onPageFinished(WebView view, String url) {
                         if (webviewProgressBar != null) {
@@ -141,6 +139,8 @@ public class WebViewActivityPresenterImpl implements WebViewActivityPresenter {
                 });
                 webview.loadUrl(url);
             }
+        }, throwable -> {
+            activity.finish();
         });
     }
 

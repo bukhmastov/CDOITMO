@@ -4,11 +4,12 @@ import android.appwidget.AppWidgetManager;
 import android.content.Context;
 
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
+import com.bukhmastov.cdoitmo.model.schedule.lessons.SLessons;
+import com.bukhmastov.cdoitmo.model.widget.schedule.lessons.WSLSettings;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Storage;
+import com.bukhmastov.cdoitmo.util.singleton.StringUtils;
 import com.bukhmastov.cdoitmo.widget.ScheduleLessonsWidgetStorage;
-
-import org.json.JSONObject;
 
 import javax.inject.Inject;
 
@@ -20,14 +21,62 @@ public class ScheduleLessonsWidgetStorageImpl implements ScheduleLessonsWidgetSt
     Log log;
     @Inject
     Storage storage;
+    @Inject
+    Context context;
 
     public ScheduleLessonsWidgetStorageImpl() {
         AppComponentProvider.getComponent().inject(this);
     }
 
     @Override
-    public String get(Context context, int appWidgetId, String type) {
-        log.v(TAG, "get | appWidgetId=" + appWidgetId + " | type=" + type);
+    public WSLSettings getSettings(int appWidgetId) throws Exception {
+        String settings = get(appWidgetId, "settings");
+        if (StringUtils.isBlank(settings)) {
+            return null;
+        }
+        return new WSLSettings().fromJsonString(settings);
+    }
+
+    @Override
+    public SLessons getCache(int appWidgetId) throws Exception {
+        String cache = get(appWidgetId, "cache");
+        if (StringUtils.isBlank(cache)) {
+            return null;
+        }
+        return new SLessons().fromJsonString(cache);
+    }
+
+    @Override
+    public SLessons getConverted(int appWidgetId) throws Exception {
+        String cache = get(appWidgetId, "cache_converted");
+        if (StringUtils.isBlank(cache)) {
+            return null;
+        }
+        return new SLessons().fromJsonString(cache);
+    }
+
+    @Override
+    public void save(int appWidgetId, String type, SLessons cache) throws Exception {
+        save(appWidgetId, type, cache.toJsonString());
+    }
+
+    @Override
+    public void save(int appWidgetId, WSLSettings settings) throws Exception {
+        save(appWidgetId, "settings", settings.toJsonString());
+    }
+
+    @Override
+    public void delete(int appWidgetId) {
+        log.v(TAG, "delete | appWidgetId=", appWidgetId);
+        if (appWidgetId == AppWidgetManager.INVALID_APPWIDGET_ID) {
+            log.w(TAG, "delete | prevented due to invalid appwidget id");
+            return;
+        }
+        storage.clear(context, Storage.PERMANENT, Storage.GLOBAL, "widget_schedule_lessons#" + appWidgetId);
+    }
+
+    private String get(int appWidgetId, String type) {
+        log.v(TAG, "get | appWidgetId=", appWidgetId, " | type=", type);
         String pref;
         if (appWidgetId == AppWidgetManager.INVALID_APPWIDGET_ID) {
             log.w(TAG, "get | prevented due to invalid appwidget id");
@@ -38,23 +87,8 @@ public class ScheduleLessonsWidgetStorageImpl implements ScheduleLessonsWidgetSt
         return pref.isEmpty() ? null : pref;
     }
 
-    @Override
-    public JSONObject getJson(Context context, int appWidgetId, String type) {
-        log.v(TAG, "getJson | appWidgetId=" + appWidgetId + " | type=" + type);
-        JSONObject pref;
-        try {
-            String tmp = get(context, appWidgetId, type);
-            if (tmp == null) throw new NullPointerException(type + " is null");
-            pref = new JSONObject(tmp);
-        } catch (Exception e) {
-            pref = null;
-        }
-        return pref;
-    }
-
-    @Override
-    public void save(Context context, int appWidgetId, String type, String text) {
-        log.v(TAG, "save | appWidgetId=" + appWidgetId + " | type=" + type);
+    private void save(int appWidgetId, String type, String text) {
+        log.v(TAG, "save | appWidgetId=", appWidgetId + " | type=", type);
         if (appWidgetId == AppWidgetManager.INVALID_APPWIDGET_ID) {
             log.w(TAG, "save | prevented due to invalid appwidget id");
             return;
@@ -62,23 +96,12 @@ public class ScheduleLessonsWidgetStorageImpl implements ScheduleLessonsWidgetSt
         storage.put(context, Storage.PERMANENT, Storage.GLOBAL, "widget_schedule_lessons#" + appWidgetId + "#" + type, text);
     }
 
-    @Override
-    public void delete(Context context, int appWidgetId, String type) {
-        log.v(TAG, "delete | appWidgetId=" + appWidgetId + " | type=" + type);
+    private void delete(int appWidgetId, String type) {
+        log.v(TAG, "delete | appWidgetId=", appWidgetId, " | type=", type);
         if (appWidgetId == AppWidgetManager.INVALID_APPWIDGET_ID) {
             log.w(TAG, "delete | prevented due to invalid appwidget id");
             return;
         }
         storage.delete(context, Storage.PERMANENT, Storage.GLOBAL, "widget_schedule_lessons#" + appWidgetId + "#" + type);
-    }
-
-    @Override
-    public void delete(Context context, int appWidgetId) {
-        log.v(TAG, "delete | appWidgetId=" + appWidgetId);
-        if (appWidgetId == AppWidgetManager.INVALID_APPWIDGET_ID) {
-            log.w(TAG, "delete | prevented due to invalid appwidget id");
-            return;
-        }
-        storage.clear(context, Storage.PERMANENT, Storage.GLOBAL, "widget_schedule_lessons#" + appWidgetId);
     }
 }

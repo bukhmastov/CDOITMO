@@ -4,11 +4,12 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.PopupMenu;
 import android.support.v7.widget.RecyclerView;
+import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
@@ -20,21 +21,23 @@ import com.bukhmastov.cdoitmo.activity.search.ScheduleAttestationsSearchActivity
 import com.bukhmastov.cdoitmo.adapter.rva.ScheduleAttestationsRVA;
 import com.bukhmastov.cdoitmo.event.bus.EventBus;
 import com.bukhmastov.cdoitmo.event.events.OpenActivityEvent;
-import com.bukhmastov.cdoitmo.exception.SilentException;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.fragment.ConnectedFragment;
 import com.bukhmastov.cdoitmo.fragment.presenter.ScheduleAttestationsFragmentPresenter;
 import com.bukhmastov.cdoitmo.fragment.settings.SettingsScheduleAttestationsFragment;
+import com.bukhmastov.cdoitmo.model.schedule.attestations.SAttestations;
+import com.bukhmastov.cdoitmo.model.schedule.attestations.SSubject;
 import com.bukhmastov.cdoitmo.network.model.Client;
 import com.bukhmastov.cdoitmo.object.schedule.Schedule;
 import com.bukhmastov.cdoitmo.object.schedule.ScheduleAttestations;
 import com.bukhmastov.cdoitmo.util.Log;
+import com.bukhmastov.cdoitmo.util.NotificationMessage;
+import com.bukhmastov.cdoitmo.util.Storage;
 import com.bukhmastov.cdoitmo.util.Thread;
 import com.bukhmastov.cdoitmo.util.Time;
 import com.bukhmastov.cdoitmo.util.singleton.Color;
-
-import org.json.JSONObject;
+import com.bukhmastov.cdoitmo.util.singleton.StringUtils;
 
 import javax.inject.Inject;
 
@@ -50,9 +53,10 @@ public class ScheduleAttestationsFragmentPresenterImpl implements ScheduleAttest
         public int offset = 0;
     }
 
-    private final Schedule.Handler scheduleHandler;
+    private final Schedule.Handler<SAttestations> scheduleHandler;
     private ConnectedFragment fragment = null;
     private ConnectedActivity activity = null;
+    private SAttestations schedule = null;
     private boolean loaded = false;
     private Client.Request requestHandle = null;
     private String lastQuery = null;
@@ -71,138 +75,134 @@ public class ScheduleAttestationsFragmentPresenterImpl implements ScheduleAttest
     @Inject
     ScheduleAttestations scheduleAttestations;
     @Inject
+    Storage storage;
+    @Inject
     Time time;
+    @Inject
+    NotificationMessage notificationMessage;
     @Inject
     FirebaseAnalyticsProvider firebaseAnalyticsProvider;
 
     public ScheduleAttestationsFragmentPresenterImpl() {
         AppComponentProvider.getComponent().inject(this);
-        scheduleHandler = new Schedule.Handler() {
+        scheduleHandler = new Schedule.Handler<SAttestations>() {
             @Override
-            public void onSuccess(final JSONObject json, final boolean fromCache) {
+            public void onSuccess(final SAttestations schedule, final boolean fromCache) {
                 thread.run(() -> {
-                    try {
-                        final int week = time.getWeek(activity);
-                        final ScheduleAttestationsRVA adapter = new ScheduleAttestationsRVA(activity, json, week);
-                        thread.runOnUI(() -> {
-                            try {
-                                fragment.draw(R.layout.layout_schedule_both_recycle_list);
-                                // prepare
-                                final SwipeRefreshLayout swipe_container = fragment.container().findViewById(R.id.schedule_swipe);
-                                final RecyclerView schedule_list = fragment.container().findViewById(R.id.schedule_list);
-                                if (swipe_container == null || schedule_list == null) throw new SilentException();
-                                final LinearLayoutManager layoutManager = new LinearLayoutManager(activity, LinearLayoutManager.VERTICAL, false);
-                                // swipe
-                                swipe_container.setColorSchemeColors(Color.resolve(activity, R.attr.colorAccent));
-                                swipe_container.setProgressBackgroundColorSchemeColor(Color.resolve(activity, R.attr.colorBackgroundRefresh));
-                                swipe_container.setOnRefreshListener(() -> {
-                                    swipe_container.setRefreshing(false);
-                                    load(true);
-                                });
-                                // recycle view (list)
-                                schedule_list.setLayoutManager(layoutManager);
-                                schedule_list.setAdapter(adapter);
-                                schedule_list.setHasFixedSize(true);
-                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                                    schedule_list.setOnScrollChangeListener((view, scrollX, scrollY, oldScrollX, oldScrollY) -> {
-                                        final int position = layoutManager.findFirstVisibleItemPosition();
-                                        final View v = schedule_list.getChildAt(0);
-                                        final int offset = (v == null) ? 0 : (v.getTop() - schedule_list.getPaddingTop());
-                                        if (scroll == null) {
-                                            scroll = new Scroll();
-                                        }
-                                        scroll.position = position;
-                                        scroll.offset = offset;
-                                    });
-                                }
-                                // scroll to previous position
-                                if (scroll != null) {
-                                    layoutManager.scrollToPositionWithOffset(scroll.position, scroll.offset);
-                                }
-                            } catch (SilentException ignore) {
-                                failed(activity);
-                            } catch (Exception e) {
-                                log.exception(e);
-                                failed(activity);
-                            }
+                    ScheduleAttestationsFragmentPresenterImpl.this.schedule = schedule;
+                    int week = time.getWeek(activity);
+                    ScheduleAttestationsRVA adapter = new ScheduleAttestationsRVA(schedule, week);
+                    adapter.setClickListener(R.id.schedule_lessons_menu, ScheduleAttestationsFragmentPresenterImpl.this::attestationsMenu);
+                    thread.runOnUI(() -> {
+                        fragment.draw(R.layout.layout_schedule_both_recycle_list);
+                        // prepare
+                        SwipeRefreshLayout swipe = fragment.container().findViewById(R.id.schedule_swipe);
+                        RecyclerView recyclerView = fragment.container().findViewById(R.id.schedule_list);
+                        if (swipe == null || recyclerView == null) {
+                            return;
+                        }
+                        LinearLayoutManager layoutManager = new LinearLayoutManager(activity, LinearLayoutManager.VERTICAL, false);
+                        // swipe
+                        swipe.setColorSchemeColors(Color.resolve(activity, R.attr.colorAccent));
+                        swipe.setProgressBackgroundColorSchemeColor(Color.resolve(activity, R.attr.colorBackgroundRefresh));
+                        swipe.setOnRefreshListener(() -> {
+                            swipe.setRefreshing(false);
+                            load(true);
                         });
-                    } catch (Exception e) {
-                        log.exception(e);
+                        // recycle view (list)
+                        recyclerView.setLayoutManager(layoutManager);
+                        recyclerView.setAdapter(adapter);
+                        recyclerView.setHasFixedSize(true);
+                        // scroll to prev position listener (only android 23+)
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                            recyclerView.setOnScrollChangeListener((view, scrollX, scrollY, oldScrollX, oldScrollY) -> {
+                                final int position = layoutManager.findFirstVisibleItemPosition();
+                                final View v = recyclerView.getChildAt(0);
+                                final int offset = (v == null) ? 0 : (v.getTop() - recyclerView.getPaddingTop());
+                                if (scroll == null) {
+                                    scroll = new Scroll();
+                                }
+                                scroll.position = position;
+                                scroll.offset = offset;
+                            });
+                        }
+                        // scroll to previous position
+                        if (scroll != null) {
+                            layoutManager.scrollToPositionWithOffset(scroll.position, scroll.offset);
+                        }
+                    }, throwable -> {
+                        log.exception(throwable);
                         failed(activity);
-                    }
+                    });
+                }, throwable -> {
+                    log.exception(throwable);
+                    failed(activity);
                 });
-            }
-            @Override
-            public void onFailure(int state) {
-                this.onFailure(0, null, state);
             }
             @Override
             public void onFailure(final int statusCode, final Client.Headers headers, final int state) {
                 thread.runOnUI(() -> {
-                    try {
-                        log.v(TAG, "onFailure | statusCode=" + statusCode + " | state=" + state);
-                        switch (state) {
-                            case Client.FAILED_OFFLINE:
-                            case Schedule.FAILED_OFFLINE: {
-                                final ViewGroup view = (ViewGroup) fragment.inflate(R.layout.state_offline_text);
-                                view.findViewById(R.id.offline_reload).setOnClickListener(v -> load(false));
-                                fragment.draw(view);
-                                break;
-                            }
-                            case Client.FAILED_TRY_AGAIN:
-                            case Client.FAILED_SERVER_ERROR:
-                            case Schedule.FAILED_LOAD: {
-                                final ViewGroup view = (ViewGroup) fragment.inflate(R.layout.state_failed_button);
-                                if (state == Client.FAILED_TRY_AGAIN) {
-                                    ((TextView) view.findViewById(R.id.try_again_message)).setText(Client.getFailureMessage(activity, statusCode));
-                                }
-                                view.findViewById(R.id.try_again_reload).setOnClickListener(v -> load(false));
-                                fragment.draw(view);
-                                break;
-                            }
-                            case Schedule.FAILED_EMPTY_QUERY: {
-                                final ViewGroup view = (ViewGroup) fragment.inflate(R.layout.layout_schedule_empty_query);
-                                view.findViewById(R.id.open_search).setOnClickListener(v -> eventBus.fire(new OpenActivityEvent(ScheduleAttestationsSearchActivity.class)));
-                                view.findViewById(R.id.open_settings).setOnClickListener(v -> activity.openActivity(ConnectedActivity.TYPE.STACKABLE, SettingsScheduleAttestationsFragment.class, null));
-                                fragment.draw(view);
-                                break;
-                            }
-                            case Schedule.FAILED_NOT_FOUND: {
-                                final ViewGroup view = (ViewGroup) fragment.inflate(R.layout.state_nothing_to_display_compact);
-                                ((TextView) view.findViewById(R.id.ntd_text)).setText(R.string.no_schedule);
-                                fragment.draw(view);
-                                break;
-                            }
-                            case Schedule.FAILED_INVALID_QUERY: {
-                                final ViewGroup view = (ViewGroup) fragment.inflate(R.layout.state_failed_text);
-                                ((TextView) view.findViewById(R.id.text)).setText(R.string.incorrect_query);
-                                fragment.draw(view);
-                                break;
-                            }
-                            case Schedule.FAILED_MINE_NEED_ISU: {
-                                // TODO replace with isu auth, when isu will be ready
-                                final ViewGroup view = (ViewGroup) fragment.inflate(R.layout.state_failed_button);
-                                view.findViewById(R.id.try_again_reload).setOnClickListener(v -> load(false));
-                                fragment.draw(view);
-                                break;
-                            }
+                    ScheduleAttestationsFragmentPresenterImpl.this.schedule = null;
+                    log.v(TAG, "onFailure | statusCode=", statusCode, " | state=", state);
+                    switch (state) {
+                        case Client.FAILED_OFFLINE:
+                        case Schedule.FAILED_OFFLINE: {
+                            final ViewGroup view = (ViewGroup) fragment.inflate(R.layout.state_offline_text);
+                            view.findViewById(R.id.offline_reload).setOnClickListener(v -> load(false));
+                            fragment.draw(view);
+                            break;
                         }
-                    } catch (Exception e) {
-                        log.exception(e);
+                        case Client.FAILED_TRY_AGAIN:
+                        case Client.FAILED_SERVER_ERROR:
+                        case Schedule.FAILED_LOAD: {
+                            final ViewGroup view = (ViewGroup) fragment.inflate(R.layout.state_failed_button);
+                            if (state == Client.FAILED_TRY_AGAIN) {
+                                ((TextView) view.findViewById(R.id.try_again_message)).setText(Client.getFailureMessage(activity, statusCode));
+                            }
+                            view.findViewById(R.id.try_again_reload).setOnClickListener(v -> load(false));
+                            fragment.draw(view);
+                            break;
+                        }
+                        case Schedule.FAILED_EMPTY_QUERY: {
+                            final ViewGroup view = (ViewGroup) fragment.inflate(R.layout.layout_schedule_empty_query);
+                            view.findViewById(R.id.open_search).setOnClickListener(v -> eventBus.fire(new OpenActivityEvent(ScheduleAttestationsSearchActivity.class)));
+                            view.findViewById(R.id.open_settings).setOnClickListener(v -> activity.openActivity(ConnectedActivity.TYPE.STACKABLE, SettingsScheduleAttestationsFragment.class, null));
+                            fragment.draw(view);
+                            break;
+                        }
+                        case Schedule.FAILED_NOT_FOUND: {
+                            final ViewGroup view = (ViewGroup) fragment.inflate(R.layout.state_nothing_to_display_compact);
+                            ((TextView) view.findViewById(R.id.ntd_text)).setText(R.string.no_schedule);
+                            fragment.draw(view);
+                            break;
+                        }
+                        case Schedule.FAILED_INVALID_QUERY: {
+                            final ViewGroup view = (ViewGroup) fragment.inflate(R.layout.state_failed_text);
+                            ((TextView) view.findViewById(R.id.text)).setText(R.string.incorrect_query);
+                            fragment.draw(view);
+                            break;
+                        }
+                        case Schedule.FAILED_MINE_NEED_ISU: {
+                            // TODO replace with isu auth, when isu will be ready
+                            final ViewGroup view = (ViewGroup) fragment.inflate(R.layout.state_failed_button);
+                            view.findViewById(R.id.try_again_reload).setOnClickListener(v -> load(false));
+                            fragment.draw(view);
+                            break;
+                        }
                     }
+                }, throwable -> {
+                    log.exception(throwable);
                 });
             }
             @Override
             public void onProgress(final int state) {
                 thread.runOnUI(() -> {
-                    try {
-                        log.v(TAG, "onProgress | state=" + state);
-                        final ViewGroup view = (ViewGroup) fragment.inflate(R.layout.state_loading_text);
-                        ((TextView) view.findViewById(R.id.loading_message)).setText(R.string.loading);
-                        fragment.draw(view);
-                    } catch (Exception e) {
-                        log.exception(e);
-                    }
+                    log.v(TAG, "onProgress | state=", state);
+                    final ViewGroup view = (ViewGroup) fragment.inflate(R.layout.state_loading_text);
+                    ((TextView) view.findViewById(R.id.loading_message)).setText(R.string.loading);
+                    fragment.draw(view);
+                }, throwable -> {
+                    log.exception(throwable);
                 });
             }
             @Override
@@ -232,7 +232,7 @@ public class ScheduleAttestationsFragmentPresenterImpl implements ScheduleAttest
             // define query
             String scope = fragment.restoreData(fragment);
             if (scope == null) {
-                scope = scheduleAttestations.getDefaultScope(activity);
+                scope = scheduleAttestations.getDefaultScope();
             }
             final Intent intent = activity.getIntent();
             if (intent != null && intent.hasExtra("action_extra")) {
@@ -322,7 +322,7 @@ public class ScheduleAttestationsFragmentPresenterImpl implements ScheduleAttest
         });
     }
 
-    private void load(final boolean refresh) {
+    private void load(boolean refresh) {
         thread.runOnUI(() -> {
             if (activity == null) {
                 log.w(TAG, "load | activity is null");
@@ -331,26 +331,27 @@ public class ScheduleAttestationsFragmentPresenterImpl implements ScheduleAttest
             }
             fragment.draw(R.layout.state_loading_text);
             thread.run(() -> {
-                try {
-                    if (activity == null || getQuery() == null) {
-                        log.w(TAG, "load | some values are null | activity=", activity, " | getQuery()=", getQuery());
-                        failed(activity);
-                        return;
-                    }
-                    if (scroll != null && !isSameQueryRequested()) {
-                        scroll.position = 0;
-                        scroll.offset = 0;
-                    }
-                    if (refresh) {
-                        scheduleAttestations.search(activity, scheduleHandler, getQuery(), 0);
-                    } else {
-                        scheduleAttestations.search(activity, scheduleHandler, getQuery());
-                    }
-                } catch (Exception e) {
-                    log.exception(e);
+                if (activity == null || getQuery() == null) {
+                    log.w(TAG, "load | some values are null | activity=", activity, " | getQuery()=", getQuery());
                     failed(activity);
+                    return;
                 }
+                if (scroll != null && !isSameQueryRequested()) {
+                    scroll.position = 0;
+                    scroll.offset = 0;
+                }
+                if (refresh) {
+                    scheduleAttestations.search(getQuery(), 0, scheduleHandler);
+                } else {
+                    scheduleAttestations.search(getQuery(), scheduleHandler);
+                }
+            }, throwable -> {
+                log.exception(throwable);
+                failed(activity);
             });
+        }, throwable -> {
+            log.exception(throwable);
+            failed(activity);
         });
     }
 
@@ -391,6 +392,77 @@ public class ScheduleAttestationsFragmentPresenterImpl implements ScheduleAttest
     }
 
     private boolean isSameQueryRequested() {
-        return lastQuery != null && query != null && lastQuery.equals(query);
+        return lastQuery != null && lastQuery.equals(query);
     }
+
+    // -->- Attestations global menu ->--
+
+    private void attestationsMenu(View view, SSubject entity) {
+        thread.run(() -> {
+            if (schedule == null) {
+                notificationMessage.snackBar(activity, activity.getString(R.string.cache_failed));
+                return;
+            }
+            String cacheToken = schedule.getQuery() == null ? null : schedule.getQuery().toLowerCase();
+            boolean isCached = cacheToken != null && StringUtils.isNotBlank(storage.get(activity, Storage.CACHE, Storage.GLOBAL, "schedule_attestations#lessons#" + cacheToken, ""));
+            thread.runOnUI(() -> {
+                PopupMenu popup = new PopupMenu(activity, view);
+                Menu menu = popup.getMenu();
+                popup.getMenuInflater().inflate(R.menu.schedule_attestations, menu);
+                menu.findItem(isCached ? R.id.add_to_cache : R.id.remove_from_cache).setVisible(false);
+                popup.setOnMenuItemClickListener(item -> {
+                    attestationsMenuSelected(item);
+                    return false;
+                });
+                popup.show();
+            }, throwable -> {
+                log.exception(throwable);
+                notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
+            });
+        }, throwable -> {
+            log.exception(throwable);
+            notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
+        });
+    }
+
+    private void attestationsMenuSelected(MenuItem item) {
+        log.v(TAG, "Attestations menu | popup item | clicked | " + item.getTitle().toString());
+        switch (item.getItemId()) {
+            case R.id.add_to_cache:
+            case R.id.remove_from_cache: toggleCache(); break;
+            case R.id.open_settings: activity.openActivityOrFragment(ConnectedActivity.TYPE.STACKABLE, SettingsScheduleAttestationsFragment.class, null); break;
+        }
+    }
+
+    private void toggleCache() {
+        thread.run(() -> {
+            if (schedule == null) {
+                notificationMessage.snackBar(activity, activity.getString(R.string.cache_failed));
+                return;
+            }
+            String cacheToken = schedule.getQuery() == null ? null : schedule.getQuery().toLowerCase();
+            if (cacheToken == null) {
+                notificationMessage.snackBar(activity, activity.getString(R.string.cache_failed));
+                return;
+            }
+            if (storage.exists(activity, Storage.CACHE, Storage.GLOBAL, "schedule_attestations#lessons#" + cacheToken)) {
+                if (storage.delete(activity, Storage.CACHE, Storage.GLOBAL, "schedule_attestations#lessons#" + cacheToken)) {
+                    notificationMessage.snackBar(activity, activity.getString(R.string.cache_false));
+                } else {
+                    notificationMessage.snackBar(activity, activity.getString(R.string.cache_failed));
+                }
+                return;
+            }
+            if (storage.put(activity, Storage.CACHE, Storage.GLOBAL, "schedule_attestations#lessons#" + cacheToken, schedule.toJsonString())) {
+                notificationMessage.snackBar(activity, activity.getString(R.string.cache_true));
+            } else {
+                notificationMessage.snackBar(activity, activity.getString(R.string.cache_failed));
+            }
+        }, throwable -> {
+            log.exception(throwable);
+            notificationMessage.snackBar(activity, activity.getString(R.string.cache_failed));
+        });
+    }
+
+    // -<-- Attestations global menu --<-
 }

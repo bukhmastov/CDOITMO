@@ -25,11 +25,16 @@ import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activity.MainActivity;
 import com.bukhmastov.cdoitmo.activity.PikaActivity;
 import com.bukhmastov.cdoitmo.activity.presenter.ScheduleLessonsWidgetConfigureActivityPresenter;
-import com.bukhmastov.cdoitmo.converter.schedule.lessons.ScheduleLessonsAdditionalConverter;
 import com.bukhmastov.cdoitmo.event.bus.EventBus;
 import com.bukhmastov.cdoitmo.event.events.OpenActivityEvent;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
+import com.bukhmastov.cdoitmo.model.converter.ScheduleLessonsAdditionalConverter;
+import com.bukhmastov.cdoitmo.model.schedule.lessons.SDay;
+import com.bukhmastov.cdoitmo.model.schedule.lessons.SLesson;
+import com.bukhmastov.cdoitmo.model.schedule.lessons.SLessons;
+import com.bukhmastov.cdoitmo.model.widget.schedule.lessons.WSLSettings;
+import com.bukhmastov.cdoitmo.model.widget.schedule.lessons.WSLTheme;
 import com.bukhmastov.cdoitmo.network.IfmoRestClient;
 import com.bukhmastov.cdoitmo.network.model.Client;
 import com.bukhmastov.cdoitmo.object.schedule.Schedule;
@@ -37,13 +42,11 @@ import com.bukhmastov.cdoitmo.object.schedule.ScheduleLessons;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Thread;
 import com.bukhmastov.cdoitmo.util.Time;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
+import com.bukhmastov.cdoitmo.util.singleton.CollectionUtils;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -118,107 +121,105 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
         display(context, appWidgetManager, appWidgetId, false);
     }
 
-    public void updateAppWidget(final Context context, final AppWidgetManager appWidgetManager, final int appWidgetId, final boolean force) {
+    public void updateAppWidget(Context context, AppWidgetManager appWidgetManager, int appWidgetId, boolean force) {
         updateAppWidget(context, appWidgetManager, appWidgetId, force, false);
     }
-    public void updateAppWidget(final Context context, final AppWidgetManager appWidgetManager, final int appWidgetId, final boolean force, final boolean controls) {
+
+    public void updateAppWidget(Context context, AppWidgetManager appWidgetManager, int appWidgetId, boolean force, boolean controls) {
         thread.run(() -> {
-            log.i(TAG, "update | appWidgetId=" + appWidgetId);
-            try {
-                JSONObject settings = scheduleLessonsWidgetStorage.getJson(context, appWidgetId, "settings");
-                JSONObject cache = scheduleLessonsWidgetStorage.getJson(context, appWidgetId, "cache");
-                if (settings == null) {
-                    needPreparations(context, appWidgetManager, appWidgetId);
-                } else if (cache == null || force) {
-                    refresh(context, appWidgetManager, appWidgetId, settings);
-                } else {
-                    long timestamp = cache.getLong("timestamp");
-                    long shift = settings.getInt("updateTime") * 3600000L;
-                    if (shift != 0 && timestamp + shift < time.getCalendar().getTimeInMillis()) {
-                        refresh(context, appWidgetManager, appWidgetId, settings);
-                    } else {
-                        display(context, appWidgetManager, appWidgetId, controls);
-                    }
-                }
-            } catch (Exception e) {
-                log.exception(e);
+            log.i(TAG, "update | appWidgetId=", appWidgetId);
+            WSLSettings settings = scheduleLessonsWidgetStorage.getSettings(appWidgetId);
+            SLessons cache = scheduleLessonsWidgetStorage.getCache(appWidgetId);
+            if (settings == null) {
+                needPreparations(context, appWidgetManager, appWidgetId);
+                return;
             }
-        });
-    }
-    public void deleteAppWidget(final Context context, final int appWidgetId) {
-        thread.run(() -> {
-            log.i(TAG, "delete | appWidgetId=" + appWidgetId);
-            scheduleLessonsWidgetStorage.delete(context, appWidgetId);
+            if (cache == null || force) {
+                refresh(context, appWidgetManager, appWidgetId, settings);
+                return;
+            }
+            long shift = settings.getUpdateTime() * 3600000L;
+            if (shift != 0 && cache.getTimestamp() + shift < time.getCalendar().getTimeInMillis()) {
+                refresh(context, appWidgetManager, appWidgetId, settings);
+            } else {
+                display(context, appWidgetManager, appWidgetId, controls);
+            }
+        }, throwable -> {
+            log.exception(throwable);
         });
     }
 
-    private void refresh(final Context context, final AppWidgetManager appWidgetManager, final int appWidgetId, final JSONObject settings) {
+    public void deleteAppWidget(Context context, int appWidgetId) {
         thread.run(() -> {
-            log.i(TAG, "refresh | appWidgetId=" + appWidgetId);
-            try {
-                scheduleLessons.search(
-                        context,
-                        new Schedule.Handler() {
-                            @Override
-                            public void onSuccess(final JSONObject json, final boolean fromCache) {
-                                thread.run(() -> {
-                                    try {
-                                        JSONObject jsonObject = new JSONObject();
-                                        jsonObject.put("timestamp", time.getCalendar().getTimeInMillis());
-                                        jsonObject.put("content", json);
-                                        scheduleLessonsWidgetStorage.save(context, appWidgetId, "cache", jsonObject.toString());
-                                        new ScheduleLessonsAdditionalConverter(context, json, content -> {
-                                            scheduleLessonsWidgetStorage.save(context, appWidgetId, "cache_converted", content.toString());
-                                            display(context, appWidgetManager, appWidgetId, false);
-                                        }).run();
-                                    } catch (Exception e) {
-                                        log.exception(e);
-                                        failed(context, appWidgetManager, appWidgetId, settings, context.getString(R.string.failed_to_show_schedule));
-                                    }
-                                });
-                            }
-                            @Override
-                            public void onFailure(int state) {
-                                this.onFailure(0, null, state);
-                            }
-                            @Override
-                            public void onFailure(int statusCode, Client.Headers headers, int state) {
-                                //R.string.server_provided_corrupted_json
-                                String message;
-                                switch (state) {
-                                    case IfmoRestClient.FAILED_SERVER_ERROR: message = IfmoRestClient.getFailureMessage(context, statusCode); break;
-                                    case IfmoRestClient.FAILED_CORRUPTED_JSON: message = context.getString(R.string.server_provided_corrupted_json); break;
-                                    default: message = context.getString(R.string.failed_to_load_schedule); break;
-                                }
-                                failed(context, appWidgetManager, appWidgetId, settings, message);
-                            }
-                            @Override
-                            public void onProgress(int state) {
-                                progress(context, appWidgetManager, appWidgetId, settings);
-                            }
-                            @Override
-                            public void onNewRequest(Client.Request request) {
-                                requestHandler = request;
-                            }
-                            @Override
-                            public void onCancelRequest() {
-                                if (requestHandler != null) {
-                                    requestHandler.cancel();
-                                }
-                            }
-                        },
-                        settings.getString("query"),
-                        0,
-                        false,
-                        false
-                );
-            } catch (Exception e) {
-                log.exception(e);
-                failed(context, appWidgetManager, appWidgetId, settings, context.getString(R.string.failed_to_load_schedule));
-            }
+            log.i(TAG, "delete | appWidgetId=", appWidgetId);
+            scheduleLessonsWidgetStorage.delete(appWidgetId);
         });
     }
-    private void progress(final Context context, final AppWidgetManager appWidgetManager, final int appWidgetId, final JSONObject settings) {
+
+    private void refresh(Context context, AppWidgetManager appWidgetManager, int appWidgetId, WSLSettings settings) {
+        thread.run(() -> {
+            log.i(TAG, "refresh | appWidgetId=", appWidgetId);
+            scheduleLessons.search(
+                    settings.getQuery(),
+                    0,
+                    false,
+                    false,
+                    new Schedule.Handler<SLessons>() {
+                        @Override
+                        public void onSuccess(final SLessons schedule, final boolean fromCache) {
+                            thread.run(() -> {
+                                if (schedule == null) {
+                                    failed(context, appWidgetManager, appWidgetId, settings, context.getString(R.string.failed_to_show_schedule));
+                                    return;
+                                }
+                                schedule.setTimestamp(time.getTimeInMillis());
+                                scheduleLessonsWidgetStorage.save(appWidgetId, "cache", schedule);
+                                SLessons converted = new ScheduleLessonsAdditionalConverter(schedule).convert();
+                                if (converted == null) {
+                                    failed(context, appWidgetManager, appWidgetId, settings, context.getString(R.string.failed_to_show_schedule));
+                                    return;
+                                }
+                                scheduleLessonsWidgetStorage.save(appWidgetId, "cache_converted", converted);
+                                display(context, appWidgetManager, appWidgetId, false);
+                            }, throwable -> {
+                                log.exception(throwable);
+                                failed(context, appWidgetManager, appWidgetId, settings, context.getString(R.string.failed_to_show_schedule));
+                            });
+                        }
+                        @Override
+                        public void onFailure(int statusCode, Client.Headers headers, int state) {
+                            //R.string.server_provided_corrupted_json
+                            String message;
+                            switch (state) {
+                                case IfmoRestClient.FAILED_SERVER_ERROR: message = IfmoRestClient.getFailureMessage(context, statusCode); break;
+                                case IfmoRestClient.FAILED_CORRUPTED_JSON: message = context.getString(R.string.server_provided_corrupted_json); break;
+                                default: message = context.getString(R.string.failed_to_load_schedule); break;
+                            }
+                            failed(context, appWidgetManager, appWidgetId, settings, message);
+                        }
+                        @Override
+                        public void onProgress(int state) {
+                            progress(context, appWidgetManager, appWidgetId, settings);
+                        }
+                        @Override
+                        public void onNewRequest(Client.Request request) {
+                            requestHandler = request;
+                        }
+                        @Override
+                        public void onCancelRequest() {
+                            if (requestHandler != null) {
+                                requestHandler.cancel();
+                            }
+                        }
+                    }
+            );
+        }, throwable -> {
+            log.exception(throwable);
+            failed(context, appWidgetManager, appWidgetId, settings, context.getString(R.string.failed_to_load_schedule));
+        });
+    }
+
+    private void progress(Context context, AppWidgetManager appWidgetManager, int appWidgetId, WSLSettings settings) {
         thread.run(() -> {
             log.v(TAG, "progress | appWidgetId=" + appWidgetId);
             final @SIZE int size = getSize(appWidgetManager.getAppWidgetOptions(appWidgetId));
@@ -261,26 +262,23 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
             appWidgetManager.updateAppWidget(appWidgetId, layout);
         });
     }
-    private void display(final Context context, final AppWidgetManager appWidgetManager, final int appWidgetId, final boolean controls) {
+
+    private void display(Context context, AppWidgetManager appWidgetManager, int appWidgetId, boolean controls) {
         thread.run(() -> {
-            log.v(TAG, "display | appWidgetId=" + appWidgetId + " | controls=" + (controls ? "true" : "false"));
-            JSONObject settings = scheduleLessonsWidgetStorage.getJson(context, appWidgetId, "settings");
-            JSONObject cache = scheduleLessonsWidgetStorage.getJson(context, appWidgetId, "cache");
-            try {
+            log.v(TAG, "display | appWidgetId=", appWidgetId, " | controls=", controls);
+            WSLSettings settings = scheduleLessonsWidgetStorage.getSettings(appWidgetId);
+            SLessons schedule = scheduleLessonsWidgetStorage.getCache(appWidgetId);
+            thread.run(() -> {
                 if (settings == null) {
                     needPreparations(context, appWidgetManager, appWidgetId);
                     return;
                 }
-                if (cache == null) {
+                if (schedule == null) {
                     refresh(context, appWidgetManager, appWidgetId, settings);
                     return;
                 }
-                if (!settings.has("shift")) {
-                    settings.put("shift", 0);
-                }
                 final @SIZE int size = getSize(appWidgetManager.getAppWidgetOptions(appWidgetId));
                 final Colors colors = getColors(settings);
-                final JSONObject json = cache.getJSONObject("content");
                 final Calendar calendar = time.getCalendar();
                 final int[] shift = getShiftBasedOnTime(context, appWidgetId, settings, calendar);
                 if (shift[0] + shift[1] != 0) {
@@ -296,7 +294,7 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
                 // заголовки
                 layout.setViewVisibility(R.id.widget_title, View.VISIBLE);
                 layout.setViewVisibility(R.id.widget_day_title, View.VISIBLE);
-                layout.setTextViewText(R.id.widget_title, json.getString("title") + ("room".equals(json.getString("type")) ? " " + context.getString(R.string.room).toLowerCase() : ""));
+                layout.setTextViewText(R.id.widget_title, schedule.getTitle() + ("room".equals(schedule.getType()) ? " " + context.getString(R.string.room).toLowerCase() : ""));
                 layout.setTextViewText(R.id.widget_day_title,
                         (
                                 (shift[0] != 0 ? ((shift[0] > 0 ? "+" : "") + String.valueOf(shift[0]) + " ") : "") +
@@ -392,15 +390,14 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
                 layout.setRemoteAdapter(R.id.slw_day_schedule, intent);
                 appWidgetManager.updateAppWidget(appWidgetId, layout);
                 appWidgetManager.notifyAppWidgetViewDataChanged(appWidgetId, R.id.slw_day_schedule);
-            } catch (Exception e) {
-                if (!("settings cannot be null".equals(e.getMessage()) || "cache cannot be null".equals(e.getMessage()))) {
-                    log.exception(e);
-                }
+            }, throwable -> {
+                log.exception(throwable);
                 failed(context, appWidgetManager, appWidgetId, settings, context.getString(R.string.failed_to_show_schedule));
-            }
+            });
         });
     }
-    private void failed(final Context context, final AppWidgetManager appWidgetManager, final int appWidgetId, final JSONObject settings, final String text) {
+
+    private void failed(Context context, AppWidgetManager appWidgetManager, int appWidgetId, WSLSettings settings, String text) {
         thread.run(() -> {
             log.v(TAG, "failed | appWidgetId=" + appWidgetId + " | text=" + text);
             final @SIZE int size = getSize(appWidgetManager.getAppWidgetOptions(appWidgetId));
@@ -448,7 +445,8 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
             appWidgetManager.updateAppWidget(appWidgetId, layout);
         });
     }
-    private void needPreparations(final Context context, final AppWidgetManager appWidgetManager, final int appWidgetId) {
+
+    private void needPreparations(Context context, AppWidgetManager appWidgetManager, int appWidgetId) {
         thread.run(() -> {
             log.v(TAG, "needPreparations | appWidgetId=" + appWidgetId);
             final @SIZE int size = getSize(appWidgetManager.getAppWidgetOptions(appWidgetId));
@@ -496,7 +494,7 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
         });
     }
 
-    private void bindMenu(final Context context, final int appWidgetId, final RemoteViews remoteViews, final @SIZE int size) {
+    private void bindMenu(Context context, int appWidgetId, RemoteViews remoteViews, @SIZE int size) {
         Intent intent;
         // refresh
         intent = new Intent(context, ScheduleLessonsWidget.class);
@@ -537,7 +535,8 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
             remoteViews.setOnClickPendingIntent(R.id.widget_next_container, PendingIntent.getBroadcast(context, 0, intent, 0));
         }
     }
-    private void bindControls(final Context context, final int appWidgetId, final RemoteViews remoteViews, final @SIZE int size) {
+
+    private void bindControls(Context context, int appWidgetId, RemoteViews remoteViews, @SIZE int size) {
         Intent intent;
         // next
         intent = new Intent(context, ScheduleLessonsWidget.class);
@@ -573,7 +572,8 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
             case WIDE: break;
         }
     }
-    private void bindOpen(final Context context, final int appWidgetId, final RemoteViews remoteViews) {
+
+    private void bindOpen(Context context, int appWidgetId, RemoteViews remoteViews) {
         Intent intent = new Intent(context, ScheduleLessonsWidget.class);
         intent.setAction(ACTION_WIDGET_OPEN);
         intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId);
@@ -582,61 +582,51 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
         remoteViews.setOnClickPendingIntent(R.id.widget_title_container, pIntent);
     }
 
-    private int[] getShiftBasedOnTime(final Context context, final int appWidgetId, JSONObject settings, Calendar calendar) {
+    private int[] getShiftBasedOnTime(Context context, int appWidgetId, WSLSettings settings, Calendar calendar) {
         int shift = 0;
         int shiftAutomatic = 0;
         // fetch current shift
         try {
-            shift = settings.getInt("shift");
+            shift = settings.getShift();
         } catch (Exception e) {
             return new int[] {shift, shiftAutomatic};
         }
         // fetch current auto shift, if enabled
         try {
-            if (!settings.has("useShiftAutomatic")) {
-                settings.put("useShiftAutomatic", true);
-            }
-            if (!settings.has("shiftAutomatic")) {
-                settings.put("shiftAutomatic", 0);
-            }
-            if (!settings.getBoolean("useShiftAutomatic")) {
+            if (!settings.isUseShiftAutomatic()) {
                 return new int[] {shift, shiftAutomatic};
             }
-            shiftAutomatic = settings.getInt("shiftAutomatic");
+            shiftAutomatic = settings.getShiftAutomatic();
         } catch (Exception e) {
             return new int[] {shift, shiftAutomatic};
         }
         // calculate new auto shift from schedule
         try {
             // fetch current schedule
-            final JSONObject content = scheduleLessonsWidgetStorage.getJson(context, appWidgetId, "cache_converted");
-            if (content == null) {
-                return new int[] {shift, shiftAutomatic};
-            }
-            final JSONArray schedule = content.getJSONArray("schedule");
+            SLessons schedule = scheduleLessonsWidgetStorage.getConverted(appWidgetId);
             if (schedule == null) {
                 return new int[] {shift, shiftAutomatic};
             }
             // seek for next day that contains following lessons
             // to set new shiftAutomatic variable value
             // seek only for 14 days starting today
-            final Calendar seek = (Calendar) calendar.clone();
-            final Pattern pattern = Pattern.compile("^(\\d{1,2}):(\\d{2})$");
+            Calendar seek = (Calendar) calendar.clone();
+            Pattern pattern = Pattern.compile("^(\\d{1,2}):(\\d{2})$");
             days_loop: for (int day = 0; day < 14; day++) {
                 if (day > 0) {
                     seek.add(Calendar.HOUR, 24);
                 }
-                final int week = time.getWeek(context, seek) % 2;
-                final int weekday = time.getWeekDay(seek);
-                final JSONArray lessons = getLessonsForWeekday(schedule, week, weekday);
+                int week = time.getWeek(context, seek) % 2;
+                int weekday = time.getWeekDay(seek);
+                ArrayList<SLesson> lessons = getLessonsForWeekday(schedule, week, weekday);
                 // if this day contains lessons
-                if (lessons.length() > 0) {
+                if (CollectionUtils.isNotEmpty(lessons)) {
                     if (day == 0) {
                         // if this day - today
                         // seek for last lesson that contains proper timeEnd value
-                        for (int i = lessons.length() - 1; i >= 0 ; i--) {
-                            final JSONObject lesson = lessons.getJSONObject(i);
-                            final Matcher lessonTimeEnd = pattern.matcher(lesson.getString("timeEnd"));
+                        for (int i = lessons.size() - 1; i >= 0 ; i--) {
+                            SLesson lesson = lessons.get(i);
+                            Matcher lessonTimeEnd = pattern.matcher(lesson.getTimeEnd());
                             if (lessonTimeEnd.find()) {
                                 Calendar calendarLTE = (Calendar) seek.clone();
                                 calendarLTE.set(Calendar.HOUR_OF_DAY, Integer.parseInt(lessonTimeEnd.group(1)));
@@ -667,13 +657,14 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
         }
         return new int[] {shift, shiftAutomatic};
     }
-    private int saveShiftAutomatic(final Context context, final int appWidgetId, JSONObject settings, int oldShift, int newShift) {
+
+    private int saveShiftAutomatic(Context context, int appWidgetId, WSLSettings settings, int oldShift, int newShift) {
         int delta = newShift - oldShift;
         oldShift = newShift;
         if (delta != 0) {
             try {
-                settings.put("shiftAutomatic", oldShift);
-                scheduleLessonsWidgetStorage.save(context, appWidgetId, "settings", settings.toString());
+                settings.setShiftAutomatic(oldShift);
+                scheduleLessonsWidgetStorage.save(appWidgetId, settings);
             } catch (Exception e) {
                 // failed to save new shifts, restore to previous ones
                 oldShift -= delta;
@@ -683,13 +674,13 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
     }
 
     @Override
-    public void onReceive(final Context context, final Intent intent) {
+    public void onReceive(Context context, Intent intent) {
         inject();
         super.onReceive(context, intent);
         thread.run(() -> {
-            final String action = intent.getAction() != null ? intent.getAction() : "";
-            final int appWidgetId = intent.getIntExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID);
-            log.v(TAG, "onReceive | action=" + action);
+            String action = intent.getAction() != null ? intent.getAction() : "";
+            int appWidgetId = intent.getIntExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID);
+            log.v(TAG, "onReceive | action=", action);
             switch (action) {
                 case ACTION_WIDGET_UPDATE: {
                     logStatistic(context, "force_update");
@@ -715,14 +706,9 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
                             case ACTION_WIDGET_CONTROLS_BEFORE: logStatistic(context, "shift_before"); break;
                             case ACTION_WIDGET_CONTROLS_RESET: logStatistic(context, "shift_reset"); break;
                         }
-                        JSONObject settings = scheduleLessonsWidgetStorage.getJson(context, appWidgetId, "settings");
+                        WSLSettings settings = scheduleLessonsWidgetStorage.getSettings(appWidgetId);
                         if (settings != null) {
-                            int shift;
-                            try {
-                                shift = settings.getInt("shift");
-                            } catch (JSONException e) {
-                                shift = 0;
-                            }
+                            int shift = settings.getShift();
                             switch (action) {
                                 case ACTION_WIDGET_CONTROLS_NEXT: shift++; break;
                                 case ACTION_WIDGET_CONTROLS_BEFORE: shift--; break;
@@ -732,12 +718,8 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
                                 shift = 0;
                                 eventBus.fire(new OpenActivityEvent(PikaActivity.class));
                             }
-                            try {
-                                settings.put("shift", shift);
-                                scheduleLessonsWidgetStorage.save(context, appWidgetId, "settings", settings.toString());
-                            } catch (JSONException ignore) {
-                                // ignore
-                            }
+                            settings.setShift(shift);
+                            scheduleLessonsWidgetStorage.save(appWidgetId, settings);
                         }
                         display(context, AppWidgetManager.getInstance(context), appWidgetId, !ACTION_WIDGET_CONTROLS_RESET.equals(action));
                     });
@@ -748,13 +730,9 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
                         logStatistic(context, "schedule_open");
                         Bundle extras = new Bundle();
                         extras.putString("action", "schedule_lessons");
-                        try {
-                            String settings = scheduleLessonsWidgetStorage.get(context, appWidgetId, "settings");
-                            if (settings != null) {
-                                extras.putString("action_extra", new JSONObject(settings).getString("query"));
-                            }
-                        } catch (Exception e) {
-                            log.exception(e);
+                        WSLSettings settings = scheduleLessonsWidgetStorage.getSettings(appWidgetId);
+                        if (settings != null) {
+                            extras.putString("action_extra", settings.getQuery());
                         }
                         eventBus.fire(new OpenActivityEvent(MainActivity.class, extras, App.intentFlagRestart));
                     });
@@ -768,18 +746,20 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
         int background;
         int text;
     }
-    public static Colors getColors(JSONObject settings) {
+
+    public static Colors getColors(WSLSettings settings) {
         try {
-            JSONObject theme = settings.getJSONObject("theme");
+            WSLTheme theme = settings.getTheme();
             Colors colors = new Colors();
-            colors.text = Color.parseColor(theme.getString("text"));
-            colors.background = Color.parseColor(theme.getString("background"));
-            colors.background = Color.argb(theme.getInt("opacity"), Color.red(colors.background), Color.green(colors.background), Color.blue(colors.background));
+            colors.text = Color.parseColor(theme.getText());
+            colors.background = Color.parseColor(theme.getBackground());
+            colors.background = Color.argb(theme.getOpacity(), Color.red(colors.background), Color.green(colors.background), Color.blue(colors.background));
             return colors;
         } catch (Exception e) {
             return getColors();
         }
     }
+
     public static Colors getColors() {
         Colors colors = new Colors();
         colors.text = Color.parseColor(ScheduleLessonsWidgetConfigureActivityPresenter.Default.Theme.Dark.text);
@@ -787,6 +767,7 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
         colors.background = Color.argb(ScheduleLessonsWidgetConfigureActivityPresenter.Default.Theme.Dark.opacity, Color.red(colors.background), Color.green(colors.background), Color.blue(colors.background));
         return colors;
     }
+
     public static Bitmap getBitmap(Context context, @DrawableRes int drawableRes, int color) {
         try {
             Bitmap b = res2Bitmap(context, drawableRes);
@@ -800,6 +781,7 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
             return null;
         }
     }
+
     public static Bitmap res2Bitmap(Context context, @DrawableRes int drawableRes) {
         Drawable drawable = context.getResources().getDrawable(drawableRes, context.getTheme());
         Bitmap bitmap = Bitmap.createBitmap(drawable.getIntrinsicWidth(), drawable.getIntrinsicHeight(), Bitmap.Config.ARGB_8888);
@@ -816,7 +798,8 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
         }
         return n - 1;
     }
-    private @LayoutRes int getViewLayout(final @SIZE int size) {
+
+    private @LayoutRes int getViewLayout(@SIZE int size) {
         switch (size) {
             case WIDE:      return R.layout.widget_schedule_lessons_layout_wide;
             case NARROW:    return R.layout.widget_schedule_lessons_layout_small;
@@ -824,7 +807,8 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
             default:        return R.layout.widget_schedule_lessons_layout;
         }
     }
-    private @SIZE int getSize(final Bundle options) {
+
+    private @SIZE int getSize(Bundle options) {
         final int width = getCellsForSize(options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH));
         final int height = getCellsForSize(options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT));
         if (width > 3) {
@@ -836,31 +820,25 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
         }
     }
 
-    public static JSONArray getLessonsForWeekday(final JSONArray schedule, final int week, final int weekday) throws JSONException {
-        JSONArray l = new JSONArray();
-        for (int i = 0; i < schedule.length(); i++) {
-            final JSONObject day = schedule.getJSONObject(i);
-            if (day.has("weekday") && day.getInt("weekday") == weekday) {
-                final JSONArray lessons = day.has("lessons") ? day.getJSONArray("lessons") : null;
-                if (lessons != null) {
-                    for (int j = 0; j < lessons.length(); j++) {
-                        final JSONObject lesson = lessons.getJSONObject(j);
-                        if (lesson != null) {
-                            if (week == -1 || (lesson.getInt("week") == 2 || lesson.getInt("week") == week)) {
-                                if (!"reduced".equals(lesson.getString("cdoitmo_type"))) {
-                                    l.put(lesson);
-                                }
-                            }
-                        }
-                    }
+    public static ArrayList<SLesson> getLessonsForWeekday(SLessons schedule, int week, int weekday) {
+        ArrayList<SLesson> lessons = new ArrayList<>();
+        for (SDay day : schedule.getSchedule()) {
+            if (day == null || day.getWeekday() != weekday || CollectionUtils.isEmpty(day.getLessons())) {
+                continue;
+            }
+            for (SLesson lesson : day.getLessons()) {
+                if (lesson == null || "reduced".equals(lesson.getCdoitmoType())) {
+                    continue;
                 }
-                break;
+                if (week == -1 || (lesson.getParity() == 2 || lesson.getParity() == week)) {
+                    lessons.add(lesson);
+                }
             }
         }
-        return l;
+        return lessons;
     }
 
-    private void logStatistic(final Context context, final String info) {
+    private void logStatistic(Context context, String info) {
         firebaseAnalyticsProvider.logEvent(
                 context,
                 FirebaseAnalyticsProvider.Event.WIDGET_USAGE,

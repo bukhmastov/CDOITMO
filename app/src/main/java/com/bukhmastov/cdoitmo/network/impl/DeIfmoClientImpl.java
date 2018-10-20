@@ -7,19 +7,22 @@ import android.support.annotation.Nullable;
 import com.bukhmastov.cdoitmo.App;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
+import com.bukhmastov.cdoitmo.function.ThrowingConsumer;
+import com.bukhmastov.cdoitmo.function.ThrowingRunnable;
+import com.bukhmastov.cdoitmo.model.parser.UserDataParser;
+import com.bukhmastov.cdoitmo.model.user.UserData;
+import com.bukhmastov.cdoitmo.model.user.UserWeek;
 import com.bukhmastov.cdoitmo.network.DeIfmoClient;
 import com.bukhmastov.cdoitmo.network.handlers.RawHandler;
 import com.bukhmastov.cdoitmo.network.handlers.ResponseHandler;
 import com.bukhmastov.cdoitmo.network.model.Client;
-import com.bukhmastov.cdoitmo.parse.UserDataParse;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Storage;
 import com.bukhmastov.cdoitmo.util.StoragePref;
 import com.bukhmastov.cdoitmo.util.TextUtils;
 import com.bukhmastov.cdoitmo.util.Thread;
 import com.bukhmastov.cdoitmo.util.Time;
-
-import org.json.JSONObject;
+import com.bukhmastov.cdoitmo.util.singleton.StringUtils;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -89,52 +92,43 @@ public class DeIfmoClientImpl extends DeIfmoClient {
                     get(context, "servlet/distributedCDE?Rule=editPersonProfile", null, new ResponseHandler() {
                         @Override
                         public void onSuccess(final int statusCode, final Headers headers, final String response) {
-                            log.v(TAG, "check | success | going to parse user data");
-                            thread.run(thread.BACKGROUND, () -> new UserDataParse(response, result -> {
-                                if (result != null) {
-                                    log.v(TAG, "check | success | parsed");
-                                    String name = textUtils.get().getStringSafely(result, "name", "");
-                                    String avatar = textUtils.get().getStringSafely(result, "avatar", "");
-                                    String group = textUtils.get().getStringSafely(result, "group", "");
-                                    String pref_group_force_override = storagePref.get(context, "pref_group_force_override", "");
-                                    if (pref_group_force_override == null) {
-                                        pref_group_force_override = "";
-                                    } else {
-                                        pref_group_force_override = pref_group_force_override.trim();
-                                    }
-                                    String[] groups = (pref_group_force_override.isEmpty() ? group : pref_group_force_override).split(",\\s|\\s|,");
-                                    String g = storage.get(context, Storage.PERMANENT, Storage.USER, "user#group");
-                                    boolean gFound = false;
-                                    for (String g1 : groups) {
-                                        if (g1.equals(g)) {
-                                            gFound = true;
-                                            break;
-                                        }
-                                    }
-                                    if (!gFound) {
-                                        g = groups.length > 0 ? groups[0] : "";
-                                    }
-                                    storage.put(context, Storage.PERMANENT, Storage.USER, "user#name", name);
-                                    storage.put(context, Storage.PERMANENT, Storage.USER, "user#group", g);
-                                    storage.put(context, Storage.PERMANENT, Storage.USER, "user#groups", android.text.TextUtils.join(", ", groups));
-                                    storage.put(context, Storage.PERMANENT, Storage.USER, "user#avatar", avatar);
-                                    try {
-                                        storage.put(context, Storage.PERMANENT, Storage.GLOBAL, "user#week", new JSONObject()
-                                                .put("week", Integer.parseInt(result.getString("week")))
-                                                .put("timestamp", time.get().getCalendar().getTimeInMillis())
-                                                .toString()
-                                        );
-                                    } catch (Exception e) {
-                                        log.exception(e);
-                                        storage.delete(context, Storage.PERMANENT, Storage.GLOBAL, "user#week");
-                                    }
-                                    firebaseAnalyticsProvider.get().setUserProperties(context, group);
-                                    responseHandler.onSuccess(200, headers, "");
-                                } else {
+                            thread.run(Thread.BACKGROUND, () -> {
+                                UserData userData = new UserDataParser(response).parse();
+                                if (userData == null) {
                                     log.v(TAG, "check | success | not parsed");
                                     responseHandler.onSuccess(200, headers, "");
+                                    return;
                                 }
-                            }).run());
+                                log.v(TAG, "check | success | parsed");
+                                String overrideGroup = storagePref.get(context, "pref_group_force_override", "");
+                                String[] groups = (StringUtils.isBlank(overrideGroup) ? userData.getGroup() : overrideGroup.trim()).split(",\\s|\\s|,");
+                                String group = storage.get(context, Storage.PERMANENT, Storage.USER, "user#group");
+                                boolean gFound = false;
+                                for (String g1 : groups) {
+                                    if (g1.equals(group)) {
+                                        gFound = true;
+                                        break;
+                                    }
+                                }
+                                if (!gFound) {
+                                    group = groups.length > 0 ? groups[0] : "";
+                                }
+                                storage.put(context, Storage.PERMANENT, Storage.USER, "user#name", userData.getName());
+                                storage.put(context, Storage.PERMANENT, Storage.USER, "user#group", group);
+                                storage.put(context, Storage.PERMANENT, Storage.USER, "user#groups", android.text.TextUtils.join(", ", groups));
+                                storage.put(context, Storage.PERMANENT, Storage.USER, "user#avatar", userData.getAvatar());
+                                try {
+                                    storage.put(context, Storage.PERMANENT, Storage.GLOBAL, "user#week", new UserWeek(
+                                            userData.getWeek(),
+                                            time.get().getTimeInMillis()
+                                    ).toJsonString());
+                                } catch (Exception e) {
+                                    log.exception(e);
+                                    storage.delete(context, Storage.PERMANENT, Storage.GLOBAL, "user#week");
+                                }
+                                firebaseAnalyticsProvider.get().setUserProperties(context, group);
+                                responseHandler.onSuccess(200, headers, "");
+                            });
                         }
                         @Override
                         public void onProgress(int state) {}
@@ -178,11 +172,11 @@ public class DeIfmoClientImpl extends DeIfmoClient {
                 params.put("Rule", "LOGON");
                 params.put("LOGIN", login);
                 params.put("PASSWD", password);
-                p(context, getAbsoluteUrl(DEFAULT_PROTOCOL, "servlet"), params, new RawHandler() {
+                doPost(context, getAbsoluteUrl(DEFAULT_PROTOCOL, "servlet"), params, new RawHandler() {
                     @Override
                     public void onDone(final int code, final okhttp3.Headers headers, final String response) {
                         //noinspection Convert2Lambda
-                        thread.run(thread.BACKGROUND, new Runnable() {
+                        thread.run(thread.BACKGROUND, new ThrowingRunnable() {
                             @Override
                             public void run() {
                                 log.v(TAG, "authorize | success | code=", code);
@@ -191,53 +185,54 @@ public class DeIfmoClientImpl extends DeIfmoClient {
                                     responseHandler.onFailure(code, new Headers(headers), FAILED_SERVER_ERROR);
                                     return;
                                 }
-                                try {
-                                    if (response == null) {
-                                        throw new NullPointerException("data cannot be null");
-                                    }
-                                    if (response.contains("Access is forbidden") && response.contains("Invalid login/password")) {
-                                        log.v(TAG, "authorize | success | FAILED_AUTH_CREDENTIALS_FAILED");
-                                        responseHandler.onFailure(code, new Headers(headers), FAILED_AUTH_CREDENTIALS_FAILED);
-                                    } else if (response.contains("Выбор группы безопасности") && response.contains("OPTION VALUE=8")) {
-                                        log.v(TAG, "authorize | success | going to select security group");
-                                        g(context, getAbsoluteUrl(DEFAULT_PROTOCOL, "servlet/distributedCDE?Rule=APPLYSECURITYGROUP&PERSON=" + storage.get(context, Storage.PERMANENT, Storage.USER, "user#deifmo#login") + "&SECURITYGROUP=8&COMPNAME="), null, new RawHandler() {
-                                            @Override
-                                            public void onDone(final int code, final okhttp3.Headers headers, final String response) {
-                                                thread.run(thread.BACKGROUND, () -> {
-                                                    if (code == 200) {
-                                                        log.v(TAG, "authorize | success | security group | authorized | statusCode=" + code);
-                                                        responseHandler.onProgress(STATE_AUTHORIZED);
-                                                        responseHandler.onSuccess(code, new Headers(headers), "authorized");
-                                                    } else {
-                                                        log.v(TAG, "authorize | success | security group | FAILED | statusCode=", code, response != null ? " | response=" + response : "");
-                                                        responseHandler.onFailure(code, new Headers(headers), code >= 400 ? FAILED_SERVER_ERROR : FAILED_AUTH_TRY_AGAIN);
-                                                    }
-                                                });
-                                            }
-                                            @Override
-                                            public void onError(final int code, final okhttp3.Headers headers, final Throwable throwable) {
-                                                thread.run(thread.BACKGROUND, () -> {
-                                                    log.v(TAG, "authorize | success | security group | FAILED | statusCode=", code, " | throwable=", throwable);
+                                if (response == null) {
+                                    throw new NullPointerException("data cannot be null");
+                                }
+                                if (response.contains("Access is forbidden") && response.contains("Invalid login/password")) {
+                                    log.v(TAG, "authorize | success | FAILED_AUTH_CREDENTIALS_FAILED");
+                                    responseHandler.onFailure(code, new Headers(headers), FAILED_AUTH_CREDENTIALS_FAILED);
+                                } else if (response.contains("Выбор группы безопасности") && response.contains("OPTION VALUE=8")) {
+                                    log.v(TAG, "authorize | success | going to select security group");
+                                    doGet(context, getAbsoluteUrl(DEFAULT_PROTOCOL, "servlet/distributedCDE?Rule=APPLYSECURITYGROUP&PERSON=" + storage.get(context, Storage.PERMANENT, Storage.USER, "user#deifmo#login") + "&SECURITYGROUP=8&COMPNAME="), null, new RawHandler() {
+                                        @Override
+                                        public void onDone(final int code, final okhttp3.Headers headers, final String response) {
+                                            thread.run(thread.BACKGROUND, () -> {
+                                                if (code == 200) {
+                                                    log.v(TAG, "authorize | success | security group | authorized | statusCode=" + code);
+                                                    responseHandler.onProgress(STATE_AUTHORIZED);
+                                                    responseHandler.onSuccess(code, new Headers(headers), "authorized");
+                                                } else {
+                                                    log.v(TAG, "authorize | success | security group | FAILED | statusCode=", code, response != null ? " | response=" + response : "");
                                                     responseHandler.onFailure(code, new Headers(headers), code >= 400 ? FAILED_SERVER_ERROR : FAILED_AUTH_TRY_AGAIN);
-                                                });
-                                            }
-                                            @Override
-                                            public void onNewRequest(Request request) {
-                                                responseHandler.onNewRequest(request);
-                                            }
-                                        });
-                                    } else if (response.contains("Обучение и аттестация")) {
-                                        log.v(TAG, "authorize | success | authorized");
-                                        responseHandler.onProgress(STATE_AUTHORIZED);
-                                        responseHandler.onSuccess(code, new Headers(headers), "authorized");
-                                    } else {
-                                        log.v(TAG, "authorize | success | FAILED_AUTH_TRY_AGAIN");
-                                        responseHandler.onFailure(code, new Headers(headers), FAILED_AUTH_TRY_AGAIN);
-                                    }
-                                } catch (Exception e) {
-                                    log.exception(e);
+                                                }
+                                            });
+                                        }
+                                        @Override
+                                        public void onError(final int code, final okhttp3.Headers headers, final Throwable throwable) {
+                                            thread.run(thread.BACKGROUND, () -> {
+                                                log.v(TAG, "authorize | success | security group | FAILED | statusCode=", code, " | throwable=", throwable);
+                                                responseHandler.onFailure(code, new Headers(headers), code >= 400 ? FAILED_SERVER_ERROR : FAILED_AUTH_TRY_AGAIN);
+                                            });
+                                        }
+                                        @Override
+                                        public void onNewRequest(Request request) {
+                                            responseHandler.onNewRequest(request);
+                                        }
+                                    });
+                                } else if (response.contains("Обучение и аттестация")) {
+                                    log.v(TAG, "authorize | success | authorized");
+                                    responseHandler.onProgress(STATE_AUTHORIZED);
+                                    responseHandler.onSuccess(code, new Headers(headers), "authorized");
+                                } else {
+                                    log.v(TAG, "authorize | success | FAILED_AUTH_TRY_AGAIN");
                                     responseHandler.onFailure(code, new Headers(headers), FAILED_AUTH_TRY_AGAIN);
                                 }
+                            }
+                        }, new ThrowingConsumer<Throwable, Throwable>() {
+                            @Override
+                            public void accept(Throwable throwable) {
+                                log.exception(throwable);
+                                responseHandler.onFailure(code, new Headers(headers), FAILED_AUTH_TRY_AGAIN);
                             }
                         });
                     }
@@ -304,53 +299,54 @@ public class DeIfmoClientImpl extends DeIfmoClient {
                     return;
                 }
                 responseHandler.onProgress(STATE_HANDLING);
-                g(context, getAbsoluteUrl(protocol, url), query, new RawHandler() {
+                doGet(context, getAbsoluteUrl(protocol, url), query, new RawHandler() {
                     @Override
                     public void onDone(final int code, final okhttp3.Headers headers, final String response) {
                         //noinspection Convert2Lambda
-                        thread.run(thread.BACKGROUND, new Runnable() {
+                        thread.run(thread.BACKGROUND, new ThrowingRunnable() {
                             @Override
                             public void run() {
                                 log.v(TAG, "get | url=", url, " | success | statusCode=", code);
-                                try {
-                                    if (code >= 400) {
-                                        responseHandler.onFailure(code, new Headers(headers), FAILED_SERVER_ERROR);
-                                        return;
-                                    }
-                                    if (response == null) {
-                                        throw new NullPointerException("data cannot be null");
-                                    }
-                                    if (response.contains("Закончился интервал неактивности") || response.contains("Доступ запрещен")) {
-                                        log.v(TAG, "get | url=", url, " | success | auth required");
-                                        if (!App.UNAUTHORIZED_MODE && reAuth) {
-                                            authorize(context, new ResponseHandler() {
-                                                @Override
-                                                public void onSuccess(int statusCode, Headers headers, String response) {
-                                                    get(context, protocol, url, query, responseHandler, true);
-                                                }
-                                                @Override
-                                                public void onProgress(int state) {
-                                                    responseHandler.onProgress(state);
-                                                }
-                                                @Override
-                                                public void onFailure(int statusCode, Headers headers, int state) {
-                                                    responseHandler.onFailure(statusCode, headers, state);
-                                                }
-                                                @Override
-                                                public void onNewRequest(Request request) {
-                                                    responseHandler.onNewRequest(request);
-                                                }
-                                            });
-                                        } else {
-                                            responseHandler.onFailure(code, new Headers(headers), FAILED_AUTH_CREDENTIALS_REQUIRED);
-                                        }
-                                    } else {
-                                        responseHandler.onSuccess(code, new Headers(headers), response);
-                                    }
-                                } catch (Exception e) {
-                                    log.exception(e);
-                                    responseHandler.onFailure(code, new Headers(headers), FAILED_TRY_AGAIN);
+                                if (code >= 400) {
+                                    responseHandler.onFailure(code, new Headers(headers), FAILED_SERVER_ERROR);
+                                    return;
                                 }
+                                if (response == null) {
+                                    throw new NullPointerException("data cannot be null");
+                                }
+                                if (response.contains("Закончился интервал неактивности") || response.contains("Доступ запрещен")) {
+                                    log.v(TAG, "get | url=", url, " | success | auth required");
+                                    if (!App.UNAUTHORIZED_MODE && reAuth) {
+                                        authorize(context, new ResponseHandler() {
+                                            @Override
+                                            public void onSuccess(int statusCode, Headers headers, String response) {
+                                                get(context, protocol, url, query, responseHandler, true);
+                                            }
+                                            @Override
+                                            public void onProgress(int state) {
+                                                responseHandler.onProgress(state);
+                                            }
+                                            @Override
+                                            public void onFailure(int statusCode, Headers headers, int state) {
+                                                responseHandler.onFailure(statusCode, headers, state);
+                                            }
+                                            @Override
+                                            public void onNewRequest(Request request) {
+                                                responseHandler.onNewRequest(request);
+                                            }
+                                        });
+                                    } else {
+                                        responseHandler.onFailure(code, new Headers(headers), FAILED_AUTH_CREDENTIALS_REQUIRED);
+                                    }
+                                } else {
+                                    responseHandler.onSuccess(code, new Headers(headers), response);
+                                }
+                            }
+                        }, new ThrowingConsumer<Throwable, Throwable>() {
+                            @Override
+                            public void accept(Throwable throwable) {
+                                log.exception(throwable);
+                                responseHandler.onFailure(code, new Headers(headers), FAILED_TRY_AGAIN);
                             }
                         });
                     }
@@ -410,52 +406,53 @@ public class DeIfmoClientImpl extends DeIfmoClient {
                     return;
                 }
                 responseHandler.onProgress(STATE_HANDLING);
-                p(context, getAbsoluteUrl(protocol, url), params, new RawHandler() {
+                doPost(context, getAbsoluteUrl(protocol, url), params, new RawHandler() {
                     @Override
                     public void onDone(final int code, final okhttp3.Headers headers, final String response) {
                         //noinspection Convert2Lambda
-                        thread.run(thread.BACKGROUND, new Runnable() {
+                        thread.run(thread.BACKGROUND, new ThrowingRunnable() {
                             @Override
                             public void run() {
                                 log.v(TAG, "post | url=", url, " | success | statusCode=", code);
-                                try {
-                                    if (code >= 400) {
-                                        responseHandler.onFailure(code, new Headers(headers), FAILED_SERVER_ERROR);
-                                        return;
-                                    }
-                                    if (response == null)
-                                        throw new NullPointerException("data cannot be null");
-                                    if (response.contains("Закончился интервал неактивности") || response.contains("Доступ запрещен")) {
-                                        log.v(TAG, "post | url=", url, " | success | auth required");
-                                        if (!App.UNAUTHORIZED_MODE) {
-                                            authorize(context, new ResponseHandler() {
-                                                @Override
-                                                public void onSuccess(int statusCode, Headers headers, String response) {
-                                                    post(context, protocol, url, params, responseHandler);
-                                                }
-                                                @Override
-                                                public void onProgress(int state) {
-                                                    responseHandler.onProgress(state);
-                                                }
-                                                @Override
-                                                public void onFailure(int statusCode, Headers headers, int state) {
-                                                    responseHandler.onFailure(statusCode, headers, state);
-                                                }
-                                                @Override
-                                                public void onNewRequest(Request request) {
-                                                    responseHandler.onNewRequest(request);
-                                                }
-                                            });
-                                        } else {
-                                            responseHandler.onFailure(code, new Headers(headers), FAILED_AUTH_CREDENTIALS_REQUIRED);
-                                        }
-                                    } else {
-                                        responseHandler.onSuccess(code, new Headers(headers), response);
-                                    }
-                                } catch (Exception e) {
-                                    log.exception(e);
-                                    responseHandler.onFailure(code, new Headers(headers), FAILED_TRY_AGAIN);
+                                if (code >= 400) {
+                                    responseHandler.onFailure(code, new Headers(headers), FAILED_SERVER_ERROR);
+                                    return;
                                 }
+                                if (response == null)
+                                    throw new NullPointerException("data cannot be null");
+                                if (response.contains("Закончился интервал неактивности") || response.contains("Доступ запрещен")) {
+                                    log.v(TAG, "post | url=", url, " | success | auth required");
+                                    if (!App.UNAUTHORIZED_MODE) {
+                                        authorize(context, new ResponseHandler() {
+                                            @Override
+                                            public void onSuccess(int statusCode, Headers headers, String response) {
+                                                post(context, protocol, url, params, responseHandler);
+                                            }
+                                            @Override
+                                            public void onProgress(int state) {
+                                                responseHandler.onProgress(state);
+                                            }
+                                            @Override
+                                            public void onFailure(int statusCode, Headers headers, int state) {
+                                                responseHandler.onFailure(statusCode, headers, state);
+                                            }
+                                            @Override
+                                            public void onNewRequest(Request request) {
+                                                responseHandler.onNewRequest(request);
+                                            }
+                                        });
+                                    } else {
+                                        responseHandler.onFailure(code, new Headers(headers), FAILED_AUTH_CREDENTIALS_REQUIRED);
+                                    }
+                                } else {
+                                    responseHandler.onSuccess(code, new Headers(headers), response);
+                                }
+                            }
+                        }, new ThrowingConsumer<Throwable, Throwable>() {
+                            @Override
+                            public void accept(Throwable throwable) throws Throwable {
+                                log.exception(throwable);
+                                responseHandler.onFailure(code, new Headers(headers), FAILED_TRY_AGAIN);
                             }
                         });
                     }

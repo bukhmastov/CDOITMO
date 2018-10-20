@@ -1,11 +1,11 @@
 package com.bukhmastov.cdoitmo.object;
 
-import org.json.JSONObject;
-
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
 import android.support.annotation.IntDef;
+
+import com.bukhmastov.cdoitmo.model.schedule.teachers.STeachers;
 
 public interface TeacherSearch {
 
@@ -15,7 +15,7 @@ public interface TeacherSearch {
 
     interface TeacherSearchCallback {
         void onState(@State int state);
-        void onSuccess(JSONObject json);
+        void onSuccess(STeachers teachers);
     }
 
     @Retention(RetentionPolicy.SOURCE)

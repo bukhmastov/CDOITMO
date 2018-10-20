@@ -6,6 +6,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.LayoutRes;
 import android.support.annotation.Nullable;
+import android.support.annotation.StringRes;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.widget.SwipeRefreshLayout;
@@ -22,35 +23,47 @@ import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.App;
 import com.bukhmastov.cdoitmo.R;
+import com.bukhmastov.cdoitmo.activity.UniversityPersonCardActivity;
+import com.bukhmastov.cdoitmo.adapter.rva.RVA;
 import com.bukhmastov.cdoitmo.adapter.rva.RecyclerViewOnScrollListener;
 import com.bukhmastov.cdoitmo.adapter.rva.university.UniversityFacultiesRVA;
 import com.bukhmastov.cdoitmo.adapter.rva.university.UniversityRVA;
 import com.bukhmastov.cdoitmo.event.bus.EventBus;
 import com.bukhmastov.cdoitmo.event.bus.annotation.Event;
 import com.bukhmastov.cdoitmo.event.events.ClearCacheEvent;
+import com.bukhmastov.cdoitmo.event.events.OpenActivityEvent;
 import com.bukhmastov.cdoitmo.event.events.OpenIntentEvent;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.fragment.presenter.UniversityFacultiesFragmentPresenter;
+import com.bukhmastov.cdoitmo.model.rva.RVASingleValue;
+import com.bukhmastov.cdoitmo.model.university.faculties.UDivision;
+import com.bukhmastov.cdoitmo.model.university.faculties.UFaculties;
+import com.bukhmastov.cdoitmo.model.university.faculties.UStructure;
+import com.bukhmastov.cdoitmo.model.university.faculties.UStructureInfo;
 import com.bukhmastov.cdoitmo.network.IfmoRestClient;
 import com.bukhmastov.cdoitmo.network.handlers.RestResponseHandler;
 import com.bukhmastov.cdoitmo.network.model.Client;
 import com.bukhmastov.cdoitmo.util.Log;
+import com.bukhmastov.cdoitmo.util.NotificationMessage;
 import com.bukhmastov.cdoitmo.util.Static;
 import com.bukhmastov.cdoitmo.util.Storage;
 import com.bukhmastov.cdoitmo.util.StoragePref;
 import com.bukhmastov.cdoitmo.util.Thread;
 import com.bukhmastov.cdoitmo.util.Time;
+import com.bukhmastov.cdoitmo.util.singleton.CollectionUtils;
 import com.bukhmastov.cdoitmo.util.singleton.Color;
-import com.bukhmastov.cdoitmo.util.singleton.JsonUtils;
+import com.bukhmastov.cdoitmo.util.singleton.StringUtils;
 
 import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.Collection;
 
 import javax.inject.Inject;
+
+import dagger.Lazy;
 
 public class UniversityFacultiesFragmentPresenterImpl implements UniversityFacultiesFragmentPresenter, SwipeRefreshLayout.OnRefreshListener {
 
@@ -61,7 +74,7 @@ public class UniversityFacultiesFragmentPresenterImpl implements UniversityFacul
     private Client.Request requestHandle = null;
     private boolean loaded = false;
     private final ArrayList<String> stack = new ArrayList<>();
-    private final ArrayMap<String, String> history = new ArrayMap<>();
+    private final ArrayMap<String, UFaculties> history = new ArrayMap<>();
     private UniversityFacultiesRVA facultiesRecyclerViewAdapter = null;
     private long timestamp = 0;
 
@@ -83,6 +96,8 @@ public class UniversityFacultiesFragmentPresenterImpl implements UniversityFacul
     Time time;
     @Inject
     FirebaseAnalyticsProvider firebaseAnalyticsProvider;
+    @Inject
+    Lazy<NotificationMessage> notificationMessage;
 
     public UniversityFacultiesFragmentPresenterImpl() {
         AppComponentProvider.getComponent().inject(this);
@@ -116,20 +131,24 @@ public class UniversityFacultiesFragmentPresenterImpl implements UniversityFacul
 
     @Override
     public void onResume() {
-        log.v(TAG, "Fragment resumed");
-        firebaseAnalyticsProvider.setCurrentScreen(activity, fragment);
-        if (!loaded) {
-            loaded = true;
-            load();
-        }
+        thread.run(() -> {
+            log.v(TAG, "Fragment resumed");
+            firebaseAnalyticsProvider.setCurrentScreen(activity, fragment);
+            if (!loaded) {
+                loaded = true;
+                load();
+            }
+        });
     }
 
     @Override
     public void onPause() {
-        log.v(TAG, "Fragment paused");
-        if (requestHandle != null && requestHandle.cancel()) {
-            loaded = false;
-        }
+        thread.run(() -> {
+            log.v(TAG, "Fragment paused");
+            if (requestHandle != null && requestHandle.cancel()) {
+                loaded = false;
+            }
+        });
     }
 
     @Override
@@ -151,160 +170,137 @@ public class UniversityFacultiesFragmentPresenterImpl implements UniversityFacul
 
     private void load(final int refresh_rate) {
         thread.run(() -> {
-            log.v(TAG, "load | refresh_rate=" + refresh_rate);
+            log.v(TAG, "load | refresh_rate=", refresh_rate);
             String fid = stack.size() == 0 ? "0" : stack.get(stack.size() - 1);
-            if (storagePref.get(activity, "pref_use_cache", true) && storagePref.get(activity, "pref_use_university_cache", false)) {
-                String cache = storage.get(activity, Storage.CACHE, Storage.GLOBAL, "university#faculties#" + fid).trim();
-                if (!cache.isEmpty()) {
-                    try {
-                        JSONObject cacheJson = new JSONObject(cache);
-                        timestamp = cacheJson.getLong("timestamp");
-                        if (timestamp + refresh_rate * 3600000L < time.getCalendar().getTimeInMillis()) {
-                            load(true, cache);
-                        } else {
-                            load(false, cache);
-                        }
-                    } catch (JSONException e) {
-                        log.exception(e);
-                        load(true, cache);
-                    }
-                } else {
-                    load(false);
-                }
-            } else {
+            if (!(storagePref.get(activity, "pref_use_cache", true) && storagePref.get(activity, "pref_use_university_cache", false))) {
                 load(false);
+                return;
             }
+            UFaculties cache = getFromCache(fid);
+            if (cache == null) {
+                load(true);
+                return;
+            }
+            timestamp = cache.getTimestamp();
+            if (cache.getTimestamp() + refresh_rate * 3600000L < time.getTimeInMillis()) {
+                load(true, cache);
+            } else {
+                load(false, cache);
+            }
+        }, throwable -> {
+            loadFailed();
         });
     }
 
     private void load(final boolean force) {
-        thread.run(() -> load(force, ""));
+        thread.run(() -> load(force, null));
     }
 
-    private void load(final boolean force, final String cache) {
+    private void load(final boolean force, final UFaculties cached) {
         thread.run(() -> {
-            log.v(TAG, "load | force=" + (force ? "true" : "false"));
-            final String fid = stack.size() == 0 ? "0" : stack.get(stack.size() - 1);
+            log.v(TAG, "load | force=", force);
+            String fid = stack.size() == 0 ? "0" : stack.get(stack.size() - 1);
             if (!force && history.containsKey(fid)) {
-                try {
-                    log.v(TAG, "load | from local cache");
-                    String local = history.get(fid);
-                    JSONObject localObj = new JSONObject(local);
-                    timestamp = time.getCalendar().getTimeInMillis();
-                    display(localObj);
-                    return;
-                } catch (Exception e) {
-                    log.v(TAG, "load | failed to load from local cache");
-                    history.remove(fid);
-                }
+                log.v(TAG, "load | from local cache");
+                timestamp = time.getTimeInMillis();
+                display(history.get(fid));
+                return;
             }
             if ((!force || !Client.isOnline(activity)) && storagePref.get(activity, "pref_use_cache", true) && storagePref.get(activity, "pref_use_university_cache", false)) {
-                try {
-                    String c = cache.isEmpty() ? storage.get(activity, Storage.CACHE, Storage.GLOBAL, "university#faculties#" + fid).trim() : cache;
-                    if (!c.isEmpty()) {
-                        log.v(TAG, "load | from cache");
-                        display(new JSONObject(c).getJSONObject("data"));
-                        return;
-                    }
-                } catch (Exception e) {
-                    log.v(TAG, "load | failed to load from cache");
-                    storage.delete(activity, Storage.CACHE, Storage.GLOBAL, "university#faculties#" + fid);
+                UFaculties cache = cached == null ? getFromCache(fid) : cached;
+                if (cache != null) {
+                    log.v(TAG, "load | from cache");
+                    display(cache);
+                    return;
                 }
             }
-            if (!App.OFFLINE_MODE) {
-                loadProvider(new RestResponseHandler() {
-                    @Override
-                    public void onSuccess(final int statusCode, final Client.Headers headers, final JSONObject json, final JSONArray responseArr) {
-                        thread.run(() -> {
-                            if (statusCode == 200) {
-                                long now = time.getCalendar().getTimeInMillis();
-                                if (json != null && storagePref.get(activity, "pref_use_cache", true) && storagePref.get(activity, "pref_use_university_cache", false)) {
-                                    try {
-                                        storage.put(activity, Storage.CACHE, Storage.GLOBAL, "university#faculties#" + fid, new JSONObject()
-                                                .put("timestamp", now)
-                                                .put("data", json)
-                                                .toString()
-                                        );
-                                    } catch (JSONException e) {
-                                        log.exception(e);
-                                    }
-                                }
-                                timestamp = now;
-                                if (json != null) {
-                                    history.put(fid, json.toString());
-                                }
-                                display(json);
-                            } else {
-                                loadFailed();
-                            }
-                        });
-                    }
-                    @Override
-                    public void onFailure(final int statusCode, final Client.Headers headers, final int state) {
-                        thread.runOnUI(() -> {
-                            log.v(TAG, "forceLoad | failure " + state);
-                            switch (state) {
-                                case IfmoRestClient.FAILED_OFFLINE:
-                                    draw(R.layout.state_offline_text);
-                                    if (activity != null) {
-                                        View offline_reload = container.findViewById(R.id.offline_reload);
-                                        if (offline_reload != null) {
-                                            offline_reload.setOnClickListener(v -> load());
-                                        }
-                                    }
-                                    break;
-                                case IfmoRestClient.FAILED_CORRUPTED_JSON:
-                                case IfmoRestClient.FAILED_SERVER_ERROR:
-                                case IfmoRestClient.FAILED_TRY_AGAIN:
-                                    draw(R.layout.state_failed_button);
-                                    TextView try_again_message = activity.findViewById(R.id.try_again_message);
-                                    if (try_again_message != null) {
-                                        switch (state) {
-                                            case IfmoRestClient.FAILED_SERVER_ERROR:   try_again_message.setText(IfmoRestClient.getFailureMessage(activity, statusCode)); break;
-                                            case IfmoRestClient.FAILED_CORRUPTED_JSON: try_again_message.setText(R.string.server_provided_corrupted_json); break;
-                                        }
-                                    }
-                                    if (activity != null) {
-                                        View try_again_reload = container.findViewById(R.id.try_again_reload);
-                                        if (try_again_reload != null) {
-                                            try_again_reload.setOnClickListener(v -> load());
-                                        }
-                                    }
-                                    break;
-                            }
-                        });
-                    }
-                    @Override
-                    public void onProgress(final int state) {
-                        thread.runOnUI(() -> {
-                            log.v(TAG, "forceLoad | progress " + state);
-                            draw(R.layout.state_loading_text);
-                            if (activity != null) {
-                                TextView loading_message = container.findViewById(R.id.loading_message);
-                                if (loading_message != null) {
-                                    switch (state) {
-                                        case IfmoRestClient.STATE_HANDLING: loading_message.setText(R.string.loading); break;
-                                    }
-                                }
-                            }
-                        });
-                    }
-                    @Override
-                    public void onNewRequest(Client.Request request) {
-                        requestHandle = request;
-                    }
-                });
-            } else {
+            if (App.OFFLINE_MODE) {
                 thread.runOnUI(() -> {
                     draw(R.layout.state_offline_text);
-                    if (activity != null) {
-                        View offline_reload = activity.findViewById(R.id.offline_reload);
-                        if (offline_reload != null) {
-                            offline_reload.setOnClickListener(v -> load());
-                        }
+                    View reload = container.findViewById(R.id.offline_reload);
+                    if (reload != null) {
+                        reload.setOnClickListener(v -> load());
                     }
+                }, throwable -> {
+                    loadFailed();
                 });
+                return;
             }
+            loadProvider(new RestResponseHandler() {
+                @Override
+                public void onSuccess(final int statusCode, final Client.Headers headers, final JSONObject obj, final JSONArray arr) {
+                    thread.run(() -> {
+                        if (statusCode == 200 && obj != null) {
+                            UFaculties data = new UFaculties().fromJson(obj);
+                            data.setTimestamp(time.getTimeInMillis());
+                            if (storagePref.get(activity, "pref_use_cache", true) && storagePref.get(activity, "pref_use_university_cache", false)) {
+                                storage.put(activity, Storage.CACHE, Storage.GLOBAL, "university#faculties#" + fid, data.toJsonString());
+                            }
+                            timestamp = data.getTimestamp();
+                            history.put(fid, data);
+                            display(data);
+                            return;
+                        }
+                        loadFailed();
+                    }, throwable -> {
+                        loadFailed();
+                    });
+                }
+                @Override
+                public void onFailure(final int statusCode, final Client.Headers headers, final int state) {
+                    thread.runOnUI(() -> {
+                        log.v(TAG, "forceLoad | failure ", state);
+                        switch (state) {
+                            case IfmoRestClient.FAILED_OFFLINE: {
+                                draw(R.layout.state_offline_text);
+                                View reload = container.findViewById(R.id.offline_reload);
+                                if (reload != null) {
+                                    reload.setOnClickListener(v -> load());
+                                }
+                                break;
+                            }
+                            case IfmoRestClient.FAILED_CORRUPTED_JSON:
+                            case IfmoRestClient.FAILED_SERVER_ERROR:
+                            case IfmoRestClient.FAILED_TRY_AGAIN: {
+                                draw(R.layout.state_failed_button);
+                                TextView message = activity.findViewById(R.id.try_again_message);
+                                if (message != null) {
+                                    switch (state) {
+                                        case IfmoRestClient.FAILED_SERVER_ERROR:   message.setText(IfmoRestClient.getFailureMessage(activity, statusCode)); break;
+                                        case IfmoRestClient.FAILED_CORRUPTED_JSON: message.setText(R.string.server_provided_corrupted_json); break;
+                                    }
+                                }
+                                View reload = container.findViewById(R.id.try_again_reload);
+                                if (reload != null) {
+                                    reload.setOnClickListener(v -> load());
+                                }
+                                break;
+                            }
+                        }
+                    }, throwable -> {
+                        loadFailed();
+                    });
+                }
+                @Override
+                public void onProgress(final int state) {
+                    thread.runOnUI(() -> {
+                        log.v(TAG, "forceLoad | progress ", state);
+                        draw(R.layout.state_loading_text);
+                        TextView message = container.findViewById(R.id.loading_message);
+                        if (message != null) {
+                            switch (state) {
+                                case IfmoRestClient.STATE_HANDLING: message.setText(R.string.loading); break;
+                            }
+                        }
+                    });
+                }
+                @Override
+                public void onNewRequest(Client.Request request) {
+                    requestHandle = request;
+                }
+            });
+        }, throwable -> {
+            loadFailed();
         });
     }
 
@@ -320,205 +316,232 @@ public class UniversityFacultiesFragmentPresenterImpl implements UniversityFacul
     private void loadFailed() {
         thread.runOnUI(() -> {
             log.v(TAG, "loadFailed");
-            try {
-                draw(R.layout.state_failed_button);
-                TextView try_again_message = container.findViewById(R.id.try_again_message);
-                if (try_again_message != null) try_again_message.setText(R.string.load_failed);
-                View try_again_reload = container.findViewById(R.id.try_again_reload);
-                if (try_again_reload != null) {
-                    try_again_reload.setOnClickListener(v -> load());
-                }
-            } catch (Exception e) {
-                log.exception(e);
+            draw(R.layout.state_failed_button);
+            TextView message = container.findViewById(R.id.try_again_message);
+            if (message != null) {
+                message.setText(R.string.load_failed);
             }
+            View reload = container.findViewById(R.id.try_again_reload);
+            if (reload != null) {
+                reload.setOnClickListener(v -> load());
+            }
+        }, throwable -> {
+            log.exception(throwable);
         });
     }
 
-    private void display(final JSONObject json) {
+    private void display(UFaculties faculties) {
         thread.runOnUI(() -> {
             log.v(TAG, "display");
-            if (json == null) {
+            if (faculties == null) {
                 loadFailed();
                 return;
             }
-            try {
-                JSONObject structure = JsonUtils.getJsonObject(json, "structure");
-                JSONArray divisions = JsonUtils.getJsonArray(json, "divisions");
-                draw(R.layout.layout_university_list_finite);
-                // заголовок
-                if (stack.size() == 0 || structure == null) {
-                    ((ImageView) ((ViewGroup) container.findViewById(R.id.back)).getChildAt(0)).setImageResource(R.drawable.ic_refresh);
-                    container.findViewById(R.id.back).setOnClickListener(v -> load(true));
-                    ((TextView) container.findViewById(R.id.title)).setText(R.string.division_general);
-                    staticUtil.removeView(container.findViewById(R.id.web));
+            draw(R.layout.layout_university_list_finite);
+            // заголовок
+            if (stack.size() == 0 || faculties.getStructure() == null) {
+                ((ImageView) ((ViewGroup) container.findViewById(R.id.back)).getChildAt(0)).setImageResource(R.drawable.ic_refresh);
+                container.findViewById(R.id.back).setOnClickListener(v -> load(true));
+                ((TextView) container.findViewById(R.id.title)).setText(R.string.division_general);
+                staticUtil.removeView(container.findViewById(R.id.web));
+            } else {
+                container.findViewById(R.id.back).setOnClickListener(v -> {
+                    stack.remove(stack.size() - 1);
+                    load();
+                });
+                UStructure structure = faculties.getStructure();
+                if (StringUtils.isNotBlank(structure.getName())) {
+                    ((TextView) container.findViewById(R.id.title)).setText(structure.getName().trim());
                 } else {
-                    container.findViewById(R.id.back).setOnClickListener(v -> {
-                        stack.remove(stack.size() - 1);
-                        load();
-                    });
-                    final String name = JsonUtils.getString(structure, "name");
-                    if (name != null && !name.trim().isEmpty()) {
-                        ((TextView) container.findViewById(R.id.title)).setText(name.trim());
-                    } else {
-                        staticUtil.removeView(container.findViewById(R.id.title));
-                    }
-                    final String type = JsonUtils.getString(structure, "type");
-                    final int id_type = stack.size() > 0 ? JsonUtils.getInt(structure, "id_type", -1) : -1;
-                    final String link = isValid(JsonUtils.getString(structure, "link")) ? JsonUtils.getString(structure, "link") : ((isValid(type) && isValid(id_type)) ? "http://www.ifmo.ru/ru/" + ("faculty".equals(type) ? "viewfaculty" : "viewdepartment") + "/" + id_type + "/" : null);
-                    if (link != null) {
-                        container.findViewById(R.id.web).setOnClickListener(view -> eventBus.fire(new OpenIntentEvent(new Intent(Intent.ACTION_VIEW, Uri.parse(link.trim())))));
-                    } else {
-                        staticUtil.removeView(container.findViewById(R.id.web));
-                    }
+                    staticUtil.removeView(container.findViewById(R.id.title));
                 }
-                // список
-                facultiesRecyclerViewAdapter = new UniversityFacultiesRVA(activity);
-                final RecyclerView finite_list = container.findViewById(R.id.finite_list);
-                if (finite_list != null) {
-                    finite_list.setLayoutManager(new LinearLayoutManager(activity));
-                    finite_list.setAdapter(facultiesRecyclerViewAdapter);
-                    finite_list.addOnScrollListener(new RecyclerViewOnScrollListener(container));
+                String link;
+                if (StringUtils.isNotBlank(structure.getLink())) {
+                    link = structure.getLink();
+                } else if (StringUtils.isNotBlank(structure.getType()) && structure.getTypeId() > 0) {
+                    link = "http://www.ifmo.ru/ru/" + ("faculty".equals(structure.getType()) ? "viewfaculty" : "viewdepartment") + "/" + structure.getTypeId() + "/";
+                } else {
+                    link = null;
                 }
-                displayContent(structure, divisions);
-                if (timestamp > 0 && timestamp + 5000 < time.getCalendar().getTimeInMillis()) {
-                    UniversityRVA.Item item = new UniversityRVA.Item();
-                    item.type = UniversityRVA.TYPE_INFO_ABOUT_UPDATE_TIME;
-                    item.data = new JSONObject().put("title", activity.getString(R.string.update_date) + " " + time.getUpdateTime(activity, timestamp));
-                    facultiesRecyclerViewAdapter.addItem(item);
+                if (StringUtils.isNotBlank(link)) {
+                    container.findViewById(R.id.web).setOnClickListener(view -> thread.run(() -> {
+                        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(link.trim()));
+                        eventBus.fire(new OpenIntentEvent(intent));
+                    }));
+                } else {
+                    staticUtil.removeView(container.findViewById(R.id.web));
                 }
-                // добавляем отступ
-                container.findViewById(R.id.top_panel).post(() -> {
-                    try {
-                        int height = container.findViewById(R.id.top_panel).getHeight();
-                        if (finite_list != null) {
-                            finite_list.setPadding(0, height, 0, 0);
-                            finite_list.scrollToPosition(0);
-                        }
-                        LinearLayout finite_list_info = container.findViewById(R.id.finite_list_info);
-                        if (finite_list_info != null && finite_list_info.getChildCount() > 0) {
-                            finite_list_info.setPadding(0, height, 0, 0);
-                        }
-                    } catch (Exception ignore) {
-                        // ignore
-                    }
-                });
-                // работаем со свайпом
-                SwipeRefreshLayout mSwipeRefreshLayout = container.findViewById(R.id.finite_list_swipe);
-                if (mSwipeRefreshLayout != null) {
-                    mSwipeRefreshLayout.setColorSchemeColors(Color.resolve(activity, R.attr.colorAccent));
-                    mSwipeRefreshLayout.setProgressBackgroundColorSchemeColor(Color.resolve(activity, R.attr.colorBackgroundRefresh));
-                    mSwipeRefreshLayout.setOnRefreshListener(this);
-                }
-            } catch (Exception e) {
-                log.exception(e);
-                loadFailed();
             }
+            // список
+            facultiesRecyclerViewAdapter = new UniversityFacultiesRVA(activity);
+            RecyclerView recyclerView = container.findViewById(R.id.finite_list);
+            if (recyclerView != null) {
+                recyclerView.setLayoutManager(new LinearLayoutManager(activity));
+                recyclerView.setAdapter(facultiesRecyclerViewAdapter);
+                recyclerView.addOnScrollListener(new RecyclerViewOnScrollListener(container));
+            }
+            registerListeners();
+            displayFaculties(faculties);
+            if (timestamp > 0 && timestamp + 5000 < time.getTimeInMillis()) {
+                facultiesRecyclerViewAdapter.addItem(new UniversityRVA.Item<>(
+                        UniversityRVA.TYPE_INFO_ABOUT_UPDATE_TIME,
+                        new RVASingleValue(activity.getString(R.string.update_date) + " " + time.getUpdateTime(activity, timestamp))
+                ));
+            }
+            // добавляем отступ
+            container.findViewById(R.id.top_panel).post(() -> {
+                try {
+                    int height = container.findViewById(R.id.top_panel).getHeight();
+                    if (recyclerView != null) {
+                        recyclerView.setPadding(0, height, 0, 0);
+                        recyclerView.scrollToPosition(0);
+                    }
+                    LinearLayout finite_list_info = container.findViewById(R.id.finite_list_info);
+                    if (finite_list_info != null && finite_list_info.getChildCount() > 0) {
+                        finite_list_info.setPadding(0, height, 0, 0);
+                    }
+                } catch (Exception ignore) {
+                    // ignore
+                }
+            });
+            // работаем со свайпом
+            SwipeRefreshLayout swipe = container.findViewById(R.id.finite_list_swipe);
+            if (swipe != null) {
+                swipe.setColorSchemeColors(Color.resolve(activity, R.attr.colorAccent));
+                swipe.setProgressBackgroundColorSchemeColor(Color.resolve(activity, R.attr.colorBackgroundRefresh));
+                swipe.setOnRefreshListener(this);
+            }
+        }, throwable -> {
+            log.exception(throwable);
+            loadFailed();
         });
     }
 
-    private void displayContent(final JSONObject structure, final JSONArray divisions) {
+    private void displayFaculties(UFaculties faculties) {
         thread.run(() -> {
-            try {
-                final ArrayList<UniversityFacultiesRVA.Item> items = new ArrayList<>();
-                if (structure != null) {
-                    final JSONObject info = JsonUtils.getJsonObject(structure, "info");
-                    if (info != null) {
-                        // основная информация
-                        final String address = JsonUtils.getString(info, "adres");
-                        final String phone = JsonUtils.getString(info, "phone");
-                        final String site = JsonUtils.getString(info, "site");
-                        if (isValid(address) || isValid(phone) || isValid(site)) {
-                            UniversityFacultiesRVA.Item item = new UniversityFacultiesRVA.Item();
-                            item.type = UniversityFacultiesRVA.TYPE_UNIT_STRUCTURE_COMMON;
-                            item.data = new JSONObject()
-                                    .put("header", activity.getString(R.string.faculty_section_general))
-                                    .put("address", isValid(address) ? address : null)
-                                    .put("phone", isValid(phone) ? phone : null)
-                                    .put("site", isValid(site) ? site : null);
-                            items.add(item);
-                        }
-                        // деканат
-                        final String deanery_address = JsonUtils.getString(info, "dekanat_adres");
-                        final String deanery_phone = JsonUtils.getString(info, "dekanat_phone");
-                        final String deanery_email = JsonUtils.getString(info, "dekanat_email");
-                        if (isValid(deanery_address) || isValid(deanery_phone) || isValid(deanery_email)) {
-                            UniversityFacultiesRVA.Item item = new UniversityFacultiesRVA.Item();
-                            item.type = UniversityFacultiesRVA.TYPE_UNIT_STRUCTURE_DEANERY;
-                            item.data = new JSONObject()
-                                    .put("header", activity.getString(R.string.faculty_section_deanery))
-                                    .put("deanery_address", isValid(deanery_address) ? deanery_address : null)
-                                    .put("deanery_phone", isValid(deanery_phone) ? deanery_phone : null)
-                                    .put("deanery_email", isValid(deanery_email) ? deanery_email : null);
-                            items.add(item);
-                        }
-                        // глава
-                        final String head_post = JsonUtils.getString(info, "person_post");
-                        final String head_lastname = JsonUtils.getString(info, "lastname");
-                        final String head_firstname = JsonUtils.getString(info, "firstname");
-                        final String head_middlename = JsonUtils.getString(info, "middlename");
-                        final String head_avatar = JsonUtils.getString(info, "person_avatar");
-                        final String head_degree = JsonUtils.getString(info, "person_degree");
-                        final int head_pid = JsonUtils.getInt(info, "ifmo_person_id", -1);
-                        final String head_email = JsonUtils.getString(info, "email");
-                        if (isValid(head_lastname) || isValid(head_firstname) || isValid(head_middlename) || isValid(head_email)) {
-                            UniversityFacultiesRVA.Item item = new UniversityFacultiesRVA.Item();
-                            item.type = UniversityFacultiesRVA.TYPE_UNIT_STRUCTURE_HEAD;
-                            item.data = new JSONObject()
-                                    .put("header", isValid(head_post) ? head_post : activity.getString(R.string.faculty_section_head))
-                                    .put("head_lastname", isValid(head_lastname) ? head_lastname : null)
-                                    .put("head_firstname", isValid(head_firstname) ? head_firstname : null)
-                                    .put("head_middlename", isValid(head_middlename) ? head_middlename : null)
-                                    .put("head_avatar", isValid(head_avatar) ? head_avatar : null)
-                                    .put("head_degree", isValid(head_degree) ? head_degree : null)
-                                    .put("head_pid", isValid(head_pid) ? head_pid : -1)
-                                    .put("head_email", isValid(head_email) ? head_email : null);
-                            items.add(item);
-                        }
-                    }
+            Collection<RVA.Item> items = new ArrayList<>();
+            if (faculties != null && faculties.getStructure() != null && faculties.getStructure().getStructureInfo() != null) {
+                UStructureInfo structureInfo = faculties.getStructure().getStructureInfo();
+                if (StringUtils.isNotBlank(structureInfo.getAddress()) ||
+                    StringUtils.isNotBlank(structureInfo.getPhone()) ||
+                    StringUtils.isNotBlank(structureInfo.getSite())
+                ) {
+                    items.add(new RVA.Item<>(UniversityFacultiesRVA.TYPE_UNIT_STRUCTURE_COMMON, faculties.getStructure()));
                 }
-                if (divisions != null && divisions.length() > 0) {
-                    // дивизионы
-                    JSONArray d = new JSONArray();
-                    for (int i = 0; i < divisions.length(); i++) {
-                        final JSONObject division = divisions.getJSONObject(i);
-                        d.put(new JSONObject()
-                                .put("title", JsonUtils.getString(division, "name"))
-                                .put("id", JsonUtils.getInt(division, "cis_dep_id", -1))
-                        );
-                    }
-                    UniversityFacultiesRVA.Item item = new UniversityFacultiesRVA.Item();
-                    item.type = UniversityFacultiesRVA.TYPE_UNIT_DIVISIONS;
-                    item.data = new JSONObject()
-                            .put("header", stack.size() == 0 ? null : activity.getString(R.string.faculty_section_divisions))
-                            .put("divisions", d);
-                    items.add(item);
+                if (StringUtils.isNotBlank(structureInfo.getDeaneryAddress()) ||
+                    StringUtils.isNotBlank(structureInfo.getDeaneryPhone()) ||
+                    StringUtils.isNotBlank(structureInfo.getDeaneryEmail())
+                ) {
+                    items.add(new RVA.Item<>(UniversityFacultiesRVA.TYPE_UNIT_STRUCTURE_DEANERY, faculties.getStructure()));
                 }
-                if (items.size() == 0) {
-                    items.add(new UniversityRVA.Item(UniversityFacultiesRVA.TYPE_NO_DATA, null));
+                if (StringUtils.isNotBlank(structureInfo.getPersonPost()) && (
+                    StringUtils.isNotBlank(structureInfo.getLastName()) ||
+                    StringUtils.isNotBlank(structureInfo.getEmail())
+                )) {
+                    items.add(new RVA.Item<>(UniversityFacultiesRVA.TYPE_UNIT_STRUCTURE_HEAD, faculties.getStructure()));
                 }
-                thread.runOnUI(() -> {
-                    if (facultiesRecyclerViewAdapter != null) {
-                        facultiesRecyclerViewAdapter.setOnDivisionClickListener(dep_id -> {
-                            stack.add(String.valueOf(dep_id));
-                            load();
-                        });
-                        facultiesRecyclerViewAdapter.addItem(items);
-                    }
-                });
-            } catch (Exception e) {
-                log.exception(e);
-                loadFailed();
             }
+            if (faculties != null && CollectionUtils.isNotEmpty(faculties.getDivisions())) {
+                items.add(new RVA.Item<>(UniversityFacultiesRVA.TYPE_UNIT_DIVISIONS, faculties));
+            }
+            if (items.size() == 0) {
+                items.add(new UniversityFacultiesRVA.Item(UniversityFacultiesRVA.TYPE_NO_DATA));
+            }
+            thread.runOnUI(() -> {
+                if (facultiesRecyclerViewAdapter != null) {
+                    facultiesRecyclerViewAdapter.addItems(items);
+                }
+            });
+        }, throwable -> {
+            log.exception(throwable);
+            loadFailed();
         });
-
     }
 
-    private boolean isValid(String text) {
-        return text != null && !text.trim().isEmpty();
+    private void registerListeners() {
+        if (facultiesRecyclerViewAdapter == null) {
+            return;
+        }
+        facultiesRecyclerViewAdapter.clearClickListeners();
+        facultiesRecyclerViewAdapter.setClickListener(R.id.division, (v, entity) -> {
+            thread.run(() -> {
+                if (!(entity.getEntity() instanceof UDivision)) {
+                    return;
+                }
+                int cisDepId = ((UDivision) entity.getEntity()).getCisDepId();
+                stack.add(String.valueOf(cisDepId));
+                load();
+            }, throwable -> {
+                showSnackBar(R.string.something_went_wrong);
+            });
+        });
+        facultiesRecyclerViewAdapter.setClickListener(R.id.university_tile_map, (v, entity) -> {
+            thread.run(() -> {
+                Uri uri = Uri.parse("geo:0,0?q=" + entity.getValueString());
+                Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+                eventBus.fire(new OpenIntentEvent(intent));
+            }, throwable -> {
+                showSnackBar(R.string.failed_to_start_geo_activity);
+            });
+        });
+        facultiesRecyclerViewAdapter.setClickListener(R.id.university_tile_phone, (v, entity) -> {
+            thread.run(() -> {
+                Intent intent = new Intent(Intent.ACTION_DIAL, Uri.parse("tel:" + entity.getValueString()));
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                eventBus.fire(new OpenIntentEvent(intent));
+            }, throwable -> {
+                showSnackBar(R.string.something_went_wrong);
+            });
+        });
+        facultiesRecyclerViewAdapter.setClickListener(R.id.university_tile_web, (v, entity) -> {
+            thread.run(() -> {
+                Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(entity.getValueString()));
+                eventBus.fire(new OpenIntentEvent(intent));
+            }, throwable -> {
+                showSnackBar(R.string.something_went_wrong);
+            });
+        });
+        facultiesRecyclerViewAdapter.setClickListener(R.id.university_tile_mail, (v, entity) -> {
+            thread.run(() -> {
+                Intent intent = new Intent(Intent.ACTION_SEND);
+                intent.setType("message/rfc822");
+                intent.putExtra(Intent.EXTRA_EMAIL, new String[]{entity.getValueString()});
+                Intent chooser = Intent.createChooser(intent, activity.getString(R.string.send_mail) + "...");
+                eventBus.fire(new OpenIntentEvent(chooser));
+            }, throwable -> {
+                showSnackBar(R.string.something_went_wrong);
+            });
+        });
+        facultiesRecyclerViewAdapter.setClickListener(R.id.university_tile_person, (v, entity) -> {
+            thread.run(() -> {
+                Bundle extras = new Bundle();
+                extras.putInt("pid", entity.getValueInteger());
+                eventBus.fire(new OpenActivityEvent(UniversityPersonCardActivity.class, extras));
+            }, throwable -> {
+                showSnackBar(R.string.something_went_wrong);
+            });
+        });
     }
 
-    private boolean isValid(int number) {
-        return number >= 0;
+    private void showSnackBar(@StringRes int res) {
+        if (activity == null) {
+            return;
+        }
+        notificationMessage.get().snackBar(activity, activity.getString(res));
+    }
+
+    private UFaculties getFromCache(String fid) {
+        thread.assertNotUI();
+        String cache = storage.get(activity, Storage.CACHE, Storage.GLOBAL, "university#faculties#" + fid).trim();
+        if (StringUtils.isBlank(cache)) {
+            return null;
+        }
+        try {
+            return new UFaculties().fromJsonString(cache);
+        } catch (Exception e) {
+            storage.delete(activity, Storage.CACHE, Storage.GLOBAL, "university#faculties#" + fid);
+            return null;
+        }
     }
 
     private void draw(int layoutId) {

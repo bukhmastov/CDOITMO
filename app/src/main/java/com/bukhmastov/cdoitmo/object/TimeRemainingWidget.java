@@ -1,12 +1,10 @@
 package com.bukhmastov.cdoitmo.object;
 
-import android.content.Context;
-
-import org.json.JSONObject;
+import com.bukhmastov.cdoitmo.model.schedule.lessons.SLessons;
 
 public interface TimeRemainingWidget {
 
-    void start(Context context, Delegate delegate, JSONObject schedule);
+    void start(SLessons schedule, Delegate delegate);
 
     void stop();
 
@@ -17,7 +15,7 @@ public interface TimeRemainingWidget {
 
     class Data {
         public String current = null;
-        public String current_15min = null;
+        public String current15min = null;
         public String next = null;
         public String day = null;
     }

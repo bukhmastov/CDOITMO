@@ -8,7 +8,7 @@ android {
         applicationId "com.bukhmastov.cdoitmo"
         minSdkVersion 21
         targetSdkVersion 28
-        versionCode 120
+        versionCode 121
         versionName "1.15.1"
     }
     buildTypes {
@@ -29,8 +29,8 @@ android {
 }
 
 ext {
-    androidSupportVersion = "28.0.0-rc02"
-    //androidXVersion = "1.0.0-rc01"
+    androidSupportVersion = "28.0.0"
+    //androidXVersion = "1.0.0"
     firebaseCoreVersion = "16.0.3"
     firebaseMessagingVersion = "17.3.2"
     firebaseConfigVersion = "16.0.0"

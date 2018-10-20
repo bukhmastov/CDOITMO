@@ -4,13 +4,15 @@ import android.content.Context;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.LayoutRes;
-import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.PopupMenu;
 import android.support.v7.widget.RecyclerView;
 import android.view.InflateException;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
@@ -21,28 +23,43 @@ import com.bukhmastov.cdoitmo.activity.search.ScheduleExamsSearchActivity;
 import com.bukhmastov.cdoitmo.adapter.rva.ScheduleExamsRVA;
 import com.bukhmastov.cdoitmo.event.bus.EventBus;
 import com.bukhmastov.cdoitmo.event.events.OpenActivityEvent;
-import com.bukhmastov.cdoitmo.exception.SilentException;
+import com.bukhmastov.cdoitmo.event.events.ShareTextEvent;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.fragment.presenter.ScheduleExamsTabFragmentPresenter;
 import com.bukhmastov.cdoitmo.fragment.presenter.ScheduleExamsTabHostFragmentPresenter;
 import com.bukhmastov.cdoitmo.fragment.settings.SettingsScheduleExamsFragment;
+import com.bukhmastov.cdoitmo.model.rva.RVAExams;
+import com.bukhmastov.cdoitmo.model.schedule.exams.SExam;
+import com.bukhmastov.cdoitmo.model.schedule.exams.SExams;
+import com.bukhmastov.cdoitmo.model.schedule.exams.SSubject;
 import com.bukhmastov.cdoitmo.network.model.Client;
 import com.bukhmastov.cdoitmo.object.schedule.Schedule;
 import com.bukhmastov.cdoitmo.object.schedule.ScheduleExams;
 import com.bukhmastov.cdoitmo.util.Log;
+import com.bukhmastov.cdoitmo.util.NotificationMessage;
+import com.bukhmastov.cdoitmo.util.Storage;
+import com.bukhmastov.cdoitmo.util.StoragePref;
+import com.bukhmastov.cdoitmo.util.TextUtils;
 import com.bukhmastov.cdoitmo.util.Thread;
+import com.bukhmastov.cdoitmo.util.Time;
+import com.bukhmastov.cdoitmo.util.singleton.CollectionUtils;
 import com.bukhmastov.cdoitmo.util.singleton.Color;
+import com.bukhmastov.cdoitmo.util.singleton.StringUtils;
 
-import org.json.JSONArray;
-import org.json.JSONObject;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.regex.Matcher;
 
 import javax.inject.Inject;
 
 public class ScheduleExamsTabFragmentPresenterImpl implements ScheduleExamsTabFragmentPresenter {
 
     private static final String TAG = "SLTabFragment";
-    private final Schedule.Handler scheduleHandler;
+    private final Schedule.Handler<SExams> scheduleHandler;
     private ConnectedActivity activity = null;
+    private SExams schedule = null;
     private boolean loaded = false;
     private Client.Request requestHandle = null;
     private View container = null;
@@ -60,187 +77,180 @@ public class ScheduleExamsTabFragmentPresenterImpl implements ScheduleExamsTabFr
     ScheduleExams scheduleExams;
     @Inject
     ScheduleExamsTabHostFragmentPresenter tabHostPresenter;
+    @Inject
+    Storage storage;
+    @Inject
+    StoragePref storagePref;
+    @Inject
+    TextUtils textUtils;
+    @Inject
+    Time time;
+    @Inject
+    NotificationMessage notificationMessage;
 
     public ScheduleExamsTabFragmentPresenterImpl() {
         AppComponentProvider.getComponent().inject(this);
-        scheduleHandler = new Schedule.Handler() {
+        scheduleHandler = new Schedule.Handler<SExams>() {
             @Override
-            public void onSuccess(final JSONObject json, final boolean fromCache) {
+            public void onSuccess(final SExams schedule, final boolean fromCache) {
                 thread.run(() -> {
-                    try {
-                        try {
-                            if (json.getString("type").equals("teachers")) {
-                                JSONArray schedule = json.getJSONArray("schedule");
-                                if (schedule.length() == 1) {
-                                    tabHostPresenter.setQuery(schedule.getJSONObject(0).getString("pid"));
-                                    tabHostPresenter.invalidate(false);
-                                    return;
-                                }
-                            }
-                        } catch (Exception ignore) {
-                            // ignore
-                        }
-                        // fetch only right exams
-                        JSONObject jsonConverted = new JSONObject(json.toString());
-                        if (jsonConverted.has("type") && !"teachers".equals(jsonConverted.getString("type"))) {
-                            JSONArray examsConverted = new JSONArray();
-                            JSONArray exams = json.getJSONArray("schedule");
-                            for (int i = 0; i < exams.length(); i++) {
-                                JSONObject exam = exams.getJSONObject(i);
-                                String type = exam.has("type") ? exam.getString("type") : "exam";
-                                if (ScheduleExamsTabFragmentPresenterImpl.this.type == 0 && "exam".equals(type) || ScheduleExamsTabFragmentPresenterImpl.this.type == 1 && "credit".equals(type)) {
-                                    examsConverted.put(exam);
-                                }
-                            }
-                            jsonConverted.put("schedule", examsConverted);
-                        }
-                        // get rva adapter
-                        final ScheduleExamsRVA adapter = new ScheduleExamsRVA(activity, jsonConverted, type, data -> {
-                            tabHostPresenter.setQuery(data);
-                            tabHostPresenter.invalidate(false);
-                        });
-                        thread.runOnUI(() -> {
-                            try {
-                                draw(activity, R.layout.layout_schedule_both_recycle_list);
-                                // prepare
-                                final SwipeRefreshLayout swipe_container = container.findViewById(R.id.schedule_swipe);
-                                final RecyclerView schedule_list = container.findViewById(R.id.schedule_list);
-                                if (swipe_container == null || schedule_list == null) throw new SilentException();
-                                final LinearLayoutManager layoutManager = new LinearLayoutManager(activity, LinearLayoutManager.VERTICAL, false);
-                                // swipe
-                                swipe_container.setColorSchemeColors(Color.resolve(activity, R.attr.colorAccent));
-                                swipe_container.setProgressBackgroundColorSchemeColor(Color.resolve(activity, R.attr.colorBackgroundRefresh));
-                                swipe_container.setOnRefreshListener(() -> {
-                                    swipe_container.setRefreshing(false);
-                                    tabHostPresenter.invalidate(true);
-                                });
-                                // recycle view (list)
-                                schedule_list.setLayoutManager(layoutManager);
-                                schedule_list.setAdapter(adapter);
-                                schedule_list.setHasFixedSize(true);
-                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                                    schedule_list.setOnScrollChangeListener((view, scrollX, scrollY, oldScrollX, oldScrollY) -> {
-                                        final int position = layoutManager.findFirstVisibleItemPosition();
-                                        final View v = schedule_list.getChildAt(0);
-                                        final int offset = (v == null) ? 0 : (v.getTop() - schedule_list.getPaddingTop());
-                                        ScheduleExamsTabHostFragmentPresenter.Scroll s = tabHostPresenter.scroll().get(type, null);
-                                        if (s == null) {
-                                            s = new ScheduleExamsTabHostFragmentPresenter.Scroll();
-                                        }
-                                        s.position = position;
-                                        s.offset = offset;
-                                        tabHostPresenter.scroll().put(type, s);
-                                    });
-                                }
-                                // scroll to previous position
-                                ScheduleExamsTabHostFragmentPresenter.Scroll s = tabHostPresenter.scroll().get(type, null);
-                                if (s != null) {
-                                    layoutManager.scrollToPositionWithOffset(s.position, s.offset);
-                                }
-                            } catch (SilentException ignore) {
-                                failed(activity);
-                            } catch (Exception e) {
-                                log.exception(e);
-                                failed(activity);
-                            }
-                        });
-                    } catch (Exception e) {
-                        log.exception(e);
-                        failed(activity);
+                    ScheduleExamsTabFragmentPresenterImpl.this.schedule = schedule;
+                    if ("teachers".equals(schedule.getType()) && schedule.getTeachers() != null &&
+                        CollectionUtils.isNotEmpty(schedule.getTeachers().getTeachers()) &&
+                        schedule.getTeachers().getTeachers().size() == 1
+                    ) {
+                        tabHostPresenter.setQuery(schedule.getTeachers().getTeachers().get(0).getPersonId());
+                        tabHostPresenter.invalidate(false);
+                        return;
                     }
+                    // fetch only right exams
+                    ArrayList<SSubject> subjects = new ArrayList<>();
+                    for (SSubject subject : CollectionUtils.emptyIfNull(schedule.getSchedule())) {
+                        if (ScheduleExamsTabFragmentPresenterImpl.this.type == 0 && "exam".equals(StringUtils.defaultIfBlank(subject.getType(), "exam")) ||
+                            ScheduleExamsTabFragmentPresenterImpl.this.type == 1 && "credit".equals(StringUtils.defaultIfBlank(subject.getType(), "exam"))
+                        ) {
+                            subjects.add(subject);
+                        }
+                    }
+                    schedule.setSchedule(subjects);
+                    // get rva adapter
+                    ScheduleExamsRVA adapter = new ScheduleExamsRVA(schedule, type);
+                    adapter.setClickListener(R.id.schedule_lessons_menu, ScheduleExamsTabFragmentPresenterImpl.this::examsMenu);
+                    adapter.setClickListener(R.id.exam_touch_icon, ScheduleExamsTabFragmentPresenterImpl.this::subjectMenu);
+                    adapter.setClickListener(R.id.teacher_picker_item, ScheduleExamsTabFragmentPresenterImpl.this::teacherSelected);
+                    thread.runOnUI(() -> {
+                        draw(activity, R.layout.layout_schedule_both_recycle_list);
+                        // prepare
+                        SwipeRefreshLayout swipe = container.findViewById(R.id.schedule_swipe);
+                        RecyclerView recyclerView = container.findViewById(R.id.schedule_list);
+                        if (swipe == null || recyclerView == null) {
+                            return;
+                        }
+                        LinearLayoutManager layoutManager = new LinearLayoutManager(activity, LinearLayoutManager.VERTICAL, false);
+                        // swipe
+                        swipe.setColorSchemeColors(Color.resolve(activity, R.attr.colorAccent));
+                        swipe.setProgressBackgroundColorSchemeColor(Color.resolve(activity, R.attr.colorBackgroundRefresh));
+                        swipe.setOnRefreshListener(() -> {
+                            swipe.setRefreshing(false);
+                            tabHostPresenter.invalidate(true);
+                        });
+                        // recycle view (list)
+                        recyclerView.setLayoutManager(layoutManager);
+                        recyclerView.setAdapter(adapter);
+                        recyclerView.setHasFixedSize(true);
+                        // scroll to prev position listener (only android 23+)
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                            recyclerView.setOnScrollChangeListener((view, scrollX, scrollY, oldScrollX, oldScrollY) -> {
+                                int position = layoutManager.findFirstVisibleItemPosition();
+                                View v = recyclerView.getChildAt(0);
+                                int offset = (v == null) ? 0 : (v.getTop() - recyclerView.getPaddingTop());
+                                ScheduleExamsTabHostFragmentPresenter.Scroll scroll = tabHostPresenter.scroll().get(type, null);
+                                if (scroll == null) {
+                                    scroll = new ScheduleExamsTabHostFragmentPresenter.Scroll();
+                                }
+                                scroll.position = position;
+                                scroll.offset = offset;
+                                tabHostPresenter.scroll().put(type, scroll);
+                            });
+                        }
+                        // scroll to previous position
+                        ScheduleExamsTabHostFragmentPresenter.Scroll scroll = tabHostPresenter.scroll().get(type, null);
+                        if (scroll != null) {
+                            layoutManager.scrollToPositionWithOffset(scroll.position, scroll.offset);
+                        }
+                    }, throwable -> {
+                        log.exception(throwable);
+                        failed(activity);
+                    });
+                }, throwable -> {
+                    log.exception(throwable);
+                    failed(activity);
                 });
-            }
-            @Override
-            public void onFailure(int state) {
-                this.onFailure(0, null, state);
             }
             @Override
             public void onFailure(final int statusCode, final Client.Headers headers, final int state) {
                 thread.runOnUI(() -> {
-                    try {
-                        log.v(TAG, "onFailure | statusCode=", statusCode, " | state=", state);
-                        switch (state) {
-                            case Client.FAILED_OFFLINE:
-                            case Schedule.FAILED_OFFLINE: {
-                                final ViewGroup view = (ViewGroup) inflate(activity, R.layout.state_offline_text);
-                                if (view != null) {
-                                    view.findViewById(R.id.offline_reload).setOnClickListener(v -> load(false));
-                                    draw(view);
-                                }
-                                break;
+                    ScheduleExamsTabFragmentPresenterImpl.this.schedule = null;
+                    log.v(TAG, "onFailure | statusCode=", statusCode, " | state=", state);
+                    switch (state) {
+                        case Client.FAILED_OFFLINE:
+                        case Schedule.FAILED_OFFLINE: {
+                            final ViewGroup view = (ViewGroup) inflate(activity, R.layout.state_offline_text);
+                            if (view != null) {
+                                view.findViewById(R.id.offline_reload).setOnClickListener(v -> load(false));
+                                draw(view);
                             }
-                            case Client.FAILED_TRY_AGAIN:
-                            case Client.FAILED_SERVER_ERROR:
-                            case Client.FAILED_CORRUPTED_JSON:
-                            case Schedule.FAILED_LOAD: {
-                                final ViewGroup view = (ViewGroup) inflate(activity, R.layout.state_failed_button);
-                                if (view != null) {
-                                    switch (state) {
-                                        case Client.FAILED_SERVER_ERROR:
-                                            ((TextView) view.findViewById(R.id.try_again_message)).setText(Client.getFailureMessage(activity, statusCode));
-                                            break;
-                                        case Client.FAILED_CORRUPTED_JSON:
-                                            ((TextView) view.findViewById(R.id.try_again_message)).setText(R.string.server_provided_corrupted_json);
-                                            break;
-                                    }
-                                    view.findViewById(R.id.try_again_reload).setOnClickListener(v -> load(false));
-                                    draw(view);
-                                }
-                                break;
-                            }
-                            case Schedule.FAILED_EMPTY_QUERY: {
-                                final ViewGroup view = (ViewGroup) inflate(activity, R.layout.layout_schedule_empty_query);
-                                if (view != null) {
-                                    view.findViewById(R.id.open_search).setOnClickListener(v -> eventBus.fire(new OpenActivityEvent(ScheduleExamsSearchActivity.class)));
-                                    view.findViewById(R.id.open_settings).setOnClickListener(v -> activity.openActivity(ConnectedActivity.TYPE.STACKABLE, SettingsScheduleExamsFragment.class, null));
-                                    draw(view);
-                                }
-                                break;
-                            }
-                            case Schedule.FAILED_NOT_FOUND: {
-                                final ViewGroup view = (ViewGroup) inflate(activity, R.layout.state_nothing_to_display_compact);
-                                if (view != null) {
-                                    ((TextView) view.findViewById(R.id.ntd_text)).setText(R.string.no_schedule);
-                                    draw(view);
-                                }
-                                break;
-                            }
-                            case Schedule.FAILED_INVALID_QUERY: {
-                                final ViewGroup view = (ViewGroup) inflate(activity, R.layout.state_failed_text);
-                                if (view != null) {
-                                    ((TextView) view.findViewById(R.id.text)).setText(R.string.incorrect_query);
-                                    draw(view);
-                                }
-                                break;
-                            }
-                            case Schedule.FAILED_MINE_NEED_ISU: {
-                                // TODO replace with isu auth, when isu will be ready
-                                final ViewGroup view = (ViewGroup) inflate(activity, R.layout.state_failed_button);
-                                if (view != null) {
-                                    view.findViewById(R.id.try_again_reload).setOnClickListener(v -> load(false));
-                                    draw(view);
-                                }
-                                break;
-                            }
+                            break;
                         }
-                    } catch (Exception e) {
-                        log.exception(e);
+                        case Client.FAILED_TRY_AGAIN:
+                        case Client.FAILED_SERVER_ERROR:
+                        case Client.FAILED_CORRUPTED_JSON:
+                        case Schedule.FAILED_LOAD: {
+                            final ViewGroup view = (ViewGroup) inflate(activity, R.layout.state_failed_button);
+                            if (view != null) {
+                                switch (state) {
+                                    case Client.FAILED_SERVER_ERROR:
+                                        ((TextView) view.findViewById(R.id.try_again_message)).setText(Client.getFailureMessage(activity, statusCode));
+                                        break;
+                                    case Client.FAILED_CORRUPTED_JSON:
+                                        ((TextView) view.findViewById(R.id.try_again_message)).setText(R.string.server_provided_corrupted_json);
+                                        break;
+                                }
+                                view.findViewById(R.id.try_again_reload).setOnClickListener(v -> load(false));
+                                draw(view);
+                            }
+                            break;
+                        }
+                        case Schedule.FAILED_EMPTY_QUERY: {
+                            final ViewGroup view = (ViewGroup) inflate(activity, R.layout.layout_schedule_empty_query);
+                            if (view != null) {
+                                view.findViewById(R.id.open_search).setOnClickListener(v -> eventBus.fire(new OpenActivityEvent(ScheduleExamsSearchActivity.class)));
+                                view.findViewById(R.id.open_settings).setOnClickListener(v -> activity.openActivity(ConnectedActivity.TYPE.STACKABLE, SettingsScheduleExamsFragment.class, null));
+                                draw(view);
+                            }
+                            break;
+                        }
+                        case Schedule.FAILED_NOT_FOUND: {
+                            final ViewGroup view = (ViewGroup) inflate(activity, R.layout.state_nothing_to_display_compact);
+                            if (view != null) {
+                                ((TextView) view.findViewById(R.id.ntd_text)).setText(R.string.no_schedule);
+                                draw(view);
+                            }
+                            break;
+                        }
+                        case Schedule.FAILED_INVALID_QUERY: {
+                            final ViewGroup view = (ViewGroup) inflate(activity, R.layout.state_failed_text);
+                            if (view != null) {
+                                ((TextView) view.findViewById(R.id.text)).setText(R.string.incorrect_query);
+                                draw(view);
+                            }
+                            break;
+                        }
+                        case Schedule.FAILED_MINE_NEED_ISU: {
+                            // TODO replace with isu auth, when isu will be ready
+                            final ViewGroup view = (ViewGroup) inflate(activity, R.layout.state_failed_button);
+                            if (view != null) {
+                                view.findViewById(R.id.try_again_reload).setOnClickListener(v -> load(false));
+                                draw(view);
+                            }
+                            break;
+                        }
                     }
+                }, throwable -> {
+                    log.exception(throwable);
                 });
             }
             @Override
             public void onProgress(final int state) {
                 thread.runOnUI(() -> {
-                    try {
-                        log.v(TAG, "onProgress | state=", state);
-                        final ViewGroup view = (ViewGroup) inflate(activity, R.layout.state_loading_text);
-                        if (view != null) {
-                            ((TextView) view.findViewById(R.id.loading_message)).setText(R.string.loading);
-                            draw(view);
-                        }
-                    } catch (Exception e) {
-                        log.exception(e);
+                    log.v(TAG, "onProgress | state=", state);
+                    final ViewGroup view = (ViewGroup) inflate(activity, R.layout.state_loading_text);
+                    if (view != null) {
+                        ((TextView) view.findViewById(R.id.loading_message)).setText(R.string.loading);
+                        draw(view);
                     }
+                }, throwable -> {
+                    log.exception(throwable);
                 });
             }
             @Override
@@ -337,25 +347,26 @@ public class ScheduleExamsTabFragmentPresenterImpl implements ScheduleExamsTabFr
             }
             draw(activity, R.layout.state_loading_text);
             thread.run(() -> {
-                try {
-                    if (activity == null || tabHostPresenter.getQuery() == null) {
-                        log.w(TAG, "load | some values are null | activity=", activity, " | getQuery()=", tabHostPresenter.getQuery());
-                        failed(activity);
-                        return;
-                    }
-                    if (tabHostPresenter.scroll() != null && !tabHostPresenter.isSameQueryRequested()) {
-                        tabHostPresenter.scroll().clear();
-                    }
-                    if (refresh) {
-                        scheduleExams.search(activity, scheduleHandler, tabHostPresenter.getQuery(), 0);
-                    } else {
-                        scheduleExams.search(activity, scheduleHandler, tabHostPresenter.getQuery());
-                    }
-                } catch (Exception e) {
-                    log.exception(e);
+                if (activity == null || tabHostPresenter.getQuery() == null) {
+                    log.w(TAG, "load | some values are null | activity=", activity, " | getQuery()=", tabHostPresenter.getQuery());
                     failed(activity);
+                    return;
                 }
+                if (tabHostPresenter.scroll() != null && !tabHostPresenter.isSameQueryRequested()) {
+                    tabHostPresenter.scroll().clear();
+                }
+                if (refresh) {
+                    scheduleExams.search(tabHostPresenter.getQuery(), 0, scheduleHandler);
+                } else {
+                    scheduleExams.search(tabHostPresenter.getQuery(), scheduleHandler);
+                }
+            }, throwable -> {
+                log.exception(throwable);
+                failed(activity);
             });
+        }, throwable -> {
+            log.exception(throwable);
+            failed(activity);
         });
     }
 
@@ -377,15 +388,13 @@ public class ScheduleExamsTabFragmentPresenterImpl implements ScheduleExamsTabFr
 
     private void draw(View view) {
         thread.runOnUI(() -> {
-            try {
-                ViewGroup vg = container.findViewById(R.id.container);
-                if (vg != null) {
-                    vg.removeAllViews();
-                    vg.addView(view, 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
-                }
-            } catch (Exception e){
-                log.exception(e);
+            ViewGroup vg = container.findViewById(R.id.container);
+            if (vg != null) {
+                vg.removeAllViews();
+                vg.addView(view, 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
             }
+        }, throwable -> {
+            log.exception(throwable);
         });
     }
 
@@ -409,4 +418,298 @@ public class ScheduleExamsTabFragmentPresenterImpl implements ScheduleExamsTabFr
         }
         return inflater.inflate(layout, null);
     }
+
+    // -->- Exams global menu ->--
+
+    private void examsMenu(View view, RVAExams entity) {
+        thread.run(() -> {
+            if (schedule == null) {
+                notificationMessage.snackBar(activity, activity.getString(R.string.cache_failed));
+                return;
+            }
+            String cacheToken = schedule.getQuery() == null ? null : schedule.getQuery().toLowerCase();
+            boolean isCached = cacheToken != null && StringUtils.isNotBlank(storage.get(activity, Storage.CACHE, Storage.GLOBAL, "schedule_exams#lessons#" + cacheToken, ""));
+            thread.runOnUI(() -> {
+                PopupMenu popup = new PopupMenu(activity, view);
+                Menu menu = popup.getMenu();
+                popup.getMenuInflater().inflate(R.menu.schedule_exams, menu);
+                menu.findItem(isCached ? R.id.add_to_cache : R.id.remove_from_cache).setVisible(false);
+                popup.setOnMenuItemClickListener(menuItem -> {
+                    examsMenuSelected(menuItem);
+                    return false;
+                });
+                popup.show();
+            }, throwable -> {
+                log.exception(throwable);
+                notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
+            });
+        }, throwable -> {
+            log.exception(throwable);
+            notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
+        });
+    }
+
+    private void examsMenuSelected(MenuItem item) {
+        log.v(TAG, "Exams menu | popup item | clicked | " + item.getTitle().toString());
+        switch (item.getItemId()) {
+            case R.id.add_to_cache:
+            case R.id.remove_from_cache: toggleCache(); break;
+            case R.id.share_schedule: shareSchedule(); break;
+            case R.id.open_settings: activity.openActivityOrFragment(ConnectedActivity.TYPE.STACKABLE, SettingsScheduleExamsFragment.class, null); break;
+        }
+    }
+
+    private void toggleCache() {
+        thread.run(() -> {
+            if (schedule == null) {
+                notificationMessage.snackBar(activity, activity.getString(R.string.cache_failed));
+                return;
+            }
+            String cacheToken = schedule.getQuery() == null ? null : schedule.getQuery().toLowerCase();
+            if (cacheToken == null) {
+                notificationMessage.snackBar(activity, activity.getString(R.string.cache_failed));
+                return;
+            }
+            if (storage.exists(activity, Storage.CACHE, Storage.GLOBAL, "schedule_exams#lessons#" + cacheToken)) {
+                if (storage.delete(activity, Storage.CACHE, Storage.GLOBAL, "schedule_exams#lessons#" + cacheToken)) {
+                    notificationMessage.snackBar(activity, activity.getString(R.string.cache_false));
+                } else {
+                    notificationMessage.snackBar(activity, activity.getString(R.string.cache_failed));
+                }
+                return;
+            }
+            if (storage.put(activity, Storage.CACHE, Storage.GLOBAL, "schedule_exams#lessons#" + cacheToken, schedule.toJsonString())) {
+                notificationMessage.snackBar(activity, activity.getString(R.string.cache_true));
+            } else {
+                notificationMessage.snackBar(activity, activity.getString(R.string.cache_failed));
+            }
+        }, throwable -> {
+            log.exception(throwable);
+            notificationMessage.snackBar(activity, activity.getString(R.string.cache_failed));
+        });
+    }
+
+    private void shareSchedule() {
+        thread.run(() -> {
+            if (schedule == null) {
+                notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                return;
+            }
+            StringBuilder sb = new StringBuilder();
+            sb.append(scheduleExams.getScheduleHeader(schedule.getTitle(), schedule.getType()));
+            sb.append("\n");
+            if (CollectionUtils.isEmpty(schedule.getSchedule())) {
+                sb.append(activity.getString(R.string.no_exams));
+            } else {
+                int examsThisTerm = 0;
+                for (SSubject subject : schedule.getSchedule()) {
+                    if (subject == null) {
+                        continue;
+                    }
+                    examsThisTerm++;
+                    String desc = null;
+                    switch (schedule.getType()) {
+                        case "group": desc = subject.getTeacherName(); break;
+                        case "teacher": desc = subject.getGroup(); break;
+                    }
+                    sb.append("\n");
+                    sb.append(subject);
+                    if (StringUtils.isNotBlank(desc)) {
+                        sb.append(" (").append(desc).append(")");
+                    }
+                    sb.append("\n");
+                    if (subject.getAdvice() != null && StringUtils.isNotBlank(subject.getAdvice().getDate())) {
+                        shareScheduleAppendEvent(sb, subject.getAdvice(), activity.getString(R.string.consult));
+                    }
+                    if (subject.getExam() != null && StringUtils.isNotBlank(subject.getExam().getDate())) {
+                        shareScheduleAppendEvent(sb, subject.getExam(), activity.getString("credit".equals(subject.getType()) ? R.string.credit : R.string.exam));
+                    }
+                }
+                if (examsThisTerm == 0) {
+                    sb.append(activity.getString(R.string.no_exams));
+                }
+            }
+            eventBus.fire(new ShareTextEvent(sb.toString().trim(), "schedule_exams_plain"));
+        }, throwable -> {
+            log.exception(throwable);
+            notificationMessage.snackBar(activity, activity.getString(R.string.cache_failed));
+        });
+    }
+
+    private void shareScheduleAppendEvent(StringBuilder sb, SExam event, String title) {
+        String date = event.getDate();
+        String time = event.getTime();
+        String room = event.getRoom();
+        String building = event.getBuilding();
+        if (StringUtils.isNotBlank(event.getBuilding())) {
+            room = ((event.getRoom() == null ? "" : event.getRoom()) + " " + event.getBuilding()).trim();
+        }
+        if (StringUtils.isNotBlank(time)) {
+            date = cuteDate(date + " " + time, " HH:mm");
+        } else {
+            date = cuteDate(date, "");
+        }
+        sb.append(title);
+        sb.append(": ");
+        sb.append(date);
+        if (StringUtils.isNotBlank(room)) {
+            sb.append(", ");
+            sb.append(room);
+        }
+        sb.append("\n");
+    }
+
+    // -<-- Exams global menu --<- || -->- Subject menu ->--
+
+    private void subjectMenu(View view, RVAExams entity) {
+        thread.run(() -> {
+            if (schedule == null || entity.getSubject() == null) {
+                notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                return;
+            }
+            SSubject subject = entity.getSubject();
+            PopupMenu popup = new PopupMenu(activity, view);
+            Menu menu = popup.getMenu();
+            popup.getMenuInflater().inflate(R.menu.schedule_exams_item, menu);
+            switch (schedule.getType()) {
+                case "group": {
+                    menu.findItem(R.id.open_group).setVisible(false);
+                    menu.findItem(R.id.open_teacher).setTitle(subject.getTeacherName());
+                    menu.findItem(R.id.open_teacher).setVisible(true);
+                    break;
+                }
+                case "teacher": {
+                    menu.findItem(R.id.open_group).setTitle(activity.getString(R.string.group) + " " + subject.getGroup());
+                    menu.findItem(R.id.open_group).setVisible(true);
+                    menu.findItem(R.id.open_teacher).setVisible(false);
+                    break;
+                }
+                default: {
+                    menu.findItem(R.id.open_group).setVisible(false);
+                    menu.findItem(R.id.open_teacher).setVisible(false);
+                    break;
+                }
+            }
+            popup.setOnMenuItemClickListener(item -> {
+                subjectMenuSelected(item, schedule, subject);
+                return false;
+            });
+            popup.show();
+        }, throwable -> {
+            log.exception(throwable);
+            notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
+        });
+    }
+
+    private void subjectMenuSelected(MenuItem item, SExams schedule, SSubject subject) {
+        thread.run(() -> {
+            log.v(TAG, "Subject menu | popup item | clicked | " + item.getTitle().toString());
+            switch (item.getItemId()) {
+                case R.id.open_group: {
+                    if (StringUtils.isNotBlank(subject.getGroup())) {
+                        tabHostPresenter.setQuery(subject.getGroup());
+                        tabHostPresenter.invalidate(false);
+                    }
+                    break;
+                }
+                case R.id.open_teacher: {
+                    String query = subject.getTeacherId();
+                    if (StringUtils.isBlank(query)) {
+                        query = subject.getTeacherName();
+                    }
+                    if (StringUtils.isNotBlank(query)) {
+                        tabHostPresenter.setQuery(query);
+                        tabHostPresenter.invalidate(false);
+                    }
+                    break;
+                }
+            }
+        }, throwable -> {
+            log.exception(throwable);
+            notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
+        });
+    }
+
+    // -<-- Subject menu --<- || -->- Teacher selection ->--
+
+    private void teacherSelected(View view, RVAExams entity) {
+        thread.run(() -> {
+            if (entity.getTeacher() == null) {
+                return;
+            }
+            if (StringUtils.isBlank(entity.getTeacher().getPersonId())) {
+                return;
+            }
+            tabHostPresenter.setQuery(entity.getTeacher().getPersonId());
+            tabHostPresenter.invalidate(false);
+        }, throwable -> {
+            log.exception(throwable);
+            notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
+        });
+    }
+
+    // -<-- Teacher selection --<- || -->- Utils ->--
+
+    private String cuteDate(String date, String date_format_append) {
+        try {
+            String date_format = "dd.MM.yyyy" + date_format_append;
+            if (isValidFormat(date, date_format)) {
+                date = textUtils.cuteDate(activity, storagePref, date_format, date);
+            } else {
+                Matcher m = ScheduleExamsRVA.patternBrokenDate.matcher(date);
+                if (m.find()) {
+                    String d = m.group(2);
+                    String dt = d.trim();
+                    if (dt.startsWith("янв")) d = ".01";
+                    if (dt.startsWith("фев")) d = ".02";
+                    if (dt.startsWith("мар")) d = ".03";
+                    if (dt.startsWith("апр")) d = ".04";
+                    if (dt.startsWith("май")) d = ".05";
+                    if (dt.startsWith("июн")) d = ".06";
+                    if (dt.startsWith("июл")) d = ".07";
+                    if (dt.startsWith("авг")) d = ".08";
+                    if (dt.startsWith("сен")) d = ".09";
+                    if (dt.startsWith("окт")) d = ".10";
+                    if (dt.startsWith("ноя")) d = ".11";
+                    if (dt.startsWith("дек")) d = ".12";
+                    date = m.group(1) + d + m.group(3);
+                }
+                date_format = "dd.MM" + date_format_append;
+                if (isValidFormat(date, date_format)) {
+                    date = cuteDateWOYear(date_format, date);
+                }
+            }
+        } catch (Exception ignore) {/* ignore */}
+        return date;
+    }
+
+    private String cuteDateWOYear(String date_format, String date_string) throws Exception {
+        SimpleDateFormat format_input = new SimpleDateFormat(date_format, textUtils.getLocale(activity, storagePref));
+        Calendar date = time.getCalendar();
+        date.setTime(format_input.parse(date_string));
+        return (new StringBuilder())
+                .append(date.get(Calendar.DATE))
+                .append(" ")
+                .append(time.getGenitiveMonth(activity, date.get(Calendar.MONTH)))
+                .append(" ")
+                .append(textUtils.ldgZero(date.get(Calendar.HOUR_OF_DAY)))
+                .append(":")
+                .append(textUtils.ldgZero(date.get(Calendar.MINUTE)))
+                .toString();
+    }
+
+    private boolean isValidFormat(String value, String format) {
+        try {
+            SimpleDateFormat sdf = new SimpleDateFormat(format, textUtils.getLocale(activity, storagePref));
+            Date date = sdf.parse(value);
+            if (!value.equals(sdf.format(date))) {
+                date = null;
+            }
+            return date != null;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    // -<-- Utils --<-
 }

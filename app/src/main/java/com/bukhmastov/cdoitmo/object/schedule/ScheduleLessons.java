@@ -1,6 +1,7 @@
 package com.bukhmastov.cdoitmo.object.schedule;
 
-public interface ScheduleLessons extends Schedule {
+import com.bukhmastov.cdoitmo.model.schedule.lessons.SLessons;
 
+public interface ScheduleLessons extends Schedule<SLessons> {
     String TYPE = "lessons";
 }

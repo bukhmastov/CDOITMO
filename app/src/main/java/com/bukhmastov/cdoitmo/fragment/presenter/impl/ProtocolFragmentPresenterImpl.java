@@ -16,7 +16,6 @@ import com.bukhmastov.cdoitmo.App;
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activity.ConnectedActivity;
 import com.bukhmastov.cdoitmo.adapter.rva.ProtocolRVA;
-import com.bukhmastov.cdoitmo.converter.ProtocolConverter;
 import com.bukhmastov.cdoitmo.event.bus.EventBus;
 import com.bukhmastov.cdoitmo.event.bus.annotation.Event;
 import com.bukhmastov.cdoitmo.event.events.ClearCacheEvent;
@@ -24,6 +23,8 @@ import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.fragment.ConnectedFragment;
 import com.bukhmastov.cdoitmo.fragment.presenter.ProtocolFragmentPresenter;
+import com.bukhmastov.cdoitmo.model.converter.ProtocolConverter;
+import com.bukhmastov.cdoitmo.model.protocol.Protocol;
 import com.bukhmastov.cdoitmo.network.DeIfmoRestClient;
 import com.bukhmastov.cdoitmo.network.handlers.RestResponseHandler;
 import com.bukhmastov.cdoitmo.network.model.Client;
@@ -35,9 +36,9 @@ import com.bukhmastov.cdoitmo.util.TextUtils;
 import com.bukhmastov.cdoitmo.util.Thread;
 import com.bukhmastov.cdoitmo.util.Time;
 import com.bukhmastov.cdoitmo.util.singleton.Color;
+import com.bukhmastov.cdoitmo.util.singleton.StringUtils;
 
 import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
@@ -50,9 +51,9 @@ public class ProtocolFragmentPresenterImpl implements ProtocolFragmentPresenter,
     private static final int maxAttempts = 3;
     private ConnectedFragment fragment = null;
     private ConnectedActivity activity = null;
-    private JSONObject data = null;
-    private int number_of_weeks = 1;
-    private boolean spinner_weeks_blocker = true;
+    private Protocol data = null;
+    private int numberOfWeeks = 1;
+    private boolean spinnerWeeksBlocker = true;
     private boolean loaded = false;
     private Client.Request requestHandle = null;
     private boolean forbidden = false;
@@ -109,7 +110,7 @@ public class ProtocolFragmentPresenterImpl implements ProtocolFragmentPresenter,
                 return;
             }
             firebaseAnalyticsProvider.logCurrentScreen(activity, fragment);
-            number_of_weeks = Integer.parseInt(storagePref.get(activity, "pref_protocol_changes_weeks", "1"));
+            numberOfWeeks = Integer.parseInt(storagePref.get(activity, "pref_protocol_changes_weeks", "1"));
         });
     }
 
@@ -129,39 +130,41 @@ public class ProtocolFragmentPresenterImpl implements ProtocolFragmentPresenter,
 
     @Override
     public void onResume() {
-        thread.runOnUI(() -> {
+        thread.run(() -> {
             log.v(TAG, "Fragment resumed");
             if (forbidden) {
                 return;
             }
             firebaseAnalyticsProvider.setCurrentScreen(activity, fragment);
             if (activity != null && activity.toolbar != null) {
-                final MenuItem simple = activity.toolbar.findItem(R.id.action_protocol_changes_switch_to_simple);
-                final MenuItem advanced = activity.toolbar.findItem(R.id.action_protocol_changes_switch_to_advanced);
-                if (simple != null && advanced != null) {
-                    switch (storagePref.get(activity, "pref_protocol_changes_mode", "advanced")) {
-                        case "simple": advanced.setVisible(true); break;
-                        case "advanced": simple.setVisible(true); break;
+                thread.runOnUI(() -> {
+                    MenuItem simple = activity.toolbar.findItem(R.id.action_protocol_changes_switch_to_simple);
+                    MenuItem advanced = activity.toolbar.findItem(R.id.action_protocol_changes_switch_to_advanced);
+                    if (simple != null && advanced != null) {
+                        switch (storagePref.get(activity, "pref_protocol_changes_mode", "advanced")) {
+                            case "simple": advanced.setVisible(true); break;
+                            case "advanced": simple.setVisible(true); break;
+                        }
+                        simple.setOnMenuItemClickListener(item -> {
+                            thread.runOnUI(() -> {
+                                storagePref.put(activity, "pref_protocol_changes_mode", "simple");
+                                simple.setVisible(false);
+                                advanced.setVisible(true);
+                                load(false);
+                            });
+                            return false;
+                        });
+                        advanced.setOnMenuItemClickListener(item -> {
+                            thread.runOnUI(() -> {
+                                storagePref.put(activity, "pref_protocol_changes_mode", "advanced");
+                                simple.setVisible(true);
+                                advanced.setVisible(false);
+                                load(false);
+                            });
+                            return false;
+                        });
                     }
-                    simple.setOnMenuItemClickListener(item -> {
-                        thread.runOnUI(() -> {
-                            storagePref.put(activity, "pref_protocol_changes_mode", "simple");
-                            simple.setVisible(false);
-                            advanced.setVisible(true);
-                            load(false);
-                        });
-                        return false;
-                    });
-                    advanced.setOnMenuItemClickListener(item -> {
-                        thread.runOnUI(() -> {
-                            storagePref.put(activity, "pref_protocol_changes_mode", "advanced");
-                            simple.setVisible(true);
-                            advanced.setVisible(false);
-                            load(false);
-                        });
-                        return false;
-                    });
-                }
+                });
             }
             if (!loaded) {
                 loaded = true;
@@ -199,275 +202,296 @@ public class ProtocolFragmentPresenterImpl implements ProtocolFragmentPresenter,
     private void load(final int refresh_rate) {
         thread.run(() -> {
             log.v(TAG, "load | refresh_rate=" + refresh_rate);
-            if (storagePref.get(activity, "pref_use_cache", true)) {
-                String cache = storage.get(activity, Storage.CACHE, Storage.USER, "protocol#core").trim();
-                if (!cache.isEmpty()) {
-                    try {
-                        JSONObject data = new JSONObject(cache);
-                        setData(data);
-                        if (data.getLong("timestamp") + refresh_rate * 3600000L < time.getCalendar().getTimeInMillis()) {
-                            load(true, cache);
-                        } else {
-                            load(false, cache);
-                        }
-                    } catch (JSONException e) {
-                        log.e(TAG, "load | exception=", e);
-                        load(true, cache);
-                    }
-                } else {
-                    load(false);
-                }
-            } else {
+            if (!storagePref.get(activity, "pref_use_cache", true)) {
                 load(false);
+                return;
+            }
+            Protocol cache = getFromCache();
+            if (cache == null) {
+                load(true, null);
+                return;
+            }
+            setData(cache);
+            if (cache.getTimestamp() + refresh_rate * 3600000L < time.getTimeInMillis()) {
+                load(true, cache);
+            } else {
+                load(false, cache);
             }
         });
     }
 
     private void load(final boolean force) {
-        thread.run(() -> load(force, "", 0));
+        thread.run(() -> load(force, null, 0));
     }
 
-    private void load(final boolean force, final String cache) {
-        thread.run(() -> load(force, cache, 0));
+    private void load(final boolean force, final Protocol cached) {
+        thread.run(() -> load(force, cached, 0));
     }
 
-    private void load(final boolean force, final String cache, final int attempt) {
+    private void load(final boolean force, final Protocol cached, final int attempt) {
         thread.run(() -> {
             log.v(TAG, "load | force=" + (force ? "true" : "false") + " | attempt=" + attempt);
             if ((!force || !Client.isOnline(activity)) && storagePref.get(activity, "pref_use_cache", true)) {
                 try {
-                    String c = cache.isEmpty() ? storage.get(activity, Storage.CACHE, Storage.USER, "protocol#core").trim() : cache;
-                    if (!c.isEmpty()) {
+                    Protocol cache = cached == null ? getFromCache() : cached;
+                    if (cache != null) {
                         log.v(TAG, "load | from cache");
-                        JSONObject d = new JSONObject(c);
-                        if (d.getInt("number_of_weeks") == number_of_weeks || !Client.isOnline(activity) || attempt >= maxAttempts) {
-                            setData(new JSONObject(c));
-                            display();
-                            return;
-                        }
+                        setData(cache);
+                        display();
+                        return;
                     }
                 } catch (Exception e) {
                     log.v(TAG, "load | failed to load from cache");
-                    storage.delete(activity, Storage.CACHE, Storage.USER, "protocol#core");
                 }
             }
-            if (!App.OFFLINE_MODE) {
-                if (attempt >= maxAttempts) {
-                    if (force) {
-                        load(false, cache, attempt + 1);
-                    } else {
-                        if (getData() != null) {
-                            display();
-                        } else {
-                            loadFailed();
-                        }
+            if (App.OFFLINE_MODE) {
+                if (getData() != null) {
+                    display();
+                    return;
+                }
+                thread.runOnUI(() -> {
+                    fragment.draw(R.layout.state_offline_text);
+                    View reload = fragment.container().findViewById(R.id.offline_reload);
+                    if (reload != null) {
+                        reload.setOnClickListener(v -> load());
                     }
+                });
+                return;
+            }
+            if (attempt >= maxAttempts) {
+                if (force) {
+                    load(false, cached, attempt + 1);
+                    return;
+                }
+                if (getData() != null) {
+                    display();
                 } else {
-                    deIfmoRestClient.get(activity, "eregisterlog?days=" + String.valueOf(number_of_weeks * 7), null, new RestResponseHandler() {
-                        @Override
-                        public void onSuccess(final int statusCode, final Client.Headers headers, final JSONObject responseObj, final JSONArray responseArr) {
-                            thread.run(() -> {
-                                log.v(TAG, "load | success | statusCode=" + statusCode + " | responseArr=" + (responseArr == null ? "null" : "notnull"));
-                                if (statusCode == 200 && responseArr != null) {
-                                    new ProtocolConverter(activity, responseArr, number_of_weeks, json -> {
-                                        try {
-                                            if (storagePref.get(activity, "pref_use_cache", true)) {
-                                                storage.put(activity, Storage.CACHE, Storage.USER, "protocol#core", json.toString());
-                                                storage.put(activity, Storage.PERMANENT, Storage.USER, "protocol_tracker#protocol", json.getJSONArray("protocol").toString());
-                                            }
-                                        } catch (JSONException e) {
-                                            log.exception(e);
-                                        }
-                                        setData(json);
-                                        display();
-                                    }).run();
-                                } else {
-                                    load(force, cache, attempt + 1);
-                                }
-                            });
+                    loadFailed();
+                }
+                return;
+            }
+            deIfmoRestClient.get(activity, "eregisterlog?days=" + String.valueOf(numberOfWeeks * 7), null, new RestResponseHandler() {
+                @Override
+                public void onSuccess(final int statusCode, final Client.Headers headers, final JSONObject obj, final JSONArray arr) {
+                    thread.run(() -> {
+                        log.v(TAG, "load | success | statusCode=" + statusCode + " | arr=" + (arr == null ? "null" : "notnull"));
+                        if (statusCode == 200 && arr != null) {
+                            Protocol data = new Protocol().fromJson(new JSONObject().put("protocol", arr));
+                            data.setTimestamp(time.getTimeInMillis());
+                            data.setNumberOfWeeks(numberOfWeeks);
+                            data = new ProtocolConverter(data).convert();
+                            if (data != null && storagePref.get(activity, "pref_use_cache", true)) {
+                                String json = data.toJsonString();
+                                storage.put(activity, Storage.CACHE, Storage.USER, "protocol#core", json);
+                                storage.put(activity, Storage.PERMANENT, Storage.USER, "protocol_tracker#protocol", json);
+                            }
+                            setData(data);
+                            display();
+                            return;
                         }
-                        @Override
-                        public void onFailure(final int statusCode, final Client.Headers headers, final int state) {
-                            thread.runOnUI(() -> {
-                                log.v(TAG, "load | failure " + state);
-                                switch (state) {
-                                    case DeIfmoRestClient.FAILED_OFFLINE:
-                                        if (getData() != null) {
-                                            display();
-                                        } else {
-                                            fragment.draw(R.layout.state_offline_text);
-                                            if (activity != null) {
-                                                View offline_reload = fragment.container().findViewById(R.id.offline_reload);
-                                                if (offline_reload != null) {
-                                                    offline_reload.setOnClickListener(v -> load());
-                                                }
-                                            }
-                                        }
-                                        break;
-                                    case DeIfmoRestClient.FAILED_TRY_AGAIN:
-                                    case DeIfmoRestClient.FAILED_SERVER_ERROR:
-                                    case DeIfmoRestClient.FAILED_CORRUPTED_JSON:
-                                        fragment.draw(R.layout.state_failed_button);
-                                        if (activity != null) {
-                                            TextView try_again_message = fragment.container().findViewById(R.id.try_again_message);
-                                            if (try_again_message != null) {
-                                                switch (state) {
-                                                    case DeIfmoRestClient.FAILED_SERVER_ERROR:   try_again_message.setText(DeIfmoRestClient.getFailureMessage(activity, statusCode)); break;
-                                                    case DeIfmoRestClient.FAILED_CORRUPTED_JSON: try_again_message.setText(R.string.server_provided_corrupted_json); break;
-                                                }
-                                            }
-                                            View try_again_reload = fragment.container().findViewById(R.id.try_again_reload);
-                                            if (try_again_reload != null) {
-                                                try_again_reload.setOnClickListener(v -> load());
-                                            }
-                                        }
-                                        break;
+                        load(force, cached, attempt + 1);
+                    }, throwable -> {
+                        loadFailed();
+                    });
+                }
+                @Override
+                public void onFailure(final int statusCode, final Client.Headers headers, final int state) {
+                    thread.run(() -> {
+                        log.v(TAG, "load | failure " + state);
+                        switch (state) {
+                            case DeIfmoRestClient.FAILED_OFFLINE:
+                                if (getData() != null) {
+                                    display();
+                                    return;
                                 }
-                            });
-                        }
-                        @Override
-                        public void onProgress(final int state) {
-                            thread.runOnUI(() -> {
-                                log.v(TAG, "load | progress " + state);
-                                fragment.draw(R.layout.state_loading_text);
-                                if (activity != null) {
-                                    TextView loading_message = fragment.container().findViewById(R.id.loading_message);
-                                    if (loading_message != null) {
+                                thread.runOnUI(() -> {
+                                    fragment.draw(R.layout.state_offline_text);
+                                    View reload = fragment.container().findViewById(R.id.offline_reload);
+                                    if (reload != null) {
+                                        reload.setOnClickListener(v -> load());
+                                    }
+                                }, throwable -> {
+                                    loadFailed();
+                                });
+                                break;
+                            case DeIfmoRestClient.FAILED_TRY_AGAIN:
+                            case DeIfmoRestClient.FAILED_SERVER_ERROR:
+                            case DeIfmoRestClient.FAILED_CORRUPTED_JSON:
+                                thread.runOnUI(() -> {
+                                    fragment.draw(R.layout.state_failed_button);
+                                    TextView message = fragment.container().findViewById(R.id.try_again_message);
+                                    if (message != null) {
                                         switch (state) {
-                                            case DeIfmoRestClient.STATE_HANDLING:
-                                                loading_message.setText(R.string.loading);
+                                            case DeIfmoRestClient.FAILED_SERVER_ERROR:
+                                                if (activity == null) {
+                                                    message.setText(DeIfmoRestClient.getFailureMessage(statusCode));
+                                                } else {
+                                                    message.setText(DeIfmoRestClient.getFailureMessage(activity, statusCode));
+                                                }
+                                                break;
+                                            case DeIfmoRestClient.FAILED_CORRUPTED_JSON:
+                                                message.setText(R.string.server_provided_corrupted_json);
                                                 break;
                                         }
                                     }
-                                }
-                            });
+                                    View reload = fragment.container().findViewById(R.id.try_again_reload);
+                                    if (reload != null) {
+                                        reload.setOnClickListener(v -> load());
+                                    }
+                                }, throwable -> {
+                                    loadFailed();
+                                });
+                                break;
                         }
-                        @Override
-                        public void onNewRequest(Client.Request request) {
-                            requestHandle = request;
+                    }, throwable -> {
+                        loadFailed();
+                    });
+                }
+                @Override
+                public void onProgress(final int state) {
+                    thread.runOnUI(() -> {
+                        log.v(TAG, "load | progress " + state);
+                        fragment.draw(R.layout.state_loading_text);
+                        TextView message = fragment.container().findViewById(R.id.loading_message);
+                        if (message != null) {
+                            switch (state) {
+                                case DeIfmoRestClient.STATE_HANDLING:
+                                    message.setText(R.string.loading);
+                                    break;
+                            }
                         }
                     });
                 }
-            } else {
-                thread.runOnUI(() -> {
-                    if (getData() != null) {
-                        display();
-                    } else {
-                        fragment.draw(R.layout.state_offline_text);
-                        if (activity != null) {
-                            View offline_reload = fragment.container().findViewById(R.id.offline_reload);
-                            if (offline_reload != null) {
-                                offline_reload.setOnClickListener(v -> load());
-                            }
-                        }
-                    }
-                });
-            }
+                @Override
+                public void onNewRequest(Client.Request request) {
+                    requestHandle = request;
+                }
+            });
+        }, throwable -> {
+            loadFailed();
         });
     }
 
     private void loadFailed() {
         thread.runOnUI(() -> {
             log.v(TAG, "loadFailed");
-            try {
-                fragment.draw(R.layout.state_failed_button);
-                TextView try_again_message = fragment.container().findViewById(R.id.try_again_message);
-                if (try_again_message != null) try_again_message.setText(R.string.load_failed_retry_in_minute);
-                View try_again_reload = fragment.container().findViewById(R.id.try_again_reload);
-                if (try_again_reload != null) {
-                    try_again_reload.setOnClickListener(v -> load());
-                }
-            } catch (Exception e) {
-                log.exception(e);
+            fragment.draw(R.layout.state_failed_button);
+            TextView message = fragment.container().findViewById(R.id.try_again_message);
+            if (message != null) {
+                message.setText(R.string.load_failed_retry_in_minute);
             }
-        });
+            View reload = fragment.container().findViewById(R.id.try_again_reload);
+            if (reload != null) {
+                reload.setOnClickListener(v -> load());
+            }
+        }, throwable -> {});
     }
 
     private void display() {
         thread.run(() -> {
             log.v(TAG, "display");
-            try {
-                if (getData() == null) throw new NullPointerException("data cannot be null");
-                final ProtocolRVA adapter = new ProtocolRVA(activity, getData().getJSONArray("protocol"), "advanced".equals(storagePref.get(activity, "pref_protocol_changes_mode", "advanced")));
-                thread.runOnUI(() -> {
-                    try {
-                        fragment.draw(R.layout.layout_protocol);
-                        // set adapter to recycler view
-                        final LinearLayoutManager layoutManager = new LinearLayoutManager(activity, LinearLayoutManager.VERTICAL, false);
-                        final RecyclerView protocol_list = fragment.container().findViewById(R.id.protocol_list);
-                        if (protocol_list != null) {
-                            protocol_list.setLayoutManager(layoutManager);
-                            protocol_list.setAdapter(adapter);
-                            protocol_list.setHasFixedSize(true);
+            Protocol data = getData();
+            if (data == null) {
+                loadFailed();
+                return;
+            }
+            ProtocolRVA adapter = new ProtocolRVA(activity, data, "advanced".equals(storagePref.get(activity, "pref_protocol_changes_mode", "advanced")));
+            thread.runOnUI(() -> {
+                fragment.draw(R.layout.layout_protocol);
+                // set adapter to recycler view
+                LinearLayoutManager layoutManager = new LinearLayoutManager(activity, LinearLayoutManager.VERTICAL, false);
+                RecyclerView recyclerView = fragment.container().findViewById(R.id.protocol_list);
+                if (recyclerView != null) {
+                    recyclerView.setLayoutManager(layoutManager);
+                    recyclerView.setAdapter(adapter);
+                    recyclerView.setHasFixedSize(true);
+                }
+                // setup swipe
+                SwipeRefreshLayout swipe = fragment.container().findViewById(R.id.swipe_container);
+                if (swipe != null) {
+                    swipe.setColorSchemeColors(Color.resolve(activity, R.attr.colorAccent));
+                    swipe.setProgressBackgroundColorSchemeColor(Color.resolve(activity, R.attr.colorBackgroundRefresh));
+                    swipe.setOnRefreshListener(this);
+                }
+                // setup spinner: weeks
+                Spinner spinner = fragment.container().findViewById(R.id.pl_weeks_spinner);
+                if (spinner != null) {
+                    final ArrayList<String> weekLabelArr = new ArrayList<>();
+                    final ArrayList<Integer> weekArr = new ArrayList<>();
+                    for (int i = 1; i <= 4; i++) {
+                        String value = activity.getString(R.string.for_the) + " ";
+                        switch (i){
+                            case 1: value += activity.getString(R.string.last_week); break;
+                            case 2: value += activity.getString(R.string.last_2_weeks); break;
+                            case 3: value += activity.getString(R.string.last_3_weeks); break;
+                            case 4: value += activity.getString(R.string.last_4_weeks); break;
                         }
-                        // setup swipe
-                        final SwipeRefreshLayout swipe_container = fragment.container().findViewById(R.id.swipe_container);
-                        if (swipe_container != null) {
-                            swipe_container.setColorSchemeColors(Color.resolve(activity, R.attr.colorAccent));
-                            swipe_container.setProgressBackgroundColorSchemeColor(Color.resolve(activity, R.attr.colorBackgroundRefresh));
-                            swipe_container.setOnRefreshListener(this);
-                        }
-                        // setup spinner: weeks
-                        final Spinner spinner_weeks = fragment.container().findViewById(R.id.pl_weeks_spinner);
-                        if (spinner_weeks != null) {
-                            final ArrayList<String> spinner_weeks_arr = new ArrayList<>();
-                            final ArrayList<Integer> spinner_weeks_arr_values = new ArrayList<>();
-                            for (int i = 1; i <= 4; i++) {
-                                String value = activity.getString(R.string.for_the) + " ";
-                                switch (i){
-                                    case 1: value += activity.getString(R.string.last_week); break;
-                                    case 2: value += activity.getString(R.string.last_2_weeks); break;
-                                    case 3: value += activity.getString(R.string.last_3_weeks); break;
-                                    case 4: value += activity.getString(R.string.last_4_weeks); break;
+                        weekArr.add(i);
+                        weekLabelArr.add(value);
+                    }
+                    spinner.setAdapter(new ArrayAdapter<>(activity, R.layout.spinner_center_single_line, weekLabelArr));
+                    spinner.setSelection(data.getNumberOfWeeks() - 1);
+                    spinnerWeeksBlocker = true;
+                    spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                        public void onItemSelected(final AdapterView<?> parent, final View item, final int position, final long selectedId) {
+                            thread.run(() -> {
+                                if (spinnerWeeksBlocker) {
+                                    spinnerWeeksBlocker = false;
+                                    return;
                                 }
-                                spinner_weeks_arr.add(value);
-                                spinner_weeks_arr_values.add(i);
-                            }
-                            spinner_weeks.setAdapter(new ArrayAdapter<>(activity, R.layout.spinner_center_single_line, spinner_weeks_arr));
-                            spinner_weeks.setSelection(getData().getInt("number_of_weeks") - 1);
-                            spinner_weeks_blocker = true;
-                            spinner_weeks.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-                                public void onItemSelected(final AdapterView<?> parent, final View item, final int position, final long selectedId) {
-                                    thread.run(() -> {
-                                        if (spinner_weeks_blocker) {
-                                            spinner_weeks_blocker = false;
-                                            return;
-                                        }
-                                        number_of_weeks = spinner_weeks_arr_values.get(position);
-                                        log.v(TAG, "spinner_weeks clicked | number_of_weeks=" + number_of_weeks);
-                                        load(true);
-                                    });
-                                }
-                                public void onNothingSelected(AdapterView<?> parent) {}
+                                numberOfWeeks = weekArr.get(position);
+                                log.v(TAG, "Number of weeks selected | numberOfWeeks=" + numberOfWeeks);
+                                load(true);
                             });
                         }
-                        // show update time
-                        notificationMessage.showUpdateTime(activity, getData().getLong("timestamp"));
-                    } catch (Exception e) {
-                        log.exception(e);
-                        loadFailed();
-                    }
-                });
-            } catch (Exception e) {
-                log.exception(e);
+                        public void onNothingSelected(AdapterView<?> parent) {}
+                    });
+                }
+                // show update time
+                notificationMessage.showUpdateTime(activity, data.getTimestamp());
+            }, throwable -> {
+                log.exception(throwable);
                 loadFailed();
-            }
+            });
+        }, throwable -> {
+            log.exception(throwable);
+            loadFailed();
         });
     }
 
-    private void setData(JSONObject data) {
-        this.data = data;
-        fragment.storeData(fragment, data.toString());
+    private Protocol getFromCache() {
+        thread.assertNotUI();
+        String cache = storage.get(activity, Storage.CACHE, Storage.USER, "protocol#core").trim();
+        if (StringUtils.isBlank(cache)) {
+            return null;
+        }
+        try {
+            return new Protocol().fromJsonString(cache);
+        } catch (Exception e) {
+            storage.delete(activity, Storage.CACHE, Storage.USER, "protocol#core");
+            return null;
+        }
     }
 
-    private JSONObject getData() {
+    private void setData(Protocol data) {
+        thread.assertNotUI();
+        try {
+            this.data = data;
+            fragment.storeData(fragment, data.toJsonString());
+        } catch (Exception e) {
+            log.exception(e);
+        }
+    }
+
+    private Protocol getData() {
+        thread.assertNotUI();
         if (data != null) {
             return data;
         }
         try {
             String stored = fragment.restoreData(fragment);
             if (stored != null && !stored.isEmpty()) {
-                data = textUtils.string2json(stored);
+                data = new Protocol().fromJsonString(stored);
                 return data;
             }
         } catch (Exception e) {

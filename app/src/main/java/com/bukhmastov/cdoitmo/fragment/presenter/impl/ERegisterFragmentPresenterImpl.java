@@ -17,7 +17,6 @@ import com.bukhmastov.cdoitmo.App;
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activity.ConnectedActivity;
 import com.bukhmastov.cdoitmo.adapter.rva.ERegisterSubjectsRVA;
-import com.bukhmastov.cdoitmo.converter.ERegisterConverter;
 import com.bukhmastov.cdoitmo.event.bus.EventBus;
 import com.bukhmastov.cdoitmo.event.bus.annotation.Event;
 import com.bukhmastov.cdoitmo.event.events.ClearCacheEvent;
@@ -26,6 +25,10 @@ import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.fragment.ConnectedFragment;
 import com.bukhmastov.cdoitmo.fragment.SubjectShowFragment;
 import com.bukhmastov.cdoitmo.fragment.presenter.ERegisterFragmentPresenter;
+import com.bukhmastov.cdoitmo.function.BiFunction;
+import com.bukhmastov.cdoitmo.model.eregister.ERSubject;
+import com.bukhmastov.cdoitmo.model.eregister.ERYear;
+import com.bukhmastov.cdoitmo.model.eregister.ERegister;
 import com.bukhmastov.cdoitmo.network.DeIfmoRestClient;
 import com.bukhmastov.cdoitmo.network.handlers.RestResponseHandler;
 import com.bukhmastov.cdoitmo.network.model.Client;
@@ -37,12 +40,17 @@ import com.bukhmastov.cdoitmo.util.TextUtils;
 import com.bukhmastov.cdoitmo.util.Thread;
 import com.bukhmastov.cdoitmo.util.Time;
 import com.bukhmastov.cdoitmo.util.singleton.Color;
+import com.bukhmastov.cdoitmo.util.singleton.StringUtils;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collection;
+import java.util.List;
+import java.util.Objects;
+import java.util.TreeSet;
 
 import javax.inject.Inject;
 
@@ -51,10 +59,10 @@ public class ERegisterFragmentPresenterImpl implements ERegisterFragmentPresente
     private static final String TAG = "ERegisterFragment";
     private ConnectedFragment fragment = null;
     private ConnectedActivity activity = null;
-    private JSONObject data = null;
+    private ERegister data = null;
     private String group;
     private int term;
-    private boolean spinner_group_blocker = true, spinner_period_blocker = true;
+    private boolean spinnerGroupBlocker = true, spinnerPeriodBlocker = true;
     private boolean loaded = false;
     private Client.Request requestHandle = null;
     private boolean forbidden = false;
@@ -132,31 +140,33 @@ public class ERegisterFragmentPresenterImpl implements ERegisterFragmentPresente
 
     @Override
     public void onResume() {
-        thread.runOnUI(() -> {
+        thread.run(() -> {
             log.v(TAG, "Fragment resumed");
             if (forbidden) {
                 return;
             }
             firebaseAnalyticsProvider.setCurrentScreen(activity, fragment);
             if (activity != null && activity.toolbar != null) {
-                MenuItem action_info = activity.toolbar.findItem(R.id.action_info);
-                if (action_info != null) {
-                    action_info.setVisible(true);
-                    action_info.setOnMenuItemClickListener(item -> {
-                        thread.runOnUI(() -> {
-                            if (activity.isFinishing() || activity.isDestroyed()) {
-                                return;
-                            }
-                            new AlertDialog.Builder(activity)
-                                    .setIcon(R.drawable.ic_info_outline)
-                                    .setTitle(R.string.e_journal)
-                                    .setMessage(R.string.e_journal_help)
-                                    .setNegativeButton(R.string.close, null)
-                                    .create().show();
+                thread.runOnUI(() -> {
+                    MenuItem action_info = activity.toolbar.findItem(R.id.action_info);
+                    if (action_info != null) {
+                        action_info.setVisible(true);
+                        action_info.setOnMenuItemClickListener(item -> {
+                            thread.runOnUI(() -> {
+                                if (activity.isFinishing() || activity.isDestroyed()) {
+                                    return;
+                                }
+                                new AlertDialog.Builder(activity)
+                                        .setIcon(R.drawable.ic_info_outline)
+                                        .setTitle(R.string.e_journal)
+                                        .setMessage(R.string.e_journal_help)
+                                        .setNegativeButton(R.string.close, null)
+                                        .create().show();
+                            });
+                            return false;
                         });
-                        return false;
-                    });
-                }
+                    }
+                });
             }
             if (!loaded) {
                 loaded = true;
@@ -194,404 +204,471 @@ public class ERegisterFragmentPresenterImpl implements ERegisterFragmentPresente
     private void load(final int refresh_rate) {
         thread.run(() -> {
             log.v(TAG, "load | refresh_rate=" + refresh_rate);
-            if (storagePref.get(activity, "pref_use_cache", true)) {
-                String cache = storage.get(activity, Storage.CACHE, Storage.USER, "eregister#core").trim();
-                if (!cache.isEmpty()) {
-                    try {
-                        JSONObject data = new JSONObject(cache);
-                        setData(data);
-                        if (data.getLong("timestamp") + refresh_rate * 3600000L < time.getCalendar().getTimeInMillis()) {
-                            load(true, cache);
-                        } else {
-                            load(false, cache);
-                        }
-                    } catch (Exception e) {
-                        log.e(TAG, "load | exception=", e);
-                        load(true, cache);
-                    }
-                } else {
-                    load(false);
-                }
-            } else {
+            if (!storagePref.get(activity, "pref_use_cache", true)) {
                 load(false);
+                return;
+            }
+            ERegister cache = getFromCache();
+            if (cache == null) {
+                load(true, null);
+                return;
+            }
+            setData(cache);
+            if (cache.getTimestamp() + refresh_rate * 3600000L < time.getTimeInMillis()) {
+                load(true, cache);
+            } else {
+                load(false, cache);
             }
         });
     }
 
     private void load(final boolean force) {
-        thread.run(() -> load(force, ""));
+        thread.run(() -> load(force, null));
     }
 
-    private void load(final boolean force, final String cache) {
+    private void load(final boolean force, final ERegister cached) {
         thread.run(() -> {
             log.v(TAG, "load | force=" + (force ? "true" : "false"));
             if ((!force || !Client.isOnline(activity)) && storagePref.get(activity, "pref_use_cache", true)) {
                 try {
-                    String c = cache.isEmpty() ? storage.get(activity, Storage.CACHE, Storage.USER, "eregister#core").trim() : cache;
-                    if (!c.isEmpty()) {
+                    ERegister cache = cached == null ? getFromCache() : cached;
+                    if (cache != null) {
                         log.v(TAG, "load | from cache");
-                        setData(new JSONObject(c));
+                        setData(cache);
                         display();
                         return;
                     }
                 } catch (Exception e) {
                     log.v(TAG, "load | failed to load from cache");
-                    storage.delete(activity, Storage.CACHE, Storage.USER, "eregister#core");
                 }
             }
-            if (!App.OFFLINE_MODE) {
-                deIfmoRestClient.get(activity, "eregister", null, new RestResponseHandler() {
-                    @Override
-                    public void onSuccess(final int statusCode, final Client.Headers headers, final JSONObject responseObj, final JSONArray responseArr) {
-                        thread.run(() -> {
-                            log.v(TAG, "load | success | statusCode=" + statusCode + " | responseObj=" + (responseObj == null ? "null" : "notnull"));
-                            if (statusCode == 200 && responseObj != null) {
-                                new ERegisterConverter(responseObj, json -> {
-                                    if (storagePref.get(activity, "pref_use_cache", true)) {
-                                        storage.put(activity, Storage.CACHE, Storage.USER, "eregister#core", json.toString());
-                                    }
-                                    setData(json);
-                                    display();
-                                }).run();
-                            } else {
+            if (App.OFFLINE_MODE) {
+                if (getData() != null) {
+                    display();
+                    return;
+                }
+                thread.runOnUI(() -> {
+                    fragment.draw(R.layout.state_offline_text);
+                    View reload = fragment.container().findViewById(R.id.offline_reload);
+                    if (reload != null) {
+                        reload.setOnClickListener(v -> load());
+                    }
+                });
+                return;
+            }
+            deIfmoRestClient.get(activity, "eregister", null, new RestResponseHandler() {
+                @Override
+                public void onSuccess(final int statusCode, final Client.Headers headers, final JSONObject obj, final JSONArray arr) {
+                    thread.run(() -> {
+                        log.v(TAG, "load | success | statusCode=" + statusCode + " | obj=" + (obj == null ? "null" : "notnull"));
+                        if (statusCode == 200 && obj != null) {
+                            ERegister data = new ERegister().fromJson(obj);
+                            data.setTimestamp(time.getTimeInMillis());
+                            if (storagePref.get(activity, "pref_use_cache", true)) {
+                                storage.put(activity, Storage.CACHE, Storage.USER, "eregister#core", data.toJsonString());
+                            }
+                            setData(data);
+                            display();
+                            return;
+                        }
+                        if (getData() != null) {
+                            display();
+                            return;
+                        }
+                        loadFailed();
+                    }, throwable -> {
+                        loadFailed();
+                    });
+                }
+                @Override
+                public void onFailure(final int statusCode, final Client.Headers headers, final int state) {
+                    thread.run(() -> {
+                        log.v(TAG, "load | failure " + state);
+                        switch (state) {
+                            case DeIfmoRestClient.FAILED_OFFLINE:
                                 if (getData() != null) {
                                     display();
-                                } else {
+                                    return;
+                                }
+                                thread.runOnUI(() -> {
+                                    fragment.draw(R.layout.state_offline_text);
+                                    View reload = fragment.container().findViewById(R.id.offline_reload);
+                                    if (reload != null) {
+                                        reload.setOnClickListener(v -> load());
+                                    }
+                                }, throwable -> {
                                     loadFailed();
-                                }
-                            }
-                        });
-                    }
-                    @Override
-                    public void onFailure(final int statusCode, final Client.Headers headers, final int state) {
-                        thread.runOnUI(() -> {
-                            log.v(TAG, "load | failure " + state);
-                            switch (state) {
-                                case DeIfmoRestClient.FAILED_OFFLINE:
-                                    if (getData() != null) {
-                                        display();
-                                    } else {
-                                        fragment.draw(R.layout.state_offline_text);
-                                        if (activity != null) {
-                                            View offline_reload = fragment.container().findViewById(R.id.offline_reload);
-                                            if (offline_reload != null) {
-                                                offline_reload.setOnClickListener(v -> load());
-                                            }
-                                        }
-                                    }
-                                    break;
-                                case DeIfmoRestClient.FAILED_TRY_AGAIN:
-                                case DeIfmoRestClient.FAILED_SERVER_ERROR:
-                                case DeIfmoRestClient.FAILED_CORRUPTED_JSON:
+                                });
+                                break;
+                            case DeIfmoRestClient.FAILED_TRY_AGAIN:
+                            case DeIfmoRestClient.FAILED_SERVER_ERROR:
+                            case DeIfmoRestClient.FAILED_CORRUPTED_JSON:
+                                thread.runOnUI(() -> {
                                     fragment.draw(R.layout.state_failed_button);
-                                    if (activity != null) {
-                                        TextView try_again_message = fragment.container().findViewById(R.id.try_again_message);
-                                        if (try_again_message != null) {
-                                            switch (state) {
-                                                case DeIfmoRestClient.FAILED_SERVER_ERROR:   try_again_message.setText(DeIfmoRestClient.getFailureMessage(activity, statusCode)); break;
-                                                case DeIfmoRestClient.FAILED_CORRUPTED_JSON: try_again_message.setText(R.string.server_provided_corrupted_json); break;
-                                            }
-                                        }
-                                        View try_again_reload = fragment.container().findViewById(R.id.try_again_reload);
-                                        if (try_again_reload != null) {
-                                            try_again_reload.setOnClickListener(v -> load());
+                                    TextView message = fragment.container().findViewById(R.id.try_again_message);
+                                    if (message != null) {
+                                        switch (state) {
+                                            case DeIfmoRestClient.FAILED_SERVER_ERROR:
+                                                if (activity == null) {
+                                                    message.setText(DeIfmoRestClient.getFailureMessage(statusCode));
+                                                } else {
+                                                    message.setText(DeIfmoRestClient.getFailureMessage(activity, statusCode));
+                                                }
+                                                break;
+                                            case DeIfmoRestClient.FAILED_CORRUPTED_JSON:
+                                                message.setText(R.string.server_provided_corrupted_json);
+                                                break;
                                         }
                                     }
-                                    break;
-                            }
-                        });
-                    }
-                    @Override
-                    public void onProgress(final int state) {
-                        thread.runOnUI(() -> {
-                            log.v(TAG, "load | progress " + state);
-                            fragment.draw(R.layout.state_loading_text);
-                            if (activity != null) {
-                                TextView loading_message = fragment.container().findViewById(R.id.loading_message);
-                                if (loading_message != null) {
-                                    switch (state) {
-                                        case DeIfmoRestClient.STATE_HANDLING: loading_message.setText(R.string.loading); break;
+                                    View reload = fragment.container().findViewById(R.id.try_again_reload);
+                                    if (reload != null) {
+                                        reload.setOnClickListener(v -> load());
                                     }
-                                }
-                            }
-                        });
-                    }
-                    @Override
-                    public void onNewRequest(Client.Request request) {
-                        requestHandle = request;
-                    }
-                });
-            } else {
-                thread.runOnUI(() -> {
-                    if (getData() != null) {
-                        display();
-                    } else {
-                        fragment.draw(R.layout.state_offline_text);
-                        if (activity != null) {
-                            View offline_reload = fragment.container().findViewById(R.id.offline_reload);
-                            if (offline_reload != null) {
-                                offline_reload.setOnClickListener(v -> load());
+                                }, throwable -> {
+                                    loadFailed();
+                                });
+                                break;
+                        }
+                    }, throwable -> {
+                        loadFailed();
+                    });
+                }
+                @Override
+                public void onProgress(final int state) {
+                    thread.runOnUI(() -> {
+                        log.v(TAG, "load | progress " + state);
+                        fragment.draw(R.layout.state_loading_text);
+                        TextView loading_message = fragment.container().findViewById(R.id.loading_message);
+                        if (loading_message != null) {
+                            switch (state) {
+                                case DeIfmoRestClient.STATE_HANDLING: loading_message.setText(R.string.loading); break;
                             }
                         }
-                    }
-                });
-            }
+                    });
+                }
+                @Override
+                public void onNewRequest(Client.Request request) {
+                    requestHandle = request;
+                }
+            });
+        }, throwable -> {
+            loadFailed();
         });
     }
 
     private void loadFailed() {
         thread.runOnUI(() -> {
             log.v(TAG, "loadFailed");
-            try {
-                fragment.draw(R.layout.state_failed_button);
-                TextView try_again_message = fragment.container().findViewById(R.id.try_again_message);
-                if (try_again_message != null) try_again_message.setText(R.string.eregister_load_failed_retry_in_minute);
-                View try_again_reload = fragment.container().findViewById(R.id.try_again_reload);
-                if (try_again_reload != null) {
-                    try_again_reload.setOnClickListener(v -> load());
-                }
-            } catch (Exception e) {
-                log.exception(e);
+            fragment.draw(R.layout.state_failed_button);
+            TextView message = fragment.container().findViewById(R.id.try_again_message);
+            if (message != null) {
+                message.setText(R.string.eregister_load_failed_retry_in_minute);
             }
-        });
+            View reload = fragment.container().findViewById(R.id.try_again_reload);
+            if (reload != null) {
+                reload.setOnClickListener(v -> load());
+            }
+        }, throwable -> {});
     }
 
     private void display() {
         thread.run(() -> {
             log.v(TAG, "display");
-            try {
-                if (getData() == null) throw new NullPointerException("data cannot be null");
-                checkData(getData());
-                // creating adapter
-                final JSONArray subjectsList = new JSONArray();
-                final JSONArray groups = getData().getJSONArray("groups");
-                for (int i = 0; i < groups.length(); i++) {
-                    final JSONObject group = groups.getJSONObject(i);
-                    if (group.getString("name").equals(this.group)) {
-                        final JSONArray terms = group.getJSONArray("terms");
-                        for (int j = 0; j < terms.length(); j++) {
-                            final JSONObject term = terms.getJSONObject(j);
-                            final int termNumber = term.getInt("number");
-                            if (this.term == -1 || this.term == termNumber) {
-                                final JSONArray subjects = term.getJSONArray("subjects");
-                                for (int k = 0; k < subjects.length(); k++) {
-                                    final JSONObject subject = subjects.getJSONObject(k);
-                                    subjectsList.put(new JSONObject()
-                                            .put("term", termNumber)
-                                            .put("subject", subject)
-                                    );
-                                }
-                            }
-                        }
-                        break;
-                    }
-                }
-                final ERegisterSubjectsRVA adapter = new ERegisterSubjectsRVA(activity, subjectsList);
-                adapter.setOnElementClickListener(R.id.subject, (v, data) -> thread.run(() -> {
-                    try {
-                        log.v(TAG, "erl_list_view clicked");
-                        final Bundle extras = new Bundle();
-                        extras.putString("data", data.get("data").toString());
-                        thread.runOnUI(() -> activity.openActivityOrFragment(SubjectShowFragment.class, extras));
-                    } catch (Exception e) {
-                        log.exception(e);
-                        notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
-                    }
-                }));
-                thread.runOnUI(() -> {
-                    try {
-                        fragment.draw(R.layout.layout_eregister);
-                        // set adapter to recycler view
-                        final LinearLayoutManager layoutManager = new LinearLayoutManager(activity, LinearLayoutManager.VERTICAL, false);
-                        final RecyclerView erl_list_view = fragment.container().findViewById(R.id.erl_list_view);
-                        if (erl_list_view != null) {
-                            erl_list_view.setLayoutManager(layoutManager);
-                            erl_list_view.setAdapter(adapter);
-                            erl_list_view.setHasFixedSize(true);
-                        }
-                        // setup swipe
-                        final SwipeRefreshLayout swipe_container = fragment.container().findViewById(R.id.swipe_container);
-                        if (swipe_container != null) {
-                            swipe_container.setColorSchemeColors(Color.resolve(activity, R.attr.colorAccent));
-                            swipe_container.setProgressBackgroundColorSchemeColor(Color.resolve(activity, R.attr.colorBackgroundRefresh));
-                            swipe_container.setOnRefreshListener(this);
-                        }
-                        // setup spinners
-                        int selection = 0, counter = 0;
-                        // spinner: groups
-                        final Spinner spinner_group = fragment.container().findViewById(R.id.erl_group_spinner);
-                        if (spinner_group != null) {
-                            final ArrayList<String> spinner_group_arr = new ArrayList<>();
-                            final ArrayList<String> spinner_group_arr_names = new ArrayList<>();
-                            for (int i = 0; i < groups.length(); i++) {
-                                JSONObject group = groups.getJSONObject(i);
-                                spinner_group_arr.add(group.getString("name") + " (" + group.getJSONArray("years").getInt(0) + "/" + group.getJSONArray("years").getInt(1) + ")");
-                                spinner_group_arr_names.add(group.getString("name"));
-                                if (group.getString("name").equals(this.group)) selection = counter;
-                                counter++;
-                            }
-                            spinner_group.setAdapter(new ArrayAdapter<>(activity, R.layout.spinner_center_single_line, spinner_group_arr));
-                            spinner_group.setSelection(selection);
-                            spinner_group_blocker = true;
-                            spinner_group.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-                                public void onItemSelected(final AdapterView<?> parent, final View item, final int position, final long selectedId) {
-                                    thread.run(() -> {
-                                        if (spinner_group_blocker) {
-                                            spinner_group_blocker = false;
-                                            return;
-                                        }
-                                        group = spinner_group_arr_names.get(position);
-                                        log.v(TAG, "spinner_group clicked | group=" + group);
-                                        storage.put(activity, Storage.CACHE, Storage.USER, "eregister#params#selected_group", group);
-                                        load(false);
-                                    });
-                                }
-                                public void onNothingSelected(AdapterView<?> parent) {}
-                            });
-                        }
-                        // spinner: terms
-                        final Spinner spinner_period = fragment.container().findViewById(R.id.erl_period_spinner);
-                        if (spinner_period != null) {
-                            final ArrayList<String> spinner_period_arr = new ArrayList<>();
-                            final ArrayList<Integer> spinner_period_arr_values = new ArrayList<>();
-                            selection = 2;
-                            for (int i = 0; i < groups.length(); i++) {
-                                JSONObject group = groups.getJSONObject(i);
-                                if (group.getString("name").equals(this.group)) {
-                                    int first = group.getJSONArray("terms").getJSONObject(0).getInt("number");
-                                    int second = group.getJSONArray("terms").getJSONObject(1).getInt("number");
-                                    spinner_period_arr.add(first + " " + activity.getString(R.string.semester));
-                                    spinner_period_arr.add(second + " " + activity.getString(R.string.semester));
-                                    spinner_period_arr.add(activity.getString(R.string.year));
-                                    spinner_period_arr_values.add(first);
-                                    spinner_period_arr_values.add(second);
-                                    spinner_period_arr_values.add(-1);
-                                    if (this.term == first) selection = 0;
-                                    if (this.term == second) selection = 1;
-                                    break;
-                                }
-                            }
-                            spinner_period.setAdapter(new ArrayAdapter<>(activity, R.layout.spinner_center_single_line, spinner_period_arr));
-                            spinner_period.setSelection(selection);
-                            spinner_period_blocker = true;
-                            spinner_period.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-                                public void onItemSelected(final AdapterView<?> parent, final View item, final int position, final long selectedId) {
-                                    thread.run(() -> {
-                                        if (spinner_period_blocker) {
-                                            spinner_period_blocker = false;
-                                            return;
-                                        }
-                                        term = spinner_period_arr_values.get(position);
-                                        log.v(TAG, "spinner_period clicked | term=" + term);
-                                        load(false);
-                                    });
-                                }
-                                public void onNothingSelected(AdapterView<?> parent) {}
-                            });
-                        }
-                        // show update time
-                        notificationMessage.showUpdateTime(activity, getData().getLong("timestamp"), NotificationMessage.LENGTH_MOMENTUM, true);
-                    } catch (Exception e) {
-                        log.exception(e);
-                        loadFailed();
-                    }
-                });
-            } catch (Exception e) {
-                log.exception(e);
+            ERegister data = getData();
+            if (data == null) {
                 loadFailed();
+                return;
             }
+            applySelectedTermAndGroup(data);
+            TreeSet<ERSubject> subjects = new TreeSet<>(ERSubject::compareTo);
+            for (ERYear erYear : data.getYears()) {
+                if (Objects.equals(group, erYear.getGroup())) {
+                    subjects.addAll(getSubjectsForTerm(erYear, term));
+                    break;
+                }
+            }
+            ERegisterSubjectsRVA adapter = new ERegisterSubjectsRVA(activity, subjects);
+            adapter.setClickListener(R.id.subject, (v, subject) -> {
+                thread.run(() -> {
+                    Bundle extras = new Bundle();
+                    extras.putSerializable("subject", subject);
+                    thread.runOnUI(() -> activity.openActivityOrFragment(SubjectShowFragment.class, extras));
+                }, throwable -> {
+                    notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                });
+            });
+            thread.runOnUI(() -> {
+                fragment.draw(R.layout.layout_eregister);
+                // set adapter to recycler view
+                LinearLayoutManager layoutManager = new LinearLayoutManager(activity, LinearLayoutManager.VERTICAL, false);
+                RecyclerView recyclerView = fragment.container().findViewById(R.id.erl_list_view);
+                if (recyclerView != null) {
+                    recyclerView.setLayoutManager(layoutManager);
+                    recyclerView.setAdapter(adapter);
+                    recyclerView.setHasFixedSize(true);
+                }
+                // setup swipe
+                SwipeRefreshLayout swipe = fragment.container().findViewById(R.id.swipe_container);
+                if (swipe != null) {
+                    swipe.setColorSchemeColors(Color.resolve(activity, R.attr.colorAccent));
+                    swipe.setProgressBackgroundColorSchemeColor(Color.resolve(activity, R.attr.colorBackgroundRefresh));
+                    swipe.setOnRefreshListener(this);
+                }
+                // setup spinners
+                Spinner spinner;
+                int selection = 0, counter = 0;
+                spinner = fragment.container().findViewById(R.id.erl_group_spinner);
+                if (spinner != null) {
+                    List<String> groupArr = new ArrayList<>();
+                    List<String> groupLabelArr = new ArrayList<>();
+                    for (ERYear erYear : data.getYears()) {
+                        groupArr.add(erYear.getGroup());
+                        groupLabelArr.add(erYear.getGroup() + " (" + erYear.getYearFirst() + "/" + erYear.getYearSecond() + ")");
+                        if (Objects.equals(group, erYear.getGroup())) {
+                            selection = counter;
+                        }
+                        counter++;
+                    }
+                    spinner.setAdapter(new ArrayAdapter<>(activity, R.layout.spinner_center_single_line, groupLabelArr));
+                    spinner.setSelection(selection);
+                    spinnerGroupBlocker = true;
+                    spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                        public void onItemSelected(final AdapterView<?> parent, final View item, final int position, final long selectedId) {
+                            thread.run(() -> {
+                                if (spinnerGroupBlocker) {
+                                    spinnerGroupBlocker = false;
+                                    return;
+                                }
+                                group = groupArr.get(position);
+                                log.v(TAG, "Group selected | group=" + group);
+                                storage.put(activity, Storage.CACHE, Storage.USER, "eregister#params#selected_group", group);
+                                load(false);
+                            });
+                        }
+                        public void onNothingSelected(AdapterView<?> parent) {}
+                    });
+                }
+                spinner = fragment.container().findViewById(R.id.erl_period_spinner);
+                if (spinner != null) {
+                    List<Integer> termArr = new ArrayList<>();
+                    List<String> termLabelArr = new ArrayList<>();
+                    selection = 2;
+                    for (ERYear erYear : data.getYears()) {
+                        if (Objects.equals(group, erYear.getGroup())) {
+                            Integer first = getTerm(erYear, Math::min);
+                            Integer second = getTerm(erYear, Math::max);
+                            if (first != null) {
+                                termArr.add(first);
+                                termLabelArr.add(first + " " + activity.getString(R.string.semester));
+                                if (term == first) {
+                                    selection = 0;
+                                }
+                            }
+                            if (second != null) {
+                                termArr.add(second);
+                                termLabelArr.add(second + " " + activity.getString(R.string.semester));
+                                if (term == second) {
+                                    selection = 1;
+                                }
+                            }
+                            termArr.add(-1);
+                            termLabelArr.add(activity.getString(R.string.year));
+                            break;
+                        }
+                    }
+                    spinner.setAdapter(new ArrayAdapter<>(activity, R.layout.spinner_center_single_line, termLabelArr));
+                    spinner.setSelection(selection);
+                    spinnerPeriodBlocker = true;
+                    spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                        public void onItemSelected(final AdapterView<?> parent, final View item, final int position, final long selectedId) {
+                            thread.run(() -> {
+                                if (spinnerPeriodBlocker) {
+                                    spinnerPeriodBlocker = false;
+                                    return;
+                                }
+                                term = termArr.get(position);
+                                log.v(TAG, "Period selected | period=" + termLabelArr.get(position));
+                                load(false);
+                            });
+                        }
+                        public void onNothingSelected(AdapterView<?> parent) {}
+                    });
+                }
+                // show update time
+                notificationMessage.showUpdateTime(activity, data.getTimestamp(), NotificationMessage.LENGTH_MOMENTUM, true);
+            }, throwable -> {
+                loadFailed();
+            });
+        }, throwable -> {
+            loadFailed();
         });
     }
 
-    private void checkData(JSONObject data) throws Exception {
-        log.v(TAG, "checkData");
+    private void applySelectedTermAndGroup(ERegister data) {
+        log.v(TAG, "applySelectedTermAndGroup");
         final Calendar now = time.getCalendar();
         final int year = now.get(Calendar.YEAR);
         final int month = now.get(Calendar.MONTH);
         String currentGroup = "";
         int currentTerm = -1, maxYear = 0;
-        final JSONArray groups = data.getJSONArray("groups");
-        for (int i = 0; i < groups.length(); i++) {
-            final JSONObject group = groups.getJSONObject(i);
-            if (!this.group.isEmpty() && group.getString("name").equals(this.group)) { // мы нашли назначенную группу
-                this.group = group.getString("name");
+        for (ERYear erYear : data.getYears()) {
+            if (!group.isEmpty() && Objects.equals(group, erYear.getGroup())) {
+                // мы нашли назначенную группу
+                group = erYear.getGroup();
                 // теперь проверяем семестр
-                final JSONArray terms = group.getJSONArray("terms");
                 boolean isTermOk = false;
-                if (this.term == -2) {
-                    final JSONArray years = group.getJSONArray("years");
-                    if (year == years.getInt(month > Calendar.AUGUST ? 0 : 1)) {
-                        switch (Integer.parseInt(storagePref.get(activity, "pref_e_journal_term", "0"))) {
-                            default: case 0: this.term = group.getJSONArray("terms").getJSONObject(month > Calendar.AUGUST || month == Calendar.JANUARY ? 0 : 1).getInt("number"); break;
-                            case 1: this.term = group.getJSONArray("terms").getJSONObject(0).getInt("number"); break;
-                            case 2: this.term = group.getJSONArray("terms").getJSONObject(1).getInt("number"); break;
-                            case 3: this.term = -1; break;
-                        }
-                    } else {
-                        this.term = -1;
-                    }
+                if (term == -2) {
+                    term = selectTerm(erYear);
                     isTermOk = true;
-                }
-                for (int j = 0; j < terms.length(); j++) {
-                    final JSONObject term = terms.getJSONObject(j);
-                    if (this.term != -1 && this.term == term.getInt("number")) { // мы нашли семестр в найденной группе
-                        this.term = term.getInt("number");
-                        isTermOk = true;
-                        break;
+                } else {
+                    for (ERSubject erSubject : erYear.getSubjects()) {
+                        if (term != -1 && term == erSubject.getTerm()) {
+                            isTermOk = true;
+                            break;
+                        }
                     }
                 }
-                if (!isTermOk) { // семестр неверен, выбираем весь год
+                if (!isTermOk) {
                     this.term = -1;
                 }
-                break;
-            } else { // группа до сих пор не найдена
-                final JSONArray years = group.getJSONArray("years");
-                if (currentGroup.isEmpty()) {
-                    if (year == years.getInt(month > Calendar.AUGUST ? 0 : 1)) {
-                        currentGroup = group.getString("name");
-                        switch (Integer.parseInt(storagePref.get(activity, "pref_e_journal_term", "0"))) {
-                            default: case 0: currentTerm = group.getJSONArray("terms").getJSONObject(month > Calendar.AUGUST || month == Calendar.JANUARY ? 0 : 1).getInt("number"); break;
-                            case 1: currentTerm = group.getJSONArray("terms").getJSONObject(0).getInt("number"); break;
-                            case 2: currentTerm = group.getJSONArray("terms").getJSONObject(1).getInt("number"); break;
-                            case 3: currentTerm = -1; break;
-                        }
+            } else {
+                // группа до сих пор не найдена
+                if (StringUtils.isBlank(currentGroup)) {
+                    if (year == (month > Calendar.AUGUST ? erYear.getYearFirst() : erYear.getYearSecond())) {
+                        currentGroup = erYear.getGroup();
+                        currentTerm = selectTermBasedOnPreference(erYear);
                     }
                 }
-                if (maxYear < years.getInt(0)) {
-                    maxYear = years.getInt(0);
+                if (maxYear < erYear.getYearFirst()) {
+                    maxYear = erYear.getYearFirst();
                 }
             }
         }
-        if (this.group.isEmpty()) {
-            if (!currentGroup.isEmpty()) {
-                this.group = currentGroup;
-                this.term = currentTerm;
+        if (StringUtils.isBlank(group)) {
+            if (StringUtils.isNotBlank(currentGroup)) {
+                term = currentTerm;
+                group = currentGroup;
             } else {
-                for (int i = 0; i < groups.length(); i++) {
-                    final JSONObject group = groups.getJSONObject(i);
-                    if (group.getJSONArray("years").getInt(0) == maxYear) {
-                        this.group = group.getString("name");
+                term = -1;
+                for (ERYear erYear : data.getYears()) {
+                    if (erYear.getYearFirst() == maxYear) {
+                        group = erYear.getGroup();
                         break;
                     }
                 }
-                this.term = -1;
             }
         }
     }
 
-    private void setData(JSONObject data) {
-        this.data = data;
-        fragment.storeData(fragment, data.toString());
+    private Integer selectTerm(ERYear erYear) {
+        final Calendar now = time.getCalendar();
+        final int year = now.get(Calendar.YEAR);
+        final int month = now.get(Calendar.MONTH);
+        if (year == (month > Calendar.AUGUST ? erYear.getYearFirst() : erYear.getYearSecond())) {
+            return selectTermBasedOnPreference(erYear);
+        }
+        return -1;
     }
 
-    private JSONObject getData() {
+    private Integer selectTermBasedOnPreference(ERYear erYear) {
+        final Calendar now = time.getCalendar();
+        final int month = now.get(Calendar.MONTH);
+        switch (Integer.parseInt(storagePref.get(activity, "pref_e_journal_term", "0"))) {
+            default: case 0: {
+                //noinspection ConstantConditions
+                return getTerm(erYear, (term1, term2) -> {
+                    if (month > Calendar.AUGUST || month == Calendar.JANUARY) {
+                        return Math.min(term1, term2);
+                    } else {
+                        return Math.max(term1, term2);
+                    }
+                });
+            }
+            case 1: {
+                //noinspection ConstantConditions
+                return getTerm(erYear, Math::min);
+            }
+            case 2: {
+                //noinspection ConstantConditions
+                return getTerm(erYear, Math::max);
+            }
+            case 3: {
+                return -1;
+            }
+        }
+    }
+
+    private Collection<ERSubject> getSubjectsForTerm(ERYear year, Integer term) {
+        if (term == null) {
+            return new ArrayList<>();
+        }
+        Collection<ERSubject> subjects = new ArrayList<>();
+        for (ERSubject subject : year.getSubjects()) {
+            if (term == -1 || Objects.equals(term, subject.getTerm())) {
+                subjects.add(subject);
+            }
+        }
+        return subjects;
+    }
+
+    private Integer getTerm(ERYear year, BiFunction<Integer, Integer, Integer> termSelector) {
+        Integer term1 = null, term2 = null;
+        for (ERSubject subject : year.getSubjects()) {
+            if (term1 == null && !Objects.equals(subject.getTerm(), term1)) {
+                term1 = subject.getTerm();
+            } else if (term2 == null && !Objects.equals(subject.getTerm(), term1) && !Objects.equals(subject.getTerm(), term2)) {
+                term2 = subject.getTerm();
+            }
+            if (term1 != null && term2 != null) {
+                break;
+            }
+        }
+        Integer term;
+        if (term1 == null && term2 == null) {
+            return null;
+        } else if (term1 == null) {
+            term = term2;
+        } else if (term2 == null) {
+            term = term1;
+        } else {
+            term = termSelector.apply(term1, term2);
+        }
+        return term;
+    }
+
+    private ERegister getFromCache() {
+        thread.assertNotUI();
+        String cache = storage.get(activity, Storage.CACHE, Storage.USER, "eregister#core").trim();
+        if (StringUtils.isBlank(cache)) {
+            return null;
+        }
+        try {
+            return new ERegister().fromJsonString(cache);
+        } catch (Exception e) {
+            storage.delete(activity, Storage.CACHE, Storage.USER, "eregister#core");
+            return null;
+        }
+    }
+
+    private void setData(ERegister data) {
+        thread.assertNotUI();
+        try {
+            this.data = data;
+            fragment.storeData(fragment, data.toJsonString());
+        } catch (Exception e) {
+            log.exception(e);
+        }
+    }
+
+    private ERegister getData() {
+        thread.assertNotUI();
         if (data != null) {
             return data;
         }
         try {
             String stored = fragment.restoreData(fragment);
             if (stored != null && !stored.isEmpty()) {
-                data = textUtils.string2json(stored);
+                data = new ERegister().fromJsonString(stored);
                 return data;
             }
         } catch (Exception e) {

@@ -45,4 +45,6 @@ public interface Room101AddRequest {
     void forward();
 
     void close(boolean done);
+
+    void reset();
 }

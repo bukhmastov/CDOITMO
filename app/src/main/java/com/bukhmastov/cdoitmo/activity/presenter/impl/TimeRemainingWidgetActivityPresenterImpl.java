@@ -22,6 +22,8 @@ import com.bukhmastov.cdoitmo.event.events.OpenActivityEvent;
 import com.bukhmastov.cdoitmo.event.events.ShareTextEvent;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
+import com.bukhmastov.cdoitmo.model.entity.ShortcutQuery;
+import com.bukhmastov.cdoitmo.model.schedule.lessons.SLessons;
 import com.bukhmastov.cdoitmo.network.IfmoRestClient;
 import com.bukhmastov.cdoitmo.network.model.Client;
 import com.bukhmastov.cdoitmo.object.TimeRemainingWidget;
@@ -29,20 +31,19 @@ import com.bukhmastov.cdoitmo.object.schedule.ScheduleLessons;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.NotificationMessage;
 import com.bukhmastov.cdoitmo.util.Thread;
-
-import org.json.JSONObject;
+import com.bukhmastov.cdoitmo.util.singleton.StringUtils;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.inject.Inject;
 
-public class TimeRemainingWidgetActivityPresenterImpl implements TimeRemainingWidgetActivityPresenter, ScheduleLessons.Handler, TimeRemainingWidget.Delegate {
+public class TimeRemainingWidgetActivityPresenterImpl implements TimeRemainingWidgetActivityPresenter, ScheduleLessons.Handler<SLessons>, TimeRemainingWidget.Delegate {
 
     private static final String TAG = "TRWidgetActivity";
     private TimeRemainingWidgetActivity activity = null;
     private String query = null;
-    private JSONObject schedule = null;
+    private SLessons schedule = null;
     private Client.Request requestHandle = null;
     private Boolean isMessageDisplaying = null;
     private TimeRemainingWidget.Data data = null;
@@ -76,20 +77,23 @@ public class TimeRemainingWidgetActivityPresenterImpl implements TimeRemainingWi
         thread.runOnUI(() -> {
             log.i(TAG, "Activity created");
             firebaseAnalyticsProvider.logCurrentScreen(activity);
-            try {
-                String shortcut_data = activity.getIntent().getStringExtra("shortcut_data");
-                if (shortcut_data == null) throw new Exception("shortcut_data cannot be null");
-                JSONObject json = new JSONObject(shortcut_data);
-                query = json.getString("query");
-                log.v(TAG, "query=" + query);
-            } catch (Exception e) {
-                log.exception(e);
+            String shortcutData = activity.getIntent().getStringExtra("shortcut_data");
+            if (StringUtils.isBlank(shortcutData)) {
+                log.w(TAG, "shortcutData is blank");
                 close();
+                return;
             }
-            View wr_container = activity.findViewById(R.id.wr_container);
-            if (wr_container != null) {
-                wr_container.setOnClickListener(v -> {
-                    log.v(TAG, "wr_container clicked");
+            ShortcutQuery shortcutQuery = new ShortcutQuery().fromJsonString(shortcutData);
+            if (shortcutQuery == null || StringUtils.isBlank(shortcutQuery.getQuery())) {
+                log.w(TAG, "shortcutQuery.getQuery() is blank");
+                close();
+                return;
+            }
+            query = shortcutQuery.getQuery();
+            log.v(TAG, "query=", query);
+            View container = activity.findViewById(R.id.wr_container);
+            if (container != null) {
+                container.setOnClickListener(v -> {
                     Bundle bundle = new Bundle();
                     bundle.putString("action", "schedule_lessons");
                     bundle.putString("action_extra", query);
@@ -97,20 +101,17 @@ public class TimeRemainingWidgetActivityPresenterImpl implements TimeRemainingWi
                     close();
                 });
             }
-            View wr_share = activity.findViewById(R.id.wr_share);
-            if (wr_share != null) {
-                wr_share.setOnClickListener(v -> thread.runOnUI(() -> {
-                    log.v(TAG, "wr_share clicked");
-                    share();
-                }));
+            View share = activity.findViewById(R.id.wr_share);
+            if (share != null) {
+                share.setOnClickListener(v -> share());
             }
-            View widget_remaining = activity.findViewById(R.id.widget_remaining);
-            if (widget_remaining != null) {
-                widget_remaining.setOnClickListener(v -> {
-                    log.v(TAG, "widget_remaining clicked");
-                    close();
-                });
+            View remaining = activity.findViewById(R.id.widget_remaining);
+            if (remaining != null) {
+                remaining.setOnClickListener(v -> close());
             }
+        }, throwable -> {
+            log.exception(throwable);
+            close();
         });
     }
 
@@ -123,7 +124,7 @@ public class TimeRemainingWidgetActivityPresenterImpl implements TimeRemainingWi
                 return;
             }
             if (query != null) {
-                scheduleLessons.search(activity, this, query, true);
+                scheduleLessons.search(query, true, this);
                 return;
             }
             log.w(TAG, "onResume | query is null");
@@ -145,14 +146,29 @@ public class TimeRemainingWidgetActivityPresenterImpl implements TimeRemainingWi
     }
 
     @Override
-    public void onProgress(int state) {
-        log.v(TAG, "progress " + state);
-        message(activity.getString(R.string.loading));
-    }
-
-    @Override
-    public void onFailure(int state) {
-        this.onFailure(0, null, state);
+    public void onSuccess(SLessons data, boolean fromCache) {
+        thread.run(() -> {
+            log.v(TAG, "success");
+            if (data == null || StringUtils.isBlank(data.getType())) {
+                log.w(TAG, "onSuccess | schedule cannot be null");
+                onFailure(ScheduleLessons.FAILED_LOAD);
+                return;
+            }
+            switch (data.getType()) {
+                case "group":
+                case "room":
+                case "teacher": break;
+                default:
+                    log.w(TAG, "onSuccess | schedule.getType() wrong value: " + data.getType());
+                    onFailure(ScheduleLessons.FAILED_LOAD);
+                    return;
+            }
+            schedule = data;
+            begin();
+        }, throwable -> {
+            log.exception(throwable);
+            onFailure(ScheduleLessons.FAILED_LOAD);
+        });
     }
 
     @Override
@@ -190,27 +206,9 @@ public class TimeRemainingWidgetActivityPresenterImpl implements TimeRemainingWi
     }
 
     @Override
-    public void onSuccess(JSONObject json, boolean fromCache) {
-        thread.run(() -> {
-            log.v(TAG, "success");
-            try {
-                if (json == null) throw new NullPointerException("json cannot be null");
-                String type = json.getString("type");
-                switch (type) {
-                    case "group":
-                    case "room":
-                    case "teacher":
-                        break;
-                    default:
-                        throw new Exception("json.type wrong value: " + type);
-                }
-                schedule = json;
-                begin();
-            } catch (Exception e) {
-                log.exception(e);
-                onFailure(ScheduleLessons.FAILED_LOAD);
-            }
-        });
+    public void onProgress(int state) {
+        log.v(TAG, "progress " + state);
+        message(activity.getString(R.string.loading));
     }
 
     @Override
@@ -226,46 +224,44 @@ public class TimeRemainingWidgetActivityPresenterImpl implements TimeRemainingWi
     }
 
     @Override
-    public void onAction(final TimeRemainingWidget.Data data) {
+    public void onAction(TimeRemainingWidget.Data data) {
         thread.runOnUI(() -> {
             this.data = data;
             if (data.current == null && data.next == null && data.day == null) {
                 message(activity.getString(R.string.lessons_gone));
+                return;
+            }
+            if (isMessageDisplaying == null || isMessageDisplaying) {
+                draw(R.layout.widget_remaining_time);
+                isMessageDisplaying = false;
+            }
+            if (data.current != null) {
+                setText(R.id.lesson_title, activity.getString(R.string.current_lesson));
+                setText(R.id.lesson_remaining, data.current);
             } else {
-                if (isMessageDisplaying == null || isMessageDisplaying) {
-                    draw(R.layout.widget_remaining_time);
-                    isMessageDisplaying = false;
-                }
-                if (data.current != null) {
-                    setText(R.id.lesson_title, activity.getString(R.string.current_lesson));
-                    setText(R.id.lesson_remaining, data.current);
-                } else {
-                    setText(R.id.lesson_title, activity.getString(R.string.next_lesson));
-                    if (data.next == null) {
-                        setText(R.id.day_remaining, activity.getString(R.string.unknown));
-                    } else {
-                        setText(R.id.lesson_remaining, data.next);
-                    }
-                }
-                if (data.day == null) {
+                setText(R.id.lesson_title, activity.getString(R.string.next_lesson));
+                if (data.next == null) {
                     setText(R.id.day_remaining, activity.getString(R.string.unknown));
                 } else {
-                    setText(R.id.day_remaining, data.day);
+                    setText(R.id.lesson_remaining, data.next);
                 }
-                View current_lesson_15min = activity.findViewById(R.id.current_lesson_15min);
-                View current_lesson_15min_separator = activity.findViewById(R.id.current_lesson_15min_separator);
-                if (data.current_15min != null) {
-                    if (current_lesson_15min != null && current_lesson_15min_separator != null && current_lesson_15min.getVisibility() == View.GONE) {
-                        current_lesson_15min.setVisibility(View.VISIBLE);
-                        current_lesson_15min_separator.setVisibility(View.VISIBLE);
-                    }
-                    setText(R.id.lesson_15min_remaining, data.current_15min);
-                } else {
-                    if (current_lesson_15min != null && current_lesson_15min_separator != null && current_lesson_15min.getVisibility() == View.VISIBLE) {
-                        current_lesson_15min.setVisibility(View.GONE);
-                        current_lesson_15min_separator.setVisibility(View.GONE);
-                    }
+            }
+            if (data.day == null) {
+                setText(R.id.day_remaining, activity.getString(R.string.unknown));
+            } else {
+                setText(R.id.day_remaining, data.day);
+            }
+            View currentLesson15min = activity.findViewById(R.id.current_lesson_15min);
+            View currentLesson15minSeparator = activity.findViewById(R.id.current_lesson_15min_separator);
+            if (data.current15min != null) {
+                if (currentLesson15min != null && currentLesson15minSeparator != null && currentLesson15min.getVisibility() == View.GONE) {
+                    currentLesson15min.setVisibility(View.VISIBLE);
+                    currentLesson15minSeparator.setVisibility(View.VISIBLE);
                 }
+                setText(R.id.lesson_15min_remaining, data.current15min);
+            } else if (currentLesson15min != null && currentLesson15minSeparator != null && currentLesson15min.getVisibility() == View.VISIBLE) {
+                currentLesson15min.setVisibility(View.GONE);
+                currentLesson15minSeparator.setVisibility(View.GONE);
             }
         });
     }
@@ -281,7 +277,7 @@ public class TimeRemainingWidgetActivityPresenterImpl implements TimeRemainingWi
             log.v(TAG, "begin");
             message(activity.getString(R.string.loaded));
             timeRemainingWidget.stop();
-            timeRemainingWidget.start(activity, this, schedule);
+            timeRemainingWidget.start(schedule, this);
         });
     }
 
@@ -295,7 +291,7 @@ public class TimeRemainingWidgetActivityPresenterImpl implements TimeRemainingWi
         });
     }
 
-    private void message(final String text) {
+    private void message(String text) {
         thread.runOnUI(() -> {
             if (isMessageDisplaying == null || !isMessageDisplaying) {
                 draw(R.layout.widget_remaining_message);
@@ -386,14 +382,14 @@ public class TimeRemainingWidgetActivityPresenterImpl implements TimeRemainingWi
         return time.trim();
     }
 
-    private void setText(final int layout, final String text) {
+    private void setText(int layout, String text) {
         TextView textView = activity.findViewById(layout);
         if (textView != null) {
             textView.setText(text);
         }
     }
 
-    private void draw(final int layoutId) {
+    private void draw(int layoutId) {
         try {
             ViewGroup vg = activity.findViewById(R.id.wr_container);
             if (vg != null) {

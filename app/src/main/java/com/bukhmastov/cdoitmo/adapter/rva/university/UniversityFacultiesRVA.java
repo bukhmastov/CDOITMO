@@ -1,14 +1,10 @@
 package com.bukhmastov.cdoitmo.adapter.rva.university;
 
-import android.content.ActivityNotFoundException;
 import android.content.Context;
-import android.content.Intent;
-import android.net.Uri;
-import android.os.Bundle;
 import android.support.annotation.DrawableRes;
+import android.support.annotation.IdRes;
 import android.support.annotation.LayoutRes;
-import android.support.annotation.NonNull;
-import android.support.v7.widget.RecyclerView;
+import android.support.annotation.Nullable;
 import android.view.InflateException;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -17,330 +13,234 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
-import com.bukhmastov.cdoitmo.activity.UniversityPersonCardActivity;
-import com.bukhmastov.cdoitmo.event.events.OpenActivityEvent;
-import com.bukhmastov.cdoitmo.event.events.OpenIntentEvent;
-import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
-import com.bukhmastov.cdoitmo.util.NotificationMessage;
-import com.bukhmastov.cdoitmo.util.TextUtils;
-import com.bukhmastov.cdoitmo.util.singleton.JsonUtils;
+import com.bukhmastov.cdoitmo.model.rva.RVAUniversity;
+import com.bukhmastov.cdoitmo.model.university.faculties.UDivision;
+import com.bukhmastov.cdoitmo.model.university.faculties.UFaculties;
+import com.bukhmastov.cdoitmo.model.university.faculties.UStructure;
+import com.bukhmastov.cdoitmo.model.university.faculties.UStructureInfo;
+import com.bukhmastov.cdoitmo.util.singleton.CollectionUtils;
+import com.bukhmastov.cdoitmo.util.singleton.StringUtils;
 import com.bukhmastov.cdoitmo.view.CircularTransformation;
 import com.squareup.picasso.Picasso;
 
-import org.json.JSONArray;
-import org.json.JSONObject;
-
-import java.util.ArrayList;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-import javax.inject.Inject;
-
 public class UniversityFacultiesRVA extends UniversityRVA {
 
-    private final Pattern working_hours_pattern = Pattern.compile("(\\D*/.*\\|?)+");
+    private boolean isFirstBlock = true;
 
-    @Inject
-    NotificationMessage notificationMessage;
-    @Inject
-    TextUtils textUtils;
-
-    public UniversityFacultiesRVA(final Context context) {
-        this(context, null);
-    }
-    public UniversityFacultiesRVA(final Context context, final ArrayList<Item> dataset) {
-        super(context, dataset);
-        AppComponentProvider.getComponent().inject(this);
+    public UniversityFacultiesRVA(Context context) {
+        super(context);
     }
 
-    @NonNull
     @Override
-    public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        switch (viewType) {
-            case TYPE_INFO_ABOUT_UPDATE_TIME: {
-                return new ViewHolder((ViewGroup) LayoutInflater.from(parent.getContext()).inflate(R.layout.layout_university_update_time, parent, false));
-            }
+    protected int onGetLayout(int type) throws NullPointerException {
+        @LayoutRes int layout;
+        switch (type) {
+            case TYPE_INFO_ABOUT_UPDATE_TIME: layout = R.layout.layout_university_update_time; break;
             case TYPE_UNIT_STRUCTURE_COMMON:
             case TYPE_UNIT_STRUCTURE_DEANERY:
             case TYPE_UNIT_STRUCTURE_HEAD:
-            case TYPE_UNIT_DIVISIONS: {
-                return new ViewHolder((ViewGroup) LayoutInflater.from(parent.getContext()).inflate(R.layout.layout_university_faculties_structure_unit, parent, false));
-            }
-            default:
-            case TYPE_NO_DATA: {
-                return new UniversityEventsRVA.ViewHolder((ViewGroup) LayoutInflater.from(parent.getContext()).inflate(R.layout.state_nothing_to_display_compact, parent, false));
-            }
+            case TYPE_UNIT_DIVISIONS: layout = R.layout.layout_university_faculties_structure_unit; break;
+            case TYPE_NO_DATA: layout = R.layout.state_nothing_to_display_compact; break;
+            default: throw new NullPointerException("Invalid type provided");
         }
+        return layout;
     }
 
     @Override
-    public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
-        Item item = dataset.get(position);
+    protected void onBind(View container, Item item) {
         switch (item.type) {
-            case TYPE_INFO_ABOUT_UPDATE_TIME: {
-                bindInfoAboutUpdateTime(holder, item);
-                break;
-            }
-            case TYPE_UNIT_STRUCTURE_COMMON:
-            case TYPE_UNIT_STRUCTURE_DEANERY:
-            case TYPE_UNIT_STRUCTURE_HEAD: {
-                bindStructure(holder, item);
-                break;
-            }
-            case TYPE_UNIT_DIVISIONS: {
-                bindDivisions(holder, item);
-                break;
-            }
-            case TYPE_NO_DATA: {
-                bindNoData(holder, item);
-                break;
-            }
+            case TYPE_INFO_ABOUT_UPDATE_TIME: bindInfoAboutUpdateTime(container, item); break;
+            case TYPE_UNIT_STRUCTURE_COMMON: bindStructureCommon(container, item); break;
+            case TYPE_UNIT_STRUCTURE_DEANERY: bindStructureDeanery(container, item); break;
+            case TYPE_UNIT_STRUCTURE_HEAD: bindStructureHead(container, item); break;
+            case TYPE_UNIT_DIVISIONS: bindDivisions(container, item); break;
+            case TYPE_NO_DATA: bindNoData(container); break;
         }
     }
 
-    private void bindStructure(RecyclerView.ViewHolder holder, Item item) {
+    private void bindStructureCommon(View container, Item<UStructure> item) {
         try {
-            ViewHolder viewHolder = (ViewHolder) holder;
-            removeFirstSeparator(viewHolder.container);
-            String header = item.data.getString("header");
-            if (header != null) {
-                ((TextView) viewHolder.container.findViewById(R.id.structure_header)).setText(textUtils.capitalizeFirstLetter(header.trim()));
-            } else {
-                staticUtil.removeView(viewHolder.container.findViewById(R.id.structure_header));
-            }
-            ViewGroup structure_container = viewHolder.container.findViewById(R.id.structure_container);
-            if (structure_container == null) {
+            UStructureInfo structureInfo = item.data.getStructureInfo();
+            boolean isFirstContainer = true;
+            removeFirstSeparator(container);
+            ((TextView) container.findViewById(R.id.structure_header)).setText(context.getString(R.string.faculty_section_general));
+            ViewGroup structureContainer = container.findViewById(R.id.structure_container);
+            if (structureContainer == null) {
                 return;
             }
-            if (item.type == TYPE_UNIT_STRUCTURE_COMMON) {
-                boolean is_first_container = true;
-                final String address = JsonUtils.getString(item.data, "address");
-                final String[] phones = (JsonUtils.getString(item.data, "phone") == null ? "" : JsonUtils.getString(item.data, "phone")).trim().split("[;,]");
-                final String[] emails = (JsonUtils.getString(item.data, "email") == null ? "" : JsonUtils.getString(item.data, "email")).trim().split("[;,]");
-                final String[] sites = (JsonUtils.getString(item.data, "site") == null ? "" : JsonUtils.getString(item.data, "site")).trim().split("[;,]");
-                final String working_hours = JsonUtils.getString(item.data, "working_hours");
-                if (address != null) {
-                    structure_container.addView(getConnectContainer(R.drawable.ic_location, address.trim(), is_first_container, v -> {
-                        try {
-                            eventBus.fire(new OpenIntentEvent(new Intent(Intent.ACTION_VIEW, Uri.parse("geo:0,0?q=" + address))));
-                        } catch (ActivityNotFoundException e) {
-                            notificationMessage.toast(context, context.getString(R.string.failed_to_start_geo_activity));
-                        }
-                    }));
-                    is_first_container = false;
-                }
-                for (final String phone : phones) {
-                    if (phone != null && !phone.trim().isEmpty()) {
-                        structure_container.addView(getConnectContainer(R.drawable.ic_phone, phone.trim(), is_first_container, v -> {
-                            Intent intent = new Intent(Intent.ACTION_DIAL, Uri.parse("tel:" + phone.trim()));
-                            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                            eventBus.fire(new OpenIntentEvent(intent));
-                        }));
-                        is_first_container = false;
+            if (StringUtils.isNotBlank(structureInfo.getAddress())) {
+                String address = structureInfo.getAddress().trim();
+                structureContainer.addView(getConnectContainer(R.drawable.ic_location, address, true, R.id.university_tile_map, new RVAUniversity(address)));
+                isFirstContainer = false;
+            }
+            if (StringUtils.isNotBlank(structureInfo.getPhone())) {
+                for (String phone : structureInfo.getPhone().trim().split("[;,]")) {
+                    if (StringUtils.isBlank(phone)) {
+                        return;
                     }
-                }
-                for (final String email : emails) {
-                    if (email != null && !email.trim().isEmpty()) {
-                        structure_container.addView(getConnectContainer(R.drawable.ic_email, email.trim(), is_first_container, v -> {
-                            Intent emailIntent = new Intent(Intent.ACTION_SEND);
-                            emailIntent.setType("message/rfc822");
-                            emailIntent.putExtra(Intent.EXTRA_EMAIL, new String[]{email.trim()});
-                            eventBus.fire(new OpenIntentEvent(Intent.createChooser(emailIntent, context.getString(R.string.send_mail) + "...")));
-                        }));
-                        is_first_container = false;
-                    }
-                }
-                for (final String site : sites) {
-                    if (site != null && !site.trim().isEmpty()) {
-                        structure_container.addView(getConnectContainer(R.drawable.ic_web, site.trim(), is_first_container, v -> eventBus.fire(new OpenIntentEvent(new Intent(Intent.ACTION_VIEW, Uri.parse(site.trim()))))));
-                        is_first_container = false;
-                    }
-                }
-                if (working_hours != null) {
-                    String wh = working_hours.trim();
-                    Matcher m = working_hours_pattern.matcher(wh);
-                    if (m.find()) {
-                        String[] days = wh.split("\\|");
-                        ArrayList<String> days_new = new ArrayList<>();
-                        for (String day : days) {
-                            String[] day_split = day.trim().split("/");
-                            StringBuilder timeBuilder = new StringBuilder();
-                            for (int i = 1; i < day_split.length; i++) {
-                                timeBuilder.append(day_split[i]).append("/");
-                            }
-                            String time = timeBuilder.toString().trim();
-                            if (time.endsWith("/")) {
-                                time = time.trim().substring(0, time.length() - 1);
-                            }
-                            time = time.replace("/", ", ");
-                            if (!time.isEmpty()) {
-                                time = (day_split[0] + " (" + time + ")").trim();
-                            }
-                            days_new.add(time);
-                        }
-                        wh = android.text.TextUtils.join("\n", days_new).trim();
-                    }
-                    structure_container.addView(getConnectContainer(R.drawable.ic_access_time, wh, is_first_container, null));
-                    is_first_container = true;
+                    structureContainer.addView(getConnectContainer(R.drawable.ic_phone, phone.trim(), isFirstContainer, R.id.university_tile_phone, new RVAUniversity(phone.trim())));
+                    isFirstContainer = false;
                 }
             }
-            if (item.type == TYPE_UNIT_STRUCTURE_DEANERY) {
-                boolean is_first_container = true;
-                final String deanery_address = JsonUtils.getString(item.data, "deanery_address");
-                final String[] deanery_phones = (JsonUtils.getString(item.data, "deanery_phone") == null ? "" : JsonUtils.getString(item.data, "deanery_phone")).trim().split("[;,]");
-                final String[] deanery_emails = (JsonUtils.getString(item.data, "deanery_email") == null ? "" : JsonUtils.getString(item.data, "deanery_email")).trim().split("[;,]");
-                if (deanery_address != null && !deanery_address.trim().isEmpty()) {
-                    structure_container.addView(getConnectContainer(R.drawable.ic_location, deanery_address.trim(), is_first_container, v -> {
-                        eventBus.fire(new OpenIntentEvent(new Intent(Intent.ACTION_VIEW, Uri.parse("geo:0,0?q=" + deanery_address))).withIdentity(UniversityFacultiesRVA.class.getName()));
-                    }));
-                    is_first_container = false;
-                }
-                for (final String deanery_phone : deanery_phones) {
-                    if (deanery_phone != null && !deanery_phone.trim().isEmpty()) {
-                        structure_container.addView(getConnectContainer(R.drawable.ic_phone, deanery_phone.trim(), is_first_container, v -> {
-                            Intent intent = new Intent(Intent.ACTION_DIAL, Uri.parse("tel:" + deanery_phone.trim()));
-                            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                            eventBus.fire(new OpenIntentEvent(intent));
-                        }));
-                        is_first_container = false;
+            if (StringUtils.isNotBlank(structureInfo.getSite())) {
+                for (String site : structureInfo.getSite().trim().split("[;,]")) {
+                    if (StringUtils.isBlank(site)) {
+                        return;
                     }
-                }
-                for (final String deanery_email : deanery_emails) {
-                    if (deanery_email != null && !deanery_email.trim().isEmpty()) {
-                        structure_container.addView(getConnectContainer(R.drawable.ic_email, deanery_email.trim(), is_first_container, v -> {
-                            Intent emailIntent = new Intent(Intent.ACTION_SEND);
-                            emailIntent.setType("message/rfc822");
-                            emailIntent.putExtra(Intent.EXTRA_EMAIL, new String[]{deanery_email.trim()});
-                            eventBus.fire(new OpenIntentEvent(Intent.createChooser(emailIntent, context.getString(R.string.send_mail) + "...")));
-                        }));
-                        is_first_container = false;
-                    }
-                }
-            }
-            if (item.type == TYPE_UNIT_STRUCTURE_HEAD) {
-                boolean is_first_container = true;
-                final String head_lastname = JsonUtils.getString(item.data, "head_lastname");
-                final String head_firstname = JsonUtils.getString(item.data, "head_firstname");
-                final String head_middlename = JsonUtils.getString(item.data, "head_middlename");
-                final String head_avatar = JsonUtils.getString(item.data, "head_avatar");
-                final String head_degree = JsonUtils.getString(item.data, "head_degree");
-                final String[] head_emails = (JsonUtils.getString(item.data, "head_email") == null ? "" : JsonUtils.getString(item.data, "head_email")).trim().split("[;,]");
-                final int head_pid = JsonUtils.getInt(item.data, "head_pid", -1);
-                if (head_lastname != null && head_firstname != null) {
-                    final View layout_university_persons_list_item = inflate(R.layout.layout_university_persons_list_item);
-                    ((TextView) layout_university_persons_list_item.findViewById(R.id.name)).setText((head_lastname + " " + head_firstname + " " + (head_middlename == null ? "" : head_middlename)).trim());
-                    if (head_degree != null && !head_degree.trim().isEmpty()) {
-                        ((TextView) layout_university_persons_list_item.findViewById(R.id.post)).setText(head_degree);
-                    } else {
-                        staticUtil.removeView(layout_university_persons_list_item.findViewById(R.id.post));
-                    }
-                    if (head_avatar != null && !head_avatar.trim().isEmpty()) {
-                        Picasso.with(context)
-                                .load(head_avatar)
-                                .error(R.drawable.ic_sentiment_very_satisfied)
-                                .transform(new CircularTransformation())
-                                .into((ImageView) layout_university_persons_list_item.findViewById(R.id.avatar));
-                    }
-                    layout_university_persons_list_item.setOnClickListener(v -> {
-                        Bundle extras = new Bundle();
-                        extras.putInt("pid", head_pid);
-                        eventBus.fire(new OpenActivityEvent(UniversityPersonCardActivity.class, extras));
-                    });
-                    structure_container.addView(layout_university_persons_list_item);
-                    is_first_container = false;
-                }
-                for (final String head_email : head_emails) {
-                    if (head_email != null && !head_email.trim().isEmpty()) {
-                        structure_container.addView(getConnectContainer(R.drawable.ic_email, head_email.trim(), is_first_container, v -> {
-                            Intent emailIntent = new Intent(Intent.ACTION_SEND);
-                            emailIntent.setType("message/rfc822");
-                            emailIntent.putExtra(Intent.EXTRA_EMAIL, new String[]{head_email.trim()});
-                            eventBus.fire(new OpenIntentEvent(Intent.createChooser(emailIntent, context.getString(R.string.send_mail) + "...")));
-                        }));
-                        is_first_container = false;
-                    }
+                    structureContainer.addView(getConnectContainer(R.drawable.ic_web, site.trim(), isFirstContainer, R.id.university_tile_web, new RVAUniversity(site.trim())));
+                    isFirstContainer = false;
                 }
             }
         } catch (Exception e) {
             log.exception(e);
         }
     }
-    private void bindDivisions(RecyclerView.ViewHolder holder, Item item) {
+    private void bindStructureDeanery(View container, Item<UStructure> item) {
         try {
-            ViewHolder viewHolder = (ViewHolder) holder;
-            removeFirstSeparator(viewHolder.container);
-            String header = JsonUtils.getString(item.data, "header");
-            if (header != null) {
-                ((TextView) viewHolder.container.findViewById(R.id.structure_header)).setText(textUtils.capitalizeFirstLetter(header.trim()));
-            } else {
-                staticUtil.removeView(viewHolder.container.findViewById(R.id.structure_header));
-            }
-            ViewGroup structure_container = viewHolder.container.findViewById(R.id.structure_container);
-            if (structure_container == null) {
+            UStructureInfo structureInfo = item.data.getStructureInfo();
+            boolean isFirstContainer = true;
+            removeFirstSeparator(container);
+            ((TextView) container.findViewById(R.id.structure_header)).setText(context.getString(R.string.faculty_section_deanery));
+            ViewGroup structureContainer = container.findViewById(R.id.structure_container);
+            if (structureContainer == null) {
                 return;
             }
-            JSONArray divisions = JsonUtils.getJsonArray(item.data, "divisions");
-            if (divisions != null) {
-                for (int i = 0; i < divisions.length(); i++) {
-                    final JSONObject division = divisions.getJSONObject(i);
-                    final String title = JsonUtils.getString(division, "title");
-                    final int id = JsonUtils.getInt(division, "id", -1);
-                    if (title != null && !title.trim().isEmpty()) {
-                        View view = inflate(R.layout.layout_university_faculties_divisions_list_item);
-                        ((TextView) view.findViewById(R.id.title)).setText(title);
-                        view.setOnClickListener(v -> {
-                            if (onDivisionClickListener != null) {
-                                onDivisionClickListener.onClick(id);
-                            }
-                        });
-                        structure_container.addView(view);
+            if (StringUtils.isNotBlank(structureInfo.getDeaneryAddress())) {
+                String address = structureInfo.getDeaneryAddress().trim();
+                structureContainer.addView(getConnectContainer(R.drawable.ic_location, address, true, R.id.university_tile_map, new RVAUniversity(address)));
+                isFirstContainer = false;
+            }
+            if (StringUtils.isNotBlank(structureInfo.getDeaneryPhone())) {
+                for (String phone : structureInfo.getDeaneryPhone().trim().split("[;,]")) {
+                    if (StringUtils.isBlank(phone)) {
+                        return;
                     }
+                    structureContainer.addView(getConnectContainer(R.drawable.ic_phone, phone.trim(), isFirstContainer, R.id.university_tile_phone, new RVAUniversity(phone.trim())));
+                    isFirstContainer = false;
+                }
+            }
+            if (StringUtils.isNotBlank(structureInfo.getDeaneryEmail())) {
+                for (String email : structureInfo.getDeaneryEmail().trim().split("[;,]")) {
+                    if (StringUtils.isBlank(email)) {
+                        return;
+                    }
+                    structureContainer.addView(getConnectContainer(R.drawable.ic_email, email.trim(), isFirstContainer, R.id.university_tile_mail, new RVAUniversity(email.trim())));
+                    isFirstContainer = false;
                 }
             }
         } catch (Exception e) {
             log.exception(e);
         }
     }
-    private void bindNoData(RecyclerView.ViewHolder holder, Item item) {
+    private void bindStructureHead(View container, Item<UStructure> item) {
         try {
-            UniversityEventsRVA.ViewHolder viewHolder = (UniversityEventsRVA.ViewHolder) holder;
-            ((TextView) viewHolder.container.findViewById(R.id.ntd_text)).setText(R.string.no_data);
+            UStructureInfo structureInfo = item.data.getStructureInfo();
+            boolean isFirstContainer = true;
+            removeFirstSeparator(container);
+            if (StringUtils.isNotBlank(structureInfo.getPersonPost())) {
+                ((TextView) container.findViewById(R.id.structure_header)).setText(textUtils.capitalizeFirstLetter(structureInfo.getPersonPost().trim()));
+            } else {
+                staticUtil.removeView(container.findViewById(R.id.structure_header));
+            }
+            ViewGroup structureContainer = container.findViewById(R.id.structure_container);
+            if (structureContainer == null) {
+                return;
+            }
+            if (StringUtils.isNotBlank(structureInfo.getLastName())) {
+                View layout = inflate(R.layout.layout_university_persons_list_item);
+                layout.setId(R.id.university_tile_person);
+                tryRegisterClickListener(layout, R.id.university_tile_person, new RVAUniversity(structureInfo.getIfmoPersonId()));
+                String personFio = structureInfo.getLastName() + " " + structureInfo.getFirstName() + " " +
+                        (StringUtils.isNotBlank(structureInfo.getMiddleName()) ? structureInfo.getMiddleName() : "");
+                ((TextView) layout.findViewById(R.id.name)).setText(personFio.trim());
+                if (StringUtils.isNotBlank(structureInfo.getPersonDegree())) {
+                    ((TextView) layout.findViewById(R.id.post)).setText(structureInfo.getPersonDegree());
+                } else {
+                    staticUtil.removeView(layout.findViewById(R.id.post));
+                }
+                if (StringUtils.isNotBlank(structureInfo.getPersonAvatar())) {
+                    Picasso.with(context)
+                            .load(structureInfo.getPersonAvatar())
+                            .error(R.drawable.ic_sentiment_very_satisfied)
+                            .transform(new CircularTransformation())
+                            .into((ImageView) layout.findViewById(R.id.avatar));
+                }
+                structureContainer.addView(layout);
+                isFirstContainer = false;
+            }
+            if (StringUtils.isNotBlank(structureInfo.getEmail())) {
+                for (String email : structureInfo.getEmail().trim().split("[;,]")) {
+                    if (StringUtils.isBlank(email)) {
+                        return;
+                    }
+                    structureContainer.addView(getConnectContainer(R.drawable.ic_email, email.trim(), isFirstContainer, R.id.university_tile_mail, new RVAUniversity(email.trim())));
+                    isFirstContainer = false;
+                }
+            }
+        } catch (Exception e) {
+            log.exception(e);
+        }
+    }
+    private void bindDivisions(View container, Item<UFaculties> item) {
+        try {
+            removeFirstSeparator(container);
+            if (CollectionUtils.isEmpty(item.data.getDivisions())) {
+                return;
+            }
+            ((TextView) container.findViewById(R.id.structure_header)).setText(context.getString(R.string.faculty_section_divisions));
+            ViewGroup structureContainer = container.findViewById(R.id.structure_container);
+            if (structureContainer == null) {
+                return;
+            }
+            for (UDivision division : item.data.getDivisions()) {
+                if (StringUtils.isNotBlank(division.getName())) {
+                    View view = inflate(R.layout.layout_university_faculties_divisions_list_item);
+                    ((TextView) view.findViewById(R.id.title)).setText(division.getName());
+                    tryRegisterClickListener(view, R.id.division, new RVAUniversity(division));
+                    structureContainer.addView(view);
+                }
+            }
+        } catch (Exception e) {
+            log.exception(e);
+        }
+    }
+    private void bindNoData(View container) {
+        try {
+            ((TextView) container.findViewById(R.id.ntd_text)).setText(R.string.no_data);
         } catch (Exception e) {
             log.exception(e);
         }
     }
 
-    public interface OnDivisionClickListener {
-        void onClick(int dep_id);
-    }
-    private OnDivisionClickListener onDivisionClickListener = null;
-    public void setOnDivisionClickListener(OnDivisionClickListener onClickListener) {
-        onDivisionClickListener = onClickListener;
-    }
-
-    private boolean first_block = true;
-    private void removeFirstSeparator(ViewGroup structure_container) {
-        if (first_block) {
-            first_block = false;
-            View structure_separator = structure_container.findViewById(R.id.structure_separator);
+    private void removeFirstSeparator(View container) {
+        if (isFirstBlock) {
+            isFirstBlock = false;
+            View structure_separator = container.findViewById(R.id.structure_separator);
             if (structure_separator != null) {
                 staticUtil.removeView(structure_separator);
             }
         }
     }
 
-    private View getConnectContainer(@DrawableRes int icon, String text, boolean is_first_container, View.OnClickListener listener) {
-        View layout_university_connect = inflate(R.layout.layout_university_connect);
-        ((ImageView) layout_university_connect.findViewById(R.id.connect_image)).setImageResource(icon);
-        ((TextView) layout_university_connect.findViewById(R.id.connect_text)).setText(text.trim());
-        if (listener != null) {
-            layout_university_connect.setOnClickListener(listener);
+    private View getConnectContainer(@DrawableRes int icon, String text, boolean isRemoveSeparator, @Nullable @IdRes Integer layoutId, @Nullable RVAUniversity entity) {
+
+        View layout = inflate(R.layout.layout_university_connect);
+
+        if (layoutId != null) {
+            layout.setId(layoutId);
+            tryRegisterClickListener(layout, layoutId, entity);
         }
-        if (is_first_container) {
-            staticUtil.removeView(layout_university_connect.findViewById(R.id.separator));
+
+        ((ImageView) layout.findViewById(R.id.connect_image)).setImageResource(icon);
+        ((TextView) layout.findViewById(R.id.connect_text)).setText(text.trim());
+
+        if (isRemoveSeparator) {
+            staticUtil.removeView(layout.findViewById(R.id.separator));
         }
-        return layout_university_connect;
+
+        return layout;
     }
+
     private View inflate(@LayoutRes int layoutId) throws InflateException {
         return ((LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(layoutId, null);
     }

@@ -11,10 +11,8 @@ import android.view.View;
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activity.ConnectedActivity;
 import com.bukhmastov.cdoitmo.adapter.PagerUniversityAdapter;
-import com.bukhmastov.cdoitmo.adapter.rva.university.UniversityFacultiesRVA;
 import com.bukhmastov.cdoitmo.event.bus.EventBus;
 import com.bukhmastov.cdoitmo.event.bus.annotation.Event;
-import com.bukhmastov.cdoitmo.event.events.OpenIntentEvent;
 import com.bukhmastov.cdoitmo.event.events.ClearCacheEvent;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
@@ -33,7 +31,7 @@ public class UniversityFragmentPresenterImpl implements UniversityFragmentPresen
     private ConnectedFragment fragment = null;
     private ConnectedActivity activity = null;
     private int tabSelected = -1;
-    private String action_extra = null;
+    private String actionExtra = null;
 
     @Inject
     Log log;
@@ -61,14 +59,6 @@ public class UniversityFragmentPresenterImpl implements UniversityFragmentPresen
         tabSelected = -1;
     }
 
-    @Event
-    public void onOpenIntentEventFailed(OpenIntentEvent.Failed event) {
-        if (!event.getIdentity().equals(UniversityFacultiesRVA.class.getName())) {
-            return;
-        }
-        notificationMessage.toast(activity, activity.getString(R.string.failed_to_start_geo_activity));
-    }
-
     @Override
     public void setFragment(ConnectedFragment fragment) {
         this.fragment = fragment;
@@ -82,8 +72,8 @@ public class UniversityFragmentPresenterImpl implements UniversityFragmentPresen
             firebaseAnalyticsProvider.logCurrentScreen(activity, fragment);
             Intent intent = activity.getIntent();
             if (intent != null) {
-                action_extra = intent.getStringExtra("action_extra");
-                if (action_extra != null) {
+                actionExtra = intent.getStringExtra("action_extra");
+                if (actionExtra != null) {
                     intent.removeExtra("action_extra");
                 }
             }
@@ -125,8 +115,8 @@ public class UniversityFragmentPresenterImpl implements UniversityFragmentPresen
                 log.w(TAG, "onViewCreated | fragment not added to activity");
                 return;
             }
-            TabLayout main_tabs = activity.findViewById(R.id.scrollable_tabs);
-            if (main_tabs == null) {
+            TabLayout tabs = activity.findViewById(R.id.scrollable_tabs);
+            if (tabs == null) {
                 return;
             }
             ViewPager pager = fragment.container().findViewById(R.id.pager);
@@ -136,26 +126,26 @@ public class UniversityFragmentPresenterImpl implements UniversityFragmentPresen
             FragmentManager fragmentManager = fragment.getChildFragmentManager();
             pager.setAdapter(new PagerUniversityAdapter(fragmentManager, activity));
             pager.addOnPageChangeListener(this);
-            main_tabs.setupWithViewPager(pager);
+            tabs.setupWithViewPager(pager);
             TabLayout.Tab tab = null;
             try {
-                if (action_extra != null) {
-                    switch (action_extra) {
-                        case "persons": tab = main_tabs.getTabAt(0); break;
-                        case "faculties": tab = main_tabs.getTabAt(1); break;
-                        case "units": tab = main_tabs.getTabAt(2); break;
-                        case "ubuildings": tab = main_tabs.getTabAt(3); break;
-                        case "news": tab = main_tabs.getTabAt(4); break;
-                        case "events": tab = main_tabs.getTabAt(5); break;
+                if (actionExtra != null) {
+                    switch (actionExtra) {
+                        case "persons": tab = tabs.getTabAt(0); break;
+                        case "faculties": tab = tabs.getTabAt(1); break;
+                        case "units": tab = tabs.getTabAt(2); break;
+                        case "ubuildings": tab = tabs.getTabAt(3); break;
+                        case "news": tab = tabs.getTabAt(4); break;
+                        case "events": tab = tabs.getTabAt(5); break;
                     }
-                    action_extra = null;
+                    actionExtra = null;
                 }
                 if (tab == null) {
                     if (tabSelected == -1) {
                         int pref = storagePref.get(activity, "pref_university_tab", -1);
-                        tab = main_tabs.getTabAt(pref < 0 ? 0 : pref);
+                        tab = tabs.getTabAt(pref < 0 ? 0 : pref);
                     } else {
-                        tab = main_tabs.getTabAt(tabSelected);
+                        tab = tabs.getTabAt(tabSelected);
                     }
                 }
             } catch (Exception e) {

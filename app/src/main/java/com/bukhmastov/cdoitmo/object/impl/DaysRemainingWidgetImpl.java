@@ -1,13 +1,12 @@
 package com.bukhmastov.cdoitmo.object.impl;
 
-import android.content.Context;
-
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
+import com.bukhmastov.cdoitmo.model.schedule.exams.SExam;
+import com.bukhmastov.cdoitmo.model.schedule.exams.SExams;
+import com.bukhmastov.cdoitmo.model.schedule.exams.SSubject;
 import com.bukhmastov.cdoitmo.object.DaysRemainingWidget;
 import com.bukhmastov.cdoitmo.util.Log;
-
-import org.json.JSONArray;
-import org.json.JSONObject;
+import com.bukhmastov.cdoitmo.util.singleton.StringUtils;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -31,9 +30,9 @@ public class DaysRemainingWidgetImpl implements DaysRemainingWidget {
     }
 
     @Override
-    public void start(Context context, Delegate delegate, JSONObject schedule) {
+    public void start(SExams schedule, Delegate delegate) {
         log.v(TAG, "start");
-        executor = new Executor(delegate, schedule);
+        executor = new Executor(schedule, delegate);
     }
 
     @Override
@@ -48,14 +47,14 @@ public class DaysRemainingWidgetImpl implements DaysRemainingWidget {
 
         private static final String TAG = "DRWidget.Executor";
         private final Delegate delegate;
-        private final JSONObject full_schedule;
+        private final SExams schedule;
         private final long delay = 1000;
         private boolean running = false;
 
-        private Executor(Delegate delegate, JSONObject full_schedule) {
+        private Executor(SExams schedule, Delegate delegate) {
             log.i(TAG, "started");
             this.delegate = delegate;
-            this.full_schedule = full_schedule;
+            this.schedule = schedule;
             this.running = true;
             start();
         }
@@ -63,23 +62,16 @@ public class DaysRemainingWidgetImpl implements DaysRemainingWidget {
         public void run() {
             while (!Thread.currentThread().isInterrupted() && running) {
                 try {
-                    final long ts = System.currentTimeMillis();
-                    final ArrayList<DaysRemainingWidget.Data> dataArray = new ArrayList<>();
-                    final JSONArray schedule = full_schedule.getJSONArray("schedule");
-                    final String schedule_type = full_schedule.getString("type");
-                    for (int i = 0; i < schedule.length(); i++) {
+                    long ts = System.currentTimeMillis();
+                    ArrayList<DaysRemainingWidget.Data> dataArray = new ArrayList<>();
+                    for (SSubject subject : schedule.getSchedule()) {
                         try {
-                            final JSONObject fullExam = schedule.getJSONObject(i);
-                            final String type = fullExam.has("type") ? fullExam.getString("type") : "exam";
-                            if (!"exam".equals(type)) {
+                            if (!"exam".equals(StringUtils.defaultIfBlank(subject.getType(), "exam"))) {
                                 continue;
                             }
-                            final JSONObject exam = fullExam.getJSONObject("exam");
-                            final String subject = fullExam.has("subject") ? fullExam.getString("subject") : "";
-                            final String group = fullExam.has("group") ? fullExam.getString("group") : "";
-                            final String teacher = fullExam.has("teacher") ? fullExam.getString("teacher") : "";
-                            String time = exam.getString("time");
-                            String date = exam.getString("date");
+                            SExam exam = subject.getExam();
+                            String time = exam.getTime();
+                            String date = exam.getDate();
                             // convert "10 янв" date to "10.01"
                             Matcher originDateMatcher = Pattern.compile("^(\\d{1,2})(\\D*)$").matcher(date);
                             if (originDateMatcher.find()) {
@@ -102,37 +94,36 @@ public class DaysRemainingWidgetImpl implements DaysRemainingWidget {
                             // verify time and date
                             Matcher timeMatcher = Pattern.compile("^(\\d{1,2}):(\\d{2})$").matcher(time);
                             Matcher dateMatcher = Pattern.compile("^(\\d{1,2})\\.(\\d{2})(\\.(\\d{4}))?$").matcher(date);
-                            if (timeMatcher.find() && dateMatcher.find()) {
-                                // build calendar instance
-                                final Calendar calendar = timeUtil.getCalendar();
-                                int year = calendar.get(Calendar.YEAR);
-                                int month = Integer.parseInt(dateMatcher.group(2));
-                                String yearStr = dateMatcher.groupCount() == 4 ? dateMatcher.group(4) : null;
-                                if (yearStr != null) {
-                                    year = Integer.parseInt(yearStr);
-                                } else {
-                                    int m = calendar.get(Calendar.MONTH);
-                                    if (m > Calendar.AUGUST && m <= Calendar.DECEMBER && !(month > 9)) {
-                                        year += 1;
-                                    }
-                                }
-                                calendar.set(Calendar.YEAR, year);
-                                calendar.set(Calendar.MONTH, month - 1);
-                                calendar.set(Calendar.DAY_OF_MONTH, Integer.parseInt(dateMatcher.group(1)));
-                                calendar.set(Calendar.HOUR_OF_DAY, Integer.parseInt(timeMatcher.group(1)));
-                                calendar.set(Calendar.MINUTE, Integer.parseInt(timeMatcher.group(2)));
-                                calendar.set(Calendar.SECOND, 0);
-                                long examTS = calendar.getTimeInMillis();
-                                if (ts < examTS) {
-                                    // add exam that not yet passed
-                                    DaysRemainingWidget.Data data = new DaysRemainingWidget.Data();
-                                    data.subject = subject;
-                                    data.desc = schedule_type.equals("teacher") ? group : teacher;
-                                    data.time = ts2time(examTS - ts);
-                                    dataArray.add(data);
-                                }
-                            } else {
+                            if (!timeMatcher.find() || !dateMatcher.find()) {
                                 throw new Exception("Invalid date/time: " + date + "/" + time);
+                            }
+                            // build calendar instance
+                            final Calendar calendar = timeUtil.getCalendar();
+                            int year = calendar.get(Calendar.YEAR);
+                            int month = Integer.parseInt(dateMatcher.group(2));
+                            String yearStr = dateMatcher.groupCount() == 4 ? dateMatcher.group(4) : null;
+                            if (yearStr != null) {
+                                year = Integer.parseInt(yearStr);
+                            } else {
+                                int m = calendar.get(Calendar.MONTH);
+                                if (m > Calendar.AUGUST && m <= Calendar.DECEMBER && !(month > 9)) {
+                                    year += 1;
+                                }
+                            }
+                            calendar.set(Calendar.YEAR, year);
+                            calendar.set(Calendar.MONTH, month - 1);
+                            calendar.set(Calendar.DAY_OF_MONTH, Integer.parseInt(dateMatcher.group(1)));
+                            calendar.set(Calendar.HOUR_OF_DAY, Integer.parseInt(timeMatcher.group(1)));
+                            calendar.set(Calendar.MINUTE, Integer.parseInt(timeMatcher.group(2)));
+                            calendar.set(Calendar.SECOND, 0);
+                            long examTS = calendar.getTimeInMillis();
+                            if (ts < examTS) {
+                                // add exam that not yet passed
+                                DaysRemainingWidget.Data data = new DaysRemainingWidget.Data();
+                                data.subject = subject.getSubject();
+                                data.desc = "teacher".equals(schedule.getScheduleType()) ? subject.getGroup() : subject.getTeacherName();
+                                data.time = ts2time(examTS - ts);
+                                dataArray.add(data);
                             }
                         } catch (Exception e) {
                             log.e(TAG, e.getMessage());
@@ -150,7 +141,9 @@ public class DaysRemainingWidgetImpl implements DaysRemainingWidget {
                     this.cancel();
                 }
             }
-            if (!Thread.currentThread().isInterrupted() || running) this.cancel();
+            if (!Thread.currentThread().isInterrupted() || running) {
+                this.cancel();
+            }
         }
 
         public void cancel() {

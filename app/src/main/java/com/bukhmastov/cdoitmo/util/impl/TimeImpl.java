@@ -4,12 +4,12 @@ import android.content.Context;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
+import com.bukhmastov.cdoitmo.model.user.UserWeek;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Storage;
 import com.bukhmastov.cdoitmo.util.StoragePref;
 import com.bukhmastov.cdoitmo.util.Time;
-
-import org.json.JSONObject;
+import com.bukhmastov.cdoitmo.util.singleton.StringUtils;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -23,6 +23,7 @@ import dagger.Lazy;
 public class TimeImpl implements Time {
 
     private static final String TAG = "Time";
+    private static final Locale DEFAULT_LOCALE = Locale.GERMANY;
 
     @Inject
     Lazy<Log> log;
@@ -37,7 +38,12 @@ public class TimeImpl implements Time {
 
     @Override
     public Calendar getCalendar() {
-        return Calendar.getInstance(Locale.GERMANY);
+        return Calendar.getInstance(DEFAULT_LOCALE);
+    }
+
+    @Override
+    public long getTimeInMillis() {
+        return getCalendar().getTimeInMillis();
     }
 
     @Override
@@ -50,8 +56,8 @@ public class TimeImpl implements Time {
         int week = -1;
         long ts = 0;
         try {
-            final String override = storagePref.get().get(context, "pref_week_force_override", "");
-            if (!override.isEmpty()) {
+            String override = storagePref.get().get(context, "pref_week_force_override", "");
+            if (StringUtils.isNotBlank(override)) {
                 try {
                     String[] v = override.split("#");
                     if (v.length == 2) {
@@ -61,12 +67,12 @@ public class TimeImpl implements Time {
                 } catch (Exception ignore) {/* ignore */}
             }
             if (week < 0) {
-                final String stored = storage.get().get(context, Storage.PERMANENT, Storage.GLOBAL, "user#week").trim();
-                if (!stored.isEmpty()) {
+                String stored = storage.get().get(context, Storage.PERMANENT, Storage.GLOBAL, "user#week").trim();
+                if (StringUtils.isNotBlank(stored)) {
                     try {
-                        JSONObject json = new JSONObject(stored);
-                        week = json.getInt("week");
-                        ts = json.getLong("timestamp");
+                        UserWeek userWeek = new UserWeek().fromJsonString(stored);
+                        week = userWeek.getWeek();
+                        ts = userWeek.getTimestamp();
                     } catch (Exception e) {
                         storage.get().delete(context, Storage.PERMANENT, Storage.GLOBAL, "user#week");
                     }

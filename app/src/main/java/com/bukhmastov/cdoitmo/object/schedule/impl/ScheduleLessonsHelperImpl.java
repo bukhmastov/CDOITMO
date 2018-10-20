@@ -8,16 +8,27 @@ import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.fragment.ScheduleLessonsModifyFragment;
 import com.bukhmastov.cdoitmo.fragment.presenter.ScheduleLessonsModifyFragmentPresenter;
-import com.bukhmastov.cdoitmo.interfaces.Callable;
+import com.bukhmastov.cdoitmo.function.Callable;
+import com.bukhmastov.cdoitmo.model.schedule.lessons.SDay;
+import com.bukhmastov.cdoitmo.model.schedule.lessons.SLesson;
+import com.bukhmastov.cdoitmo.model.schedule.lessons.added.SLessonsAdded;
+import com.bukhmastov.cdoitmo.model.schedule.lessons.reduced.SDayReduced;
+import com.bukhmastov.cdoitmo.model.schedule.lessons.reduced.SLessonsReduced;
 import com.bukhmastov.cdoitmo.object.schedule.ScheduleLessonsHelper;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Storage;
-import com.bukhmastov.cdoitmo.util.Thread;
 import com.bukhmastov.cdoitmo.util.TextUtils;
+import com.bukhmastov.cdoitmo.util.Thread;
+import com.bukhmastov.cdoitmo.util.Time;
+import com.bukhmastov.cdoitmo.util.singleton.CollectionUtils;
+import com.bukhmastov.cdoitmo.util.singleton.StringUtils;
+import com.bukhmastov.cdoitmo.util.singleton.TimeUtil;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Collection;
+import java.util.Objects;
+import java.util.TreeSet;
 
 import javax.inject.Inject;
 
@@ -30,7 +41,13 @@ public class ScheduleLessonsHelperImpl implements ScheduleLessonsHelper {
     @Inject
     Thread thread;
     @Inject
+    Context context;
+    @Inject
+    Storage storage;
+    @Inject
     TextUtils textUtils;
+    @Inject
+    Time time;
     @Inject
     FirebaseAnalyticsProvider firebaseAnalyticsProvider;
 
@@ -39,13 +56,14 @@ public class ScheduleLessonsHelperImpl implements ScheduleLessonsHelper {
     }
 
     @Override
-    public boolean clearChanges(final Context context, final Storage storage, final String query, final Callable callback) {
+    public boolean clearChanges(String query, Callable callback) {
         try {
-            if (context == null) throw new NullPointerException("context cannot be null");
-            if (query == null) throw new NullPointerException("query cannot be null");
-            if (query.isEmpty()) throw new IllegalArgumentException("query cannot be empty");
+            thread.assertNotUI();
+            if (StringUtils.isBlank(query)) {
+                return false;
+            }
             log.v(TAG, "clearChanges | query=", query);
-            final String token = query.toLowerCase();
+            String token = query.toLowerCase();
             boolean added = false;
             boolean reduced = false;
             if (storage.exists(context, Storage.PERMANENT, Storage.USER, "schedule_lessons#added#" + token)) {
@@ -71,49 +89,60 @@ public class ScheduleLessonsHelperImpl implements ScheduleLessonsHelper {
     }
 
     @Override
-    public boolean reduceLesson(final Context context, final Storage storage, final String query, final int weekday, final JSONObject lesson, final Callable callback) {
+    public boolean reduceLesson(String query, int weekday, SLesson lesson, Callable callback) {
         try {
-            if (context == null) throw new NullPointerException("context cannot be null");
-            if (query == null) throw new NullPointerException("query cannot be null");
-            if (query.isEmpty()) throw new IllegalArgumentException("query cannot be empty");
-            if (lesson == null) throw new NullPointerException("lesson cannot be null");
-            log.v(TAG, "reduceLesson | query=", query, " | weekday=", weekday, " | lesson=", lesson.toString());
-            final String cdoitmo_type = lesson.getString("cdoitmo_type");
-            if (!cdoitmo_type.equals("normal")) throw new Exception("wrong cdoitmo_type type: " + cdoitmo_type);
-            final String token = query.toLowerCase();
-            final String hash = getLessonHash(lesson);
-            final JSONArray reduced = textUtils.string2jsonArray(storage.get(context, Storage.PERMANENT, Storage.USER, "schedule_lessons#reduced#" + token, ""));
+            thread.assertNotUI();
+            if (StringUtils.isBlank(query) || lesson == null) {
+                return false;
+            }
+            log.v(TAG, "reduceLesson | query=", query, " | weekday=", weekday, " | lesson=", lesson);
+            if (!Objects.equals(lesson.getCdoitmoType(), "normal")) {
+                throw new Exception("Wrong cdoitmo_type type: " + lesson.getCdoitmoType());
+            }
+            String token = query.toLowerCase();
+            String lessonHash = getLessonHash(lesson);
+            String reduced = storage.get(context, Storage.PERMANENT, Storage.USER, "schedule_lessons#reduced#" + token, null);
+            SLessonsReduced lessonsReduced = new SLessonsReduced();
+            if (StringUtils.isNotBlank(reduced)) {
+                lessonsReduced.fromJsonString(reduced);
+            }
+            if (lessonsReduced.getSchedule() == null) {
+                lessonsReduced.setSchedule(new ArrayList<>());
+            }
             boolean found = false;
-            for (int i = 0; i < reduced.length(); i++) {
-                final JSONObject day = reduced.getJSONObject(i);
-                if (day.getInt("weekday") == weekday) {
-                    final JSONArray lessons = day.getJSONArray("lessons");
-                    boolean foundLesson = false;
-                    for (int j = 0; j < lessons.length(); j++) {
-                        if (lessons.getString(j).equals(hash)) {
-                            foundLesson = true;
-                            break;
-                        }
-                    }
-                    if (!foundLesson) lessons.put(hash);
-                    found = true;
-                    break;
+            for (SDayReduced dayReduced : lessonsReduced.getSchedule()) {
+                if (dayReduced.getWeekday() != weekday) {
+                    continue;
                 }
+                boolean foundLesson = false;
+                for (String hash : dayReduced.getLessons()) {
+                    if (Objects.equals(lessonHash, hash)) {
+                        foundLesson = true;
+                        break;
+                    }
+                }
+                if (!foundLesson) {
+                    dayReduced.getLessons().add(lessonHash);
+                }
+                found = true;
+                break;
             }
             if (!found) {
-                reduced.put(new JSONObject()
-                        .put("weekday", weekday)
-                        .put("lessons", new JSONArray().put(hash))
-                );
+                SDayReduced dayReduced = new SDayReduced();
+                dayReduced.setWeekday(weekday);
+                dayReduced.setLessons(new ArrayList<>());
+                dayReduced.getLessons().add(lessonHash);
+                lessonsReduced.getSchedule().add(dayReduced);
             }
-            storage.put(context, Storage.PERMANENT, Storage.USER, "schedule_lessons#reduced#" + token, reduced.toString());
+            lessonsReduced.setTimestamp(time.getTimeInMillis());
+            storage.put(context, Storage.PERMANENT, Storage.USER, "schedule_lessons#reduced#" + token, lessonsReduced.toJsonString());
             if (callback != null) {
                 callback.call();
             }
             firebaseAnalyticsProvider.logEvent(
                     context,
                     FirebaseAnalyticsProvider.Event.SCHEDULE_LESSON_REDUCE,
-                    firebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.LESSON_TITLE, lesson.getString("subject"))
+                    firebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.LESSON_TITLE, lesson.getSubject())
             );
             return true;
         } catch (Exception e) {
@@ -123,41 +152,49 @@ public class ScheduleLessonsHelperImpl implements ScheduleLessonsHelper {
     }
 
     @Override
-    public boolean restoreLesson(final Context context, final Storage storage, final String query, final int weekday, final JSONObject lesson, final Callable callback) {
+    public boolean restoreLesson(String query, int weekday, SLesson lesson, Callable callback) {
         try {
-            if (context == null) throw new NullPointerException("context cannot be null");
-            if (query == null) throw new NullPointerException("query cannot be null");
-            if (query.isEmpty()) throw new IllegalArgumentException("query cannot be empty");
-            if (lesson == null) throw new NullPointerException("lesson cannot be null");
-            log.v(TAG, "restoreLesson | query=", query, " | weekday=", weekday, " | lesson=", lesson.toString());
-            final String cdoitmo_type = lesson.getString("cdoitmo_type");
-            if (!cdoitmo_type.equals("reduced")) throw new Exception("wrong cdoitmo_type type: " + cdoitmo_type);
-            final String token = query.toLowerCase();
-            final String hash = getLessonHash(lesson);
-            final JSONArray reduced = textUtils.string2jsonArray(storage.get(context, Storage.PERMANENT, Storage.USER, "schedule_lessons#reduced#" + token, ""));
-            for (int i = 0; i < reduced.length(); i++) {
-                final JSONObject day = reduced.getJSONObject(i);
-                if (day.getInt("weekday") == weekday) {
-                    final JSONArray lessons = day.getJSONArray("lessons");
-                    for (int j = 0; j < lessons.length(); j++) {
-                        if (lessons.getString(j).equals(hash)) {
-                            lessons.remove(j);
-                            break;
-                        }
-                    }
-                    if (lessons.length() == 0) {
-                        reduced.remove(i);
-                    }
-                    break;
-                }
+            thread.assertNotUI();
+            if (StringUtils.isBlank(query) || lesson == null) {
+                return false;
             }
-            if (reduced.length() == 0) {
+            log.v(TAG, "restoreLesson | query=", query, " | weekday=", weekday, " | lesson=", lesson);
+            if (!Objects.equals(lesson.getCdoitmoType(), "reduced")) {
+                throw new Exception("Wrong cdoitmo_type type: " + lesson.getCdoitmoType());
+            }
+            String token = query.toLowerCase();
+            String lessonHash = getLessonHash(lesson);
+            String reduced = storage.get(context, Storage.PERMANENT, Storage.USER, "schedule_lessons#reduced#" + token, null);
+            if (StringUtils.isBlank(reduced)) {
+                return false;
+            }
+            SLessonsReduced lessonsReduced = new SLessonsReduced().fromJsonString(reduced);
+            if (lessonsReduced == null || CollectionUtils.isEmpty(lessonsReduced.getSchedule())) {
+                return false;
+            }
+            for (SDayReduced dayReduced : lessonsReduced.getSchedule()) {
+                if (dayReduced.getWeekday() != weekday) {
+                    continue;
+                }
+                for (String hash : dayReduced.getLessons()) {
+                    if (Objects.equals(lessonHash, hash)) {
+                        dayReduced.getLessons().remove(hash);
+                        break;
+                    }
+                }
+                if (dayReduced.getLessons().size() == 0) {
+                    lessonsReduced.getSchedule().remove(dayReduced);
+                }
+                break;
+            }
+            if (lessonsReduced.getSchedule().size() == 0) {
                 storage.delete(context, Storage.PERMANENT, Storage.USER, "schedule_lessons#reduced#" + token);
                 if (storage.list(context, Storage.PERMANENT, Storage.USER, "schedule_lessons#reduced").size() == 0) {
                     storage.clear(context, Storage.PERMANENT, Storage.USER, "schedule_lessons#reduced");
                 }
             } else {
-                storage.put(context, Storage.PERMANENT, Storage.USER, "schedule_lessons#reduced#" + token, reduced.toString());
+                lessonsReduced.setTimestamp(time.getTimeInMillis());
+                storage.put(context, Storage.PERMANENT, Storage.USER, "schedule_lessons#reduced#" + token, lessonsReduced.toJsonString());
             }
             if (callback != null) {
                 callback.call();
@@ -170,22 +207,22 @@ public class ScheduleLessonsHelperImpl implements ScheduleLessonsHelper {
     }
 
     @Override
-    public boolean createLesson(final ConnectedActivity activity, final String query, final String title, final String type, final int weekday, final JSONObject lesson, final Callable callback) {
+    public boolean createLesson(ConnectedActivity activity, String query, String title, String type, int weekday, SLesson lesson, Callable callback) {
         try {
-            if (activity == null) throw new NullPointerException("activity cannot be null");
-            if (query == null) throw new NullPointerException("query cannot be null");
-            if (query.isEmpty()) throw new IllegalArgumentException("query cannot be empty");
-            if (title == null) throw new NullPointerException("title cannot be null");
-            if (type == null) throw new NullPointerException("type cannot be null");
-            if (lesson == null) throw new NullPointerException("lesson cannot be null");
-            log.v(TAG, "createLesson | open fragment | query=", query, " | weekday=", weekday, " | lesson=", lesson.toString());
-            final Bundle extras = new Bundle();
+            if (activity == null) {
+                return false;
+            }
+            if (StringUtils.isBlank(query) || StringUtils.isBlank(title) || StringUtils.isBlank(type) || lesson == null) {
+                return false;
+            }
+            log.v(TAG, "createLesson | open fragment | query=", query, " | weekday=", weekday, " | lesson=", lesson);
+            Bundle extras = new Bundle();
             extras.putString("action_type", ScheduleLessonsModifyFragmentPresenter.CREATE);
             extras.putString("query", query);
             extras.putString("type", type);
             extras.putString("title", title);
             extras.putInt("weekday", weekday);
-            extras.putString("lesson", lesson.toString());
+            extras.putSerializable("lesson", lesson);
             thread.runOnUI(() -> {
                 if (activity.openActivityOrFragment(ScheduleLessonsModifyFragment.class, extras) && callback != null) {
                     thread.run(callback::call);
@@ -199,36 +236,44 @@ public class ScheduleLessonsHelperImpl implements ScheduleLessonsHelper {
     }
 
     @Override
-    public boolean createLesson(final Context context, final Storage storage, final String query, final int weekday, final JSONObject lesson, final Callable callback) {
+    public boolean createLesson(String query, int weekday, SLesson lesson, Callable callback) {
         try {
-            if (context == null) throw new NullPointerException("context cannot be null");
-            if (query == null) throw new NullPointerException("query cannot be null");
-            if (query.isEmpty()) throw new IllegalArgumentException("query cannot be empty");
-            if (lesson == null) throw new NullPointerException("lesson cannot be null");
-            log.v(TAG, "createLesson | query=", query, " | weekday=", weekday, " | lesson=", lesson.toString());
-            lesson.put("cdoitmo_type", "synthetic");
-            final String subject = lesson.getString("subject");
-            final String token = query.toLowerCase();
-            final JSONArray added = textUtils.string2jsonArray(storage.get(context, Storage.PERMANENT, Storage.USER, "schedule_lessons#added#" + token, ""));
+            thread.assertNotUI();
+            if (StringUtils.isBlank(query) || lesson == null) {
+                return false;
+            }
+            log.v(TAG, "createLesson | query=", query, " | weekday=", weekday, " | lesson=", lesson);
+            lesson.setCdoitmoType("synthetic");
+            String token = query.toLowerCase();
+            String added = storage.get(context, Storage.PERMANENT, Storage.USER, "schedule_lessons#added#" + token, null);
+            SLessonsAdded lessonsAdded = new SLessonsAdded();
+            if (StringUtils.isNotBlank(added)) {
+                lessonsAdded.fromJsonString(added);
+            }
+            if (lessonsAdded.getSchedule() == null) {
+                lessonsAdded.setSchedule(new ArrayList<>());
+            }
             boolean found = false;
-            for (int i = 0; i < added.length(); i++) {
-                final JSONObject day = added.getJSONObject(i);
-                if (day.getInt("weekday") == weekday) {
-                    found = true;
-                    day.getJSONArray("lessons").put(lesson);
+            for (SDay day : lessonsAdded.getSchedule()) {
+                if (day.getWeekday() != weekday) {
+                    continue;
                 }
+                day.getLessons().add(lesson);
+                found = true;
             }
             if (!found) {
-                added.put(new JSONObject()
-                        .put("weekday", weekday)
-                        .put("lessons", new JSONArray().put(lesson))
-                );
+                SDay day = new SDay();
+                day.setWeekday(weekday);
+                day.setLessons(new ArrayList<>());
+                day.getLessons().add(lesson);
+                lessonsAdded.getSchedule().add(day);
             }
-            storage.put(context, Storage.PERMANENT, Storage.USER, "schedule_lessons#added#" + token, added.toString());
+            lessonsAdded.setTimestamp(time.getTimeInMillis());
+            storage.put(context, Storage.PERMANENT, Storage.USER, "schedule_lessons#added#" + token, lessonsAdded.toJsonString());
             firebaseAnalyticsProvider.logEvent(
                     context,
                     FirebaseAnalyticsProvider.Event.SCHEDULE_LESSON_ADD,
-                    firebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.LESSON_TITLE, subject)
+                    firebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.LESSON_TITLE, lesson.getSubject())
             );
             if (callback != null) {
                 callback.call();
@@ -241,41 +286,48 @@ public class ScheduleLessonsHelperImpl implements ScheduleLessonsHelper {
     }
 
     @Override
-    public boolean deleteLesson(final Context context, final Storage storage, final String query, final int weekday, final JSONObject lesson, final Callable callback) {
+    public boolean deleteLesson(String query, int weekday, SLesson lesson, Callable callback) {
         try {
-            if (context == null) throw new NullPointerException("context cannot be null");
-            if (query == null) throw new NullPointerException("query cannot be null");
-            if (query.isEmpty()) throw new IllegalArgumentException("query cannot be empty");
-            if (lesson == null) throw new NullPointerException("lesson cannot be null");
-            log.v(TAG, "deleteLesson | query=", query, " | weekday=", weekday, " | lesson=", lesson.toString());
-            final String cdoitmo_type = lesson.getString("cdoitmo_type");
-            if (!cdoitmo_type.equals("synthetic")) throw new Exception("wrong cdoitmo_type type: " + cdoitmo_type);
-            final String hash = getLessonHash(lesson);
-            final String token = query.toLowerCase();
-            final JSONArray added = textUtils.string2jsonArray(storage.get(context, Storage.PERMANENT, Storage.USER, "schedule_lessons#added#" + token, ""));
-            for (int i = 0; i < added.length(); i++) {
-                final JSONObject day = added.getJSONObject(i);
-                if (day.getInt("weekday") == weekday) {
-                    final JSONArray lessons = day.getJSONArray("lessons");
-                    for (int j = 0; j < lessons.length(); j++) {
-                        if (getLessonHash(lessons.getJSONObject(j)).equals(hash)) {
-                            lessons.remove(j);
-                            break;
-                        }
+            thread.assertNotUI();
+            if (StringUtils.isBlank(query) || lesson == null) {
+                return false;
+            }
+            log.v(TAG, "deleteLesson | query=", query, " | weekday=", weekday, " | lesson=", lesson);
+            if (!Objects.equals(lesson.getCdoitmoType(), "synthetic")) {
+                throw new Exception("Wrong cdoitmo_type type: " + lesson.getCdoitmoType());
+            }
+            String lessonHash = getLessonHash(lesson);
+            String token = query.toLowerCase();
+            String added = storage.get(context, Storage.PERMANENT, Storage.USER, "schedule_lessons#added#" + token, null);
+            if (StringUtils.isBlank(added)) {
+                return false;
+            }
+            SLessonsAdded lessonsAdded = new SLessonsAdded().fromJsonString(added);
+            if (lessonsAdded == null || CollectionUtils.isEmpty(lessonsAdded.getSchedule())) {
+                return false;
+            }
+            for (SDay day : lessonsAdded.getSchedule()) {
+                if (day.getWeekday() != weekday) {
+                    continue;
+                }
+                for (SLesson sLesson : day.getLessons()) {
+                    if (Objects.equals(getLessonHash(sLesson), lessonHash)) {
+                        day.getLessons().remove(sLesson);
+                        break;
                     }
-                    if (lessons.length() == 0) {
-                        added.remove(i);
-                    }
-                    break;
+                }
+                if (day.getLessons().size() == 0) {
+                    lessonsAdded.getSchedule().remove(day);
                 }
             }
-            if (added.length() == 0) {
+            if (lessonsAdded.getSchedule().size() == 0) {
                 storage.delete(context, Storage.PERMANENT, Storage.USER, "schedule_lessons#added#" + token);
                 if (storage.list(context, Storage.PERMANENT, Storage.USER, "schedule_lessons#added").size() == 0) {
                     storage.clear(context, Storage.PERMANENT, Storage.USER, "schedule_lessons#added");
                 }
             } else {
-                storage.put(context, Storage.PERMANENT, Storage.USER, "schedule_lessons#added#" + token, added.toString());
+                lessonsAdded.setTimestamp(time.getTimeInMillis());
+                storage.put(context, Storage.PERMANENT, Storage.USER, "schedule_lessons#added#" + token, lessonsAdded.toJsonString());
             }
             if (callback != null) {
                 callback.call();
@@ -288,22 +340,22 @@ public class ScheduleLessonsHelperImpl implements ScheduleLessonsHelper {
     }
 
     @Override
-    public boolean editLesson(final ConnectedActivity activity, final String query, final String title, final String type, final int weekday, final JSONObject lesson, final Callable callback) {
+    public boolean editLesson(ConnectedActivity activity, String query, String title, String type, int weekday, SLesson lesson, Callable callback) {
         try {
-            if (activity == null) throw new NullPointerException("activity cannot be null");
-            if (query == null) throw new NullPointerException("query cannot be null");
-            if (query.isEmpty()) throw new IllegalArgumentException("query cannot be empty");
-            if (title == null) throw new NullPointerException("title cannot be null");
-            if (type == null) throw new NullPointerException("type cannot be null");
-            if (lesson == null) throw new NullPointerException("lesson cannot be null");
-            log.v(TAG, "editLesson | open fragment | query=", query, " | weekday=", weekday, " | lesson=", lesson.toString());
-            final Bundle extras = new Bundle();
+            if (activity == null) {
+                return false;
+            }
+            if (StringUtils.isBlank(query) || StringUtils.isBlank(title) || StringUtils.isBlank(type) || lesson == null) {
+                return false;
+            }
+            log.v(TAG, "editLesson | open fragment | query=", query, " | weekday=", weekday, " | lesson=", lesson);
+            Bundle extras = new Bundle();
             extras.putString("action_type", ScheduleLessonsModifyFragmentPresenter.EDIT);
             extras.putString("query", query);
             extras.putString("type", type);
             extras.putString("title", title);
             extras.putInt("weekday", weekday);
-            extras.putString("lesson", lesson.toString());
+            extras.putSerializable("lesson", lesson);
             thread.runOnUI(() -> {
                 if (activity.openActivityOrFragment(ScheduleLessonsModifyFragment.class, extras) && callback != null) {
                     thread.run(callback::call);
@@ -317,23 +369,55 @@ public class ScheduleLessonsHelperImpl implements ScheduleLessonsHelper {
     }
 
     @Override
-    public String getLessonHash(JSONObject lesson) throws JSONException {
+    public String getLessonHash(SLesson lesson) throws Exception {
         return textUtils.crypt(getLessonSignature(lesson));
     }
 
     @Override
-    public String getLessonSignature(JSONObject lesson) throws JSONException {
-        JSONObject replica = new JSONObject();
-        replica.put("subject", lesson.getString("subject"));
-        replica.put("type", lesson.getString("type"));
-        replica.put("week", lesson.getInt("week"));
-        replica.put("timeStart", lesson.getString("timeStart"));
-        replica.put("timeEnd", lesson.getString("timeEnd"));
-        replica.put("group", lesson.getString("group"));
-        replica.put("teacher", lesson.getString("teacher"));
-        replica.put("teacher_id", lesson.getString("teacher_id"));
-        replica.put("room", lesson.getString("room"));
-        replica.put("building", lesson.getString("building"));
-        return replica.toString();
+    public String getLessonSignature(SLesson lesson) throws Exception {
+        SLesson replica = new SLesson();
+        replica.setSubject(lesson.getSubject());
+        replica.setType(lesson.getType());
+        replica.setParity(lesson.getParity());
+        replica.setTimeStart(lesson.getTimeStart());
+        replica.setTimeEnd(lesson.getTimeEnd());
+        replica.setGroup(lesson.getGroup());
+        replica.setTeacherName(lesson.getTeacherName());
+        replica.setTeacherId(lesson.getTeacherId());
+        replica.setRoom(lesson.getRoom());
+        replica.setBuilding(lesson.getBuilding());
+        return replica.toJsonString();
+    }
+
+    @Override
+    public TreeSet<SLesson> filterAndSortLessons(Collection<SLesson> lessons, int parity, boolean hideReducedLessons) {
+        TreeSet<SLesson> filtered = new TreeSet<>((lesson1, lesson2) -> {
+            try {
+                Calendar calendar1 = TimeUtil.time2calendar(time.getCalendar(), lesson1.getTimeStart());
+                Calendar calendar2 = TimeUtil.time2calendar(time.getCalendar(), lesson2.getTimeStart());
+                if (calendar1 == null || calendar2 == null) {
+                    return 0;
+                }
+                return calendar1.compareTo(calendar2);
+            } catch (Exception e) {
+                return 0;
+            }
+        });
+        if (CollectionUtils.isEmpty(lessons)) {
+            return filtered;
+        }
+        for (SLesson lesson : lessons) {
+            if (lesson == null) {
+                continue;
+            }
+            if (!(parity == 2 || lesson.getParity() == 2 || parity == lesson.getParity())) {
+                continue;
+            }
+            if (hideReducedLessons && "reduced".equals(lesson.getCdoitmoType())) {
+                continue;
+            }
+            filtered.add(lesson);
+        }
+        return filtered;
     }
 }

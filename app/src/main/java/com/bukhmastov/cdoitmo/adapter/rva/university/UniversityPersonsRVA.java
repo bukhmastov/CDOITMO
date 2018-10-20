@@ -1,147 +1,104 @@
 package com.bukhmastov.cdoitmo.adapter.rva.university;
 
 import android.content.Context;
-import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.v7.widget.RecyclerView;
-import android.view.LayoutInflater;
+import android.support.annotation.LayoutRes;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
-import com.bukhmastov.cdoitmo.activity.UniversityPersonCardActivity;
-import com.bukhmastov.cdoitmo.event.events.OpenActivityEvent;
+import com.bukhmastov.cdoitmo.model.rva.RVAUniversity;
+import com.bukhmastov.cdoitmo.model.university.persons.UPerson;
+import com.bukhmastov.cdoitmo.util.singleton.StringUtils;
 import com.bukhmastov.cdoitmo.view.CircularTransformation;
 import com.squareup.picasso.Picasso;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.util.ArrayList;
-
 public class UniversityPersonsRVA extends UniversityRVA {
 
-    public UniversityPersonsRVA(final Context context) {
-        this(context, null);
-    }
-    public UniversityPersonsRVA(final Context context, final ArrayList<Item> dataset) {
-        super(context, dataset);
+    public UniversityPersonsRVA(Context context) {
+        super(context);
     }
 
-    @NonNull
     @Override
-    public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        switch (viewType) {
-            case TYPE_INFO_ABOUT_UPDATE_TIME: {
-                return new ViewHolder((ViewGroup) LayoutInflater.from(parent.getContext()).inflate(R.layout.layout_university_update_time, parent, false));
-            }
-            case TYPE_MAIN: {
-                return new ViewHolder((ViewGroup) LayoutInflater.from(parent.getContext()).inflate(R.layout.layout_university_persons_list_item, parent, false));
-            }
-            case TYPE_STATE: {
-                return new ViewHolder((ViewGroup) LayoutInflater.from(parent.getContext()).inflate(R.layout.layout_university_list_item_state, parent, false));
-            }
-            default:
-            case TYPE_NO_DATA: {
-                return new UniversityEventsRVA.ViewHolder((ViewGroup) LayoutInflater.from(parent.getContext()).inflate(R.layout.state_nothing_to_display_compact, parent, false));
-            }
+    protected int onGetLayout(int type) throws NullPointerException {
+        @LayoutRes int layout;
+        switch (type) {
+            case TYPE_INFO_ABOUT_UPDATE_TIME: layout = R.layout.layout_university_update_time; break;
+            case TYPE_MAIN: layout = R.layout.layout_university_persons_list_item; break;
+            case TYPE_STATE: layout = R.layout.layout_university_list_item_state; break;
+            case TYPE_NO_DATA: layout = R.layout.state_nothing_to_display_compact; break;
+            default: throw new NullPointerException("Invalid type provided");
         }
+        return layout;
     }
 
     @Override
-    public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
-        Item item = dataset.get(position);
+    protected void onBind(View container, Item item) {
         switch (item.type) {
-            case TYPE_INFO_ABOUT_UPDATE_TIME: {
-                bindInfoAboutUpdateTime(holder, item);
-                break;
-            }
-            case TYPE_MAIN: {
-                bindMain(holder, item);
-                break;
-            }
-            case TYPE_STATE: {
-                bindState(holder, item);
-                break;
-            }
-            case TYPE_NO_DATA: {
-                bindNoData(holder, item);
-                break;
-            }
+            case TYPE_INFO_ABOUT_UPDATE_TIME: bindInfoAboutUpdateTime(container, item); break;
+            case TYPE_MAIN: bindMain(container, item); break;
+            case TYPE_STATE: bindState(container, item); break;
+            case TYPE_NO_DATA: bindNoData(container); break;
         }
     }
 
-    private void bindMain(RecyclerView.ViewHolder holder, final Item item) {
+    private void bindMain(View container, Item<UPerson> item) {
         try {
-            ViewHolder viewHolder = (ViewHolder) holder;
-            final String name = (getStringIfExists(item.data, "title_l") + " " + getStringIfExists(item.data, "title_f") + " " + getStringIfExists(item.data, "title_m")).trim();
-            final String degree = item.data.getString("degree").trim();
-            final String image = item.data.getString("image");
-            View nameView = viewHolder.container.findViewById(R.id.name);
-            View postView = viewHolder.container.findViewById(R.id.post);
-            View avatarView = viewHolder.container.findViewById(R.id.avatar);
+            UPerson person = item.data;
+            tryRegisterClickListener(container, R.id.person, new RVAUniversity(person));
+            View nameView = container.findViewById(R.id.name);
             if (nameView != null) {
+                String name = (getStringIfExists(person.getLastName()) + " " + getStringIfExists(person.getFirstName()) + " " + getStringIfExists(person.getMiddleName())).trim();
                 ((TextView) nameView).setText(name);
             }
+            View postView = container.findViewById(R.id.post);
             if (postView != null) {
-                if (!degree.isEmpty()) {
-                        ((TextView) postView).setText(degree.substring(0, 1).toUpperCase() + degree.substring(1));
+                if (StringUtils.isNotBlank(person.getDegree())) {
+                    ((TextView) postView).setText(textUtils.capitalizeFirstLetter(person.getDegree()));
                 } else {
-                    staticUtil.removeView(viewHolder.container.findViewById(R.id.post));
+                    staticUtil.removeView(container.findViewById(R.id.post));
                 }
             }
+            View avatarView = container.findViewById(R.id.avatar);
             if (avatarView != null) {
                 Picasso.with(context)
-                        .load(image)
+                        .load(person.getImage())
                         .error(R.drawable.ic_sentiment_very_satisfied)
                         .transform(new CircularTransformation())
                         .into((ImageView) avatarView);
             }
-            viewHolder.container.setOnClickListener(v -> {
-                try {
-                    Bundle extras = new Bundle();
-                    extras.putInt("pid", item.data.getInt("persons_id"));
-                    extras.putString("person", item.data.toString());
-                    eventBus.fire(new OpenActivityEvent(UniversityPersonCardActivity.class, extras));
-                } catch (Exception e) {
-                    log.exception(e);
-                }
-            });
         } catch (Exception e) {
             log.exception(e);
         }
     }
-    private void bindState(RecyclerView.ViewHolder holder, Item item) {
+    private void bindState(View container, Item item) {
         try {
-            ViewHolder viewHolder = (ViewHolder) holder;
-            for (int i = viewHolder.container.getChildCount() - 1; i >= 0; i--) {
-                View child = viewHolder.container.getChildAt(i);
-                if (child.getId() == item.data_state_keep) {
-                    child.setVisibility(View.VISIBLE);
-                } else {
-                    child.setVisibility(View.GONE);
+            tryRegisterClickListener(container, (int) item.extras.get(DATA_STATE_KEEP), null);
+            if (container instanceof ViewGroup) {
+                ViewGroup containerGroup = (ViewGroup) container;
+                for (int i = containerGroup.getChildCount() - 1; i >= 0; i--) {
+                    View child = containerGroup.getChildAt(i);
+                    if (child.getId() == (int) item.extras.get(DATA_STATE_KEEP)) {
+                        child.setVisibility(View.VISIBLE);
+                    } else {
+                        child.setVisibility(View.GONE);
+                    }
                 }
-            }
-            View.OnClickListener onStateClickListener = onStateClickListeners.containsKey(item.data_state_keep) ? onStateClickListeners.get(item.data_state_keep) : null;
-            if (onStateClickListener != null) {
-                viewHolder.container.setOnClickListener(onStateClickListener);
             }
         } catch (Exception e) {
             log.exception(e);
         }
     }
-    private void bindNoData(RecyclerView.ViewHolder holder, Item item) {
+    private void bindNoData(View container) {
         try {
-            UniversityEventsRVA.ViewHolder viewHolder = (UniversityEventsRVA.ViewHolder) holder;
-            ((TextView) viewHolder.container.findViewById(R.id.ntd_text)).setText(R.string.no_persons);
+            ((TextView) container.findViewById(R.id.ntd_text)).setText(R.string.no_persons);
         } catch (Exception e) {
             log.exception(e);
         }
     }
 
-    private String getStringIfExists(JSONObject jsonObject, String key) throws JSONException {
-        return jsonObject.has(key) ? jsonObject.getString(key) : "";
+    private String getStringIfExists(String value) {
+        return StringUtils.isNotBlank(value) ? value : "";
     }
 }

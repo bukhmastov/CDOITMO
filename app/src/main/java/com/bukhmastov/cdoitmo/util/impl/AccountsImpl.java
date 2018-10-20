@@ -6,14 +6,19 @@ import android.support.annotation.NonNull;
 
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
+import com.bukhmastov.cdoitmo.model.user.UsersList;
 import com.bukhmastov.cdoitmo.util.Account;
 import com.bukhmastov.cdoitmo.util.Accounts;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Storage;
 import com.bukhmastov.cdoitmo.util.Thread;
 import com.bukhmastov.cdoitmo.util.TextUtils;
+import com.bukhmastov.cdoitmo.util.singleton.CollectionUtils;
+import com.bukhmastov.cdoitmo.util.singleton.StringUtils;
 
-import org.json.JSONArray;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 
 import javax.inject.Inject;
 
@@ -44,21 +49,23 @@ public class AccountsImpl implements Accounts {
                 log.v(TAG, "add | login=", login);
                 boolean isNewAuthorization = true;
                 // save login on top of the list of authorized users
-                JSONArray list = get(context);
-                JSONArray accounts = new JSONArray();
-                accounts.put(login);
-                for (int i = 0; i < list.length(); i++) {
-                    String entry = list.getString(i);
-                    if (entry.equals(login)) {
-                        isNewAuthorization = false;
-                    } else {
-                        accounts.put(entry);
+                UsersList list = get(context);
+                ArrayList<String> accounts = new ArrayList<>();
+                accounts.add(login);
+                if (CollectionUtils.isNotEmpty(list.getLogins())) {
+                    for (String entry : list.getLogins()) {
+                        if (Objects.equals(entry, login)) {
+                            isNewAuthorization = false;
+                        } else {
+                            accounts.add(entry);
+                        }
                     }
                 }
-                storage.put(context, Storage.PERMANENT, Storage.GLOBAL, "users#list", accounts.toString());
+                list.setLogins(accounts);
+                storage.put(context, Storage.PERMANENT, Storage.GLOBAL, "users#list", list.toJsonString());
                 // track statistics
                 Bundle bundle;
-                bundle = firebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.LOGIN_COUNT, accounts.length());
+                bundle = firebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.LOGIN_COUNT, list.getLogins().size());
                 bundle = firebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.LOGIN_NEW, isNewAuthorization ? "new" : "old", bundle);
                 firebaseAnalyticsProvider.logEvent(
                         context,
@@ -78,19 +85,22 @@ public class AccountsImpl implements Accounts {
             try {
                 log.v(TAG, "remove | login=", login);
                 // remove login from the list of authorized users
-                JSONArray list = get(context);
-                for (int i = 0; i < list.length(); i++) {
-                    if (list.getString(i).equals(login)) {
-                        list.remove(i);
-                        break;
+                UsersList list = get(context);
+                if (CollectionUtils.isNotEmpty(list.getLogins())) {
+                    List<String> accounts = list.getLogins();
+                    for (String entry : accounts) {
+                        if (Objects.equals(entry, login)) {
+                            accounts.remove(entry);
+                            break;
+                        }
                     }
+                    storage.put(context, Storage.PERMANENT, Storage.GLOBAL, "users#list", list.toJsonString());
                 }
-                storage.put(context, Storage.PERMANENT, Storage.GLOBAL, "users#list", list.toString());
                 // track statistics
                 firebaseAnalyticsProvider.logEvent(
                         context,
                         FirebaseAnalyticsProvider.Event.LOGOUT,
-                        firebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.LOGIN_COUNT, list.length())
+                        firebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.LOGIN_COUNT, list.getLogins().size())
                 );
             } catch (Exception e) {
                 log.exception(e);
@@ -99,17 +109,21 @@ public class AccountsImpl implements Accounts {
     }
 
     @Override
-    public JSONArray get(@NonNull Context context) {
+    public @NonNull UsersList get(@NonNull Context context) {
+        log.v(TAG, "get");
+        UsersList usersList = new UsersList();
+        usersList.setLogins(new ArrayList<>());
         try {
-            log.v(TAG, "get");
-            try {
-                return textUtils.string2jsonArray(storage.get(context, Storage.PERMANENT, Storage.GLOBAL, "users#list", ""));
-            } catch (Exception e) {
-                return new JSONArray();
+            String accounts = storage.get(context, Storage.PERMANENT, Storage.GLOBAL, "users#list", "");
+            if (StringUtils.isNotBlank(accounts)) {
+                usersList.fromJsonString(accounts);
+            }
+            if (usersList.getLogins() == null) {
+                usersList.setLogins(new ArrayList<>());
             }
         } catch (Exception e) {
             log.exception(e);
-            return new JSONArray();
         }
+        return usersList;
     }
 }

@@ -443,10 +443,6 @@
     <string name="no_teachers">No teachers found</string>
     <string name="on_search_for">The search for</string>
     <string name="teachers_found">found the teachers</string>
-    <string name="share_schedule_notification1_1_single">reduced lesson was skipped</string>
-    <string name="share_schedule_notification1_1_plural">reduced lessons were skipped</string>
-    <string name="share_schedule_notification1_1_plural2">reduced lessons were skipped</string>
-    <string name="share_schedule_notification1_2">because the file was created in older versions of the app</string>
     <string name="changes_will_take_effect_next_startup">The changes will take effect the next time the application starts</string>
     <string name="incorrect_query">Incorrect query</string>
     <string name="no_schedule">Schedule not found</string>
@@ -513,5 +509,7 @@
     <string name="reset_preference_message">You are about to reset the application settings to the default values</string>
     <string name="open_search">Open search</string>
     <string name="share_schedule">Share timetable</string>
+    <string name="unspecified_points">Unspecified points</string>
+    <string name="outdated_file_version">This file was created in an outdated version of the application and is no longer supported</string>
 
 </resources>

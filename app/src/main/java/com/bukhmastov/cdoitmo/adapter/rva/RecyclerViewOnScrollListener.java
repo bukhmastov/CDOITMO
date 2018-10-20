@@ -1,5 +1,6 @@
 package com.bukhmastov.cdoitmo.adapter.rva;
 
+import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.view.ViewGroup;
@@ -22,7 +23,7 @@ public class RecyclerViewOnScrollListener extends RecyclerView.OnScrollListener 
     }
 
     @Override
-    public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
+    public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
         super.onScrolled(recyclerView, dx, dy);
         scrolled += dy;
         if (scrolled < HIDE_MINIMUM) {
@@ -48,17 +49,17 @@ public class RecyclerViewOnScrollListener extends RecyclerView.OnScrollListener 
 
     private void show() {
         if (container != null) {
-            ViewGroup top_panel = container.findViewById(R.id.top_panel);
-            if (top_panel != null) {
-                top_panel.animate().translationY(0).setInterpolator(new DecelerateInterpolator(1)).start();
+            ViewGroup panel = container.findViewById(R.id.top_panel);
+            if (panel != null) {
+                panel.animate().translationY(0).setInterpolator(new DecelerateInterpolator(1)).start();
             }
         }
     }
     private void hide() {
         if (container != null) {
-            ViewGroup top_panel = container.findViewById(R.id.top_panel);
-            if (top_panel != null) {
-                top_panel.animate().translationY(-top_panel.getHeight()).setInterpolator(new AccelerateInterpolator(1)).start();
+            ViewGroup panel = container.findViewById(R.id.top_panel);
+            if (panel != null) {
+                panel.animate().translationY(-panel.getHeight()).setInterpolator(new AccelerateInterpolator(1)).start();
             }
         }
     }

@@ -34,11 +34,9 @@ public abstract class Ifmo extends Client {
      */
     protected void g(@NonNull final Context context, @NonNull final String url, @Nullable final Map<String, String> query, @NonNull final RawHandler rawHandler) {
         thread.run(thread.BACKGROUND, () -> {
-            try {
-                _g(url, getHeaders(context), query, rawHandler);
-            } catch (Throwable throwable) {
-                rawHandler.onError(STATUS_CODE_EMPTY, null, throwable);
-            }
+            doGet(url, getHeaders(context), query, rawHandler);
+        }, throwable -> {
+            rawHandler.onError(STATUS_CODE_EMPTY, null, throwable);
         });
     }
 
@@ -52,11 +50,9 @@ public abstract class Ifmo extends Client {
      */
     protected void p(@NonNull final Context context, @NonNull final String url, @Nullable final Map<String, String> params, @NonNull final RawHandler rawHandler) {
         thread.run(thread.BACKGROUND, () -> {
-            try {
-                _p(url, getHeaders(context), null, params, rawHandler);
-            } catch (Throwable throwable) {
-                rawHandler.onError(STATUS_CODE_EMPTY, null, throwable);
-            }
+            doPost(url, getHeaders(context), null, params, rawHandler);
+        }, throwable -> {
+            rawHandler.onError(STATUS_CODE_EMPTY, null, throwable);
         });
     }
 
@@ -70,11 +66,9 @@ public abstract class Ifmo extends Client {
      */
     protected void gJson(@NonNull final Context context, @NonNull final String url, @Nullable final Map<String, String> query, @NonNull final RawJsonHandler rawJsonHandler) {
         thread.run(thread.BACKGROUND, () -> {
-            try {
-                _gJson(url, getHeaders(context), query, rawJsonHandler);
-            } catch (Throwable throwable) {
-                rawJsonHandler.onError(STATUS_CODE_EMPTY, null, throwable);
-            }
+            doGetJson(url, getHeaders(context), query, rawJsonHandler);
+        }, throwable -> {
+            rawJsonHandler.onError(STATUS_CODE_EMPTY, null, throwable);
         });
     }
 

@@ -3,7 +3,7 @@ package com.bukhmastov.cdoitmo.object;
 import android.content.Context;
 import android.support.annotation.NonNull;
 
-import com.bukhmastov.cdoitmo.interfaces.Callable;
+import com.bukhmastov.cdoitmo.function.Callable;
 
 public interface ProtocolTrackerService {
 

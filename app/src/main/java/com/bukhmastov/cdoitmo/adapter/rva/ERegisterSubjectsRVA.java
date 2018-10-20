@@ -7,26 +7,29 @@ import android.view.View;
 import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
-import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
-
-import org.json.JSONArray;
-import org.json.JSONObject;
+import com.bukhmastov.cdoitmo.model.eregister.ERMark;
+import com.bukhmastov.cdoitmo.model.eregister.ERPoint;
+import com.bukhmastov.cdoitmo.model.eregister.ERSubject;
+import com.bukhmastov.cdoitmo.model.rva.RVASubject;
+import com.bukhmastov.cdoitmo.util.singleton.CollectionUtils;
+import com.bukhmastov.cdoitmo.util.singleton.NumberUtils;
+import com.bukhmastov.cdoitmo.util.singleton.StringUtils;
 
 import java.util.ArrayList;
+import java.util.TreeSet;
 import java.util.regex.Pattern;
 
-public class ERegisterSubjectsRVA extends RVA {
+public class ERegisterSubjectsRVA extends RVA<ERSubject> {
 
     private static final int TYPE_SUBJECT = 0;
     private static final int TYPE_SUBJECT_PASSED = 1;
     private static final int TYPE_NO_SUBJECTS = 2;
 
-    private static Pattern patternExamOrCredit = Pattern.compile("^.*зач[её]т$|^экзамен$|^тестирование$", Pattern.CASE_INSENSITIVE);
+    private static final Pattern PATTERN_ATTESTATION = Pattern.compile("^.*зач[её]т$|^экзамен$|^тестирование$|^общий\\sрейтинг$", Pattern.CASE_INSENSITIVE);
 
-    public ERegisterSubjectsRVA(@NonNull Context context, @NonNull JSONArray subjects) {
+    public ERegisterSubjectsRVA(@NonNull Context context, @NonNull TreeSet<ERSubject> subjects) {
         super();
-        AppComponentProvider.getComponent().inject(this);
-        addItems(json2dataset(context, subjects));
+        addItems(entity2dataset(context, subjects));
     }
 
     @Override
@@ -46,90 +49,81 @@ public class ERegisterSubjectsRVA extends RVA {
         switch (item.type) {
             case TYPE_SUBJECT: bindSubject(container, item); break;
             case TYPE_SUBJECT_PASSED: bindSubject(container, item); break;
-            case TYPE_NO_SUBJECTS: bindNoSubjects(container, item); break;
+            case TYPE_NO_SUBJECTS: bindNoSubjects(container); break;
         }
     }
 
-    private ArrayList<Item> json2dataset(@NonNull final Context context, @NonNull final JSONArray subjects) {
-        final ArrayList<Item> dataset = new ArrayList<>();
+    private void bindSubject(View container, Item<RVASubject> item) {
         try {
-            if (subjects.length() == 0) {
-                dataset.add(getNewItem(TYPE_NO_SUBJECTS, null));
-            } else {
-                for (int i = 0; i < subjects.length(); i++) {
-                    final JSONObject data = subjects.getJSONObject(i);
-                    final JSONObject subject = data.getJSONObject("subject");
-                    final int term = data.getInt("term");
-                    // define variables
-                    final String name = subject.getString("name");
-                    final JSONArray attestations = subject.getJSONArray("attestations");
-                    final ArrayList<String> attestationsArray = new ArrayList<>();
-                    int attestationIndex = 0;
-                    for (int j = 0; j < attestations.length(); j++) {
-                        final JSONObject attestation = attestations.getJSONObject(j);
-                        String aName = attestation.getString("name");
-                        if (aName == null) continue;
-                        aName = aName.trim();
-                        if (aName.isEmpty()) continue;
-                        attestationsArray.add(aName);
-                        if (patternExamOrCredit.matcher(aName).find()) {
-                            attestationIndex = j;
-                        }
-                    }
-                    final double points = attestations.getJSONObject(attestationIndex).getDouble("value");
-                    final String value = double2string(points);
-                    final StringBuilder about = new StringBuilder(term + " " + context.getString(R.string.semester));
-                    if (attestationsArray.size() > 0) {
-                        about.append(" | ");
-                        int j = 0;
-                        for (String attestationString : attestationsArray) {
-                            about.append(j++ > 0 ? ", " : "").append(attestationString);
-                        }
-                    }
-                    // save to dataset
-                    dataset.add(getNewItem(points >= 60.0 ? TYPE_SUBJECT_PASSED : TYPE_SUBJECT, new JSONObject()
-                            .put("name", name)
-                            .put("about", about)
-                            .put("value", value)
-                            .put("data", data)
-                    ));
-                }
-            }
-        } catch (Exception e) {
-            log.exception(e);
-        }
-        return dataset;
-    }
-
-    private void bindSubject(View container, Item item) {
-        try {
-            ((TextView) container.findViewById(R.id.name)).setText(item.data.getString("name"));
-            ((TextView) container.findViewById(R.id.about)).setText(item.data.getString("about"));
-            ((TextView) container.findViewById(R.id.value)).setText(item.data.getString("value"));
-            final JSONObject data = item.data.getJSONObject("data");
-            if (onElementClickListeners.containsKey(R.id.subject)) {
-                container.findViewById(R.id.subject).setOnClickListener(v -> onElementClickListeners.get(R.id.subject).onClick(v, getMap("data", data)));
-            }
+            ((TextView) container.findViewById(R.id.name)).setText(item.data.getName());
+            ((TextView) container.findViewById(R.id.about)).setText(item.data.getAbout());
+            ((TextView) container.findViewById(R.id.value)).setText(item.data.getValue());
+            tryRegisterClickListener(container, R.id.subject, item.data.getSubject());
         } catch (Exception e) {
             log.exception(e);
         }
     }
-    private void bindNoSubjects(View container, Item item) {
+    private void bindNoSubjects(View container) {
         try {
             ((TextView) container.findViewById(R.id.ntd_text)).setText(R.string.no_subjects);
         } catch (Exception e) {
             log.exception(e);
         }
     }
-    private String double2string(Double value) {
-        String valueStr = String.valueOf(value);
-        if (value != -1.0) {
-            if (value == Double.parseDouble(value.intValue() + ".0")) {
-                valueStr = String.valueOf(value.intValue());
+
+    private ArrayList<Item> entity2dataset(@NonNull Context context, @NonNull TreeSet<ERSubject> subjects) {
+        final ArrayList<Item> dataset = new ArrayList<>();
+        try {
+            if (CollectionUtils.isEmpty(subjects)) {
+                dataset.add(new Item(TYPE_NO_SUBJECTS));
+                return dataset;
             }
-        } else {
-            valueStr = "";
+            for (ERSubject subject : subjects) {
+                Double points = null;
+                if (CollectionUtils.isNotEmpty(subject.getPoints())) {
+                    for (ERPoint point : subject.getPoints()) {
+                        Double max = point.getMax();
+                        if (max != null && max == 100.0) {
+                            points = point.getValue();
+                            if (points != null) {
+                                break;
+                            }
+                        }
+                    }
+                    if (points == null) {
+                        for (ERPoint point : subject.getPoints()) {
+                            if (StringUtils.isBlank(point.getName()) || point.getValue() == null) {
+                                continue;
+                            }
+                            if (PATTERN_ATTESTATION.matcher(point.getName()).find()) {
+                                points = point.getValue();
+                                break;
+                            }
+                        }
+                    }
+                }
+                StringBuilder about = new StringBuilder(subject.getTerm() + " " + context.getString(R.string.semester));
+                if (CollectionUtils.isNotEmpty(subject.getMarks())) {
+                    about.append(" | ");
+                    int j = 0;
+                    for (ERMark mark : subject.getMarks()) {
+                        about.append(j++ > 0 ? ", " : "").append(mark.getWorkType());
+                    }
+                }
+                RVASubject rvaSubject = new RVASubject();
+                rvaSubject.setName(subject.getName());
+                rvaSubject.setAbout(about.toString());
+                rvaSubject.setValue(NumberUtils.prettyDouble(points));
+                rvaSubject.setSubject(subject);
+                // save to dataset
+                dataset.add(new Item<>(
+                        points != null && points >= 60.0 ? TYPE_SUBJECT_PASSED : TYPE_SUBJECT,
+                        rvaSubject
+                ));
+            }
+        } catch (Exception e) {
+            log.exception(e);
         }
-        return valueStr;
+        return dataset;
     }
 }

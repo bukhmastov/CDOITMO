@@ -3,6 +3,7 @@ package com.bukhmastov.cdoitmo.network.model;
 import android.content.Context;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.annotation.StringRes;
 import android.text.TextUtils;
 
 import com.bukhmastov.cdoitmo.R;
@@ -52,13 +53,11 @@ public abstract class DeIfmo extends Client {
      * @param rawHandler of request, cannot be null
      * @see RawHandler
      */
-    protected void g(@NonNull final Context context, @NonNull final String url, @Nullable final Map<String, String> query, @NonNull final RawHandler rawHandler) {
+    protected void doGet(@NonNull final Context context, @NonNull final String url, @Nullable final Map<String, String> query, @NonNull final RawHandler rawHandler) {
         thread.run(thread.BACKGROUND, () -> {
-            try {
-                _g(url, getHeaders(context), query, rawHandler);
-            } catch (Throwable throwable) {
-                rawHandler.onError(STATUS_CODE_EMPTY, null, throwable);
-            }
+            doGet(url, getHeaders(context), query, rawHandler);
+        }, throwable -> {
+            rawHandler.onError(STATUS_CODE_EMPTY, null, throwable);
         });
     }
 
@@ -70,13 +69,11 @@ public abstract class DeIfmo extends Client {
      * @param rawHandler of request, cannot be null
      * @see RawHandler
      */
-    protected void p(@NonNull final Context context, @NonNull final String url, @Nullable final Map<String, String> params, @NonNull final RawHandler rawHandler) {
+    protected void doPost(@NonNull final Context context, @NonNull final String url, @Nullable final Map<String, String> params, @NonNull final RawHandler rawHandler) {
         thread.run(thread.BACKGROUND, () -> {
-            try {
-                _p(url, getHeaders(context), null, params, rawHandler);
-            } catch (Throwable throwable) {
-                rawHandler.onError(STATUS_CODE_EMPTY, null, throwable);
-            }
+            doPost(url, getHeaders(context), null, params, rawHandler);
+        }, throwable -> {
+            rawHandler.onError(STATUS_CODE_EMPTY, null, throwable);
         });
     }
 
@@ -88,13 +85,11 @@ public abstract class DeIfmo extends Client {
      * @param rawJsonHandler of request, cannot be null
      * @see RawJsonHandler
      */
-    protected void gJson(@NonNull final Context context, @NonNull final String url, @Nullable final Map<String, String> query, @NonNull final RawJsonHandler rawJsonHandler) {
+    protected void doGetJson(@NonNull final Context context, @NonNull final String url, @Nullable final Map<String, String> query, @NonNull final RawJsonHandler rawJsonHandler) {
         thread.run(thread.BACKGROUND, () -> {
-            try {
-                _gJson(url, getHeaders(context), query, rawJsonHandler);
-            } catch (Throwable throwable) {
-                rawJsonHandler.onError(STATUS_CODE_EMPTY, null, throwable);
-            }
+            doGetJson(url, getHeaders(context), query, rawJsonHandler);
+        }, throwable -> {
+            rawJsonHandler.onError(STATUS_CODE_EMPTY, null, throwable);
         });
     }
 
@@ -290,6 +285,13 @@ public abstract class DeIfmo extends Client {
             return context.getString(R.string.server_maintenance);
         } else {
             return Client.getFailureMessage(context, statusCode);
+        }
+    }
+    public static @StringRes int getFailureMessage(final int statusCode) {
+        if (statusCode == 591) {
+            return R.string.server_maintenance;
+        } else {
+            return Client.getFailureMessage();
         }
     }
 }

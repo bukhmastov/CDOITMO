@@ -1,14 +1,12 @@
 package com.bukhmastov.cdoitmo.object;
 
-import android.content.Context;
-
-import org.json.JSONObject;
+import com.bukhmastov.cdoitmo.model.schedule.exams.SExams;
 
 import java.util.ArrayList;
 
 public interface DaysRemainingWidget {
 
-    void start(Context context, Delegate delegate, JSONObject schedule);
+    void start(SExams schedule, Delegate delegate);
 
     void stop();
 

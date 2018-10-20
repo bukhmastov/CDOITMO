@@ -23,11 +23,14 @@ import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.fragment.ConnectedFragment;
 import com.bukhmastov.cdoitmo.fragment.RatingListFragment;
 import com.bukhmastov.cdoitmo.fragment.presenter.RatingFragmentPresenter;
+import com.bukhmastov.cdoitmo.model.JsonEntity;
+import com.bukhmastov.cdoitmo.model.parser.RatingPickerAllParser;
+import com.bukhmastov.cdoitmo.model.parser.RatingPickerOwnParser;
+import com.bukhmastov.cdoitmo.model.rating.pickerall.RatingPickerAll;
+import com.bukhmastov.cdoitmo.model.rating.pickerown.RatingPickerOwn;
 import com.bukhmastov.cdoitmo.network.DeIfmoClient;
 import com.bukhmastov.cdoitmo.network.handlers.ResponseHandler;
 import com.bukhmastov.cdoitmo.network.model.Client;
-import com.bukhmastov.cdoitmo.parse.rating.RatingListParse;
-import com.bukhmastov.cdoitmo.parse.rating.RatingParse;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.NotificationMessage;
 import com.bukhmastov.cdoitmo.util.Storage;
@@ -36,9 +39,7 @@ import com.bukhmastov.cdoitmo.util.TextUtils;
 import com.bukhmastov.cdoitmo.util.Thread;
 import com.bukhmastov.cdoitmo.util.Time;
 import com.bukhmastov.cdoitmo.util.singleton.Color;
-
-import org.json.JSONException;
-import org.json.JSONObject;
+import com.bukhmastov.cdoitmo.util.singleton.StringUtils;
 
 import javax.inject.Inject;
 
@@ -96,8 +97,8 @@ public class RatingFragmentPresenterImpl implements RatingFragmentPresenter, Swi
         thread.run(() -> {
             log.v(TAG, "Fragment created");
             firebaseAnalyticsProvider.logCurrentScreen(activity, fragment);
-            data.put(COMMON, new Info(EMPTY, null));
-            data.put(OWN, new Info(EMPTY, null));
+            data.put(COMMON, new Info(EMPTY));
+            data.put(OWN, new Info(EMPTY));
         });
     }
 
@@ -118,26 +119,24 @@ public class RatingFragmentPresenterImpl implements RatingFragmentPresenter, Swi
                 return;
             }
             loaded = true;
-            try {
-                String storedData = fragment.restoreData(fragment);
-                String storedExtra = fragment.restoreDataExtra(fragment);
-                JSONObject storedCommon = storedData != null && !storedData.isEmpty() ? textUtils.string2json(storedData) : null;
-                JSONObject storedOwn = storedExtra != null && !storedExtra.isEmpty() ? textUtils.string2json(storedExtra) : null;
-                if (storedCommon != null) {
-                    data.put(COMMON, new Info(LOADED, storedCommon));
-                }
-                if (storedOwn != null) {
-                    data.put(OWN, new Info(LOADED, storedOwn));
-                }
-                if (storedCommon == null || storedOwn == null) {
-                    load();
-                } else {
-                    display();
-                }
-            } catch (Exception e) {
-                log.exception(e);
-                load();
+            String storedData = fragment.restoreData(fragment);
+            String storedExtra = fragment.restoreDataExtra(fragment);
+            RatingPickerAll storedAll = StringUtils.isNotBlank(storedData) ? new RatingPickerAll().fromJsonString(storedData) : null;
+            RatingPickerOwn storedOwn = StringUtils.isNotBlank(storedExtra) ? new RatingPickerOwn().fromJsonString(storedExtra) : null;
+            if (storedAll != null) {
+                data.put(COMMON, new Info<>(LOADED, storedAll));
             }
+            if (storedOwn != null) {
+                data.put(OWN, new Info<>(LOADED, storedOwn));
+            }
+            if (storedAll == null || storedOwn == null) {
+                load();
+            } else {
+                display();
+            }
+        }, throwable -> {
+            log.exception(throwable);
+            load();
         });
     }
 
@@ -163,7 +162,7 @@ public class RatingFragmentPresenterImpl implements RatingFragmentPresenter, Swi
         thread.run(() -> load(COMMON));
     }
 
-    private void load(final @TYPE String type) {
+    private void load(@TYPE String type) {
         thread.run(() -> {
             switch (type) {
                 case COMMON: {
@@ -175,260 +174,184 @@ public class RatingFragmentPresenterImpl implements RatingFragmentPresenter, Swi
                     break;
                 }
             }
+        }, throwable -> {
+            loadFailed();
         });
     }
 
-    private void load(final @TYPE String type, final int refresh_rate) {
+    private void load(@TYPE String type, int refresh_rate) {
         thread.run(() -> {
-            log.v(TAG, "load | type=" + type + " | refresh_rate=" + refresh_rate);
-            if (storagePref.get(activity, "pref_use_cache", true)) {
-                String cache = "";
-                switch (type) {
-                    case COMMON: {
-                        cache = storage.get(activity, Storage.CACHE, Storage.USER, "rating#list").trim();
-                        break;
-                    }
-                    case OWN: {
-                        cache = storage.get(activity, Storage.CACHE, Storage.USER, "rating#core").trim();
-                        break;
-                    }
-                }
-                if (!cache.isEmpty()) {
-                    try {
-                        data.get(type).data = new JSONObject(cache);
-                        if (data.get(type).data.getLong("timestamp") + refresh_rate * 3600000L < time.getCalendar().getTimeInMillis()) {
-                            load(type, true, cache);
-                        } else {
-                            load(type, false, cache);
-                        }
-                    } catch (JSONException e) {
-                        log.e(TAG, "load | type=", type, " | exception=", e);
-                        load(type, true, cache);
-                    }
-                } else {
-                    load(type, false);
-                }
-            } else {
+            log.v(TAG, "load | type=", type, " | refresh_rate=", refresh_rate);
+            if (!storagePref.get(activity, "pref_use_cache", true)) {
                 load(type, false);
+                return;
             }
+            JsonEntity cached = getFromCache(type);
+            if (cached == null) {
+                load(type, false);
+                return;
+            }
+            data.get(type).data = COMMON.equals(type) ? (RatingPickerAll) cached : (RatingPickerOwn) cached;
+            long timestamp;
+            if (COMMON.equals(type)) {
+                //noinspection ConstantConditions
+                timestamp = ((RatingPickerAll) cached).getTimestamp();
+            } else {
+                //noinspection ConstantConditions
+                timestamp = ((RatingPickerOwn) cached).getTimestamp();
+            }
+            if (timestamp + refresh_rate * 3600000L < time.getTimeInMillis()) {
+                load(type, true, cached);
+            } else {
+                load(type, false, cached);
+            }
+        }, throwable -> {
+            loadFailed();
         });
     }
 
-    private void load(final @TYPE String type, final boolean force) {
-        thread.run(() -> load(type, force, ""));
+    private void load(@TYPE String type, boolean force) {
+        thread.run(() -> load(type, force, null));
     }
 
-    private void load(final @TYPE String type, final boolean force, final String cache) {
+    private <T extends JsonEntity> void load(@TYPE String type, boolean force, T cached) {
         thread.runOnUI(() -> {
             fragment.draw(R.layout.state_loading_text);
-            if (activity != null) {
-                TextView loading_message = fragment.container().findViewById(R.id.loading_message);
-                if (loading_message != null) {
-                    loading_message.setText(R.string.loading);
-                }
+            TextView message = fragment.container().findViewById(R.id.loading_message);
+            if (message != null) {
+                message.setText(R.string.loading);
             }
         });
         thread.run(() -> {
-            if (App.UNAUTHORIZED_MODE && type.equals(OWN)) {
+            if (App.UNAUTHORIZED_MODE && OWN.equals(type)) {
                 loaded(type);
                 return;
             }
-            log.v(TAG, "load | type=" + type + " | force=" + (force ? "true" : "false"));
+            log.v(TAG, "load | type=", type, " | force=", force);
             if ((!force || !Client.isOnline(activity)) && storagePref.get(activity, "pref_use_cache", true)) {
                 try {
-                    String c = "";
-                    if (cache.isEmpty()) {
-                        switch (type) {
-                            case COMMON: {
-                                c = storage.get(activity, Storage.CACHE, Storage.USER, "rating#list").trim();
-                                break;
-                            }
-                            case OWN: {
-                                c = storage.get(activity, Storage.CACHE, Storage.USER, "rating#core").trim();
-                                break;
-                            }
-                        }
-                    } else {
-                        c = cache;
-                    }
-                    if (!c.isEmpty()) {
-                        log.v(TAG, "load | type=" + type + " | from cache");
-                        data.put(type, new Info(LOADED, new JSONObject(c)));
+                    JsonEntity cache = cached == null ? getFromCache(type) : cached;
+                    if (cache != null) {
+                        log.v(TAG, "load | type=", type, " | from cache");
+                        data.put(type, new Info<>(LOADED, COMMON.equals(type) ? (RatingPickerAll) cache : (RatingPickerOwn) cache));
                         loaded(type);
                         return;
                     }
                 } catch (Exception e) {
-                    log.v(TAG, "load | type=" + type + " | failed to load from cache");
-                    switch (type) {
-                        case COMMON: {
-                            storage.delete(activity, Storage.CACHE, Storage.USER, "rating#list");
-                            break;
-                        }
-                        case OWN: {
-                            storage.delete(activity, Storage.CACHE, Storage.USER, "rating#core");
-                            break;
-                        }
-                    }
+                    log.v(TAG, "load | type=", type, " | failed to load from cache");
                 }
             }
-            if (!App.OFFLINE_MODE) {
-                String url = "";
-                switch (type) {
-                    case COMMON: {
-                        url = "index.php?node=rating";
-                        break;
-                    }
-                    case OWN: {
-                        url = "servlet/distributedCDE?Rule=REP_EXECUTE_PRINT&REP_ID=1441";
-                        break;
-                    }
-                }
-                deIfmoClient.get(activity, url, null, new ResponseHandler() {
-                    @Override
-                    public void onSuccess(final int statusCode, final Client.Headers headers, final String response) {
-                        thread.run(() -> {
-                            log.v(TAG, "load | type=" + type + " | success | statusCode=" + statusCode + " | response=" + (response == null ? "null" : "notnull"));
-                            if (statusCode == 200) {
-                                switch (type) {
-                                    case COMMON: {
-                                        new RatingListParse(response, json -> {
-                                            if (json != null) {
-                                                try {
-                                                    json = new JSONObject()
-                                                            .put("timestamp", time.getCalendar().getTimeInMillis())
-                                                            .put("rating", json);
-                                                    if (storagePref.get(activity, "pref_use_cache", true)) {
-                                                        storage.put(activity, Storage.CACHE, Storage.USER, "rating#list", json.toString());
-                                                    }
-                                                    data.put(type, new Info(LOADED, json));
-                                                } catch (JSONException e) {
-                                                    log.exception(e);
-                                                    if (data.get(type).data != null) {
-                                                        data.get(type).status = LOADED;
-                                                        loaded(type);
-                                                    } else {
-                                                        data.put(type, new Info(FAILED, null));
-                                                    }
-                                                }
-                                            } else {
-                                                if (data.get(type).data != null) {
-                                                    data.get(type).status = LOADED;
-                                                    loaded(type);
-                                                } else {
-                                                    data.put(type, new Info(FAILED, null));
-                                                }
-                                            }
-                                            loaded(type);
-                                        }).run();
-                                        break;
-                                    }
-                                    case OWN: {
-                                        new RatingParse(response, json -> {
-                                            if (json != null) {
-                                                try {
-                                                    json = new JSONObject()
-                                                            .put("timestamp", time.getCalendar().getTimeInMillis())
-                                                            .put("rating", json);
-                                                    if (storagePref.get(activity, "pref_use_cache", true)) {
-                                                        storage.put(activity, Storage.CACHE, Storage.USER, "rating#core", json.toString());
-                                                    }
-                                                    data.put(type, new Info(LOADED, json));
-                                                } catch (JSONException e) {
-                                                    log.exception(e);
-                                                    if (data.get(type).data != null) {
-                                                        data.get(type).status = LOADED;
-                                                        loaded(type);
-                                                    } else {
-                                                        data.put(type, new Info(FAILED, null));
-                                                    }
-                                                }
-                                            } else {
-                                                if (data.get(type).data != null) {
-                                                    data.get(type).status = LOADED;
-                                                    loaded(type);
-                                                } else {
-                                                    data.put(type, new Info(FAILED, null));
-                                                }
-                                            }
-                                            loaded(type);
-                                        }).run();
-                                        break;
-                                    }
-                                }
-                            } else {
-                                if (data.get(type).data != null) {
-                                    data.get(type).status = LOADED;
-                                    loaded(type);
-                                } else {
-                                    data.put(type, new Info(FAILED, null));
-                                    loaded(type);
-                                }
-                            }
-                        });
-                    }
-                    @Override
-                    public void onFailure(final int statusCode, final Client.Headers headers, final int state) {
-                        thread.run(() -> {
-                            log.v(TAG, "load | type=" + type + " | failure " + state);
-                            switch (state) {
-                                case DeIfmoClient.FAILED_AUTH_CREDENTIALS_REQUIRED: {
-                                    loaded = false;
-                                    gotoLogin(LoginActivity.SIGNAL_CREDENTIALS_REQUIRED);
-                                    break;
-                                }
-                                case DeIfmoClient.FAILED_AUTH_CREDENTIALS_FAILED: {
-                                    loaded = false;
-                                    gotoLogin(LoginActivity.SIGNAL_CREDENTIALS_FAILED);
-                                    break;
-                                }
-                                case DeIfmoClient.FAILED_SERVER_ERROR: {
-                                    data.put(type, new Info(SERVER_ERROR, null));
-                                    loaded(type);
-                                    break;
-                                }
-                                default: {
-                                    if (data.get(type).data != null) {
-                                        data.get(type).status = LOADED;
-                                        loaded(type);
-                                    } else {
-                                        data.put(type, new Info(FAILED, null));
-                                        loaded(type);
-                                    }
-                                    break;
-                                }
-                            }
-                        });
-                    }
-                    @Override
-                    public void onProgress(final int state) {
-                        log.v(TAG, "load | type=" + type + " | progress " + state);
-                    }
-                    @Override
-                    public void onNewRequest(Client.Request request) {
-                        requestHandle = request;
-                    }
-                });
-            } else {
+            if (App.OFFLINE_MODE) {
                 if (data.get(type).data != null) {
                     data.get(type).status = LOADED;
                     loaded(type);
                 } else {
-                    data.put(type, new Info(OFFLINE, null));
+                    data.put(type, new Info(OFFLINE));
                     loaded(type);
                 }
             }
+            String url = COMMON.equals(type) ? "index.php?node=rating" : "servlet/distributedCDE?Rule=REP_EXECUTE_PRINT&REP_ID=1441";
+            deIfmoClient.get(activity, url, null, new ResponseHandler() {
+                @Override
+                public void onSuccess(final int statusCode, final Client.Headers headers, final String response) {
+                    thread.run(() -> {
+                        log.v(TAG, "load | type=", type, " | success | statusCode=", statusCode, " | response=", (response == null ? "null" : "notnull"));
+                        if (statusCode == 200 && response != null) {
+                            switch (type) {
+                                case COMMON: {
+                                    RatingPickerAll ratingPickerAll = new RatingPickerAllParser(response).parse();
+                                    if (ratingPickerAll != null) {
+                                        ratingPickerAll.setTimestamp(time.getTimeInMillis());
+                                        if (storagePref.get(activity, "pref_use_cache", true)) {
+                                            storage.put(activity, Storage.CACHE, Storage.USER, "rating#list", ratingPickerAll.toJsonString());
+                                        }
+                                        data.put(type, new Info<>(LOADED, ratingPickerAll));
+                                        loaded(type);
+                                        return;
+                                    }
+                                    break;
+                                }
+                                case OWN: {
+                                    RatingPickerOwn ratingPickerOwn = new RatingPickerOwnParser(response).parse();
+                                    if (ratingPickerOwn != null) {
+                                        ratingPickerOwn.setTimestamp(time.getTimeInMillis());
+                                        if (storagePref.get(activity, "pref_use_cache", true)) {
+                                            storage.put(activity, Storage.CACHE, Storage.USER, "rating#core", ratingPickerOwn.toJsonString());
+                                        }
+                                        data.put(type, new Info<>(LOADED, ratingPickerOwn));
+                                        loaded(type);
+                                        return;
+                                    }
+                                    break;
+                                }
+                            }
+                        }
+                        if (data.get(type).data != null) {
+                            data.get(type).status = LOADED;
+                        } else {
+                            data.put(type, new Info(FAILED));
+                        }
+                        loaded(type);
+                    }, throwable -> {
+                        loadFailed();
+                    });
+                }
+                @Override
+                public void onFailure(final int statusCode, final Client.Headers headers, final int state) {
+                    thread.run(() -> {
+                        log.v(TAG, "load | type=", type, " | failure ", state);
+                        switch (state) {
+                            case DeIfmoClient.FAILED_AUTH_CREDENTIALS_REQUIRED: {
+                                loaded = false;
+                                gotoLogin(LoginActivity.SIGNAL_CREDENTIALS_REQUIRED);
+                                break;
+                            }
+                            case DeIfmoClient.FAILED_AUTH_CREDENTIALS_FAILED: {
+                                loaded = false;
+                                gotoLogin(LoginActivity.SIGNAL_CREDENTIALS_FAILED);
+                                break;
+                            }
+                            case DeIfmoClient.FAILED_SERVER_ERROR: {
+                                data.put(type, new Info(SERVER_ERROR));
+                                loaded(type);
+                                break;
+                            }
+                            default: {
+                                if (data.get(type).data != null) {
+                                    data.get(type).status = LOADED;
+                                    loaded(type);
+                                } else {
+                                    data.put(type, new Info(FAILED));
+                                    loaded(type);
+                                }
+                                break;
+                            }
+                        }
+                    });
+                }
+                @Override
+                public void onProgress(final int state) {
+                    log.v(TAG, "load | type=", type, " | progress ", state);
+                }
+                @Override
+                public void onNewRequest(Client.Request request) {
+                    requestHandle = request;
+                }
+            });
+        }, throwable -> {
+            loadFailed();
         });
     }
 
-    private void loaded(final @TYPE String type) {
+    private void loaded(@TYPE String type) {
         thread.run(() -> {
             switch (type) {
                 case COMMON: {
-                    if (!App.UNAUTHORIZED_MODE) {
-                        load(OWN);
-                    } else {
+                    if (App.UNAUTHORIZED_MODE) {
                         display();
+                        break;
                     }
+                    load(OWN);
                     break;
                 }
                 case OWN: {
@@ -436,126 +359,111 @@ public class RatingFragmentPresenterImpl implements RatingFragmentPresenter, Swi
                     break;
                 }
             }
+        }, throwable -> {
+            loadFailed();
         });
     }
 
     private void loadFailed() {
         thread.runOnUI(() -> {
             log.v(TAG, "loadFailed");
-            try {
-                fragment.draw(R.layout.state_failed_button);
-                View try_again_reload = fragment.container().findViewById(R.id.try_again_reload);
-                if (try_again_reload != null) {
-                    try_again_reload.setOnClickListener(v -> load());
-                }
-            } catch (Exception e) {
-                log.exception(e);
+            fragment.draw(R.layout.state_failed_button);
+            View reload = fragment.container().findViewById(R.id.try_again_reload);
+            if (reload != null) {
+                reload.setOnClickListener(v -> load());
             }
-        });
+        }, throwable -> {});
     }
 
     private void display() {
         thread.run(() -> {
-            try {
-                log.v(TAG, "display");
-                fragment.storeData(fragment,
-                        data.containsKey(COMMON) ? (data.get(COMMON).data != null ? data.get(COMMON).data.toString() : null) : null,
-                        data.containsKey(OWN) ? (data.get(OWN).data != null ? data.get(OWN).data.toString() : null) : null
-                );
-                final RatingRVA adapter = new RatingRVA(activity, data);
-                adapter.setOnElementClickListener(R.id.common_apply, (v, data) -> thread.run(() -> {
-                    try {
-                        firebaseAnalyticsProvider.logBasicEvent(activity, "Detailed rating used");
-                        final JSONObject d = (JSONObject) data.get("data");
-                        final String faculty = d.getString("faculty");
-                        final String course = d.getString("course");
-                        log.v(TAG, "detailed rating used | faculty=" + faculty + " | course=" + course);
-                        thread.runOnUI(() -> {
-                            try {
-                                Bundle extras = new Bundle();
-                                extras.putString("faculty", faculty);
-                                extras.putString("course", course);
-                                activity.openActivityOrFragment(RatingListFragment.class, extras);
-                            } catch (Exception e) {
-                                log.exception(e);
-                                notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
-                            }
-                        });
-                    } catch (Exception e) {
-                        log.exception(e);
-                        notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
-                    }
-                }));
-                adapter.setOnElementClickListener(R.id.own_apply, (v, data) -> thread.run(() -> {
-                    try {
-                        final JSONObject d = (JSONObject) data.get("data");
-                        if (d != null) {
-                            firebaseAnalyticsProvider.logBasicEvent(activity, "Own rating used");
-                            final String faculty = d.getString("faculty");
-                            final String course = d.getString("course");
-                            final String years = d.getString("years");
-                            log.v(TAG, "own rating used | faculty=" + faculty + " | course=" + course + " | years=" + years);
-                            thread.runOnUI(() -> {
-                                try {
-                                    Bundle extras = new Bundle();
-                                    extras.putString("faculty", faculty);
-                                    extras.putString("course", course);
-                                    extras.putString("years", years);
-                                    activity.openActivityOrFragment(RatingListFragment.class, extras);
-                                } catch (Exception e) {
-                                    log.exception(e);
-                                    notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
-                                }
-                            });
-                        } else {
-                            log.v(TAG, "own rating used | not found");
-                        }
-                    } catch (Exception e) {
-                        log.exception(e);
-                        notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
-                    }
-                }));
+            log.v(TAG, "display");
+            fragment.storeData(fragment,
+                    data.containsKey(COMMON) ? (data.get(COMMON).data != null ? data.get(COMMON).data.toJsonString() : null) : null,
+                    data.containsKey(OWN) ? (data.get(OWN).data != null ? data.get(OWN).data.toJsonString() : null) : null
+            );
+            RatingRVA adapter = new RatingRVA(activity, data);
+            adapter.setClickListener(R.id.common_apply, (v, data) -> {
                 thread.runOnUI(() -> {
-                    try {
-                        fragment.draw(R.layout.layout_rating_list);
-                        // set adapter to recycler view
-                        final LinearLayoutManager layoutManager = new LinearLayoutManager(activity, LinearLayoutManager.VERTICAL, false);
-                        final RecyclerView rating_list = fragment.container().findViewById(R.id.rating_list);
-                        if (rating_list != null) {
-                            rating_list.setLayoutManager(layoutManager);
-                            rating_list.setAdapter(adapter);
-                            rating_list.setHasFixedSize(true);
-                        }
-                        // setup swipe
-                        final SwipeRefreshLayout swipe_container = fragment.container().findViewById(R.id.swipe_container);
-                        if (swipe_container != null) {
-                            swipe_container.setColorSchemeColors(Color.resolve(activity, R.attr.colorAccent));
-                            swipe_container.setProgressBackgroundColorSchemeColor(Color.resolve(activity, R.attr.colorBackgroundRefresh));
-                            swipe_container.setOnRefreshListener(this);
-                        }
-                    } catch (Exception e) {
-                        log.exception(e);
-                        loadFailed();
-                    }
+                    firebaseAnalyticsProvider.logBasicEvent(activity, "Detailed rating used");
+                    log.v(TAG, "detailed rating used | faculty=" + data.getTitle() + " | course=" + data.getDesc());
+                    Bundle extras = new Bundle();
+                    extras.putString("faculty", data.getTitle());
+                    extras.putString("course", data.getDesc());
+                    activity.openActivityOrFragment(RatingListFragment.class, extras);
+                }, throwable -> {
+                    log.exception(throwable);
+                    notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
                 });
-            } catch (Exception e) {
-                log.exception(e);
+            });
+            adapter.setClickListener(R.id.own_apply, (v, data) -> {
+                thread.runOnUI(() -> {
+                    firebaseAnalyticsProvider.logBasicEvent(activity, "Own rating used");
+                    log.v(TAG, "own rating used | faculty=" + data.getDesc() + " | course=" + data.getMeta() + " | years=" + data.getExtra());
+                    Bundle extras = new Bundle();
+                    extras.putString("faculty", data.getDesc());
+                    extras.putString("course", data.getMeta());
+                    extras.putString("years", data.getExtra());
+                    activity.openActivityOrFragment(RatingListFragment.class, extras);
+                }, throwable -> {
+                    log.exception(throwable);
+                    notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                });
+            });
+            thread.runOnUI(() -> {
+                fragment.draw(R.layout.layout_rating_list);
+                // set adapter to recycler view
+                final LinearLayoutManager layoutManager = new LinearLayoutManager(activity, LinearLayoutManager.VERTICAL, false);
+                final RecyclerView recyclerView = fragment.container().findViewById(R.id.rating_list);
+                if (recyclerView != null) {
+                    recyclerView.setLayoutManager(layoutManager);
+                    recyclerView.setAdapter(adapter);
+                    recyclerView.setHasFixedSize(true);
+                }
+                // setup swipe
+                final SwipeRefreshLayout swipe = fragment.container().findViewById(R.id.swipe_container);
+                if (swipe != null) {
+                    swipe.setColorSchemeColors(Color.resolve(activity, R.attr.colorAccent));
+                    swipe.setProgressBackgroundColorSchemeColor(Color.resolve(activity, R.attr.colorBackgroundRefresh));
+                    swipe.setOnRefreshListener(this);
+                }
+            }, throwable -> {
+                log.exception(throwable);
                 loadFailed();
-            }
+            });
+        }, throwable -> {
+            log.exception(throwable);
+            loadFailed();
         });
     }
 
-    private void gotoLogin(final int state) {
-        thread.run(() -> {
-            try {
-                log.v(TAG, "gotoLogin | state=" + state);
-                Bundle extras = new Bundle();
-                extras.putInt("state", state);
-                eventBus.fire(new OpenActivityEvent(LoginActivity.class, extras));
-            } catch (Exception e) {
-                log.exception(e);
-                loadFailed();
+    private JsonEntity getFromCache(@TYPE String type) {
+        thread.assertNotUI();
+        String cache = storage.get(activity, Storage.CACHE, Storage.USER, COMMON.equals(type) ? "rating#list" : "rating#core").trim();
+        if (StringUtils.isBlank(cache)) {
+            return null;
+        }
+        try {
+            if (COMMON.equals(type)) {
+                return new RatingPickerAll().fromJsonString(cache);
+            } else {
+                return new RatingPickerOwn().fromJsonString(cache);
             }
+        } catch (Exception e) {
+            storage.delete(activity, Storage.CACHE, Storage.USER, COMMON.equals(type) ? "rating#list" : "rating#core");
+            return null;
+        }
+    }
+
+    private void gotoLogin(int state) {
+        thread.run(() -> {
+            log.v(TAG, "gotoLogin | state=", state);
+            Bundle extras = new Bundle();
+            extras.putInt("state", state);
+            eventBus.fire(new OpenActivityEvent(LoginActivity.class, extras));
+        }, throwable -> {
+            log.exception(throwable);
+            loadFailed();
         });
     }
 }

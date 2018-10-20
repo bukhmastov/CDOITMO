@@ -3,7 +3,7 @@ package com.bukhmastov.cdoitmo.util;
 import android.content.Context;
 import android.support.annotation.NonNull;
 
-import org.json.JSONArray;
+import com.bukhmastov.cdoitmo.model.user.UsersList;
 
 public interface Accounts {
 
@@ -11,5 +11,5 @@ public interface Accounts {
 
     void remove(@NonNull final Context context, @NonNull final String login);
 
-    JSONArray get(@NonNull Context context);
+    @NonNull UsersList get(@NonNull Context context);
 }

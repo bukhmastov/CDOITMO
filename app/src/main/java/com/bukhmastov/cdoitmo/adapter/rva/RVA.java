@@ -10,43 +10,53 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
-import com.bukhmastov.cdoitmo.util.Log;
-
-import org.json.JSONObject;
+import com.bukhmastov.cdoitmo.model.JsonEntity;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
-import javax.inject.Inject;
+public abstract class RVA<J extends JsonEntity> extends RVABase {
 
-public abstract class RVA extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
+    @FunctionalInterface
+    public interface OnElementClickListener<J extends JsonEntity> {
+        void onClick(View v, J entity);
+    }
 
-    protected final ArrayList<Item> dataset = new ArrayList<>();
-    protected class Item {
-        protected int type;
-        protected JSONObject data;
-        protected Map<String, Object> extras = new HashMap<>();
-        protected Item(int type, JSONObject data) {
+    public static class Item<T extends JsonEntity> {
+        public int type;
+        public T data;
+        public Map<String, Object> extras = new HashMap<>();
+        public Item(int type) {
+            this.type = type;
+        }
+        public Item(int type, T data) {
             this.type = type;
             this.data = data;
         }
     }
-    protected class ViewHolder extends RecyclerView.ViewHolder {
-        protected final View container;
-        protected ViewHolder(@NonNull View container) {
+
+    public static class ViewHolder extends RecyclerView.ViewHolder {
+        public final View container;
+        public ViewHolder(@NonNull View container) {
             super(container);
             this.container = container;
         }
     }
 
-    @Inject
-    Log log;
+    protected final List<Item> dataset = new ArrayList<>();
+    protected final Map<Integer, OnElementClickListener<J>> onElementClickListeners = new ArrayMap<>();
 
     public RVA() {
-        AppComponentProvider.getComponent().inject(this);
+        super();
     }
+
+    protected abstract @LayoutRes int onGetLayout(int type) throws NullPointerException;
+
+    protected abstract void onBind(View container, Item item);
+
 
     @Override
     public int getItemCount() {
@@ -71,40 +81,59 @@ public abstract class RVA extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
 
     @Override
     public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
+        if (!(holder instanceof ViewHolder)) {
+            return;
+        }
+        if (position < 0 || position >= dataset.size()) {
+            return;
+        }
         onBind(((ViewHolder) holder).container, dataset.get(position));
     }
 
-    protected abstract @LayoutRes int onGetLayout(int type) throws NullPointerException;
-    protected abstract void onBind(View container, Item item);
-    protected Item getNewItem(int type, JSONObject data) {
-        return new Item(type, data);
-    }
 
-    protected final ArrayMap<Integer, OnElementClickListener> onElementClickListeners = new ArrayMap<>();
-    public interface OnElementClickListener {
-        void onClick(View v, Map<String, Object> data);
-    }
-    public void setOnElementClickListener(@IdRes int layout, @NonNull OnElementClickListener onElementClickListener) {
+    public void setClickListener(@IdRes int layout, @NonNull OnElementClickListener<J> onElementClickListener) {
         onElementClickListeners.put(layout, onElementClickListener);
     }
-    protected Map<String, Object> getMap(@NonNull String key, @Nullable Object value) {
-        Map<String, Object> data = new HashMap<>();
-        data.put(key, value);
-        return data;
+
+    public void clearClickListeners() {
+        onElementClickListeners.clear();
     }
 
+    protected void tryRegisterClickListener(@NonNull View container, @IdRes int element, @Nullable J entity) {
+        if (!onElementClickListeners.containsKey(element)) {
+            return;
+        }
+        View view = container.findViewById(element);
+        if (view == null) {
+            return;
+        }
+        view.setOnClickListener(v -> {
+            try {
+                OnElementClickListener<J> listener = onElementClickListeners.get(element);
+                if (listener != null) {
+                    listener.onClick(v, entity);
+                }
+            } catch (Exception e) {
+                log.exception(e);
+            }
+        });
+    }
+
+
     public void addItem(@NonNull Item item) {
-        this.dataset.add(item);
-        this.notifyItemInserted(this.dataset.size() - 1);
+        dataset.add(item);
+        notifyItemInserted(dataset.size() - 1);
     }
-    public void addItems(@NonNull ArrayList<Item> dataset) {
-        int itemStart = this.dataset.size() - 1;
-        this.dataset.addAll(dataset);
-        this.notifyItemRangeInserted(itemStart, dataset.size() - 1);
+
+    public void addItems(@NonNull Collection<Item> items) {
+        int itemStart = dataset.size() - 1;
+        dataset.addAll(items);
+        notifyItemRangeInserted(itemStart, items.size() - 1);
     }
+
     public void removeItem(int position) {
-        this.dataset.remove(position);
-        this.notifyItemRemoved(position);
-        this.notifyItemRangeChanged(position, this.dataset.size() - 1);
+        dataset.remove(position);
+        notifyItemRemoved(position);
+        notifyItemRangeChanged(position, dataset.size() - 1);
     }
 }

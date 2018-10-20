@@ -5,8 +5,7 @@ import android.support.annotation.Nullable;
 import android.support.annotation.StringDef;
 
 import com.bukhmastov.cdoitmo.fragment.ConnectedFragment;
-
-import org.json.JSONObject;
+import com.bukhmastov.cdoitmo.model.JsonEntity;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -38,10 +37,13 @@ public interface RatingFragmentPresenter {
     String OFFLINE = "offline";
     String SERVER_ERROR = "server_error";
 
-    class Info {
+    class Info<T extends JsonEntity> {
         public @STATUS String status;
-        public JSONObject data;
-        public Info(@STATUS String status, JSONObject data) {
+        public T data;
+        public Info(@STATUS String status) {
+            this.status = status;
+        }
+        public Info(@STATUS String status, T data) {
             this.status = status;
             this.data = data;
         }

@@ -4,6 +4,7 @@ import android.content.Context;
 import android.os.Handler;
 
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
+import com.bukhmastov.cdoitmo.model.schedule.lessons.SLessons;
 import com.bukhmastov.cdoitmo.network.model.Client;
 import com.bukhmastov.cdoitmo.object.TeacherSearch;
 import com.bukhmastov.cdoitmo.object.schedule.Schedule;
@@ -27,8 +28,6 @@ public class TeacherSearchImpl implements TeacherSearch {
     Log log;
     @Inject
     Thread thread;
-    @Inject
-    Context context;
     @Inject
     ScheduleLessons scheduleLessons;
 
@@ -79,12 +78,16 @@ public class TeacherSearchImpl implements TeacherSearch {
             handler.postDelayed(() -> {
                 log.v(TAG, "search | query = ", query, " | searching");
                 callback.onState(SEARCHING);
-                scheduleLessons.search(context, new Schedule.Handler() {
+                scheduleLessons.search(query, new Schedule.Handler<SLessons>() {
                     @Override
-                    public void onSuccess(JSONObject json, boolean fromCache) {
+                    public void onSuccess(SLessons schedule, boolean fromCache) {
                         log.v(TAG, "search | query = ", query, " | found");
+                        if (schedule == null || schedule.getTeachers() == null) {
+                            callback.onState(NOT_FOUND);
+                            return;
+                        }
                         callback.onState(FOUND);
-                        callback.onSuccess(json);
+                        callback.onSuccess(schedule.getTeachers());
                     }
                     @Override
                     public void onFailure(int state) {
@@ -107,7 +110,7 @@ public class TeacherSearchImpl implements TeacherSearch {
                             requestHandle.cancel();
                         }
                     }
-                }, query);
+                });
             }, SEARCH_DELAY_MS);
         });
     }

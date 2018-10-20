@@ -19,6 +19,7 @@ import com.bukhmastov.cdoitmo.event.bus.EventBus;
 import com.bukhmastov.cdoitmo.event.events.OpenIntentEvent;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
+import com.bukhmastov.cdoitmo.model.university.persons.UPerson;
 import com.bukhmastov.cdoitmo.network.IfmoRestClient;
 import com.bukhmastov.cdoitmo.network.handlers.RestResponseHandler;
 import com.bukhmastov.cdoitmo.network.model.Client;
@@ -27,6 +28,7 @@ import com.bukhmastov.cdoitmo.util.Static;
 import com.bukhmastov.cdoitmo.util.TextUtils;
 import com.bukhmastov.cdoitmo.util.Thread;
 import com.bukhmastov.cdoitmo.util.singleton.Color;
+import com.bukhmastov.cdoitmo.util.singleton.StringUtils;
 import com.bukhmastov.cdoitmo.view.CircularTransformation;
 import com.squareup.picasso.Picasso;
 
@@ -41,8 +43,8 @@ public class UniversityPersonCardActivityPresenterImpl implements UniversityPers
     private UniversityPersonCardActivity activity = null;
     private Client.Request requestHandle = null;
     private boolean loaded = false;
-    private boolean first_load = true;
-    private JSONObject person = null;
+    private boolean firstLoad = true;
+    private UPerson person = null;
     private int pid = -1;
 
     @Inject
@@ -73,36 +75,42 @@ public class UniversityPersonCardActivityPresenterImpl implements UniversityPers
     public void onCreate(@Nullable Bundle savedInstanceState) {
         thread.runOnUI(() -> {
             log.i(TAG, "Activity created");
-            try {
-                Intent intent = activity.getIntent();
-                if (intent == null) throw new NullPointerException("intent is null");
-                Bundle extras = intent.getExtras();
-                if (extras == null) throw new NullPointerException("extras are null");
-                boolean ok = false;
-                if (extras.containsKey("person")) {
-                    try {
-                        person = new JSONObject(extras.getString("person"));
-                        pid = person.getInt("persons_id");
-                        ok = true;
-                    } catch (Exception e) {
-                        ok = false;
-                    }
-                }
-                if (!ok && extras.containsKey("pid")) {
-                    try {
-                        person = null;
-                        pid = extras.getInt("pid");
-                        ok = true;
-                    } catch (Exception e) {
-                        ok = false;
-                    }
-                }
-                if (!ok) throw new Exception("failed to get info from extras");
-                if (pid < 0) throw new Exception("Invalid person id provided");
-            } catch (Exception e) {
+            Intent intent = activity.getIntent();
+            if (intent == null) {
                 activity.finish();
+                return;
+            }
+            Bundle extras = intent.getExtras();
+            if (extras == null) {
+                activity.finish();
+                return;
+            }
+            boolean ok = false;
+            if (extras.containsKey("person")) {
+                try {
+                    person = (UPerson) extras.getSerializable("person");
+                    pid = person.getId();
+                    ok = true;
+                } catch (Exception e) {
+                    ok = false;
+                }
+            }
+            if (!ok && extras.containsKey("pid")) {
+                try {
+                    person = null;
+                    pid = extras.getInt("pid");
+                    ok = true;
+                } catch (Exception e) {
+                    ok = false;
+                }
+            }
+            if (!ok || pid < 0) {
+                activity.finish();
+                return;
             }
             firebaseAnalyticsProvider.logCurrentScreen(activity);
+        }, throwable -> {
+            activity.finish();
         });
     }
 
@@ -153,84 +161,84 @@ public class UniversityPersonCardActivityPresenterImpl implements UniversityPers
             }
             loadProvider(new RestResponseHandler() {
                 @Override
-                public void onSuccess(final int statusCode, final Client.Headers headers, final JSONObject json, final JSONArray responseArr) {
+                public void onSuccess(final int statusCode, final Client.Headers headers, final JSONObject obj, final JSONArray arr) {
                     thread.runOnUI(() -> {
-                        SwipeRefreshLayout mSwipeRefreshLayout = activity.findViewById(R.id.person_swipe);
-                        if (mSwipeRefreshLayout != null) {
-                            mSwipeRefreshLayout.setRefreshing(false);
+                        SwipeRefreshLayout swipe = activity.findViewById(R.id.person_swipe);
+                        if (swipe != null) {
+                            swipe.setRefreshing(false);
                         }
                     });
                     thread.run(() -> {
-                        if (statusCode == 200 && json != null) {
-                            try {
-                                String post = json.getString("post");
-                                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
-                                    json.put("post", android.text.Html.fromHtml(post, android.text.Html.FROM_HTML_MODE_LEGACY));
-                                } else {
-                                    //noinspection deprecation
-                                    json.put("post", android.text.Html.fromHtml(post));
-                                }
-                            } catch (Exception ignore) {
-                                // ignore
+                        if (statusCode == 200 && obj != null) {
+                            UPerson data = new UPerson().fromJson(obj);
+                            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+                                data.setPost(android.text.Html.fromHtml(data.getPost(), android.text.Html.FROM_HTML_MODE_LEGACY).toString());
+                            } else {
+                                //noinspection deprecation
+                                data.setPost(android.text.Html.fromHtml(data.getPost()).toString());
                             }
-                            person = json;
+                            person = data;
                             display();
-                        } else {
-                            loadFailed();
+                            return;
                         }
+                        loadFailed();
+                    }, throwable -> {
+                        loadFailed();
                     });
                 }
                 @Override
                 public void onFailure(final int statusCode, final Client.Headers headers, final int state) {
                     thread.runOnUI(() -> {
-                        log.v(TAG, "load | statusCode = " + statusCode + " | failure " + state);
-                        SwipeRefreshLayout mSwipeRefreshLayout = activity.findViewById(R.id.person_swipe);
-                        if (mSwipeRefreshLayout != null) {
-                            mSwipeRefreshLayout.setRefreshing(false);
+                        log.v(TAG, "load | statusCode = ", statusCode, " | failure ", state);
+                        SwipeRefreshLayout swipe = activity.findViewById(R.id.person_swipe);
+                        if (swipe != null) {
+                            swipe.setRefreshing(false);
                         }
                         if (statusCode == 404) {
                             loadNotFound();
-                        } else {
-                            switch (state) {
-                                case IfmoRestClient.FAILED_OFFLINE:
-                                    activity.draw(R.layout.state_offline_text);
-                                    View offline_reload = activity.findViewById(R.id.offline_reload);
-                                    if (offline_reload != null) {
-                                        offline_reload.setOnClickListener(v -> load());
+                            return;
+                        }
+                        switch (state) {
+                            case IfmoRestClient.FAILED_OFFLINE: {
+                                activity.draw(R.layout.state_offline_text);
+                                View reload = activity.findViewById(R.id.offline_reload);
+                                if (reload != null) {
+                                    reload.setOnClickListener(v -> load());
+                                }
+                                break;
+                            }
+                            case IfmoRestClient.FAILED_CORRUPTED_JSON:
+                            case IfmoRestClient.FAILED_SERVER_ERROR:
+                            case IfmoRestClient.FAILED_TRY_AGAIN: {
+                                activity.draw(R.layout.state_failed_button);
+                                TextView message = activity.findViewById(R.id.try_again_message);
+                                if (message != null) {
+                                    switch (state) {
+                                        case IfmoRestClient.FAILED_SERVER_ERROR:   message.setText(IfmoRestClient.getFailureMessage(activity, statusCode)); break;
+                                        case IfmoRestClient.FAILED_CORRUPTED_JSON: message.setText(R.string.server_provided_corrupted_json); break;
                                     }
-                                    break;
-                                case IfmoRestClient.FAILED_CORRUPTED_JSON:
-                                case IfmoRestClient.FAILED_SERVER_ERROR:
-                                case IfmoRestClient.FAILED_TRY_AGAIN:
-                                    activity.draw(R.layout.state_failed_button);
-                                    TextView try_again_message = activity.findViewById(R.id.try_again_message);
-                                    if (try_again_message != null) {
-                                        switch (state) {
-                                            case IfmoRestClient.FAILED_SERVER_ERROR:   try_again_message.setText(IfmoRestClient.getFailureMessage(activity, statusCode)); break;
-                                            case IfmoRestClient.FAILED_CORRUPTED_JSON: try_again_message.setText(R.string.server_provided_corrupted_json); break;
-                                        }
-                                    }
-                                    View try_again_reload = activity.findViewById(R.id.try_again_reload);
-                                    if (try_again_reload != null) {
-                                        try_again_reload.setOnClickListener(v -> load());
-                                    }
-                                    break;
+                                }
+                                View reload = activity.findViewById(R.id.try_again_reload);
+                                if (reload != null) {
+                                    reload.setOnClickListener(v -> load());
+                                }
+                                break;
                             }
                         }
+                    }, throwable -> {
+                        loadFailed();
                     });
                 }
                 @Override
                 public void onProgress(final int state) {
                     thread.runOnUI(() -> {
-                        log.v(TAG, "load | progress " + state);
-                        if (first_load) {
+                        log.v(TAG, "load | progress ", state);
+                        if (firstLoad) {
                             activity.draw(R.layout.state_loading_text);
-                            TextView loading_message = activity.findViewById(R.id.loading_message);
-                            if (loading_message != null) {
+                            TextView message = activity.findViewById(R.id.loading_message);
+                            if (message != null) {
                                 switch (state) {
-                                    case IfmoRestClient.STATE_HANDLING:
-                                        loading_message.setText(R.string.loading);
-                                        break;
+                                    case IfmoRestClient.STATE_HANDLING: message.setText(R.string.loading); break;
                                 }
                             }
                         }
@@ -241,6 +249,8 @@ public class UniversityPersonCardActivityPresenterImpl implements UniversityPers
                     requestHandle = request;
                 }
             });
+        }, throwable -> {
+            loadFailed();
         });
     }
 
@@ -252,139 +262,140 @@ public class UniversityPersonCardActivityPresenterImpl implements UniversityPers
     private void loadFailed() {
         thread.runOnUI(() -> {
             log.v(TAG, "loadFailed");
-            try {
-                activity.draw(R.layout.state_failed_button);
-                TextView try_again_message = activity.findViewById(R.id.try_again_message);
-                if (try_again_message != null) try_again_message.setText(R.string.load_failed);
-                View try_again_reload = activity.findViewById(R.id.try_again_reload);
-                if (try_again_reload != null) {
-                    try_again_reload.setOnClickListener(v -> load());
-                }
-            } catch (Exception e) {
-                log.exception(e);
+            activity.draw(R.layout.state_failed_button);
+            TextView message = activity.findViewById(R.id.try_again_message);
+            if (message != null) {
+                message.setText(R.string.load_failed);
             }
+            View reload = activity.findViewById(R.id.try_again_reload);
+            if (reload != null) {
+                reload.setOnClickListener(v -> load());
+            }
+        }, throwable -> {
+            log.exception(throwable);
         });
     }
 
     private void loadNotFound() {
         thread.runOnUI(() -> {
             log.v(TAG, "loadNotFound");
-            try {
-                activity.draw(R.layout.state_nothing_to_display_person);
-                activity.findViewById(R.id.web).setOnClickListener(view -> {
-                    eventBus.fire(new OpenIntentEvent(new Intent(Intent.ACTION_VIEW, Uri.parse("http://www.ifmo.ru/ru/viewperson/" + pid + "/"))));
-                });
-            } catch (Exception e) {
-                log.exception(e);
-            }
+            activity.draw(R.layout.state_nothing_to_display_person);
+            activity.findViewById(R.id.web).setOnClickListener(view -> thread.run(() -> {
+                Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("http://www.ifmo.ru/ru/viewperson/" + pid + "/"));
+                eventBus.fire(new OpenIntentEvent(intent));
+            }));
+        }, throwable -> {
+            log.exception(throwable);
         });
     }
 
     private void display() {
         thread.runOnUI(() -> {
-            try {
-                first_load = false;
-                activity.draw(R.layout.layout_university_person_card);
-                activity.findViewById(R.id.person_header).setPadding(0, getStatusBarHeight(), 0, 0);
-                // кнопка назад
-                activity.findViewById(R.id.back).setOnClickListener(v -> activity.finish());
-                // кнопка сайта
-                final String persons_id = person.getString("persons_id");
-                if (persons_id != null && !persons_id.trim().isEmpty()) {
-                    activity.findViewById(R.id.web).setOnClickListener(view -> {
-                        eventBus.fire(new OpenIntentEvent(new Intent(Intent.ACTION_VIEW, Uri.parse("http://www.ifmo.ru/ru/viewperson/" + persons_id.trim() + "/"))));
-                    });
-                } else {
-                    staticUtil.removeView(activity.findViewById(R.id.web));
-                }
-                // заголовок
-                final String name = (person.getString("title_l") + " " + person.getString("title_f") + " " + person.getString("title_m")).trim();
-                final String degree = person.getString("degree").trim();
-                final String image = person.getString("image");
-                ((TextView) activity.findViewById(R.id.name)).setText(name);
-                if (!degree.isEmpty()) {
-                    ((TextView) activity.findViewById(R.id.degree)).setText(textUtils.capitalizeFirstLetter(degree));
-                } else {
-                    staticUtil.removeView(activity.findViewById(R.id.degree));
-                }
-                Picasso.with(activity)
-                        .load(image)
-                        .error(R.drawable.ic_sentiment_very_satisfied_white)
-                        .transform(new CircularTransformation())
-                        .into((ImageView) activity.findViewById(R.id.avatar));
-                // контент
-                ViewGroup info_connect_container = activity.findViewById(R.id.info_connect_container);
-                if (info_connect_container != null) {
-                    boolean exists = false;
-                    final String[] phones = person.getString("phone").trim().split("[;,]");
-                    final String[] emails = person.getString("email").trim().split("[;,]");
-                    final String[] webs = person.getString("www").trim().split("[;,]");
-                    for (final String phone : phones) {
-                        if (!phone.isEmpty()) {
-                            info_connect_container.addView(getConnectContainer(R.drawable.ic_phone, phone, exists, v -> {
+            if (person == null) {
+                loadFailed();
+                return;
+            }
+            firstLoad = false;
+            activity.draw(R.layout.layout_university_person_card);
+            activity.findViewById(R.id.person_header).setPadding(0, getStatusBarHeight(), 0, 0);
+            // кнопка назад
+            activity.findViewById(R.id.back).setOnClickListener(v -> activity.finish());
+            // кнопка сайта
+            activity.findViewById(R.id.web).setOnClickListener(view -> thread.run(() -> {
+                Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("http://www.ifmo.ru/ru/viewperson/" + person.getId() + "/"));
+                eventBus.fire(new OpenIntentEvent(intent));
+            }));
+            // заголовок
+            String name = (getStringIfExists(person.getLastName()) + " " + getStringIfExists(person.getFirstName()) + " " + getStringIfExists(person.getMiddleName())).trim();
+            ((TextView) activity.findViewById(R.id.name)).setText(name);
+            if (StringUtils.isNotBlank(person.getDegree())) {
+                ((TextView) activity.findViewById(R.id.degree)).setText(textUtils.capitalizeFirstLetter(person.getDegree()));
+            } else {
+                staticUtil.removeView(activity.findViewById(R.id.degree));
+            }
+            Picasso.with(activity)
+                    .load(person.getImage())
+                    .error(R.drawable.ic_sentiment_very_satisfied_white)
+                    .transform(new CircularTransformation())
+                    .into((ImageView) activity.findViewById(R.id.avatar));
+            // контент
+            ViewGroup infoConnectContainer = activity.findViewById(R.id.info_connect_container);
+            if (infoConnectContainer != null) {
+                boolean exists = false;
+                if (StringUtils.isNotBlank(person.getPhone())) {
+                    String[] phones = person.getPhone().trim().split("[;,]");
+                    for (String phone : phones) {
+                        if (StringUtils.isNotBlank(phone)) {
+                            infoConnectContainer.addView(getConnectContainer(R.drawable.ic_phone, phone.trim(), exists, v -> thread.run(() -> {
                                 Intent intent = new Intent(Intent.ACTION_DIAL, Uri.parse("tel:" + phone.trim()));
                                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                                 eventBus.fire(new OpenIntentEvent(intent));
-                            }));
-                            exists = true;
-                        }
-                    }
-                    for (final String email : emails) {
-                        if (!email.isEmpty()) {
-                            info_connect_container.addView(getConnectContainer(R.drawable.ic_email, email, exists, v -> {
-                                Intent emailIntent = new Intent(Intent.ACTION_SEND);
-                                emailIntent.setType("message/rfc822");
-                                emailIntent.putExtra(Intent.EXTRA_EMAIL, new String[]{email.trim()});
-                                eventBus.fire(new OpenIntentEvent(Intent.createChooser(emailIntent, activity.getString(R.string.send_mail) + "...")));
-                            }));
-                            exists = true;
-                        }
-                    }
-                    for (final String web : webs) {
-                        if (!web.isEmpty()) {
-                            info_connect_container.addView(getConnectContainer(R.drawable.ic_web, web, exists, v -> {
-                                eventBus.fire(new OpenIntentEvent(new Intent(Intent.ACTION_VIEW, Uri.parse(web.trim()))));
-                            }));
+                            })));
                             exists = true;
                         }
                     }
                 }
-                ViewGroup info_about_container = activity.findViewById(R.id.info_about_container);
-                if (info_about_container != null) {
-                    final String rank = person.getString("rank").trim();
-                    final String post = person.getString("post").trim();
-                    final String bio = person.getString("text").trim();
-                    if (!rank.isEmpty()) {
-                        info_about_container.addView(getAboutContainer(activity.getString(R.string.person_rank), textUtils.capitalizeFirstLetter(rank)));
-                    }
-                    if (!post.isEmpty()) {
-                        info_about_container.addView(getAboutContainer(activity.getString(R.string.person_post), textUtils.capitalizeFirstLetter(post)));
-                    }
-                    if (!bio.isEmpty()) {
-                        info_about_container.addView(getAboutContainer(activity.getString(R.string.person_bio), bio));
+                if (StringUtils.isNotBlank(person.getEmail())) {
+                    String[] emails = person.getEmail().trim().split("[;,]");
+                    for (String email : emails) {
+                        if (StringUtils.isNotBlank(email)) {
+                            infoConnectContainer.addView(getConnectContainer(R.drawable.ic_email, email.trim(), exists, v -> thread.run(() -> {
+                                Intent intent = new Intent(Intent.ACTION_SEND);
+                                intent.setType("message/rfc822");
+                                intent.putExtra(Intent.EXTRA_EMAIL, new String[]{email.trim()});
+                                Intent chooser = Intent.createChooser(intent, activity.getString(R.string.send_mail) + "...");
+                                eventBus.fire(new OpenIntentEvent(chooser));
+                            })));
+                            exists = true;
+                        }
                     }
                 }
-                // работаем со свайпом
-                SwipeRefreshLayout mSwipeRefreshLayout = activity.findViewById(R.id.person_swipe);
-                if (mSwipeRefreshLayout != null) {
-                    mSwipeRefreshLayout.setColorSchemeColors(Color.resolve(activity, R.attr.colorAccent));
-                    mSwipeRefreshLayout.setProgressBackgroundColorSchemeColor(Color.resolve(activity, R.attr.colorBackgroundRefresh));
-                    mSwipeRefreshLayout.setOnRefreshListener(this);
+                if (StringUtils.isNotBlank(person.getWww())) {
+                    String[] webs = person.getWww().trim().split("[;,]");
+                    for (String web : webs) {
+                        if (StringUtils.isNotBlank(web)) {
+                            infoConnectContainer.addView(getConnectContainer(R.drawable.ic_web, web.trim(), exists, v -> thread.run(() -> {
+                                Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(web.trim()));
+                                eventBus.fire(new OpenIntentEvent(intent));
+                            })));
+                            exists = true;
+                        }
+                    }
                 }
-            } catch (Exception e) {
-                log.exception(e);
             }
+            ViewGroup infoAboutContainer = activity.findViewById(R.id.info_about_container);
+            if (infoAboutContainer != null) {
+                if (StringUtils.isNotBlank(person.getRank())) {
+                    infoAboutContainer.addView(getAboutContainer(activity.getString(R.string.person_rank), textUtils.capitalizeFirstLetter(person.getRank())));
+                }
+                if (StringUtils.isNotBlank(person.getPost())) {
+                    infoAboutContainer.addView(getAboutContainer(activity.getString(R.string.person_post), textUtils.capitalizeFirstLetter(person.getPost())));
+                }
+                if (StringUtils.isNotBlank(person.getText())) {
+                    infoAboutContainer.addView(getAboutContainer(activity.getString(R.string.person_bio), person.getText()));
+                }
+            }
+            // работаем со свайпом
+            SwipeRefreshLayout swipe = activity.findViewById(R.id.person_swipe);
+            if (swipe != null) {
+                swipe.setColorSchemeColors(Color.resolve(activity, R.attr.colorAccent));
+                swipe.setProgressBackgroundColorSchemeColor(Color.resolve(activity, R.attr.colorBackgroundRefresh));
+                swipe.setOnRefreshListener(this);
+            }
+        }, throwable -> {
+            log.exception(throwable);
+            loadFailed();
         });
     }
 
-    private View getConnectContainer(@DrawableRes int icon, String text, boolean first_block, View.OnClickListener listener) {
+    private View getConnectContainer(@DrawableRes int icon, String text, boolean isRemoveSeparator, View.OnClickListener listener) {
         View activity_university_person_card_connect = activity.inflate(R.layout.layout_university_connect);
         ((ImageView) activity_university_person_card_connect.findViewById(R.id.connect_image)).setImageResource(icon);
         ((TextView) activity_university_person_card_connect.findViewById(R.id.connect_text)).setText(text.trim());
         if (listener != null) {
             activity_university_person_card_connect.setOnClickListener(listener);
         }
-        if (!first_block) {
+        if (!isRemoveSeparator) {
             staticUtil.removeView(activity_university_person_card_connect.findViewById(R.id.separator));
         }
         return activity_university_person_card_connect;
@@ -401,6 +412,10 @@ public class UniversityPersonCardActivityPresenterImpl implements UniversityPers
             textView.setText(android.text.Html.fromHtml(text).toString().trim());
         }
         return activity_university_person_card_about;
+    }
+
+    private String getStringIfExists(String value) {
+        return StringUtils.isNotBlank(value) ? value : "";
     }
 
     private int getStatusBarHeight() {

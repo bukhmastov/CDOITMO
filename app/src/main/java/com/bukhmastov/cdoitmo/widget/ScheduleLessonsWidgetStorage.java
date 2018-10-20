@@ -1,18 +1,19 @@
 package com.bukhmastov.cdoitmo.widget;
 
-import android.content.Context;
-
-import org.json.JSONObject;
+import com.bukhmastov.cdoitmo.model.schedule.lessons.SLessons;
+import com.bukhmastov.cdoitmo.model.widget.schedule.lessons.WSLSettings;
 
 public interface ScheduleLessonsWidgetStorage  {
 
-    String get(Context context, int appWidgetId, String type);
+    WSLSettings getSettings(int appWidgetId) throws Exception;
 
-    JSONObject getJson(Context context, int appWidgetId, String type);
+    SLessons getCache(int appWidgetId) throws Exception;
 
-    void save(Context context, int appWidgetId, String type, String text);
+    SLessons getConverted(int appWidgetId) throws Exception;
 
-    void delete(Context context, int appWidgetId, String type);
+    void save(int appWidgetId, String type, SLessons cache) throws Exception;
 
-    void delete(Context context, int appWidgetId);
+    void save(int appWidgetId, WSLSettings settings) throws Exception;
+
+    void delete(int appWidgetId);
 }

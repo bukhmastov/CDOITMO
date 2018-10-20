@@ -6,12 +6,16 @@ import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Looper;
 import android.os.Process;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+import android.widget.Toast;
 
 import com.bukhmastov.cdoitmo.App;
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
+import com.bukhmastov.cdoitmo.function.ThrowingConsumer;
+import com.bukhmastov.cdoitmo.function.ThrowingRunnable;
 import com.bukhmastov.cdoitmo.util.Log;
-import com.bukhmastov.cdoitmo.util.NotificationMessage;
 import com.bukhmastov.cdoitmo.util.Thread;
 
 import javax.inject.Inject;
@@ -27,23 +31,28 @@ public class ThreadImpl implements Thread {
     Lazy<Log> log;
     @Inject
     Lazy<Context> context;
-    @Inject
-    Lazy<NotificationMessage> notificationMessage;
 
     public ThreadImpl() {
         AppComponentProvider.getComponent().inject(this);
     }
 
     @Override
-    public void run(final Runnable runnable) {
+    public void run(@NonNull ThrowingRunnable runnable) {
         run(FOREGROUND, runnable);
     }
 
     @Override
-    public void run(final @Thread.TYPE int type, final Runnable runnable) {
-        if (runnable == null) {
-            throw new NullPointerException("Passed runnable is null");
-        }
+    public void run(@NonNull ThrowingRunnable runnable, @Nullable ThrowingConsumer<Throwable, Throwable> errorHandler) {
+        run(FOREGROUND, runnable, errorHandler);
+    }
+
+    @Override
+    public void run(@Thread.TYPE int type, final @NonNull ThrowingRunnable runnable) {
+        run(FOREGROUND, runnable, null);
+    }
+
+    @Override
+    public void run(@Thread.TYPE int type, @NonNull ThrowingRunnable runnable, @Nullable ThrowingConsumer<Throwable, Throwable> errorHandler) {
         final ThreadFacade threadFacade = getThreadFacade(type);
         if (threadFacade.thread != null && !threadFacade.thread.isAlive()) {
             log("run | HandlerThread is not alive, going to quit | id = " + threadFacade.thread.getId() + " | name = " + threadFacade.thread.getName());
@@ -69,25 +78,27 @@ public class ThreadImpl implements Thread {
                 try {
                     runnable.run();
                 } catch (Throwable throwable) {
-                    onCaughtUncaughtException(threadFacade.thread.getName(), throwable);
+                    onCaughtUncaughtException(threadFacade.thread.getName(), throwable, errorHandler);
                 }
             });
         } catch (Throwable throwable) {
-            onCaughtUncaughtException(threadFacade.thread.getName(), throwable);
+            onCaughtUncaughtException(threadFacade.thread.getName(), throwable, errorHandler);
         }
     }
 
     @Override
-    public void runOnUI(final Runnable runnable) {
-        if (runnable == null) {
-            throw new NullPointerException("Passed runnable is null");
-        }
+    public void runOnUI(@NonNull ThrowingRunnable runnable) {
+        runOnUI(runnable, null);
+    }
+
+    @Override
+    public void runOnUI(@NonNull ThrowingRunnable runnable, @Nullable ThrowingConsumer<Throwable, Throwable> errorHandler) {
         if (isMainThread()) {
             // log("runOnUI | run on current thread");
             try {
                 runnable.run();
             } catch (Throwable throwable) {
-                onCaughtUncaughtException("main", throwable);
+                onCaughtUncaughtException("main", throwable, errorHandler);
             }
         } else {
             // log("runOnUI | run with Handler.post");
@@ -96,11 +107,11 @@ public class ThreadImpl implements Thread {
                     try {
                         runnable.run();
                     } catch (Throwable throwable) {
-                        onCaughtUncaughtException("main", throwable);
+                        onCaughtUncaughtException("main", throwable, errorHandler);
                     }
                 });
             } catch (Throwable throwable) {
-                onCaughtUncaughtException("main", throwable);
+                onCaughtUncaughtException("main", throwable, errorHandler);
             }
         }
     }
@@ -114,28 +125,35 @@ public class ThreadImpl implements Thread {
     public boolean assertUI() {
         if (isMainThread()) {
             return true;
-        } else {
-            if (App.DEBUG) {
-                throw new IllegalStateException("Main thread required");
-            } else {
-                log.get().wtf(new IllegalStateException("Main thread required"));
-            }
-            return false;
         }
+        if (App.DEBUG) {
+            uncaught(new IllegalStateException("Main thread required"));
+        } else {
+            log.get().wtf(new IllegalStateException("Main thread required"));
+        }
+        return false;
     }
 
     @Override
     public boolean assertNotUI() {
         if (!isMainThread()) {
             return true;
-        } else {
-            if (App.DEBUG) {
-                throw new IllegalStateException("Not main thread required");
-            } else {
-                log.get().wtf(new IllegalStateException("Not main thread required"));
-            }
-            return false;
         }
+        if (App.DEBUG) {
+            uncaught(new IllegalStateException("Not main thread required"));
+        } else {
+            log.get().wtf(new IllegalStateException("Not main thread required"));
+        }
+        return false;
+    }
+
+    @Override
+    public void uncaught(Throwable throwable) {
+        if (!App.DEBUG) {
+            return;
+        }
+        java.lang.Thread.getDefaultUncaughtExceptionHandler()
+                .uncaughtException(java.lang.Thread.currentThread(), throwable);
     }
 
     private boolean isMainThread() {
@@ -153,9 +171,28 @@ public class ThreadImpl implements Thread {
         }
     }
 
-    private void onCaughtUncaughtException(String thread, Throwable throwable) {
-        log.get().exception("Run on " + thread + " thread failed", throwable);
-        notificationMessage.get().toast(context.get(), R.string.something_went_wrong);
+    private void onCaughtUncaughtException(String thread, Throwable throwable, ThrowingConsumer<Throwable, Throwable> errorHandler) {
+        if (errorHandler == null) {
+            log.get().exception("Run on " + thread + " thread failed", throwable);
+            showToast();
+            return;
+        }
+        log.get().e(TAG, "Run on " + thread + " thread failed | ", throwable.getClass().getName(), ": ", throwable.getMessage());
+        // showToast();
+        try {
+            errorHandler.accept(throwable);
+        } catch (Throwable t) {
+            log.get().exception("Run on " + thread + " thread failed | run on error consumer failed", t);
+            showToast();
+        }
+    }
+
+    private void showToast() {
+        try {
+            Toast.makeText(context.get(), R.string.something_went_wrong, Toast.LENGTH_SHORT).show();
+        } catch (Throwable throwable) {
+            log.get().exception("ThreadImpl#showToast() failed", throwable);
+        }
     }
 
     private void log(String log) {

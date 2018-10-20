@@ -5,14 +5,13 @@ import android.support.v7.app.AlertDialog;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activity.ConnectedActivity;
+import com.bukhmastov.cdoitmo.model.entity.SettingsQuery;
 import com.bukhmastov.cdoitmo.object.preference.Preference;
 import com.bukhmastov.cdoitmo.object.preference.PreferenceBasic;
 import com.bukhmastov.cdoitmo.object.preference.PreferenceList;
 import com.bukhmastov.cdoitmo.object.preference.PreferenceSwitch;
 import com.bukhmastov.cdoitmo.provider.InjectProvider;
 import com.bukhmastov.cdoitmo.util.Storage;
-
-import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -34,11 +33,11 @@ public class SettingsScheduleLessonsFragment extends SettingsTemplatePreferences
             @Override
             public String onGetSummary(ConnectedActivity activity, String value) {
                 try {
-                    final JSONObject json = new JSONObject(value);
-                    switch (json.getString("query")) {
+                    SettingsQuery settingsQuery = new SettingsQuery().fromJsonString(value);
+                    switch (settingsQuery.getQuery()) {
                         case "mine": return activity.getString(R.string.personal_schedule);
                         case "auto": return activity.getString(R.string.current_group);
-                        default: return json.getString("title");
+                        default: return settingsQuery.getTitle();
                     }
                 } catch (Exception e) {
                     return null;

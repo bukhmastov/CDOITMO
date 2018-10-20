@@ -451,10 +451,6 @@
     <string name="no_teachers">Преподавателей не найдено</string>
     <string name="on_search_for">По запросу</string>
     <string name="teachers_found">найдены преподаватели</string>
-    <string name="share_schedule_notification1_1_single">скрытое занятие было пропущено</string>
-    <string name="share_schedule_notification1_1_plural">скрытых занятий были пропущены</string>
-    <string name="share_schedule_notification1_1_plural2">скрытых занятия были пропущены</string>
-    <string name="share_schedule_notification1_2">так как файл был создан в устаревшей версии приложения</string>
     <string name="changes_will_take_effect_next_startup">Изменения вступят в силу при следующем запуске приложения</string>
     <string name="incorrect_query">Задан неверный запрос</string>
     <string name="no_schedule">Расписание не найдено</string>
@@ -521,5 +517,7 @@
     <string name="reset_preference_message">Вы собираетесь сбросить настройки приложения до значений по умолчанию</string>
     <string name="open_search">Открыть поиск</string>
     <string name="share_schedule">Поделиться расписанием</string>
+    <string name="unspecified_points">Не распределенные баллы</string>
+    <string name="outdated_file_version">Файл был создан в устаревшей версии приложения и более не поддерживается</string>
 
 </resources>

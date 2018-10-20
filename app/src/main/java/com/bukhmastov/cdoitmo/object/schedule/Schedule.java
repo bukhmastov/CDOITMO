@@ -1,12 +1,11 @@
 package com.bukhmastov.cdoitmo.object.schedule;
 
-import android.content.Context;
+import android.support.annotation.NonNull;
 
+import com.bukhmastov.cdoitmo.model.schedule.ScheduleJsonEntity;
 import com.bukhmastov.cdoitmo.network.model.Client;
 
-import org.json.JSONObject;
-
-public interface Schedule {
+public interface Schedule<T extends ScheduleJsonEntity> {
 
     int FAILED_LOAD = 100;
     int FAILED_OFFLINE = 101;
@@ -15,37 +14,36 @@ public interface Schedule {
     int FAILED_INVALID_QUERY = 104;
     int FAILED_NOT_FOUND = 105;
 
-    void search(final Context context, final Handler handler, final String query);
+    void search(@NonNull String query, @NonNull Handler<T> handler);
 
-    void search(final Context context, final Handler handler, final String query, final int refreshRate);
+    void search(@NonNull String query, int refreshRate, @NonNull Handler<T> handler);
 
-    void search(final Context context, final Handler handler, final String query, final boolean forceToCache);
+    void search(@NonNull String query, boolean forceToCache, @NonNull Handler<T> handler);
 
-    void search(final Context context, final Handler handler, final String query, final boolean forceToCache, final boolean withUserChanges);
+    void search(@NonNull String query, boolean forceToCache, boolean withUserChanges, @NonNull Handler<T> handler);
 
-    void search(final Context context, final Handler handler, final String query, final int refreshRate, final boolean forceToCache);
+    void search(@NonNull String query, int refreshRate, boolean forceToCache, @NonNull Handler<T> handler);
 
-    void search(final Context context, final Handler handler, final String query, final int refreshRate, final boolean forceToCache, final boolean withUserChanges);
+    void search(@NonNull String query, int refreshRate, boolean forceToCache, boolean withUserChanges, @NonNull Handler<T> handler);
 
-    // Returns the default query string for a schedule search
-    String getDefaultScope(final Context context);
+    String getDefaultScope();
 
-    // Returns main title for schedules
-    String getScheduleHeader(final Context context, String title, String type);
+    String getScheduleHeader(String title, String type);
 
-    // Returns second title for schedules
-    String getScheduleWeek(final Context context, int week);
+    String getScheduleWeek(int week);
 
-    interface Handler {
-        void onSuccess(JSONObject json, boolean fromCache);
-        void onFailure(int state);
+    interface Handler<J extends ScheduleJsonEntity> {
+        void onSuccess(J schedule, boolean fromCache);
+        default void onFailure(int state) {
+            onFailure(0, null, state);
+        }
         void onFailure(int statusCode, Client.Headers headers, int state);
         void onProgress(int state);
         void onNewRequest(Client.Request request);
         void onCancelRequest();
     }
 
-    interface ScheduleSearchProvider {
-        void onSearch(Context context, String query, Handler handler);
+    interface ScheduleSearchProvider<J extends ScheduleJsonEntity> {
+        void onSearch(String query, Handler<J> handler);
     }
 }

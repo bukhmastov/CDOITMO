@@ -20,8 +20,11 @@ import android.widget.ListView;
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.adapter.SuggestionsListView;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
-import com.bukhmastov.cdoitmo.object.entity.Suggestion;
+import com.bukhmastov.cdoitmo.model.entity.Suggestion;
+import com.bukhmastov.cdoitmo.model.entity.Suggestions;
+import com.bukhmastov.cdoitmo.model.schedule.lessons.SLessons;
 import com.bukhmastov.cdoitmo.util.NotificationMessage;
+import com.bukhmastov.cdoitmo.util.singleton.CollectionUtils;
 import com.bukhmastov.cdoitmo.util.singleton.CtxWrapper;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Storage;
@@ -29,11 +32,8 @@ import com.bukhmastov.cdoitmo.util.StoragePref;
 import com.bukhmastov.cdoitmo.util.TextUtils;
 import com.bukhmastov.cdoitmo.util.Theme;
 import com.bukhmastov.cdoitmo.util.Thread;
+import com.bukhmastov.cdoitmo.util.singleton.StringUtils;
 import com.bukhmastov.cdoitmo.util.singleton.Transliterate;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -48,7 +48,7 @@ public abstract class SearchActivity extends AppCompatActivity {
     private static final String TAG = "SearchActivity";
     private static final int REQ_CODE_SPEECH_INPUT = 1337;
     protected final Context context = this;
-    private EditText search_edit_text;
+    private EditText searchEditText;
     protected final int numberOfSuggestions;
     protected final int maxCountOfSuggestionsToStore;
     protected int currentNumberOfSuggestions = 0;
@@ -114,10 +114,10 @@ public abstract class SearchActivity extends AppCompatActivity {
             log.v(TAG, "type=", getType(), " | search_close clicked");
             finish();
         });
-        search_edit_text = findViewById(R.id.search_edittext);
-        search_edit_text.setHint(getHint());
-        search_edit_text.addTextChangedListener(textWatcher);
-        search_edit_text.setOnKeyListener(onKeyListener);
+        searchEditText = findViewById(R.id.search_edittext);
+        searchEditText.setHint(getHint());
+        searchEditText.addTextChangedListener(textWatcher);
+        searchEditText.setOnKeyListener(onKeyListener);
         setMode(SPEECH_RECOGNITION);
         setSuggestions(getSuggestions(""));
     }
@@ -137,87 +137,93 @@ public abstract class SearchActivity extends AppCompatActivity {
     private void setMode(final @EXTRA_ACTION_MODE String mode) {
         thread.runOnUI(() -> {
             log.v(TAG, "setMode | type=", getType(), " | mode=", mode);
-            final ViewGroup search_extra_action = findViewById(R.id.search_extra_action);
-            final ImageView search_extra_action_image = findViewById(R.id.search_extra_action_image);
-            if (search_extra_action != null) {
-                search_extra_action.setOnClickListener(null);
-                if (!mode.equals(NONE)) {
-                    switch (mode) {
-                        case SPEECH_RECOGNITION: {
-                            if (checkVoiceRecognition()) {
-                                log.v(TAG, "type=", getType(), " | voice recognition not supported");
-                                setMode(NONE);
-                                return;
-                            }
-                            if (search_extra_action_image != null) {
-                                search_extra_action_image.setImageDrawable(getDrawable(R.drawable.ic_keyboard_voice));
-                            }
-                            search_extra_action.setOnClickListener(v -> {
-                                log.v(TAG, "type=", getType(), " | speech_recognition clicked");
-                                startRecognition();
-                            });
-                            break;
+            final ViewGroup searchExtraAction = findViewById(R.id.search_extra_action);
+            final ImageView searchExtraActionImage = findViewById(R.id.search_extra_action_image);
+            if (searchExtraAction == null) {
+                return;
+            }
+            searchExtraAction.setOnClickListener(null);
+            if (!mode.equals(NONE)) {
+                switch (mode) {
+                    case SPEECH_RECOGNITION: {
+                        if (checkVoiceRecognition()) {
+                            log.v(TAG, "type=", getType(), " | voice recognition not supported");
+                            setMode(NONE);
+                            return;
                         }
-                        case CLEAR: {
-                            if (search_extra_action_image != null) {
-                                search_extra_action_image.setImageDrawable(getDrawable(R.drawable.ic_close));
-                            }
-                            search_extra_action.setOnClickListener(v -> {
-                                log.v(TAG, "type=", getType(), " | clear clicked");
-                                search_edit_text.setText("");
-                            });
-                            break;
+                        if (searchExtraActionImage != null) {
+                            searchExtraActionImage.setImageDrawable(getDrawable(R.drawable.ic_keyboard_voice));
                         }
+                        searchExtraAction.setOnClickListener(v -> {
+                            log.v(TAG, "type=", getType(), " | speech_recognition clicked");
+                            startRecognition();
+                        });
+                        break;
                     }
-                    if (search_extra_action_image != null) {
-                        search_extra_action_image.setVisibility(View.VISIBLE);
+                    case CLEAR: {
+                        if (searchExtraActionImage != null) {
+                            searchExtraActionImage.setImageDrawable(getDrawable(R.drawable.ic_close));
+                        }
+                        searchExtraAction.setOnClickListener(v -> {
+                            log.v(TAG, "type=", getType(), " | clear clicked");
+                            searchEditText.setText("");
+                        });
+                        break;
                     }
-                } else if (search_extra_action_image != null) {
-                    search_extra_action_image.setVisibility(View.GONE);
                 }
+                if (searchExtraActionImage != null) {
+                    searchExtraActionImage.setVisibility(View.VISIBLE);
+                }
+            } else if (searchExtraActionImage != null) {
+                searchExtraActionImage.setVisibility(View.GONE);
             }
         });
     }
+
     private void setSuggestions(final List<Suggestion> suggestions) {
         thread.runOnUI(() -> {
             log.v(TAG, "setSuggestions | type=", getType());
-            try {
-                ListView search_suggestions = findViewById(R.id.search_suggestions);
-                if (search_suggestions != null) {
-                    search_suggestions.setDividerHeight(0);
-                    search_suggestions.setDivider(null);
-                    search_suggestions.setAdapter(new SuggestionsListView(context, suggestions, new SuggestionsListView.OnClickCallback() {
-                        @Override
-                        public void onClick(Suggestion suggestion) {
-                            done(suggestion.query, suggestion.title);
-                        }
-                        @Override
-                        public void onRemove(Suggestion suggestion) {
-                            try {
-                                if (suggestion.removable) {
-                                    JSONArray recent = textUtils.string2jsonArray(storage.get(context, Storage.PERMANENT, Storage.USER, "schedule_" + getType() + "#recent", ""));
-                                    for (int i = 0; i < recent.length(); i++) {
-                                        String item = recent.getString(i);
-                                        if (SearchActivity.equals(item, suggestion.query) || SearchActivity.equals(item, suggestion.title)) {
-                                            recent.remove(i);
-                                            storage.put(context, Storage.PERMANENT, Storage.USER, "schedule_" + getType() + "#recent", recent.toString());
-                                            setSuggestions(getSuggestions(""));
-                                            break;
-                                        }
-                                    }
-                                }
-                            } catch (Exception ignore) {
-                                /* ignore */
+            ListView searchSuggestions = findViewById(R.id.search_suggestions);
+            if (searchSuggestions != null) {
+                searchSuggestions.setDividerHeight(0);
+                searchSuggestions.setDivider(null);
+                searchSuggestions.setAdapter(new SuggestionsListView(context, suggestions, new SuggestionsListView.OnClickCallback() {
+                    @Override
+                    public void onClick(Suggestion suggestion) {
+                        done(suggestion.query, suggestion.title);
+                    }
+                    @Override
+                    public void onRemove(Suggestion suggestion) {
+                        thread.run(() -> {
+                            if (!suggestion.removable) {
+                                return;
                             }
-                        }
-                    }));
-                    search_suggestions.setOnItemClickListener((parent, view, position, id) -> done(suggestions.get(position).query, suggestions.get(position).title));
-                }
-            } catch (Exception e) {
-                log.exception(e);
+                            String recentString = storage.get(context, Storage.PERMANENT, Storage.USER, "schedule_" + getType() + "#recent", "");
+                            if (StringUtils.isBlank(recentString)) {
+                                return;
+                            }
+                            Suggestions recent = new Suggestions().fromJsonString(recentString);
+                            if (CollectionUtils.isEmpty(recent.getSuggestions())) {
+                                return;
+                            }
+                            for (String item : recent.getSuggestions()) {
+                                if (SearchActivity.equals(item, suggestion.query) || SearchActivity.equals(item, suggestion.title)) {
+                                    recent.getSuggestions().remove(item);
+                                    storage.put(context, Storage.PERMANENT, Storage.USER, "schedule_" + getType() + "#recent", recent.toJsonString());
+                                    setSuggestions(getSuggestions(""));
+                                    break;
+                                }
+                            }
+                        }, throwable -> {});
+                    }
+                }));
+                searchSuggestions.setOnItemClickListener((parent, view, position, id) -> done(suggestions.get(position).query, suggestions.get(position).title));
             }
+        }, throwable -> {
+            log.exception(throwable);
         });
     }
+
     private List<Suggestion> getSuggestions(String query) {
         log.v(TAG, "getSuggestions | type=", getType(), " | query=", query);
         try {
@@ -242,16 +248,25 @@ public abstract class SearchActivity extends AppCompatActivity {
             return null;
         }
     }
+
     private void done(String query, String title) {
         thread.run(() -> {
             log.v(TAG, "done | type=", getType(), " | query=", query, " | title=", title);
             try {
-                JSONArray recent = textUtils.string2jsonArray(storage.get(context, Storage.PERMANENT, Storage.USER, "schedule_" + getType() + "#recent", ""));
-                for (int i = 0; i < recent.length(); i++) {
-                    String item = recent.getString(i);
-                    if (equals(item, query) || equals(item, title)) {
-                        recent.remove(i);
-                        break;
+                String recentString = storage.get(context, Storage.PERMANENT, Storage.USER, "schedule_" + getType() + "#recent", "");
+                Suggestions recent = new Suggestions();
+                recent.setSuggestions(new ArrayList<>());
+                if (StringUtils.isNotBlank(recentString)) {
+                    recent.fromJsonString(recentString);
+                    if (recent.getSuggestions() == null) {
+                        recent.setSuggestions(new ArrayList<>());
+                    } else {
+                        for (String item : recent.getSuggestions()) {
+                            if (equals(item, query) || equals(item, title)) {
+                                recent.getSuggestions().remove(item);
+                                break;
+                            }
+                        }
                     }
                 }
                 saveCurrentSuggestion = true;
@@ -263,17 +278,17 @@ public abstract class SearchActivity extends AppCompatActivity {
                     return false;
                 });
                 if (saveCurrentSuggestion) {
-                    for (int i = recent.length() - 1; i >= 0; i--) {
-                        recent.put(i + 1, recent.getString(i));
+                    for (int i = recent.getSuggestions().size() - 1; i >= 0; i--) {
+                        recent.getSuggestions().add(i + 1, recent.getSuggestions().get(i));
                     }
-                    recent.put(0, title);
-                    if (recent.length() > maxCountOfSuggestionsToStore) {
-                        for (int i = maxCountOfSuggestionsToStore; i < recent.length(); i++) {
-                            recent.remove(i);
+                    recent.getSuggestions().add(0, title);
+                    if (recent.getSuggestions().size() > maxCountOfSuggestionsToStore) {
+                        for (int i = maxCountOfSuggestionsToStore; i < recent.getSuggestions().size(); i++) {
+                            recent.getSuggestions().remove(i);
                         }
                     }
                 }
-                storage.put(context, Storage.PERMANENT, Storage.USER, "schedule_" + getType() + "#recent", recent.toString());
+                storage.put(context, Storage.PERMANENT, Storage.USER, "schedule_" + getType() + "#recent", recent.toJsonString());
             } catch (Exception e) {
                 log.exception(e);
                 storage.delete(context, Storage.PERMANENT, Storage.USER, "schedule_" + getType() + "#recent");
@@ -282,9 +297,11 @@ public abstract class SearchActivity extends AppCompatActivity {
             thread.runOnUI(this::finish);
         });
     }
+
     private static boolean contains(String first, String second) {
         return first != null && second != null && (first.toLowerCase().contains(second.toLowerCase()) || Transliterate.cyr2lat(first).toLowerCase().contains(Transliterate.cyr2lat(second).toLowerCase()));
     }
+
     private static boolean equals(String first, String second) {
         return first != null && second != null && (first.equalsIgnoreCase(second) || Transliterate.cyr2lat(first).equalsIgnoreCase(Transliterate.cyr2lat(second)));
     }
@@ -297,6 +314,7 @@ public abstract class SearchActivity extends AppCompatActivity {
             return true;
         }
     }
+
     private void startRecognition() {
         log.v(TAG, "startRecognition");
         Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
@@ -310,6 +328,7 @@ public abstract class SearchActivity extends AppCompatActivity {
             notificationMessage.toast(context, R.string.speech_recognition_is_not_supported);
         }
     }
+
     @Override
     protected void onActivityResult(final int requestCode, final int resultCode, final Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -321,7 +340,7 @@ public abstract class SearchActivity extends AppCompatActivity {
                         ArrayList<String> result = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
                         if (result.size() > 0) {
                             log.v(TAG, "resultRecognition | " + result.get(0));
-                            search_edit_text.setText(result.get(0));
+                            searchEditText.setText(result.get(0));
                         }
                     }
                     break;
@@ -333,30 +352,36 @@ public abstract class SearchActivity extends AppCompatActivity {
     protected interface RecentSchedulesIterator {
         boolean onIterate(String item);
     }
+
     protected interface CachedSchedulesIterator {
         boolean onIterate(String query, String title);
     }
-    protected void recentSchedulesIterator(String type, RecentSchedulesIterator recentSchedulesIterator) throws JSONException {
-        JSONArray recent = textUtils.string2jsonArray(storage.get(context, Storage.PERMANENT, Storage.USER, "schedule_" + type + "#recent", ""));
-        for (int i = 0; i < recent.length(); i++) {
-            if (recentSchedulesIterator.onIterate(recent.getString(i))) {
+
+    protected void recentSchedulesIterator(String type, RecentSchedulesIterator recentSchedulesIterator) throws Exception {
+        String recentString = storage.get(context, Storage.PERMANENT, Storage.USER, "schedule_" + getType() + "#recent", "");
+        if (StringUtils.isBlank(recentString)) {
+            return;
+        }
+        Suggestions recent = new Suggestions().fromJsonString(recentString);
+        if (CollectionUtils.isEmpty(recent.getSuggestions())) {
+            return;
+        }
+        for (String item : recent.getSuggestions()) {
+            if (recentSchedulesIterator.onIterate(item)) {
                 break;
             }
         }
     }
+
     protected void cachedSchedulesIterator(String type, CachedSchedulesIterator cachedSchedulesIterator) {
         ArrayList<String> cachedFiles = storage.list(context, Storage.CACHE, Storage.GLOBAL, "schedule_" + type + "#lessons");
         for (String file : cachedFiles) {
             String cachedFile = storage.get(context, Storage.CACHE, Storage.GLOBAL, "schedule_" + type + "#lessons#" + file);
-            if (!cachedFile.isEmpty()) {
+            if (StringUtils.isNotBlank(cachedFile)) {
                 try {
-                    JSONObject cached = new JSONObject(cachedFile);
-                    if (cached.has("query") && cached.has("title")) {
-                        String query = cached.getString("query");
-                        String title = cached.getString("title");
-                        if (cachedSchedulesIterator.onIterate(query, title)) {
-                            break;
-                        }
+                    SLessons cached = new SLessons().fromJsonString(cachedFile);
+                    if (cachedSchedulesIterator.onIterate(cached.getQuery(), cached.getTitle())) {
+                        break;
                     }
                 } catch (Exception e) {
                     log.exception(e);
@@ -383,10 +408,12 @@ public abstract class SearchActivity extends AppCompatActivity {
             });
         }
     };
+
     private final View.OnKeyListener onKeyListener = new View.OnKeyListener() {
+        @Override
         public boolean onKey(View v, int keyCode, KeyEvent event) {
             if (event.getAction() == KeyEvent.ACTION_DOWN && keyCode == KeyEvent.KEYCODE_ENTER) {
-                String query = textUtils.prettifyGroupNumber(search_edit_text.getText().toString().trim());
+                String query = textUtils.prettifyGroupNumber(searchEditText.getText().toString().trim());
                 if (!query.isEmpty()) {
                     done(query, query);
                     return true;

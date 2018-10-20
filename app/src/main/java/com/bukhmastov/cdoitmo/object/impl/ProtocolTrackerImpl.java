@@ -11,9 +11,10 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import com.bukhmastov.cdoitmo.App;
-import com.bukhmastov.cdoitmo.converter.ProtocolConverter;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
-import com.bukhmastov.cdoitmo.interfaces.Callable;
+import com.bukhmastov.cdoitmo.function.Callable;
+import com.bukhmastov.cdoitmo.model.converter.ProtocolConverter;
+import com.bukhmastov.cdoitmo.model.protocol.Protocol;
 import com.bukhmastov.cdoitmo.network.DeIfmoRestClient;
 import com.bukhmastov.cdoitmo.network.handlers.RestResponseHandler;
 import com.bukhmastov.cdoitmo.network.model.Client;
@@ -23,15 +24,20 @@ import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Storage;
 import com.bukhmastov.cdoitmo.util.StoragePref;
 import com.bukhmastov.cdoitmo.util.Thread;
+import com.bukhmastov.cdoitmo.util.Time;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
 
 import javax.inject.Inject;
 
+import dagger.Lazy;
+
 public class ProtocolTrackerImpl implements ProtocolTracker {
 
     private static final String TAG = "ProtocolTracker";
+    private static final String TRUE = "1";
+    private static final String FALSE = "0";
     private final int jobID = 0;
 
     private JobScheduler jobScheduler = null;
@@ -53,6 +59,8 @@ public class ProtocolTrackerImpl implements ProtocolTracker {
     Storage storage;
     @Inject
     StoragePref storagePref;
+    @Inject
+    Lazy<Time> time;
 
     public ProtocolTrackerImpl() {
         AppComponentProvider.getComponent().inject(this);
@@ -64,28 +72,26 @@ public class ProtocolTrackerImpl implements ProtocolTracker {
     }
 
     @Override
-    public ProtocolTracker check(@NonNull Context context, @Nullable final Callable callback) {
+    public ProtocolTracker check(@NonNull Context context, @Nullable Callable callback) {
         log.v(TAG, "check");
         boolean enabled = storagePref.get(context, "pref_use_notifications", true);
-        boolean running = "1".equals(storage.get(context, Storage.PERMANENT, Storage.USER, "protocol_tracker#job_service_running", "0"));
+        boolean running = TRUE.equals(storage.get(context, Storage.PERMANENT, Storage.USER, "protocol_tracker#job_service_running", FALSE));
+        log.v(TAG, "check | enabled=", enabled, " | running=", running);
         if (enabled && !running) {
             start(context, callback);
-        } else if (!enabled && running) {
+            return this;
+        }
+        if (!enabled && running) {
             stop(context, callback);
-        } else if (enabled && Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            try {
-                if (getJobScheduler(context).getPendingJob(jobID) == null) throw new Exception("job is null");
-                if (callback != null) {
-                    callback.call();
-                }
-            } catch (Exception e) {
-                log.w(TAG, e.getMessage());
-                restart(context, callback);
-            }
-        } else {
-            if (callback != null) {
-                callback.call();
-            }
+            return this;
+        }
+        /*if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N && enabled && getJobScheduler(context).getPendingJob(jobID) == null) {
+            log.v(TAG, "check | enabled=", true, " | job is null");
+            restart(context, callback);
+            return this;
+        }*/
+        if (callback != null) {
+            callback.call();
         }
         return this;
     }
@@ -96,7 +102,7 @@ public class ProtocolTrackerImpl implements ProtocolTracker {
     }
 
     @Override
-    public ProtocolTracker restart(@NonNull Context context, @Nullable final Callable callback) {
+    public ProtocolTracker restart(@NonNull Context context, @Nullable Callable callback) {
         log.v(TAG, "restart");
         stop(context, () -> start(context, callback));
         return this;
@@ -108,7 +114,7 @@ public class ProtocolTrackerImpl implements ProtocolTracker {
     }
 
     @Override
-    public ProtocolTracker start(@NonNull Context context, @Nullable final Callable callback) {
+    public ProtocolTracker start(@NonNull Context context, @Nullable Callable callback) {
         log.v(TAG, "start");
         if (App.UNAUTHORIZED_MODE) {
             log.v(TAG, "start | UNAUTHORIZED_MODE");
@@ -116,14 +122,21 @@ public class ProtocolTrackerImpl implements ProtocolTracker {
             return this;
         }
         boolean enabled = storagePref.get(context, "pref_use_notifications", true);
-        boolean running = "1".equals(storage.get(context, Storage.PERMANENT, Storage.USER, "protocol_tracker#job_service_running", "0"));
+        boolean running = TRUE.equals(storage.get(context, Storage.PERMANENT, Storage.USER, "protocol_tracker#job_service_running", FALSE));
+        log.v(TAG, "start | enabled=", enabled, " | running=", running);
         if (enabled && !running) {
-            log.v(TAG, "Starting");
+            log.v(TAG, "start | starting");
             try {
                 int frequency = Integer.parseInt(storagePref.get(context, "pref_notify_frequency", "30"));
+                long intervalMillis = (long) frequency * 60000L;
+                long intervalFlexMillis = 5 * intervalMillis / 100;
                 boolean network_unmetered = storagePref.get(context, "pref_notify_network_unmetered", false);
-                JobInfo.Builder builder = new JobInfo.Builder(0, new ComponentName(context, ProtocolTrackerJobService.class));
-                builder.setPeriodic(frequency * 60000);
+                JobInfo.Builder builder = new JobInfo.Builder(jobID, new ComponentName(context, ProtocolTrackerJobService.class));
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                    builder.setPeriodic(intervalMillis, Math.max(intervalFlexMillis, JobInfo.getMinFlexMillis()));
+                } else {
+                    builder.setPeriodic(intervalMillis);
+                }
                 builder.setPersisted(true);
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
                     NetworkRequest.Builder nrBuilder = new NetworkRequest.Builder();
@@ -136,22 +149,26 @@ public class ProtocolTrackerImpl implements ProtocolTracker {
                 } else {
                     builder.setRequiredNetworkType(network_unmetered ? JobInfo.NETWORK_TYPE_UNMETERED : JobInfo.NETWORK_TYPE_ANY);
                 }
-                getJobScheduler(context).schedule(builder.build());
-                storage.put(context, Storage.PERMANENT, Storage.USER, "protocol_tracker#job_service_running", "1");
-                storage.put(context, Storage.PERMANENT, Storage.USER, "protocol_tracker#protocol", "");
-                log.i(TAG, "Started | user = " + storage.get(context, Storage.PERMANENT, Storage.GLOBAL, "users#current_login") + " | frequency = " + frequency);
+                int result = getJobScheduler(context).schedule(builder.build());
+                if (JobScheduler.RESULT_SUCCESS == result) {
+                    storage.put(context, Storage.PERMANENT, Storage.USER, "protocol_tracker#job_service_running", TRUE);
+                    storage.put(context, Storage.PERMANENT, Storage.USER, "protocol_tracker#protocol", "");
+                    log.i(TAG, "start | started | user=", storage.get(context, Storage.PERMANENT, Storage.GLOBAL, "users#current_login"), " | frequency=", frequency);
+                } else {
+                    log.e(TAG, "start | failed to schedule job | result=", result);
+                }
                 if (callback != null) {
                     callback.call();
                 }
-            } catch (Exception e){
-                log.e(TAG, "Failed to schedule job");
+            } catch (Exception e) {
+                log.e(TAG, "start | failed to schedule job");
                 log.exception(e);
                 stop(context, callback);
             }
-        } else {
-            if (callback != null) {
-                callback.call();
-            }
+            return this;
+        }
+        if (callback != null) {
+            callback.call();
         }
         return this;
     }
@@ -162,15 +179,21 @@ public class ProtocolTrackerImpl implements ProtocolTracker {
     }
 
     @Override
-    public ProtocolTracker stop(@NonNull Context context, @Nullable final Callable callback) {
+    public ProtocolTracker stop(@NonNull Context context, @Nullable Callable callback) {
         log.v(TAG, "stop");
-        boolean running = "1".equals(storage.get(context, Storage.PERMANENT, Storage.USER, "protocol_tracker#job_service_running", "0"));
+        boolean running = TRUE.equals(storage.get(context, Storage.PERMANENT, Storage.USER, "protocol_tracker#job_service_running", FALSE));
+        log.v(TAG, "stop | running=", running);
         if (running) {
-            log.v(TAG, "Stopping");
-            getJobScheduler(context).cancel(jobID);
-            storage.put(context, Storage.PERMANENT, Storage.USER, "protocol_tracker#job_service_running", "0");
-            storage.put(context, Storage.PERMANENT, Storage.USER, "protocol_tracker#protocol", "");
-            log.i(TAG, "Stopped");
+            try {
+                log.v(TAG, "stop | stopping");
+                getJobScheduler(context).cancel(jobID);
+                storage.put(context, Storage.PERMANENT, Storage.USER, "protocol_tracker#job_service_running", FALSE);
+                storage.put(context, Storage.PERMANENT, Storage.USER, "protocol_tracker#protocol", "");
+                log.i(TAG, "stop | stopped");
+            } catch (Exception e) {
+                log.e(TAG, "stop | failed to stop job");
+                log.exception(e);
+            }
         }
         if (callback != null) {
             callback.call();
@@ -184,11 +207,16 @@ public class ProtocolTrackerImpl implements ProtocolTracker {
     }
 
     @Override
-    public ProtocolTracker reset(@NonNull Context context, @Nullable final Callable callback) {
+    public ProtocolTracker reset(@NonNull Context context, @Nullable Callable callback) {
         log.v(TAG, "reset");
-        getJobScheduler(context).cancelAll();
-        storage.put(context, Storage.PERMANENT, Storage.USER, "protocol_tracker#job_service_running", "0");
-        storage.put(context, Storage.PERMANENT, Storage.USER, "protocol_tracker#protocol", "");
+        try {
+            getJobScheduler(context).cancelAll();
+            storage.put(context, Storage.PERMANENT, Storage.USER, "protocol_tracker#job_service_running", FALSE);
+            storage.put(context, Storage.PERMANENT, Storage.USER, "protocol_tracker#protocol", "");
+        } catch (Exception e) {
+            log.e(TAG, "reset | failed to reset job");
+            log.exception(e);
+        }
         check(context, callback);
         return this;
     }
@@ -196,33 +224,39 @@ public class ProtocolTrackerImpl implements ProtocolTracker {
     @Override
     public void setup(@NonNull Context context, @NonNull DeIfmoRestClient deIfmoRestClient, int attempt) {
         thread.run(Thread.BACKGROUND, () -> {
-            log.v(TAG, "setup | attempt=" + attempt);
+            log.v(TAG, "setup | attempt=", attempt);
             if (!storagePref.get(context, "pref_protocol_changes_track", true)) {
                 log.v(TAG, "setup | pref_protocol_changes_track=false");
                 return;
             }
-            if (attempt < 3) {
-                deIfmoRestClient.get(context, "eregisterlog?days=126", null, new RestResponseHandler() {
-                    @Override
-                    public void onSuccess(final int statusCode, Client.Headers headers, JSONObject responseObj, final JSONArray responseArr) {
-                        thread.run(Thread.BACKGROUND, () -> {
-                            if (statusCode == 200 && responseArr != null) {
-                                new ProtocolConverter(context, responseArr, 18, json -> log.i(TAG, "setup | uploaded")).run();
-                            } else {
-                                setup(context, deIfmoRestClient, attempt + 1);
-                            }
-                        });
-                    }
-                    @Override
-                    public void onFailure(int statusCode, Client.Headers headers, int state) {
-                        thread.run(Thread.BACKGROUND, () -> setup(context, deIfmoRestClient, attempt + 1));
-                    }
-                    @Override
-                    public void onProgress(int state) {}
-                    @Override
-                    public void onNewRequest(Client.Request request) {}
-                });
+            if (attempt >= 3) {
+                log.v(TAG, "setup | failed to setup, number of attempts exceeded the limit");
+                return;
             }
+            deIfmoRestClient.get(context, "eregisterlog?days=126", null, new RestResponseHandler() {
+                @Override
+                public void onSuccess(final int statusCode, Client.Headers headers, JSONObject obj, final JSONArray arr) {
+                    thread.run(Thread.BACKGROUND, () -> {
+                        if (statusCode == 200 && arr != null) {
+                            Protocol protocol = new Protocol().fromJson(new JSONObject().put("protocol", arr));
+                            protocol.setTimestamp(time.get().getTimeInMillis());
+                            protocol.setNumberOfWeeks(18);
+                            new ProtocolConverter(protocol).convert();
+                            log.i(TAG, "setup | uploaded");
+                        } else {
+                            setup(context, deIfmoRestClient, attempt + 1);
+                        }
+                    });
+                }
+                @Override
+                public void onFailure(int statusCode, Client.Headers headers, int state) {
+                    thread.run(Thread.BACKGROUND, () -> setup(context, deIfmoRestClient, attempt + 1));
+                }
+                @Override
+                public void onProgress(int state) {}
+                @Override
+                public void onNewRequest(Client.Request request) {}
+            });
         });
     }
 }

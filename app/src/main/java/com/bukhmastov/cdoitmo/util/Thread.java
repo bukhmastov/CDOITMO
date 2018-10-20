@@ -1,23 +1,42 @@
 package com.bukhmastov.cdoitmo.util;
 
 import android.support.annotation.IntDef;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+
+import com.bukhmastov.cdoitmo.function.ThrowingConsumer;
+import com.bukhmastov.cdoitmo.function.ThrowingRunnable;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
 public interface Thread {
 
-    void run(final Runnable runnable);
+    void run(@NonNull ThrowingRunnable runnable);
 
-    void run(final @TYPE int type, final Runnable runnable);
+    void run(@NonNull ThrowingRunnable runnable, @Nullable ThrowingConsumer<Throwable, Throwable> errorHandler);
 
-    void runOnUI(final Runnable runnable);
+    void run(@TYPE int type, @NonNull ThrowingRunnable runnable);
+
+    void run(@TYPE int type, @NonNull ThrowingRunnable runnable, @Nullable ThrowingConsumer<Throwable, Throwable> errorHandler);
+
+    void runOnUI(@NonNull ThrowingRunnable runnable);
+
+    void runOnUI(@NonNull ThrowingRunnable runnable, @Nullable ThrowingConsumer<Throwable, Throwable> errorHandler);
 
     void sleep(long millis) throws InterruptedException;
 
     boolean assertUI();
 
     boolean assertNotUI();
+
+    /**
+     * Will crash the application
+     * Only for debugging purposes
+     * Will not take affect if debug mode turned off
+     * @see com.bukhmastov.cdoitmo.App.DEBUG
+     */
+    void uncaught(Throwable throwable);
 
     @Retention(RetentionPolicy.SOURCE)
     @IntDef({FOREGROUND, BACKGROUND})

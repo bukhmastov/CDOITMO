@@ -12,8 +12,8 @@ import com.bukhmastov.cdoitmo.event.events.ClearCacheEvent;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebasePerformanceProvider;
-import com.bukhmastov.cdoitmo.interfaces.Callable;
-import com.bukhmastov.cdoitmo.interfaces.CallableString;
+import com.bukhmastov.cdoitmo.function.Callable;
+import com.bukhmastov.cdoitmo.function.Consumer;
 import com.bukhmastov.cdoitmo.network.DeIfmoClient;
 import com.bukhmastov.cdoitmo.network.DeIfmoRestClient;
 import com.bukhmastov.cdoitmo.network.handlers.ResponseHandler;
@@ -130,7 +130,7 @@ public class AccountImpl implements Account {
                 @Override
                 public void onFailure(final int statusCode, final Client.Headers headers, final int state) {
                     thread.run(() -> {
-                        final CallableString callback = text -> thread.runOnUI(() -> {
+                        final Consumer<String> callback = (text) -> thread.runOnUI(() -> {
                             if ("offline".equals(text)) {
                                 loginHandler.onOffline();
                             } else {
@@ -143,12 +143,12 @@ public class AccountImpl implements Account {
                             case DeIfmoClient.FAILED_OFFLINE:
                                 if (isNewUser) {
                                     logoutTemporarily(context, () -> {
-                                        callback.call(context.getString(R.string.network_unavailable));
+                                        callback.accept(context.getString(R.string.network_unavailable));
                                         firebasePerformanceProvider.putAttribute(trace, "state", "failed_network_unavailable");
                                     });
                                 } else {
                                     authorized = true;
-                                    callback.call("offline");
+                                    callback.accept("offline");
                                     firebasePerformanceProvider.putAttribute(trace, "state", "failed_offline");
                                 }
                                 break;
@@ -157,7 +157,7 @@ public class AccountImpl implements Account {
                             case DeIfmoClient.FAILED_AUTH_TRY_AGAIN:
                             case DeIfmoClient.FAILED_SERVER_ERROR:
                                 logoutTemporarily(context, () -> {
-                                    callback.call(context.getString(R.string.auth_failed) + (state == DeIfmoClient.FAILED_SERVER_ERROR ? ". " + DeIfmoClient.getFailureMessage(context, statusCode) : ""));
+                                    callback.accept(context.getString(R.string.auth_failed) + (state == DeIfmoClient.FAILED_SERVER_ERROR ? ". " + DeIfmoClient.getFailureMessage(context, statusCode) : ""));
                                     firebasePerformanceProvider.putAttribute(trace, "state", "failed_auth");
                                 });
                                 break;
@@ -166,7 +166,7 @@ public class AccountImpl implements Account {
                                 break;
                             case DeIfmoClient.FAILED_AUTH_CREDENTIALS_REQUIRED:
                                 cb = () -> {
-                                    callback.call(context.getString(R.string.required_login_password));
+                                    callback.accept(context.getString(R.string.required_login_password));
                                     firebasePerformanceProvider.putAttribute(trace, "state", "failed_credentials_required");
                                 };
                                 if (isNewUser) {
@@ -177,7 +177,7 @@ public class AccountImpl implements Account {
                                 break;
                             case DeIfmoClient.FAILED_AUTH_CREDENTIALS_FAILED:
                                 cb = () -> {
-                                    callback.call(context.getString(R.string.invalid_login_password));
+                                    callback.accept(context.getString(R.string.invalid_login_password));
                                     firebasePerformanceProvider.putAttribute(trace, "state", "failed_credentials_failed");
                                 };
                                 if (isNewUser) {

@@ -35,34 +35,26 @@ import com.bukhmastov.cdoitmo.adapter.PagerLessonsAdapter;
 import com.bukhmastov.cdoitmo.adapter.PagerUniversityAdapter;
 import com.bukhmastov.cdoitmo.adapter.SuggestionsListView;
 import com.bukhmastov.cdoitmo.adapter.TeacherPickerAdapter;
-import com.bukhmastov.cdoitmo.adapter.rva.ERegisterSubjectsRVA;
-import com.bukhmastov.cdoitmo.adapter.rva.RVA;
+import com.bukhmastov.cdoitmo.adapter.rva.RVABase;
 import com.bukhmastov.cdoitmo.adapter.rva.RatingRVA;
 import com.bukhmastov.cdoitmo.adapter.rva.ScheduleAttestationsRVA;
 import com.bukhmastov.cdoitmo.adapter.rva.ScheduleExamsRVA;
 import com.bukhmastov.cdoitmo.adapter.rva.ScheduleLessonsRVA;
-import com.bukhmastov.cdoitmo.adapter.rva.university.UniversityFacultiesRVA;
 import com.bukhmastov.cdoitmo.adapter.rva.university.UniversityRVA;
 import com.bukhmastov.cdoitmo.builder.Room101ReviewBuilder;
-import com.bukhmastov.cdoitmo.converter.Converter;
-import com.bukhmastov.cdoitmo.converter.ProtocolConverter;
-import com.bukhmastov.cdoitmo.converter.schedule.exams.ScheduleExamsConverter;
-import com.bukhmastov.cdoitmo.converter.schedule.lessons.ScheduleConverter;
-import com.bukhmastov.cdoitmo.converter.schedule.lessons.ScheduleLessonsAdditionalConverter;
-import com.bukhmastov.cdoitmo.converter.schedule.lessons.ScheduleLessonsConverterIfmo;
 import com.bukhmastov.cdoitmo.dialog.BottomSheetDialog;
 import com.bukhmastov.cdoitmo.dialog.CacheClearDialog;
 import com.bukhmastov.cdoitmo.dialog.ColorPickerDialog;
 import com.bukhmastov.cdoitmo.dialog.Dialog;
 import com.bukhmastov.cdoitmo.dialog.ThemeDialog;
 import com.bukhmastov.cdoitmo.event.bus.impl.EventBusImpl;
+import com.bukhmastov.cdoitmo.factory.module.ActivityPresenterModule;
 import com.bukhmastov.cdoitmo.factory.module.AppModule;
 import com.bukhmastov.cdoitmo.factory.module.EventBusModule;
 import com.bukhmastov.cdoitmo.factory.module.FirebaseModule;
 import com.bukhmastov.cdoitmo.factory.module.FragmentPresenterModule;
 import com.bukhmastov.cdoitmo.factory.module.NetworkModule;
 import com.bukhmastov.cdoitmo.factory.module.ObjectModule;
-import com.bukhmastov.cdoitmo.factory.module.ActivityPresenterModule;
 import com.bukhmastov.cdoitmo.factory.module.ProviderModule;
 import com.bukhmastov.cdoitmo.factory.module.UtilsModule;
 import com.bukhmastov.cdoitmo.factory.module.WidgetModule;
@@ -128,6 +120,8 @@ import com.bukhmastov.cdoitmo.fragment.settings.SettingsFragment;
 import com.bukhmastov.cdoitmo.fragment.settings.SettingsNotificationsFragment;
 import com.bukhmastov.cdoitmo.fragment.settings.SettingsTemplateHeadersFragment;
 import com.bukhmastov.cdoitmo.fragment.settings.SettingsTemplatePreferencesFragment;
+import com.bukhmastov.cdoitmo.model.converter.ConverterBase;
+import com.bukhmastov.cdoitmo.model.parser.ParserBase;
 import com.bukhmastov.cdoitmo.network.impl.DeIfmoClientImpl;
 import com.bukhmastov.cdoitmo.network.impl.DeIfmoRestClientImpl;
 import com.bukhmastov.cdoitmo.network.impl.IfmoClientImpl;
@@ -143,8 +137,8 @@ import com.bukhmastov.cdoitmo.object.impl.DaysRemainingWidgetImpl;
 import com.bukhmastov.cdoitmo.object.impl.ProtocolTrackerImpl;
 import com.bukhmastov.cdoitmo.object.impl.ProtocolTrackerServiceImpl;
 import com.bukhmastov.cdoitmo.object.impl.Room101AddRequestImpl;
-import com.bukhmastov.cdoitmo.object.impl.SettingsSchedule;
 import com.bukhmastov.cdoitmo.object.impl.SettingsScheduleAttestationsImpl;
+import com.bukhmastov.cdoitmo.object.impl.SettingsScheduleBase;
 import com.bukhmastov.cdoitmo.object.impl.SettingsScheduleExamsImpl;
 import com.bukhmastov.cdoitmo.object.impl.SettingsScheduleLessonsImpl;
 import com.bukhmastov.cdoitmo.object.impl.TeacherSearchImpl;
@@ -152,13 +146,10 @@ import com.bukhmastov.cdoitmo.object.impl.TimeRemainingWidgetImpl;
 import com.bukhmastov.cdoitmo.object.preference.Preference;
 import com.bukhmastov.cdoitmo.object.preference.PreferenceSwitch;
 import com.bukhmastov.cdoitmo.object.schedule.impl.ScheduleAttestationsImpl;
+import com.bukhmastov.cdoitmo.object.schedule.impl.ScheduleBase;
 import com.bukhmastov.cdoitmo.object.schedule.impl.ScheduleExamsImpl;
-import com.bukhmastov.cdoitmo.object.schedule.impl.ScheduleImpl;
 import com.bukhmastov.cdoitmo.object.schedule.impl.ScheduleLessonsHelperImpl;
 import com.bukhmastov.cdoitmo.object.schedule.impl.ScheduleLessonsImpl;
-import com.bukhmastov.cdoitmo.parse.Parse;
-import com.bukhmastov.cdoitmo.parse.room101.Room101ViewRequestParse;
-import com.bukhmastov.cdoitmo.parse.schedule.ScheduleAttestationsParse;
 import com.bukhmastov.cdoitmo.provider.InjectProvider;
 import com.bukhmastov.cdoitmo.provider.StorageProvider;
 import com.bukhmastov.cdoitmo.receiver.ShortcutReceiver;
@@ -296,14 +287,12 @@ public interface AppComponent {
     void inject(PagerUniversityAdapter pagerUniversityAdapter);
     void inject(PagerLessonsAdapter pagerLessonsAdapter);
     void inject(PagerExamsAdapter pagerExamsAdapter);
-    void inject(RVA rva);
-    void inject(ERegisterSubjectsRVA eRegisterSubjectsRVA);
+    void inject(RVABase rva);
     void inject(RatingRVA ratingRVA);
     void inject(ScheduleAttestationsRVA scheduleAttestationsRVA);
     void inject(ScheduleExamsRVA scheduleExamsRVA);
     void inject(ScheduleLessonsRVA scheduleLessonsRVA);
     void inject(UniversityRVA universityRVA);
-    void inject(UniversityFacultiesRVA universityFacultiesRVA);
 
     // Dialogs
     void inject(Dialog dialog);
@@ -342,14 +331,14 @@ public interface AppComponent {
     void inject(ProtocolTrackerServiceImpl protocolTrackerService);
     void inject(ProtocolTrackerJobService protocolTrackerJobService);
     void inject(Room101AddRequestImpl room101AddRequest);
-    void inject(SettingsSchedule settingsSchedule);
+    void inject(SettingsScheduleBase settingsSchedule);
     void inject(SettingsScheduleAttestationsImpl settingsScheduleAttestations);
     void inject(SettingsScheduleExamsImpl settingsScheduleExams);
     void inject(SettingsScheduleLessonsImpl settingsScheduleLessons);
     void inject(TimeRemainingWidgetImpl timeRemainingWidget);
     void inject(Preference preference);
     void inject(PreferenceSwitch preferenceSwitch);
-    void inject(ScheduleImpl schedule);
+    void inject(ScheduleBase schedule);
     void inject(ScheduleLessonsImpl scheduleLessons);
     void inject(ScheduleLessonsHelperImpl scheduleLessonsHelper);
     void inject(ScheduleExamsImpl scheduleExams);
@@ -375,18 +364,9 @@ public interface AppComponent {
     void inject(InjectProvider injectProvider);
     void inject(StorageProvider storageProvider);
 
-    // Converters
-    void inject(Converter converter);
-    void inject(ProtocolConverter protocolConverter);
-    void inject(ScheduleConverter scheduleConverter);
-    void inject(ScheduleExamsConverter scheduleExamsConverter);
-    void inject(ScheduleLessonsAdditionalConverter scheduleLessonsAdditionalConverter);
-    void inject(ScheduleLessonsConverterIfmo scheduleLessonsConverterIfmo);
-
-    // Parses
-    void inject(Parse parse);
-    void inject(Room101ViewRequestParse room101ViewRequestParse);
-    void inject(ScheduleAttestationsParse scheduleAttestationsParse);
+    // Converters and Parsers
+    void inject(ConverterBase converter);
+    void inject(ParserBase parse);
 
     // Builders and more
     void inject(Room101ReviewBuilder room101ReviewBuilder);

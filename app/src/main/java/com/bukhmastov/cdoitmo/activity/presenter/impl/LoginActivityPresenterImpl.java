@@ -2,7 +2,6 @@ package com.bukhmastov.cdoitmo.activity.presenter.impl;
 
 import android.content.Intent;
 import android.content.res.TypedArray;
-import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -15,7 +14,6 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.WindowManager;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -35,6 +33,7 @@ import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseConfigProvider;
 import com.bukhmastov.cdoitmo.fragment.AboutFragment;
+import com.bukhmastov.cdoitmo.model.user.UsersList;
 import com.bukhmastov.cdoitmo.network.model.Client;
 import com.bukhmastov.cdoitmo.util.Account;
 import com.bukhmastov.cdoitmo.util.Accounts;
@@ -44,10 +43,9 @@ import com.bukhmastov.cdoitmo.util.Static;
 import com.bukhmastov.cdoitmo.util.Storage;
 import com.bukhmastov.cdoitmo.util.Theme;
 import com.bukhmastov.cdoitmo.util.Thread;
+import com.bukhmastov.cdoitmo.util.singleton.CollectionUtils;
+import com.bukhmastov.cdoitmo.util.singleton.StringUtils;
 import com.bukhmastov.cdoitmo.view.Message;
-
-import org.json.JSONArray;
-import org.json.JSONException;
 
 import javax.inject.Inject;
 
@@ -314,12 +312,11 @@ public class LoginActivityPresenterImpl implements LoginActivityPresenter {
     }
 
     private void appendAllUsersView(final ViewGroup container) {
-        final JSONArray acs = accounts.get(activity);
-        for (int i = 0; i < acs.length(); i++) {
+        UsersList acs = accounts.get(activity);
+        for (String acLogin : CollectionUtils.emptyIfNull(acs.getLogins())) {
             try {
                 // unique situation, we need to grab info about accounts in which we are not logged in
                 // danger zone begins
-                final String acLogin = acs.getString(i);
                 log.v(TAG, "show | account in accounts | login=", acLogin);
                 storage.put(activity, Storage.PERMANENT, Storage.GLOBAL, "users#current_login", acLogin);
                 final String login = storage.get(activity, Storage.PERMANENT, Storage.USER, "user#deifmo#login");
@@ -432,7 +429,7 @@ public class LoginActivityPresenterImpl implements LoginActivityPresenter {
                     popup.show();
                 });
                 container.addView(user_tile);
-            } catch (JSONException e) {
+            } catch (Exception e) {
                 log.exception(e);
             }
         }
@@ -615,48 +612,53 @@ public class LoginActivityPresenterImpl implements LoginActivityPresenter {
     }
 
     private void displayRemoteMessage() {
-        thread.run(() -> firebaseConfigProvider.getJson(FirebaseConfigProvider.MESSAGE_LOGIN, value -> thread.run(() -> {
-            try {
-                if (value == null) return;
-                final int type = value.getInt("type");
-                final String message = value.getString("message");
-                if (message == null || message.trim().isEmpty()) return;
-                final String hash = textUtils.crypt(message);
+        thread.run(() -> firebaseConfigProvider.getMessage(FirebaseConfigProvider.MESSAGE_LOGIN, value -> {
+            thread.run(() -> {
+                if (value == null) {
+                    return;
+                }
+                int type = value.getType();
+                String message = value.getMessage();
+                if (StringUtils.isBlank(message)) {
+                    return;
+                }
+                String hash = textUtils.crypt(message);
                 if (hash != null && hash.equals(storage.get(activity, Storage.PERMANENT, Storage.GLOBAL, "firebase#remote_message#login", ""))) {
                     return;
                 }
                 thread.runOnUI(() -> {
-                    final ViewGroup message_login = activity.findViewById(R.id.message_login);
-                    final View layout = Message.getRemoteMessage(activity, type, message, (context, view) -> {
-                        if (hash != null) {
-                            thread.run(() -> {
-                                if (storage.put(activity, Storage.PERMANENT, Storage.GLOBAL, "firebase#remote_message#login", hash)) {
-                                    thread.runOnUI(() -> {
-                                        if (message_login != null && view != null) {
-                                            message_login.removeView(view);
-                                        }
-                                    });
-                                    notificationMessage.snackBar(activity, activity.getString(R.string.notification_dismissed), activity.getString(R.string.undo), v -> thread.run(() -> {
-                                        if (storage.delete(activity, Storage.PERMANENT, Storage.GLOBAL, "firebase#remote_message#login")) {
-                                            thread.runOnUI(() -> {
-                                                if (message_login != null && view != null) {
-                                                    message_login.addView(view);
-                                                }
-                                            });
-                                        }
-                                    }));
+                    ViewGroup messageView = activity.findViewById(R.id.message_login);
+                    View layout = Message.getRemoteMessage(activity, type, message, (context, view) -> {
+                        if (hash == null) {
+                            return;
+                        }
+                        thread.run(() -> {
+                            if (!storage.put(activity, Storage.PERMANENT, Storage.GLOBAL, "firebase#remote_message#login", hash)) {
+                                return;
+                            }
+                            thread.runOnUI(() -> {
+                                if (messageView != null && view != null) {
+                                    messageView.removeView(view);
                                 }
                             });
-                        }
+                            notificationMessage.snackBar(activity, activity.getString(R.string.notification_dismissed), activity.getString(R.string.undo), v -> thread.run(() -> {
+                                if (!storage.delete(activity, Storage.PERMANENT, Storage.GLOBAL, "firebase#remote_message#login")) {
+                                    return;
+                                }
+                                thread.runOnUI(() -> {
+                                    if (messageView != null && view != null) {
+                                        messageView.addView(view);
+                                    }
+                                });
+                            }));
+                        });
                     });
-                    if (layout != null && message_login != null) {
-                        message_login.removeAllViews();
-                        message_login.addView(layout);
+                    if (layout != null && messageView != null) {
+                        messageView.removeAllViews();
+                        messageView.addView(layout);
                     }
                 });
-            } catch (Exception ignore) {
-                // ignore
-            }
-        })));
+            }, throwable -> {});
+        }));
     }
 }

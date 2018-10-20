@@ -14,21 +14,27 @@ import com.bukhmastov.cdoitmo.App;
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.fragment.presenter.RatingFragmentPresenter;
+import com.bukhmastov.cdoitmo.model.rating.pickerall.RFaculty;
+import com.bukhmastov.cdoitmo.model.rating.pickerall.RatingPickerAll;
+import com.bukhmastov.cdoitmo.model.rating.pickerown.RCourse;
+import com.bukhmastov.cdoitmo.model.rating.pickerown.RatingPickerOwn;
+import com.bukhmastov.cdoitmo.model.rva.RVARating;
+import com.bukhmastov.cdoitmo.model.rva.RVASingleValue;
 import com.bukhmastov.cdoitmo.network.DeIfmoClient;
 import com.bukhmastov.cdoitmo.util.Storage;
 import com.bukhmastov.cdoitmo.util.Thread;
 import com.bukhmastov.cdoitmo.util.Time;
-
-import org.json.JSONArray;
-import org.json.JSONObject;
+import com.bukhmastov.cdoitmo.util.singleton.CollectionUtils;
+import com.bukhmastov.cdoitmo.util.singleton.StringUtils;
 
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Map;
+import java.util.List;
+import java.util.Objects;
 
 import javax.inject.Inject;
 
-public class RatingRVA extends RVA {
+public class RatingRVA extends RVA<RVARating> {
 
     private static final int TYPE_HEADER = 0;
     private static final int TYPE_COMMON = 1;
@@ -79,84 +85,82 @@ public class RatingRVA extends RVA {
             case TYPE_COMMON: bindCommon(container, item); break;
             case TYPE_OWN: bindOwn(container, item); break;
             case TYPE_COMMON_EMPTY:
-            case TYPE_OWN_EMPTY: bindEmpty(container, item); break;
+            case TYPE_OWN_EMPTY: bindEmpty(container); break;
             case TYPE_FAILED: bindFailed(container, item); break;
             case TYPE_OFFLINE: break;
         }
     }
 
-    private ArrayList<Item> map2dataset(@NonNull final Context context, @NonNull final ArrayMap<String, RatingFragmentPresenter.Info> data) {
+    private ArrayList<Item> map2dataset(@NonNull Context context, @NonNull ArrayMap<String, RatingFragmentPresenter.Info> data) {
         final ArrayList<Item> dataset = new ArrayList<>();
         try {
-            final RatingFragmentPresenter.Info common = data.get(RatingFragmentPresenter.COMMON);
-            final RatingFragmentPresenter.Info own    = data.get(RatingFragmentPresenter.OWN);
+            RatingFragmentPresenter.Info common = data.get(RatingFragmentPresenter.COMMON);
+            RatingFragmentPresenter.Info own    = data.get(RatingFragmentPresenter.OWN);
             // setup common part
-            JSONArray faculties = new JSONArray();
-            dataset.add(getNewItem(TYPE_HEADER, new JSONObject().put("title", context.getString(R.string.detailed_rating))));
-            if (common.status.equals(RatingFragmentPresenter.LOADED) && common.data != null) {
+            List<RFaculty> faculties = new ArrayList<>();
+            dataset.add(new Item<>(TYPE_HEADER, new RVASingleValue(context.getString(R.string.detailed_rating))));
+            if (RatingFragmentPresenter.LOADED.equals(common.status) && common.data != null) {
                 try {
-                    faculties = common.data.getJSONObject("rating").getJSONArray("faculties");
-                    if (faculties.length() == 0) {
-                        dataset.add(getNewItem(TYPE_COMMON_EMPTY, null));
+                    RatingPickerAll ratingPickerAll = (RatingPickerAll) common.data;
+                    faculties = ratingPickerAll.getFaculties();
+                    if (CollectionUtils.isEmpty(faculties)) {
+                        dataset.add(new Item(TYPE_COMMON_EMPTY));
                     } else {
-                        dataset.add(getNewItem(TYPE_COMMON, new JSONObject().put("faculties", faculties)));
+                        dataset.add(new Item<>(TYPE_COMMON, ratingPickerAll));
                     }
                 } catch (Exception e) {
                     log.exception(e);
                 }
             } else {
-                dataset.add(getNewItem(
+                dataset.add(new Item<>(
                         common.status.equals(RatingFragmentPresenter.OFFLINE) ? TYPE_OFFLINE : TYPE_FAILED,
-                        new JSONObject().put("text", common.status.equals(RatingFragmentPresenter.SERVER_ERROR) ? DeIfmoClient.getFailureMessage(context, -1) : "")
+                        new RVASingleValue(common.status.equals(RatingFragmentPresenter.SERVER_ERROR) ? DeIfmoClient.getFailureMessage(context, -1) : "")
                 ));
             }
             // setup own mode
-            if (!App.UNAUTHORIZED_MODE) {
-                dataset.add(getNewItem(TYPE_HEADER, new JSONObject().put("title", context.getString(R.string.your_rating))));
-                if (own.status.equals(RatingFragmentPresenter.LOADED) && own.data != null) {
-                    try {
-                        final JSONArray courses = own.data.getJSONObject("rating").getJSONArray("courses");
-                        final int max_course = own.data.getJSONObject("rating").getInt("max_course");
-                        if (courses.length() == 0) {
-                            dataset.add(getNewItem(TYPE_OWN_EMPTY, null));
-                        } else {
-                            for (int i = 0; i < courses.length(); i++) {
-                                final JSONObject course = courses.getJSONObject(i);
-                                final String f = course.getString("faculty");
-                                final String p = course.getString("position");
-                                final int c = course.getInt("course");
-                                JSONObject extras = null;
-                                for (int j = 0; j < faculties.length(); j++) {
-                                    JSONObject faculty = faculties.getJSONObject(j);
-                                    if (faculty.getString("name").contains(f)) {
-                                        int course_delta = (max_course - c);
-                                        Calendar now = time.getCalendar();
-                                        int year = now.get(Calendar.YEAR) - course_delta;
-                                        int month = now.get(Calendar.MONTH);
-                                        String years = month > Calendar.AUGUST ? year + "/" + (year + 1) : (year - 1) + "/" + year;
-                                        extras = new JSONObject()
-                                                .put("faculty", faculty.getString("depId"))
-                                                .put("course", String.valueOf(c))
-                                                .put("years", years);
-                                        break;
-                                    }
-                                }
-                                dataset.add(getNewItem(TYPE_OWN, new JSONObject()
-                                        .put("title", f + " — " + String.valueOf(c) + " " + context.getString(R.string.course))
-                                        .put("position", p)
-                                        .put("extras", extras)
-                                ));
+            if (App.UNAUTHORIZED_MODE) {
+                return dataset;
+            }
+            dataset.add(new Item<>(TYPE_HEADER, new RVASingleValue(context.getString(R.string.your_rating))));
+            if (own.status.equals(RatingFragmentPresenter.LOADED) && own.data != null) {
+                try {
+                    RatingPickerOwn ratingPickerOwn = (RatingPickerOwn) own.data;
+                    List<RCourse> courses = ratingPickerOwn.getCourses();
+                    if (CollectionUtils.isEmpty(courses)) {
+                        dataset.add(new Item(TYPE_OWN_EMPTY));
+                    } else {
+                        for (RCourse course : courses) {
+                            if (course == null) {
+                                continue;
                             }
+                            RVARating rvaRating = new RVARating();
+                            rvaRating.setTitle(course.getFaculty() + " — " + String.valueOf(course.getCourse()) + " " + context.getString(R.string.course));
+                            rvaRating.setPosition(course.getPosition());
+                            for (RFaculty faculty : faculties) {
+                                if (StringUtils.isNotBlank(faculty.getName()) && faculty.getName().contains(course.getFaculty())) {
+                                //if (Objects.equals(faculty.getName(), course.getFaculty())) {
+                                    Calendar now = time.getCalendar();
+                                    int courseDelta = (ratingPickerOwn.getMaxCourse() - course.getCourse());
+                                    int year = now.get(Calendar.YEAR) - courseDelta;
+                                    int month = now.get(Calendar.MONTH);
+                                    String years = month > Calendar.AUGUST ? year + "/" + (year + 1) : (year - 1) + "/" + year;
+                                    rvaRating.setDesc(faculty.getDepId());
+                                    rvaRating.setMeta(String.valueOf(course.getCourse()));
+                                    rvaRating.setExtra(years);
+                                    break;
+                                }
+                            }
+                            dataset.add(new Item<>(TYPE_OWN, rvaRating));
                         }
-                    } catch (Exception e) {
-                        log.exception(e);
                     }
-                } else {
-                    dataset.add(getNewItem(
-                            own.status.equals(RatingFragmentPresenter.OFFLINE) ? TYPE_OFFLINE : TYPE_FAILED,
-                            new JSONObject().put("text", own.status.equals(RatingFragmentPresenter.SERVER_ERROR) ? DeIfmoClient.getFailureMessage(context, -1) : "")
-                    ));
+                } catch (Exception e) {
+                    log.exception(e);
                 }
+            } else {
+                dataset.add(new Item<>(
+                        own.status.equals(RatingFragmentPresenter.OFFLINE) ? TYPE_OFFLINE : TYPE_FAILED,
+                        new RVASingleValue(own.status.equals(RatingFragmentPresenter.SERVER_ERROR) ? DeIfmoClient.getFailureMessage(context, -1) : "")
+                ));
             }
         } catch (Exception e) {
             log.exception(e);
@@ -164,137 +168,118 @@ public class RatingRVA extends RVA {
         return dataset;
     }
 
-    private void bindHeader(View container, Item item) {
+    private void bindHeader(View container, Item<RVASingleValue> item) {
         try {
-            ((TextView) container.findViewById(R.id.title)).setText(item.data.getString("title"));
+            ((TextView) container.findViewById(R.id.title)).setText(item.data.getValue());
         } catch (Exception e) {
             log.exception(e);
         }
     }
-    private void bindCommon(View container, Item item) {
-        thread.run(() -> {
-            try {
-                final Context context = container.getContext();
-                final JSONArray faculties = item.data.getJSONArray("faculties");
-                final ArrayList<String> facultiesAdapterArr = new ArrayList<>();
-                final ArrayList<String> coursesAdapterArr = new ArrayList<>();
-                final ArrayList<Integer> selected = new ArrayList<>();
-                selected.add(0, 0);
-                selected.add(1, 0);
-                for (int i = 0; i < faculties.length(); i++) {
-                    final JSONObject faculty = faculties.getJSONObject(i);
-                    facultiesAdapterArr.add(faculty.getString("name"));
-                    if (commonSelectedFaculty.equals(faculty.getString("depId"))) {
-                        selected.add(0, i);
-                    }
+    private void bindCommon(View container, Item<RatingPickerAll> item) {
+        try {
+            if (item.data == null || CollectionUtils.isEmpty(item.data.getFaculties())) {
+                return;
+            }
+            Context context = container.getContext();
+            ArrayList<String> facultiesAdapterArr = new ArrayList<>();
+            ArrayList<String> coursesAdapterArr = new ArrayList<>();
+            ArrayList<Integer> selected = new ArrayList<>();
+            selected.add(0, 0);
+            selected.add(1, 0);
+            for (int i = 0; i < item.data.getFaculties().size(); i++) {
+                RFaculty faculty = item.data.getFaculties().get(i);
+                facultiesAdapterArr.add(faculty.getName());
+                if (commonSelectedFaculty.equals(faculty.getDepId())) {
+                    selected.add(0, i);
                 }
-                for (int i = 1; i <= 4; i++) {
-                    coursesAdapterArr.add(i + " " + context.getString(R.string.course));
-                    if (commonSelectedCourse.equals(String.valueOf(i))) {
-                        selected.add(1, i - 1);
-                    }
+            }
+            for (int i = 1; i <= 4; i++) {
+                coursesAdapterArr.add(i + " " + context.getString(R.string.course));
+                if (commonSelectedCourse.equals(String.valueOf(i))) {
+                    selected.add(1, i - 1);
                 }
-                thread.runOnUI(() -> {
-                    try {
-                        // faculty spinner
-                        final Spinner faculty_spinner = container.findViewById(R.id.faculty);
-                        if (faculty_spinner != null) {
-                            ArrayAdapter<String> adapter = new ArrayAdapter<>(context, R.layout.spinner_rating, facultiesAdapterArr);
-                            adapter.setDropDownViewResource(R.layout.spinner_center_normal_case);
-                            faculty_spinner.setAdapter(adapter);
-                            faculty_spinner.setSelection(selected.get(0));
-                            faculty_spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-                                public void onItemSelected(final AdapterView<?> parent, final View item, final int position, final long selectedId) {
-                                    thread.run(() -> {
-                                        try {
-                                            commonSelectedFaculty = faculties.getJSONObject(position).getString("depId");
-                                            storage.put(context, Storage.CACHE, Storage.USER, "rating#choose#faculty", commonSelectedFaculty);
-                                        } catch (Exception e) {
-                                            log.exception(e);
-                                        }
-                                    });
-                                }
-                                public void onNothingSelected(AdapterView<?> parent) {}
-                            });
-                            commonSelectedFaculty = faculties.getJSONObject(faculty_spinner.getSelectedItemPosition()).getString("depId");
-                        }
-                        // course spinner
-                        final Spinner course_spinner = container.findViewById(R.id.course);
-                        if (course_spinner != null) {
-                            ArrayAdapter<String> adapter = new ArrayAdapter<>(context, R.layout.spinner_rating, coursesAdapterArr);
-                            adapter.setDropDownViewResource(R.layout.spinner_center_normal_case);
-                            course_spinner.setAdapter(adapter);
-                            course_spinner.setSelection(selected.get(1));
-                            course_spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-                                public void onItemSelected(final AdapterView<?> parent, final View item, final int position, final long selectedId) {
-                                    thread.run(() -> {
-                                        try {
-                                            commonSelectedCourse = String.valueOf(position + 1);
-                                            storage.put(context, Storage.CACHE, Storage.USER, "rating#choose#course", commonSelectedCourse);
-                                        } catch (Exception e) {
-                                            log.exception(e);
-                                        }
-                                    });
-                                }
-                                public void onNothingSelected(AdapterView<?> parent) {}
-                            });
-                            commonSelectedCourse = String.valueOf(course_spinner.getSelectedItemPosition() + 1);
-                        }
-                        // apply button
-                        if (onElementClickListeners.containsKey(R.id.common_apply)) {
-                            container.findViewById(R.id.common_apply).setOnClickListener(v -> thread.run(() -> {
-                                try {
-                                    final Map<String, Object> extras = getMap("data", new JSONObject()
-                                            .put("faculty", commonSelectedFaculty)
-                                            .put("course", commonSelectedCourse)
-                                    );
-                                    thread.runOnUI(() -> onElementClickListeners.get(R.id.common_apply).onClick(v, extras));
-                                } catch (Exception e) {
-                                    log.exception(e);
-                                }
-                            }));
-                        }
-                    } catch (Exception e) {
-                        log.exception(e);
+            }
+            // faculty spinner
+            Spinner spinner;
+            spinner = container.findViewById(R.id.faculty);
+            if (spinner != null) {
+                ArrayAdapter<String> adapter = new ArrayAdapter<>(context, R.layout.spinner_rating, facultiesAdapterArr);
+                adapter.setDropDownViewResource(R.layout.spinner_center_normal_case);
+                spinner.setAdapter(adapter);
+                spinner.setSelection(selected.get(0));
+                spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                    public void onItemSelected(final AdapterView<?> parent, final View view, final int position, final long selectedId) {
+                        thread.run(() -> {
+                            commonSelectedFaculty = item.data.getFaculties().get(position).getDepId();
+                            storage.put(context, Storage.CACHE, Storage.USER, "rating#choose#faculty", commonSelectedFaculty);
+                        }, throwable -> {
+                            log.exception(throwable);
+                        });
                     }
+                    public void onNothingSelected(AdapterView<?> parent) {}
                 });
-            } catch (Exception e) {
-                log.exception(e);
+                commonSelectedFaculty = item.data.getFaculties().get(spinner.getSelectedItemPosition()).getDepId();
             }
-        });
-    }
-    private void bindOwn(View container, Item item) {
-        try {
-            final String title = item.data.getString("title");
-            final String position = item.data.getString("position");
-            ((TextView) container.findViewById(R.id.title)).setText(title);
-            ((TextView) container.findViewById(R.id.position)).setText(position);
-            if (onElementClickListeners.containsKey(R.id.own_apply)) {
-                container.findViewById(R.id.own_apply).setOnClickListener(v -> thread.run(() -> {
-                    try {
-                        final Map<String, Object> extras = getMap("data", item.data.has("extras") && !item.data.isNull("extras") ? item.data.getJSONObject("extras") : null);
-                        thread.runOnUI(() -> onElementClickListeners.get(R.id.own_apply).onClick(v, extras));
-                    } catch (Exception e) {
-                        log.exception(e);
+            // course spinner
+            spinner = container.findViewById(R.id.course);
+            if (spinner != null) {
+                ArrayAdapter<String> adapter = new ArrayAdapter<>(context, R.layout.spinner_rating, coursesAdapterArr);
+                adapter.setDropDownViewResource(R.layout.spinner_center_normal_case);
+                spinner.setAdapter(adapter);
+                spinner.setSelection(selected.get(1));
+                spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                    public void onItemSelected(final AdapterView<?> parent, final View item, final int position, final long selectedId) {
+                        thread.run(() -> {
+                            commonSelectedCourse = String.valueOf(position + 1);
+                            storage.put(context, Storage.CACHE, Storage.USER, "rating#choose#course", commonSelectedCourse);
+                        }, throwable -> {
+                            log.exception(throwable);
+                        });
                     }
-                }));
+                    public void onNothingSelected(AdapterView<?> parent) {}
+                });
+                commonSelectedCourse = String.valueOf(spinner.getSelectedItemPosition() + 1);
+            }
+            // apply button
+            if (onElementClickListeners.containsKey(R.id.common_apply)) {
+                container.findViewById(R.id.common_apply).setOnClickListener(v -> {
+                    thread.run(() -> {
+                        OnElementClickListener<RVARating> listener = onElementClickListeners.get(R.id.common_apply);
+                        if (listener != null) {
+                            RVARating rvaRating = new RVARating();
+                            rvaRating.setTitle(commonSelectedFaculty);
+                            rvaRating.setDesc(commonSelectedCourse);
+                            listener.onClick(v, rvaRating);
+                        }
+                    }, throwable -> {
+                        log.exception(throwable);
+                    });
+                });
             }
         } catch (Exception e) {
             log.exception(e);
         }
     }
-    private void bindEmpty(View container, Item item) {
+    private void bindOwn(View container, Item<RVARating> item) {
+        try {
+            ((TextView) container.findViewById(R.id.title)).setText(item.data.getTitle());
+            ((TextView) container.findViewById(R.id.position)).setText(item.data.getPosition());
+            tryRegisterClickListener(container, R.id.own_apply, item.data);
+        } catch (Exception e) {
+            log.exception(e);
+        }
+    }
+    private void bindEmpty(View container) {
         try {
             ((TextView) container.findViewById(R.id.ntd_text)).setText(R.string.no_data);
         } catch (Exception e) {
             log.exception(e);
         }
     }
-    private void bindFailed(View container, Item item) {
+    private void bindFailed(View container, Item<RVASingleValue> item) {
         try {
-            final String text = item.data.getString("text");
-            if (text != null && !text.isEmpty()) {
-                ((TextView) container.findViewById(R.id.state_failed_compact_message)).setText(text);
+            if (StringUtils.isNotBlank(item.data.getValue())) {
+                ((TextView) container.findViewById(R.id.state_failed_compact_message)).setText(item.data.getValue());
             }
         } catch (Exception e) {
             log.exception(e);

@@ -3,13 +3,11 @@ package com.bukhmastov.cdoitmo.firebase.impl;
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseConfigProvider;
+import com.bukhmastov.cdoitmo.model.firebase.config.FBConfigMessage;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Thread;
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig;
 import com.google.firebase.remoteconfig.FirebaseRemoteConfigSettings;
-
-import org.json.JSONObject;
-import org.json.JSONTokener;
 
 import javax.inject.Inject;
 
@@ -45,31 +43,26 @@ public class FirebaseConfigProviderImpl implements FirebaseConfigProvider {
 
     @Override
     public void getString(final String key, final Result result) {
-        log.v(TAG, "getString | key=" + key);
+        log.v(TAG, "getString | key=", key);
         fetch(successful -> {
             String value = getFirebaseRemoteConfig().getString(key);
-            log.v(TAG, "getString | onComplete | key=" + key + " | value=" + value);
+            log.v(TAG, "getString | onComplete | key=", key, " | value=", value);
             result.onResult(value);
         });
     }
 
     @Override
-    public void getJson(final String key, final ResultJson result) {
-        log.v(TAG, "getJson | key=" + key);
+    public void getMessage(final String key, final ResultMessage result) {
+        log.v(TAG, "getMessage | key=", key);
         fetch(successful -> {
             try {
                 String value = getFirebaseRemoteConfig().getString(key);
-                log.v(TAG, "getJson | onComplete | key=" + key + " | value=" + value);
+                log.v(TAG, "getMessage | onComplete | key=", key, " | value=", value);
                 if (value == null || value.isEmpty()) {
                     result.onResult(null);
                     return;
                 }
-                Object object = new JSONTokener(value).nextValue();
-                if (object instanceof JSONObject) {
-                    result.onResult((JSONObject) object);
-                } else {
-                    result.onResult(null);
-                }
+                result.onResult(new FBConfigMessage().fromJsonString(value));
             } catch (Exception ignore) {
                 result.onResult(null);
             }

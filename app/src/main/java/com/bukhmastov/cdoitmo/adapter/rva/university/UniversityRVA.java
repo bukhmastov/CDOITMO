@@ -1,28 +1,30 @@
 package com.bukhmastov.cdoitmo.adapter.rva.university;
 
 import android.content.Context;
-import android.support.v4.util.ArrayMap;
-import android.support.v7.widget.RecyclerView;
+import android.support.annotation.IdRes;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
+import com.bukhmastov.cdoitmo.adapter.rva.RVA;
 import com.bukhmastov.cdoitmo.event.bus.EventBus;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
-import com.bukhmastov.cdoitmo.util.Log;
+import com.bukhmastov.cdoitmo.model.JsonEntity;
+import com.bukhmastov.cdoitmo.model.rva.RVASingleValue;
+import com.bukhmastov.cdoitmo.model.rva.RVAUniversity;
+import com.bukhmastov.cdoitmo.util.NotificationMessage;
 import com.bukhmastov.cdoitmo.util.Static;
 import com.bukhmastov.cdoitmo.util.StoragePref;
 import com.bukhmastov.cdoitmo.util.TextUtils;
-import com.bukhmastov.cdoitmo.util.singleton.JsonUtils;
+import com.bukhmastov.cdoitmo.util.Thread;
 
-import org.json.JSONObject;
-
-import java.util.ArrayList;
+import java.util.Collection;
 
 import javax.inject.Inject;
 
-public abstract class UniversityRVA extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
+import dagger.Lazy;
+
+public abstract class UniversityRVA extends RVA<RVAUniversity> {
 
     public static final int TYPE_INFO_ABOUT_UPDATE_TIME = 0;
     public static final int TYPE_MAIN = 1;
@@ -33,30 +35,10 @@ public abstract class UniversityRVA extends RecyclerView.Adapter<RecyclerView.Vi
     public static final int TYPE_UNIT_STRUCTURE_HEAD = 6;
     public static final int TYPE_UNIT_DIVISIONS = 7;
     public static final int TYPE_NO_DATA = 8;
-    public static class Item {
-        public int type;
-        public JSONObject data;
-        public int data_state_keep = -1;
-        public Item () {}
-        public Item (int type, JSONObject data) {
-            this.type = type;
-            this.data = data;
-        }
-    }
-    protected static class ViewHolder extends RecyclerView.ViewHolder {
-        protected final ViewGroup container;
-        protected ViewHolder(ViewGroup container) {
-            super(container);
-            this.container = container;
-        }
-    }
-    protected final Context context;
-    protected ArrayList<Item> dataset = new ArrayList<>();
 
-    @Inject
-    Log log;
-    @Inject
-    EventBus eventBus;
+    protected static final String DATA_STATE_KEEP = "dataStateKeep";
+    protected final Context context;
+
     @Inject
     StoragePref storagePref;
     @Inject
@@ -64,60 +46,27 @@ public abstract class UniversityRVA extends RecyclerView.Adapter<RecyclerView.Vi
     @Inject
     TextUtils textUtils;
 
-    public UniversityRVA(final Context context) {
+    public UniversityRVA(Context context) {
         this(context, null);
     }
-    public UniversityRVA(final Context context, final ArrayList<Item> dataset) {
+
+    public UniversityRVA(Context context, Collection<Item> dataset) {
         AppComponentProvider.getComponent().inject(this);
         this.context = context;
         if (dataset != null) {
-            this.dataset = new ArrayList<>();
-            this.dataset = dataset;
-        } else {
-            this.dataset = new ArrayList<>();
+            this.dataset.clear();
+            this.dataset.addAll(dataset);
         }
     }
 
-    @Override
-    public int getItemCount() {
-        return dataset.size();
+    public void setState(@IdRes int type) {
+        removeState();
+        Item item = new Item(TYPE_STATE);
+        item.type = TYPE_STATE;
+        item.extras.put(DATA_STATE_KEEP, type);
+        addItem(item);
     }
 
-    @Override
-    public int getItemViewType(int position) {
-        return dataset.get(position).type;
-    }
-
-    protected void bindInfoAboutUpdateTime(RecyclerView.ViewHolder holder, Item item) {
-        try {
-            ViewHolder viewHolder = (ViewHolder) holder;
-            String title = JsonUtils.getString(item.data, "title");
-            if (title != null) {
-                ((TextView) viewHolder.container.findViewById(R.id.update_time)).setText(title);
-            }
-        } catch (Exception e) {
-            log.exception(e);
-        }
-    }
-
-    protected final ArrayMap<Integer, View.OnClickListener> onStateClickListeners = new ArrayMap<>();
-    public void setOnStateClickListener(int layout, View.OnClickListener onClickListener) {
-        onStateClickListeners.put(layout, onClickListener);
-    }
-    public void addItem(Item item) {
-        this.dataset.add(item);
-        this.notifyItemInserted(this.dataset.size() - 1);
-    }
-    public void addItem(ArrayList<Item> dataset) {
-        int itemStart = this.dataset.size() - 1;
-        this.dataset.addAll(dataset);
-        this.notifyItemRangeInserted(itemStart, dataset.size() - 1);
-    }
-    public void removeItem(int position) {
-        this.dataset.remove(position);
-        this.notifyItemRemoved(position);
-        this.notifyItemRangeChanged(position, this.dataset.size() - 1);
-    }
     public void removeState() {
         int position = -1;
         for (int i = dataset.size() - 1; i >= 0; i--) {
@@ -130,11 +79,12 @@ public abstract class UniversityRVA extends RecyclerView.Adapter<RecyclerView.Vi
             removeItem(position);
         }
     }
-    public void setState(int type) {
-        removeState();
-        Item item = new Item();
-        item.type = TYPE_STATE;
-        item.data_state_keep = type;
-        addItem(item);
+
+    protected void bindInfoAboutUpdateTime(View container, Item<RVASingleValue> item) {
+        try {
+            ((TextView) container.findViewById(R.id.update_time)).setText(item.data.getValue());
+        } catch (Exception e) {
+            log.exception(e);
+        }
     }
 }

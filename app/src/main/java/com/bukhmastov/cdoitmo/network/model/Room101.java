@@ -18,56 +18,56 @@ public abstract class Room101 extends DeIfmo {
     }
 
     @Override
-    protected void g(@NonNull final Context context, @NonNull final String url, @Nullable final Map<String, String> query, @NonNull final RawHandler rawHandler) {
+    protected void doGet(@NonNull final Context context, @NonNull final String url, @Nullable final Map<String, String> query, @NonNull final RawHandler rawHandler) {
         thread.run(thread.BACKGROUND, () -> {
-            try {
-                _g(url, getHeaders(context), query, new RawHandler() {
-                    @Override
-                    public void onDone(final int code, final okhttp3.Headers headers, final String response) {
-                        thread.run(thread.BACKGROUND, () -> {
-                            storeCookies(context, headers, false);
-                            rawHandler.onDone(code, headers, response);
-                        });
-                    }
-                    @Override
-                    public void onError(final int code, final okhttp3.Headers headers, final Throwable throwable) {
+            doGet(url, getHeaders(context), query, new RawHandler() {
+                @Override
+                public void onDone(final int code, final okhttp3.Headers headers, final String response) {
+                    thread.run(thread.BACKGROUND, () -> {
+                        storeCookies(context, headers, false);
+                        rawHandler.onDone(code, headers, response);
+                    }, throwable -> {
                         rawHandler.onError(code, headers, throwable);
-                    }
-                    @Override
-                    public void onNewRequest(final Request request) {
-                        rawHandler.onNewRequest(request);
-                    }
-                });
-            } catch (Throwable throwable) {
-                rawHandler.onError(STATUS_CODE_EMPTY, null, throwable);
-            }
+                    });
+                }
+                @Override
+                public void onError(final int code, final okhttp3.Headers headers, final Throwable throwable) {
+                    rawHandler.onError(code, headers, throwable);
+                }
+                @Override
+                public void onNewRequest(final Request request) {
+                    rawHandler.onNewRequest(request);
+                }
+            });
+        }, throwable -> {
+            rawHandler.onError(STATUS_CODE_EMPTY, null, throwable);
         });
     }
 
     @Override
-    protected void p(@NonNull final Context context, @NonNull final String url, @Nullable final Map<String, String> params, @NonNull final RawHandler rawHandler) {
+    protected void doPost(@NonNull final Context context, @NonNull final String url, @Nullable final Map<String, String> params, @NonNull final RawHandler rawHandler) {
         thread.run(thread.BACKGROUND, () -> {
-            try {
-                _p(url, getHeaders(context), null, params, new RawHandler() {
-                    @Override
-                    public void onDone(final int code, final okhttp3.Headers headers, final String response) {
-                        thread.run(thread.BACKGROUND, () -> {
-                            storeCookies(context, headers, false);
-                            rawHandler.onDone(code, headers, response);
-                        });
-                    }
-                    @Override
-                    public void onError(final int code, final okhttp3.Headers headers, final Throwable throwable) {
+            doPost(url, getHeaders(context), null, params, new RawHandler() {
+                @Override
+                public void onDone(final int code, final okhttp3.Headers headers, final String response) {
+                    thread.run(thread.BACKGROUND, () -> {
+                        storeCookies(context, headers, false);
+                        rawHandler.onDone(code, headers, response);
+                    }, throwable -> {
                         rawHandler.onError(code, headers, throwable);
-                    }
-                    @Override
-                    public void onNewRequest(final Request request) {
-                        rawHandler.onNewRequest(request);
-                    }
-                });
-            } catch (Throwable throwable) {
-                rawHandler.onError(STATUS_CODE_EMPTY, null, throwable);
-            }
+                    });
+                }
+                @Override
+                public void onError(final int code, final okhttp3.Headers headers, final Throwable throwable) {
+                    rawHandler.onError(code, headers, throwable);
+                }
+                @Override
+                public void onNewRequest(final Request request) {
+                    rawHandler.onNewRequest(request);
+                }
+            });
+        }, throwable -> {
+            rawHandler.onError(STATUS_CODE_EMPTY, null, throwable);
         });
     }
 }

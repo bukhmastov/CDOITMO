@@ -2,34 +2,26 @@ package com.bukhmastov.cdoitmo.adapter.rva;
 
 import android.content.Context;
 import android.support.annotation.LayoutRes;
-import android.support.v7.widget.PopupMenu;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
-import com.bukhmastov.cdoitmo.activity.ConnectedActivity;
-import com.bukhmastov.cdoitmo.event.bus.EventBus;
-import com.bukhmastov.cdoitmo.event.events.ShareTextEvent;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
-import com.bukhmastov.cdoitmo.fragment.settings.SettingsScheduleExamsFragment;
+import com.bukhmastov.cdoitmo.model.rva.RVADualValue;
+import com.bukhmastov.cdoitmo.model.rva.RVAExams;
+import com.bukhmastov.cdoitmo.model.rva.RVASingleValue;
+import com.bukhmastov.cdoitmo.model.schedule.exams.SExam;
+import com.bukhmastov.cdoitmo.model.schedule.exams.SExams;
+import com.bukhmastov.cdoitmo.model.schedule.exams.SSubject;
+import com.bukhmastov.cdoitmo.model.schedule.teachers.STeacher;
 import com.bukhmastov.cdoitmo.object.schedule.ScheduleExams;
-import com.bukhmastov.cdoitmo.util.NotificationMessage;
 import com.bukhmastov.cdoitmo.util.Static;
-import com.bukhmastov.cdoitmo.util.Storage;
 import com.bukhmastov.cdoitmo.util.StoragePref;
 import com.bukhmastov.cdoitmo.util.TextUtils;
 import com.bukhmastov.cdoitmo.util.Time;
-import com.bukhmastov.cdoitmo.interfaces.CallableString;
-import com.bukhmastov.cdoitmo.util.Thread;
-import com.bukhmastov.cdoitmo.util.singleton.JsonUtils;
+import com.bukhmastov.cdoitmo.util.singleton.CollectionUtils;
 import com.bukhmastov.cdoitmo.util.singleton.StringUtils;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -40,7 +32,7 @@ import java.util.regex.Pattern;
 
 import javax.inject.Inject;
 
-public class ScheduleExamsRVA extends RVA {
+public class ScheduleExamsRVA extends RVA<RVAExams> {
 
     private static final String TAG = "ScheduleExamsRVA";
 
@@ -52,46 +44,30 @@ public class ScheduleExamsRVA extends RVA {
     private static final int TYPE_PICKER_ITEM = 5;
     private static final int TYPE_PICKER_NO_TEACHERS = 6;
 
-    private static Pattern patternBrokenDate = Pattern.compile("^(\\d{1,2})(\\s\\S*)(.*)$", Pattern.CASE_INSENSITIVE);
+    public static Pattern patternBrokenDate = Pattern.compile("^(\\d{1,2})(\\s\\S*)(.*)$", Pattern.CASE_INSENSITIVE);
 
     @Inject
-    Thread thread;
-    @Inject
-    EventBus eventBus;
+    Context context;
     @Inject
     ScheduleExams scheduleExams;
     @Inject
-    Storage storage;
-    @Inject
     StoragePref storagePref;
-    @Inject
-    NotificationMessage notificationMessage;
     @Inject
     Time time;
     @Inject
     TextUtils textUtils;
 
-    private final ConnectedActivity activity;
-    private final JSONObject data;
+    private final SExams data;
     private final int mode; // 0 - exam, 1 - credit
-    private final CallableString callback;
     private String type = "";
-    private String query = null;
 
-    public ScheduleExamsRVA(final ConnectedActivity activity, JSONObject data, int mode, final CallableString callback) {
+    public ScheduleExamsRVA(SExams data, int mode) {
         super();
         AppComponentProvider.getComponent().inject(this);
-        this.activity = activity;
         this.data = data;
         this.mode = mode;
-        this.callback = callback;
-        try {
-            type = data.getString("type");
-            query = data.getString("query");
-            addItems(json2dataset(activity, data));
-        } catch (Exception e) {
-            log.exception(e);
-        }
+        this.type = data.getType();
+        addItems(entity2dataset(data));
     }
 
     @Override
@@ -126,7 +102,7 @@ public class ScheduleExamsRVA extends RVA {
                 break;
             }
             case TYPE_NO_EXAMS: {
-                bindNoExams(container, item);
+                bindNoExams(container);
                 break;
             }
             case TYPE_PICKER_HEADER: {
@@ -144,182 +120,126 @@ public class ScheduleExamsRVA extends RVA {
         }
     }
 
-    private void bindHeader(View container, Item item) {
+    private void bindHeader(View container, Item<RVADualValue> item) {
         try {
-            final String title = JsonUtils.getString(item.data, "title");
-            final String week = JsonUtils.getString(item.data, "week");
-            TextView schedule_lessons_header = container.findViewById(R.id.schedule_lessons_header);
-            if (title != null && !title.isEmpty()) {
-                schedule_lessons_header.setText(title);
+            String title = item.data.getFirst();
+            String week = item.data.getSecond();
+            TextView headerView = container.findViewById(R.id.schedule_lessons_header);
+            TextView weekView = container.findViewById(R.id.schedule_lessons_week);
+            if (StringUtils.isNotBlank(title)) {
+                headerView.setText(title);
             } else {
-                ((ViewGroup) schedule_lessons_header.getParent()).removeView(schedule_lessons_header);
+                ((ViewGroup) headerView.getParent()).removeView(headerView);
             }
-            TextView schedule_lessons_week = container.findViewById(R.id.schedule_lessons_week);
-            if (week != null && !week.isEmpty()) {
-                schedule_lessons_week.setText(week);
+            if (StringUtils.isNotBlank(week)) {
+                weekView.setText(week);
             } else {
-                ((ViewGroup) schedule_lessons_week.getParent()).removeView(schedule_lessons_week);
+                ((ViewGroup) weekView.getParent()).removeView(weekView);
             }
-            container.findViewById(R.id.schedule_lessons_menu).setOnClickListener(this::showOptionsMenu);
+            tryRegisterClickListener(container, R.id.schedule_lessons_menu, null);
         } catch (Exception e) {
             log.exception(e);
         }
     }
-    private void bindExam(View container, Item item) {
+    private void bindExam(View container, Item<SSubject> item) {
         try {
-            final String t = item.data.has("type") ? item.data.getString("type") : "exam";
-            final String subject = item.data.has("subject") ? item.data.getString("subject") : "";
-            final String group = item.data.has("group") ? item.data.getString("group") : "";
-            final String teacher = item.data.has("teacher") ? item.data.getString("teacher") : "";
-            final String teacher_id = item.data.has("teacher_id") ? item.data.getString("teacher_id") : "";
-            final JSONObject exam = item.data.has("exam") ? item.data.getJSONObject("exam") : null;
-            final JSONObject advice = item.data.has("advice") ? item.data.getJSONObject("advice") : null;
+            SSubject subject = item.data;
             final String desc;
-            final boolean touch_icon_enabled;
+            final boolean isTouchIconEnabled;
             switch (type) {
                 case "group": {
-                    desc = teacher;
-                    touch_icon_enabled = (teacher_id != null && !teacher_id.isEmpty()) || (teacher != null && !teacher.isEmpty());
+                    desc = subject.getTeacherName();
+                    isTouchIconEnabled = StringUtils.isNotBlank(subject.getTeacherId()) || StringUtils.isNotBlank(subject.getTeacherName());
                     break;
                 }
                 case "teacher": {
-                    desc = group;
-                    touch_icon_enabled = group != null && !group.isEmpty();
+                    desc = subject.getGroup();
+                    isTouchIconEnabled = StringUtils.isNotBlank(subject.getGroup());
                     break;
                 }
                 default: {
                     desc = null;
-                    touch_icon_enabled = false;
+                    isTouchIconEnabled = false;
                     break;
                 }
             }
             // title and description
-            ((TextView) container.findViewById(R.id.exam_header)).setText(subject.toUpperCase());
-            if (desc != null && !desc.trim().isEmpty()) {
+            ((TextView) container.findViewById(R.id.exam_header)).setText(subject.getSubject().toUpperCase());
+            if (StringUtils.isNotBlank(desc)) {
                 ((TextView) container.findViewById(R.id.exam_desc)).setText(desc);
                 container.findViewById(R.id.exam_desc).setVisibility(View.VISIBLE);
             } else {
                 container.findViewById(R.id.exam_desc).setVisibility(View.GONE);
             }
             // badges (actually, only one)
-            View exam_touch_icon = container.findViewById(R.id.exam_touch_icon);
-            exam_touch_icon.setVisibility(touch_icon_enabled ? View.VISIBLE : View.GONE);
-            if (touch_icon_enabled) {
-                exam_touch_icon.setOnClickListener(view -> {
-                    try {
-                        log.v(TAG, "exam_touch_icon clicked");
-                        PopupMenu popup = new PopupMenu(activity, view);
-                        Menu menu = popup.getMenu();
-                        popup.getMenuInflater().inflate(R.menu.schedule_exams_item, menu);
-                        switch (type) {
-                            case "group": {
-                                menu.findItem(R.id.open_group).setVisible(false);
-                                menu.findItem(R.id.open_teacher).setTitle(teacher);
-                                menu.findItem(R.id.open_teacher).setVisible(true);
-                                break;
-                            }
-                            case "teacher": {
-                                menu.findItem(R.id.open_group).setTitle(activity.getString(R.string.group) + " " + group);
-                                menu.findItem(R.id.open_group).setVisible(true);
-                                menu.findItem(R.id.open_teacher).setVisible(false);
-                                break;
-                            }
-                            default: {
-                                menu.findItem(R.id.open_group).setVisible(false);
-                                menu.findItem(R.id.open_teacher).setVisible(false);
-                                break;
-                            }
-                        }
-                        popup.setOnMenuItemClickListener(item1 -> {
-                            log.v(TAG, "popup.MenuItem clicked | " + item1.getTitle().toString());
-                            switch (item1.getItemId()) {
-                                case R.id.open_group: if (group != null && !group.isEmpty()) callback.call(group); break;
-                                case R.id.open_teacher: {
-                                    if (teacher_id != null && !teacher_id.isEmpty()) {
-                                        callback.call(teacher_id);
-                                    } else if (teacher != null && !teacher.isEmpty()) {
-                                        callback.call(teacher);
-                                    }
-                                    break;
-                                }
-                            }
-                            return false;
-                        });
-                        popup.show();
-                    } catch (Exception e){
-                        log.exception(e);
-                    }
-                });
+            View examTouchIcon = container.findViewById(R.id.exam_touch_icon);
+            examTouchIcon.setVisibility(isTouchIconEnabled ? View.VISIBLE : View.GONE);
+            if (isTouchIconEnabled) {
+                tryRegisterClickListener(container, R.id.exam_touch_icon, new RVAExams(subject));
             }
             // advice
             boolean isAdviceExists = false;
-            if (advice != null) {
-                String date_format_append = "";
-                String advice_date = advice.getString("date");
-                String advice_time = advice.getString("time");
-                String advice_room = advice.getString("room");
-                String advice_building = advice.getString("building");
-                if (advice_date != null && !advice_date.isEmpty()) {
-                    String date = advice_date;
-                    if (advice_time != null && !advice_time.isEmpty()) {
-                        date += " " + advice_time;
-                        date_format_append = " HH:mm";
+            if (subject.getAdvice() != null) {
+                SExam advice = subject.getAdvice();
+                String dateFormatAppend = "";
+                if (StringUtils.isNotBlank(advice.getDate())) {
+                    String date = advice.getDate();
+                    if (StringUtils.isNotBlank(advice.getTime())) {
+                        date += " " + advice.getTime();
+                        dateFormatAppend = " HH:mm";
                     }
                     String place = "";
-                    if (advice_room != null && !advice_room.isEmpty()) {
-                        place += advice_room;
+                    if (StringUtils.isNotBlank(advice.getRoom())) {
+                        place += advice.getRoom();
                     }
-                    if (advice_building != null && !advice_building.isEmpty()) {
-                        place += " " + advice_building;
+                    if (StringUtils.isNotBlank(advice.getBuilding())) {
+                        place += " " + advice.getBuilding();
                     }
                     place = place.trim();
-                    if (!place.isEmpty()) {
-                        place = activity.getString(R.string.place) + ": " + place;
+                    if (StringUtils.isNotBlank(place)) {
+                        place = context.getString(R.string.place) + ": " + place;
                     }
-                    ((TextView) container.findViewById(R.id.exam_info_advice_date)).setText(cuteDate(activity, storagePref, date, date_format_append));
-                    TextView exam_info_advice_place = container.findViewById(R.id.exam_info_advice_place);
+                    ((TextView) container.findViewById(R.id.exam_info_advice_date)).setText(cuteDate(date, dateFormatAppend));
+                    TextView placeView = container.findViewById(R.id.exam_info_advice_place);
                     if (!place.isEmpty()) {
-                        exam_info_advice_place.setText(place);
-                        exam_info_advice_place.setVisibility(View.VISIBLE);
+                        placeView.setText(place);
+                        placeView.setVisibility(View.VISIBLE);
                     } else {
-                        exam_info_advice_place.setVisibility(View.GONE);
+                        placeView.setVisibility(View.GONE);
                     }
                     isAdviceExists = true;
                 }
             }
             // exam
             boolean isExamExists = false;
-            if (exam != null) {
-                String date_format_append = "";
-                String exam_date = exam.getString("date");
-                String exam_time = exam.getString("time");
-                String exam_room = exam.getString("room");
-                String exam_building = exam.getString("building");
-                if (exam_date != null && !exam_date.isEmpty()) {
-                    String date = exam_date;
-                    if (exam_time != null && !exam_time.isEmpty()) {
-                        date += " " + exam_time;
-                        date_format_append = " HH:mm";
+            if (subject.getExam() != null) {
+                SExam exam = subject.getExam();
+                String dateFormatAppend = "";
+                if (StringUtils.isNotBlank(exam.getDate())) {
+                    String date = exam.getDate();
+                    if (StringUtils.isNotBlank(exam.getTime())) {
+                        date += " " + exam.getTime();
+                        dateFormatAppend = " HH:mm";
                     }
                     String place = "";
-                    if (exam_room != null && !exam_room.isEmpty()) {
-                        place += exam_room;
+                    if (StringUtils.isNotBlank(exam.getRoom())) {
+                        place += exam.getRoom();
                     }
-                    if (exam_building != null && !exam_building.isEmpty()) {
-                        place += " " + exam_building;
+                    if (StringUtils.isNotBlank(exam.getBuilding())) {
+                        place += " " + exam.getBuilding();
                     }
                     place = place.trim();
-                    if (!place.isEmpty()) {
-                        place = activity.getString(R.string.place) + ": " + place;
+                    if (StringUtils.isNotBlank(place)) {
+                        place = context.getString(R.string.place) + ": " + place;
                     }
-                    ((TextView) container.findViewById(R.id.exam_info_exam_title)).setText("credit".equals(t) ? R.string.credit : R.string.exam);
-                    ((TextView) container.findViewById(R.id.exam_info_exam_date)).setText(cuteDate(activity, storagePref, date, date_format_append));
-                    TextView exam_info_exam_place = container.findViewById(R.id.exam_info_exam_place);
+                    ((TextView) container.findViewById(R.id.exam_info_exam_title)).setText("credit".equals(subject.getType()) ? R.string.credit : R.string.exam);
+                    ((TextView) container.findViewById(R.id.exam_info_exam_date)).setText(cuteDate(date, dateFormatAppend));
+                    TextView placeView = container.findViewById(R.id.exam_info_exam_place);
                     if (!place.isEmpty()) {
-                        exam_info_exam_place.setText(place);
-                        exam_info_exam_place.setVisibility(View.VISIBLE);
+                        placeView.setText(place);
+                        placeView.setVisibility(View.VISIBLE);
                     } else {
-                        exam_info_exam_place.setVisibility(View.GONE);
+                        placeView.setVisibility(View.GONE);
                     }
                     isExamExists = true;
                 }
@@ -332,68 +252,61 @@ public class ScheduleExamsRVA extends RVA {
             log.exception(e);
         }
     }
-    private void bindUpdateTime(View container, Item item) {
+    private void bindUpdateTime(View container, Item<RVASingleValue> item) {
         try {
-            final String text = JsonUtils.getString(item.data, "text");
-            ((TextView) container.findViewById(R.id.update_time)).setText(text != null && !text.isEmpty() ? text : Static.GLITCH);
+            ((TextView) container.findViewById(R.id.update_time)).setText(StringUtils.isNotBlank(item.data.getValue()) ? item.data.getValue() : Static.GLITCH);
         } catch (Exception e) {
             log.exception(e);
         }
     }
-    private void bindNoExams(View container, Item item) {
+    private void bindNoExams(View container) {
         try {
             String info = "";
             Calendar calendar = time.getCalendar();
             int month = calendar.get(Calendar.MONTH);
             int day = calendar.get(Calendar.DAY_OF_MONTH);
             if ((month >= Calendar.SEPTEMBER && (month <= Calendar.DECEMBER && day < 20)) || (month >= Calendar.FEBRUARY && (month <= Calendar.MAY && day < 20))) {
-                info = "\n" + activity.getString(R.string.no_exams_info);
+                info = "\n" + context.getString(R.string.no_exams_info);
             }
-            ((TextView) container.findViewById(R.id.ntd_text)).setText((mode == 0 ? activity.getText(R.string.no_exams) : activity.getText(R.string.no_credits)) + info);
+            ((TextView) container.findViewById(R.id.ntd_text)).setText((mode == 0 ? context.getText(R.string.no_exams) : context.getText(R.string.no_credits)) + info);
         } catch (Exception e) {
             log.exception(e);
         }
     }
-    private void bindPickerHeader(View container, Item item) {
+    private void bindPickerHeader(View container, Item<RVASingleValue> item) {
         try {
-            String query = item.data.getString("query");
+            String query = item.data.getValue();
             String text;
             if (query == null || query.isEmpty()) {
-                text = activity.getString(R.string.choose_teacher) + ":";
+                text = context.getString(R.string.choose_teacher) + ":";
             } else {
-                text = activity.getString(R.string.on_search_for) + " \"" + query + "\" " + activity.getString(R.string.teachers_found) + ":";
+                text = context.getString(R.string.on_search_for) + " \"" + query + "\" " + context.getString(R.string.teachers_found) + ":";
             }
             ((TextView) container.findViewById(R.id.teacher_picker_header)).setText(text);
         } catch (Exception e) {
             log.exception(e);
         }
     }
-    private void bindPickerItem(View container, Item item) {
+    private void bindPickerItem(View container, Item<STeacher> item) {
         try {
-            final String pid = item.data.getString("pid");
-            String teacher = item.data.getString("person");
-            String post = item.data.getString("post");
-            if (post != null && !post.isEmpty()) {
-                teacher += " (" + post + ")";
+            String teacher = item.data.getPerson();
+            if (StringUtils.isNotBlank(item.data.getPost())) {
+                teacher += " (" + item.data.getPost() + ")";
             }
             ((TextView) container.findViewById(R.id.teacher_picker_title)).setText(teacher);
-            container.findViewById(R.id.teacher_picker_item).setOnClickListener(view -> {
-                if (pid != null && !pid.isEmpty()) {
-                    callback.call(pid);
-                }
-            });
+            tryRegisterClickListener(container, R.id.teacher_picker_item, new RVAExams(item.data));
         } catch (Exception e) {
             log.exception(e);
         }
     }
-    private void bindPickerNoTeachers(View container, Item item) {
+    private void bindPickerNoTeachers(View container, Item<RVASingleValue> item) {
         try {
-            String query = item.data.getString("query");
+            String query = item.data.getValue();
             String text;
             if (query == null || query.isEmpty()) {
-                text = activity.getString(R.string.no_teachers);
+                text = context.getString(R.string.no_teachers);
             } else {
-                text = activity.getString(R.string.on_search_for) + " \"" + query + "\" " + activity.getString(R.string.no_teachers).toLowerCase();
+                text = context.getString(R.string.on_search_for) + " \"" + query + "\" " + context.getString(R.string.no_teachers).toLowerCase();
             }
             ((TextView) container.findViewById(R.id.ntd_text)).setText(text);
         } catch (Exception e) {
@@ -401,195 +314,50 @@ public class ScheduleExamsRVA extends RVA {
         }
     }
 
-    private void showOptionsMenu(View anchor) {
-        thread.run(() -> {
-            final String cacheToken = query == null ? null : query.toLowerCase();
-            final boolean isCached = cacheToken != null && !storage.get(activity, Storage.CACHE, Storage.GLOBAL, "schedule_exams#lessons#" + cacheToken, "").isEmpty();
-            thread.runOnUI(() -> {
-                try {
-                    final PopupMenu popup = new PopupMenu(activity, anchor);
-                    final Menu menu = popup.getMenu();
-                    popup.getMenuInflater().inflate(R.menu.schedule_exams, menu);
-                    menu.findItem(isCached ? R.id.add_to_cache : R.id.remove_from_cache).setVisible(false);
-                    popup.setOnMenuItemClickListener(menuItem -> {
-                        optionsMenuClicked(menuItem, cacheToken);
-                        return false;
-                    });
-                    popup.show();
-                } catch (Exception e) {
-                    log.exception(e);
-                    notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
-                }
-            });
-        });
-    }
-    private void optionsMenuClicked(MenuItem item, String cacheToken) {
-        log.v(TAG, "menu | popup item | clicked | " + item.getTitle().toString());
-        switch (item.getItemId()) {
-            case R.id.add_to_cache:
-            case R.id.remove_from_cache: {
-                toggleCache(cacheToken);
-                break;
-            }
-            case R.id.share_schedule: {
-                shareSchedule();
-                break;
-            }
-            case R.id.open_settings: {
-                activity.openActivityOrFragment(ConnectedActivity.TYPE.STACKABLE, SettingsScheduleExamsFragment.class, null);
-                break;
-            }
-        }
-    }
-    private void toggleCache(String cacheToken) {
-        thread.run(() -> {
-            try {
-                if (cacheToken == null) {
-                    notificationMessage.snackBar(activity, activity.getString(R.string.cache_failed));
-                    return;
-                }
-                if (storage.exists(activity, Storage.CACHE, Storage.GLOBAL, "schedule_exams#lessons#" + cacheToken)) {
-                    if (storage.delete(activity, Storage.CACHE, Storage.GLOBAL, "schedule_exams#lessons#" + cacheToken)) {
-                        notificationMessage.snackBar(activity, activity.getString(R.string.cache_false));
-                    } else {
-                        notificationMessage.snackBar(activity, activity.getString(R.string.cache_failed));
-                    }
-                } else {
-                    if (data == null) {
-                        notificationMessage.snackBar(activity, activity.getString(R.string.cache_failed));
-                        return;
-                    }
-                    if (storage.put(activity, Storage.CACHE, Storage.GLOBAL, "schedule_exams#lessons#" + cacheToken, data.toString())) {
-                        notificationMessage.snackBar(activity, activity.getString(R.string.cache_true));
-                    } else {
-                        notificationMessage.snackBar(activity, activity.getString(R.string.cache_failed));
-                    }
-                }
-            } catch (Exception e) {
-                log.exception(e);
-                notificationMessage.snackBar(activity, activity.getString(R.string.cache_failed));
-            }
-        });
-    }
-    private void shareSchedule() {
-        thread.run(() -> {
-            StringBuilder sb = new StringBuilder();
-            sb.append(scheduleExams.getScheduleHeader(activity, JsonUtils.getString(data, "title"), JsonUtils.getString(data, "type")));
-            sb.append("\n");
-            JSONArray schedule = JsonUtils.getJsonArray(data, "schedule");
-            if (schedule == null || schedule.length() == 0) {
-                sb.append(activity.getString(R.string.no_exams));
-            } else {
-                String type = JsonUtils.getString(data, "type", "");
-                int examsThisTerm = 0;
-                for (int i = 0; i < schedule.length(); i++) {
-                    JSONObject exam = JsonUtils.getJsonObject(schedule, i);
-                    if (exam == null) {
-                        continue;
-                    }
-                    examsThisTerm++;
-                    String subject = JsonUtils.getString(exam, "subject", Static.GLITCH);
-                    String examOrAdvice = JsonUtils.getString(exam, "type", "exam");
-                    String group = JsonUtils.getString(exam, "group", "");
-                    String teacher = JsonUtils.getString(exam, "teacher", "");
-                    JSONObject ex = JsonUtils.getJsonObject(exam, "exam");
-                    JSONObject advice = JsonUtils.getJsonObject(exam, "advice");
-                    String desc = null;
-                    switch (type) {
-                        case "group": desc = teacher; break;
-                        case "teacher": desc = group; break;
-                    }
-                    sb.append("\n");
-                    sb.append(subject);
-                    if (StringUtils.isNotBlank(desc)) {
-                        sb.append(" (").append(desc).append(")");
-                    }
-                    sb.append("\n");
-                    if (advice != null && StringUtils.isNotBlank(JsonUtils.getString(advice, "date"))) {
-                        shareScheduleAppendEvent(sb, advice, activity.getString(R.string.consult));
-                    }
-                    if (ex != null && StringUtils.isNotBlank(JsonUtils.getString(ex, "date"))) {
-                        shareScheduleAppendEvent(sb, ex, activity.getString("credit".equals(examOrAdvice) ? R.string.credit : R.string.exam));
-                    }
-                }
-                if (examsThisTerm == 0) {
-                    sb.append(activity.getString(R.string.no_exams));
-                }
-            }
-            eventBus.fire(new ShareTextEvent(sb.toString().trim(), "schedule_exams_plain"));
-        });
-    }
-    private void shareScheduleAppendEvent(StringBuilder sb, JSONObject event, String title) {
-        String date = JsonUtils.getString(event, "date");
-        String time = JsonUtils.getString(event, "time");
-        String room = JsonUtils.getString(event, "room");
-        String building = JsonUtils.getString(event, "building");
-        if (StringUtils.isNotBlank(building)) {
-            room = ((room == null ? "" : room) + " " + building).trim();
-        }
-        if (StringUtils.isNotBlank(time)) {
-            date = cuteDate(activity, storagePref, date + " " + time, " HH:mm");
-        } else {
-            date = cuteDate(activity, storagePref, date, "");
-        }
-        sb.append(title);
-        sb.append(": ");
-        sb.append(date);
-        if (StringUtils.isNotBlank(room)) {
-            sb.append(", ");
-            sb.append(room);
-        }
-        sb.append("\n");
-    }
-
-    private ArrayList<Item> json2dataset(ConnectedActivity activity, JSONObject json) throws JSONException {
+    private ArrayList<Item> entity2dataset(SExams schedule) {
         final ArrayList<Item> dataset = new ArrayList<>();
         // check
-        if (!ScheduleExams.TYPE.equals(json.getString("schedule_type"))) {
+        if (!ScheduleExams.TYPE.equals(schedule.getScheduleType())) {
             return dataset;
         }
-        if (type.equals("teachers")) {
-            // teacher picker mode
-            final JSONArray schedule = json.getJSONArray("schedule");
-            if (schedule.length() > 0) {
-                dataset.add(new Item(TYPE_PICKER_HEADER, new JSONObject().put("query", query)));
-                for (int i = 0; i < schedule.length(); i++) {
-                    final JSONObject teacher = schedule.getJSONObject(i);
-                    dataset.add(new Item(TYPE_PICKER_ITEM, teacher));
+        // teacher picker mode
+        if ("teachers".equals(schedule.getType())) {
+            if (schedule.getTeachers() != null && CollectionUtils.isNotEmpty(schedule.getTeachers().getTeachers())) {
+                dataset.add(new Item<>(TYPE_PICKER_HEADER, new RVASingleValue(data.getQuery())));
+                for (STeacher teacher : schedule.getTeachers().getTeachers()) {
+                    dataset.add(new Item<>(TYPE_PICKER_ITEM, teacher));
                 }
             } else {
-                dataset.add(new Item(TYPE_PICKER_NO_TEACHERS, new JSONObject().put("query", query)));
+                dataset.add(new Item<>(TYPE_PICKER_NO_TEACHERS, new RVASingleValue(data.getQuery())));
             }
-        } else {
-            // regular schedule mode
-            // header
-            dataset.add(new Item(TYPE_HEADER, new JSONObject()
-                    .put("title", scheduleExams.getScheduleHeader(activity, json.getString("title"), json.getString("type")))
-                    .put("week", scheduleExams.getScheduleWeek(activity, -1))
-            ));
-            // schedule
-            final JSONArray exams = json.getJSONArray("schedule");
-            int exams_count = 0;
-            for (int i = 0; i < exams.length(); i++) {
-                final JSONObject exam = exams.getJSONObject(i);
-                dataset.add(new Item(TYPE_EXAM, exam));
-                exams_count++;
-            }
-            if (exams_count == 0) {
-                dataset.add(new Item(TYPE_NO_EXAMS, null));
-            } else {
-                // update time
-                dataset.add(new Item(TYPE_UPDATE_TIME, new JSONObject().put("text", activity.getString(R.string.update_date) + " " + time.getUpdateTime(activity, json.getLong("timestamp")))));
-            }
+            return dataset;
         }
-        // that's all
+        // regular schedule mode
+        // header
+        dataset.add(new Item<>(TYPE_HEADER, new RVADualValue(
+                scheduleExams.getScheduleHeader(schedule.getTitle(), schedule.getType()),
+                scheduleExams.getScheduleWeek(-1)
+        )));
+        // schedule
+        int exams_count = 0;
+        for (SSubject subject : schedule.getSchedule()) {
+            dataset.add(new Item<>(TYPE_EXAM, subject));
+            exams_count++;
+        }
+        if (exams_count == 0) {
+            dataset.add(new Item(TYPE_NO_EXAMS));
+        } else {
+            // update time
+            dataset.add(new Item<>(TYPE_UPDATE_TIME, new RVASingleValue(context.getString(R.string.update_date) + " " + time.getUpdateTime(context, schedule.getTimestamp()))));
+        }
+        // that's all folks
         return dataset;
     }
 
-    protected String cuteDate(Context context, StoragePref storagePref, String date, String date_format_append) {
+    private String cuteDate(String date, String date_format_append) {
         try {
             String date_format = "dd.MM.yyyy" + date_format_append;
-            if (isValidFormat(context, storagePref, date, date_format)) {
+            if (isValidFormat(date, date_format)) {
                 date = textUtils.cuteDate(context, storagePref, date_format, date);
             } else {
                 Matcher m = patternBrokenDate.matcher(date);
@@ -611,14 +379,15 @@ public class ScheduleExamsRVA extends RVA {
                     date = m.group(1) + d + m.group(3);
                 }
                 date_format = "dd.MM" + date_format_append;
-                if (isValidFormat(context, storagePref, date, date_format)) {
-                    date = cuteDateWOYear(context, storagePref, date_format, date);
+                if (isValidFormat(date, date_format)) {
+                    date = cuteDateWOYear(date_format, date);
                 }
             }
         } catch (Exception ignore) {/* ignore */}
         return date;
     }
-    protected String cuteDateWOYear(Context context, StoragePref storagePref, String date_format, String date_string) throws Exception {
+
+    private String cuteDateWOYear(String date_format, String date_string) throws Exception {
         SimpleDateFormat format_input = new SimpleDateFormat(date_format, textUtils.getLocale(context, storagePref));
         Calendar date = time.getCalendar();
         date.setTime(format_input.parse(date_string));
@@ -632,7 +401,8 @@ public class ScheduleExamsRVA extends RVA {
                 .append(textUtils.ldgZero(date.get(Calendar.MINUTE)))
                 .toString();
     }
-    protected boolean isValidFormat(Context context, StoragePref storagePref, String value, String format) {
+
+    private boolean isValidFormat(String value, String format) {
         try {
             SimpleDateFormat sdf = new SimpleDateFormat(format, textUtils.getLocale(context, storagePref));
             Date date = sdf.parse(value);

@@ -28,6 +28,15 @@ import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.fragment.ConnectedFragment;
 import com.bukhmastov.cdoitmo.fragment.presenter.HomeScreenInteractionFragmentPresenter;
+import com.bukhmastov.cdoitmo.function.BiConsumer;
+import com.bukhmastov.cdoitmo.function.ThrowingConsumer;
+import com.bukhmastov.cdoitmo.function.ThrowingRunnable;
+import com.bukhmastov.cdoitmo.model.entity.ShortcutQuery;
+import com.bukhmastov.cdoitmo.model.schedule.ScheduleJsonEntity;
+import com.bukhmastov.cdoitmo.model.schedule.attestations.SAttestations;
+import com.bukhmastov.cdoitmo.model.schedule.exams.SExams;
+import com.bukhmastov.cdoitmo.model.schedule.lessons.SLessons;
+import com.bukhmastov.cdoitmo.model.schedule.teachers.STeacher;
 import com.bukhmastov.cdoitmo.network.model.Client;
 import com.bukhmastov.cdoitmo.object.schedule.Schedule;
 import com.bukhmastov.cdoitmo.object.schedule.ScheduleAttestations;
@@ -38,9 +47,8 @@ import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.NotificationMessage;
 import com.bukhmastov.cdoitmo.util.Storage;
 import com.bukhmastov.cdoitmo.util.Thread;
-
-import org.json.JSONArray;
-import org.json.JSONObject;
+import com.bukhmastov.cdoitmo.util.singleton.CollectionUtils;
+import com.bukhmastov.cdoitmo.util.singleton.StringUtils;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -56,6 +64,9 @@ public class HomeScreenInteractionFragmentPresenterImpl implements HomeScreenInt
     private ConnectedActivity activity = null;
     private ShortcutReceiver receiver = new ShortcutReceiver();
     private Client.Request requestHandle = null;
+    private AutoCompleteTextView searchTextView = null;
+    private TeacherPickerAdapter teacherPickerAdapter = null;
+    private AlertDialog alertDialog = null;
 
     @Inject
     Log log;
@@ -73,10 +84,6 @@ public class HomeScreenInteractionFragmentPresenterImpl implements HomeScreenInt
     NotificationMessage notificationMessage;
     @Inject
     FirebaseAnalyticsProvider firebaseAnalyticsProvider;
-
-    private interface Result {
-        void done(String title, String query);
-    }
 
     @Retention(RetentionPolicy.SOURCE)
     @StringDef({PICK, WIDGETS, APPS, SHORTCUTS})
@@ -188,9 +195,9 @@ public class HomeScreenInteractionFragmentPresenterImpl implements HomeScreenInt
         initPicker(true);
     }
 
-    private void route(final @MODE String mode) {
+    private void route(@MODE String mode) {
         thread.run(() -> {
-            log.v(TAG, "route | mode=" + mode);
+            log.v(TAG, "route | mode=", mode);
             switch (mode) {
                 case PICK: initPicker(false); break;
                 case WIDGETS: initWidgets(); break;
@@ -200,182 +207,174 @@ public class HomeScreenInteractionFragmentPresenterImpl implements HomeScreenInt
         });
     }
 
-    private void initPicker(final boolean first_launch) {
+    private void initPicker(boolean isFirstLaunch) {
         thread.runOnUI(() -> {
-            log.v(TAG, "initPicker | first_launch=" + (first_launch ? "true" : "false"));
-            try {
-                // Переключаем режим отображения
-                toggleMode(false, !first_launch);
-                // Инициализируем кнопки
-                ViewGroup menu_widgets = fragment.container().findViewById(R.id.menu_widgets);
-                ViewGroup menu_apps = fragment.container().findViewById(R.id.menu_apps);
-                ViewGroup menu_shortcuts = fragment.container().findViewById(R.id.menu_shortcuts);
-                if (menu_widgets != null) {
-                    menu_widgets.setOnClickListener(view -> route(WIDGETS));
-                }
-                if (menu_apps != null) {
-                    menu_apps.setOnClickListener(view -> route(APPS));
-                }
-                if (menu_shortcuts != null) {
-                    menu_shortcuts.setOnClickListener(view -> route(SHORTCUTS));
-                }
-            } catch (Exception e) {
-                log.exception(e);
-                notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
+            log.v(TAG, "initPicker | isFirstLaunch=", isFirstLaunch);
+            // Переключаем режим отображения
+            toggleMode(false, !isFirstLaunch);
+            // Инициализируем кнопки
+            ViewGroup widgets = fragment.container().findViewById(R.id.menu_widgets);
+            ViewGroup apps = fragment.container().findViewById(R.id.menu_apps);
+            ViewGroup shortcuts = fragment.container().findViewById(R.id.menu_shortcuts);
+            if (widgets != null) {
+                widgets.setOnClickListener(view -> route(WIDGETS));
             }
+            if (apps != null) {
+                apps.setOnClickListener(view -> route(APPS));
+            }
+            if (shortcuts != null) {
+                shortcuts.setOnClickListener(view -> route(SHORTCUTS));
+            }
+        }, throwable -> {
+            log.exception(throwable);
+            notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
         });
     }
     
     private void initWidgets() {
         thread.run(() -> {
             log.v(TAG, "initWidgets");
-            try {
-                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-                    AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(activity);
-                    if (appWidgetManager.isRequestPinAppWidgetSupported()) {
-                        AppWidgetProviderInfo appWidgetProviderInfo = new AppWidgetProviderInfo();
-                        ComponentName componentName = appWidgetProviderInfo.provider;
-                        if (!appWidgetManager.requestPinAppWidget(componentName, null, null)) {
-                            showWidgetsHolder();
-                        }
-                    } else {
-                        showWidgetsHolder();
-                    }
-                } else {
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(activity);
+                if (!appWidgetManager.isRequestPinAppWidgetSupported()) {
+                    showWidgetsHolder();
+                    return;
+                }
+                AppWidgetProviderInfo appWidgetProviderInfo = new AppWidgetProviderInfo();
+                ComponentName componentName = appWidgetProviderInfo.provider;
+                if (!appWidgetManager.requestPinAppWidget(componentName, null, null)) {
                     showWidgetsHolder();
                 }
-            } catch (Exception e) {
-                log.exception(e);
-                notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
+            } else {
+                showWidgetsHolder();
             }
+        }, throwable -> {
+            log.exception(throwable);
+            notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
         });
     }
     
     private void initApps() {
         thread.runOnUI(() -> {
             log.v(TAG, "initApps");
-            try {
-                // Переключаем режим отображения
-                toggleMode(true);
-                // Устанавливаем заголовок
-                ImageView header_icon = fragment.container().findViewById(R.id.header_icon);
-                TextView header_text = fragment.container().findViewById(R.id.header_text);
-                ImageView header_close = fragment.container().findViewById(R.id.header_close);
-                if (header_icon != null) {
-                    header_icon.setImageResource(R.drawable.ic_extension);
-                }
-                if (header_text != null) {
-                    header_text.setText(R.string.homescreen_apps);
-                }
-                if (header_close != null) {
-                    header_close.setOnClickListener(view -> route(PICK));
-                }
-                // Отображаем приложения
-                ViewGroup content = fragment.container().findViewById(R.id.content);
-                if (content != null) {
-                    content.removeAllViews();
-                    for (final App app : apps) {
-                        ViewGroup item = (ViewGroup) fragment.inflate(R.layout.layout_homescreen_apps_item);
-                        ((ImageView) item.findViewById(R.id.image)).setImageResource(app.image);
-                        ((TextView) item.findViewById(R.id.title)).setText(app.title);
-                        ((TextView) item.findViewById(R.id.desc)).setText(app.desc);
-                        ((TextView) item.findViewById(R.id.desc_extra)).setText(app.desc_extra);
-                        item.setOnClickListener(view -> thread.run(() -> {
-                            String group = storage.get(activity, Storage.PERMANENT, Storage.USER, "user#group", "");
-                            switch (app.id) {
-                                case "time_remaining_widget": {
-                                    getScheduleLessons(group.isEmpty() ? null : group, (title, query) -> {
-                                        try {
-                                            addShortcut(
-                                                    app.id,
-                                                    new JSONObject().put("label", title).put("query", query).toString(),
-                                                    "regular"
-                                            );
-                                        } catch (Exception e) {
-                                            log.exception(e);
-                                            notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
-                                        }
-                                    });
-                                    break;
-                                }
-                                case "days_remaining_widget": {
-                                    getScheduleExams(group.isEmpty() ? null : group, (title, query) -> {
-                                        try {
-                                            addShortcut(
-                                                    app.id,
-                                                    new JSONObject().put("label", title).put("query", query).toString(),
-                                                    "regular"
-                                            );
-                                        } catch (Exception e) {
-                                            log.exception(e);
-                                            notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
-                                        }
-                                    });
-                                    break;
-                                }
-                            }
-                        }));
-                        content.addView(item);
-                    }
-                }
-            } catch (Exception e) {
-                log.exception(e);
-                notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
+            // Переключаем режим отображения
+            toggleMode(true);
+            // Устанавливаем заголовок
+            ImageView headerIcon = fragment.container().findViewById(R.id.header_icon);
+            TextView headerText = fragment.container().findViewById(R.id.header_text);
+            ImageView headerClose = fragment.container().findViewById(R.id.header_close);
+            if (headerIcon != null) {
+                headerIcon.setImageResource(R.drawable.ic_extension);
             }
+            if (headerText != null) {
+                headerText.setText(R.string.homescreen_apps);
+            }
+            if (headerClose != null) {
+                headerClose.setOnClickListener(view -> route(PICK));
+            }
+            // Отображаем приложения
+            ViewGroup content = fragment.container().findViewById(R.id.content);
+            if (content == null) {
+                return;
+            }
+            content.removeAllViews();
+            for (App app : apps) {
+                ViewGroup item = (ViewGroup) fragment.inflate(R.layout.layout_homescreen_apps_item);
+                ((ImageView) item.findViewById(R.id.image)).setImageResource(app.image);
+                ((TextView) item.findViewById(R.id.title)).setText(app.title);
+                ((TextView) item.findViewById(R.id.desc)).setText(app.desc);
+                ((TextView) item.findViewById(R.id.desc_extra)).setText(app.desc_extra);
+                item.setOnClickListener(view -> thread.run(() -> {
+                    String group = storage.get(activity, Storage.PERMANENT, Storage.USER, "user#group", "");
+                    switch (app.id) {
+                        case "time_remaining_widget": {
+                            getScheduleLessons(group.isEmpty() ? null : group, (title, query) -> {
+                                thread.run(() -> {
+                                    addShortcut(
+                                            app.id, "regular",
+                                            new ShortcutQuery(query, title).toJsonString()
+                                    );
+                                }, throwable -> {
+                                    log.exception(throwable);
+                                    notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                                });
+                            });
+                            break;
+                        }
+                        case "days_remaining_widget": {
+                            getScheduleExams(group.isEmpty() ? null : group, (title, query) -> {
+                                thread.run(() -> {
+                                    addShortcut(
+                                            app.id, "regular",
+                                            new ShortcutQuery(query, title).toJsonString()
+                                    );
+                                }, throwable -> {
+                                    log.exception(throwable);
+                                    notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                                });
+                            });
+                            break;
+                        }
+                    }
+                }));
+                content.addView(item);
+            }
+        }, throwable -> {
+            log.exception(throwable);
+            notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
         });
     }
     
     private void initShortcuts() {
         thread.runOnUI(() -> {
             log.v(TAG, "initShortcuts");
-            try {
-                // Переключаем режим отображения
-                toggleMode(true);
-                // Устанавливаем заголовок
-                ImageView header_icon = fragment.container().findViewById(R.id.header_icon);
-                TextView header_text = fragment.container().findViewById(R.id.header_text);
-                ImageView header_close = fragment.container().findViewById(R.id.header_close);
-                if (header_icon != null) {
-                    header_icon.setImageResource(R.drawable.ic_shortcut);
-                }
-                if (header_text != null) {
-                    header_text.setText(R.string.homescreen_shortcuts);
-                }
-                if (header_close != null) {
-                    header_close.setOnClickListener(view -> route(PICK));
-                }
-                // Отображаем ярлыки
-                ViewGroup content = fragment.container().findViewById(R.id.content);
-                if (content != null) {
-                    content.removeAllViews();
-                    for (final Shortcut shortcut : shortcuts) {
-                        ViewGroup item = (ViewGroup) fragment.inflate(R.layout.layout_homescreen_shortcuts_item);
-                        ((ImageView) item.findViewById(R.id.image)).setImageResource(shortcut.image);
-                        ((TextView) item.findViewById(R.id.title)).setText(shortcut.title);
-                        if (shortcut.desc != null) {
-                            ((TextView) item.findViewById(R.id.desc)).setText(shortcut.desc);
-                        } else {
-                            try {
-                                View view = item.findViewById(R.id.desc);
-                                ((ViewGroup) view.getParent()).removeView(view);
-                            } catch (Throwable e) {
-                                log.exception(e);
-                            }
-                        }
-                        item.setOnClickListener(view -> shortcutClicked(shortcut, "regular"));
-                        if ("offline".equals(shortcut.id) || ("room101".equals(shortcut.id) && "create".equals(shortcut.meta))) {
-                            item.findViewById(R.id.separator).setVisibility(View.GONE);
-                            item.findViewById(R.id.offline).setVisibility(View.GONE);
-                        } else {
-                            item.findViewById(R.id.offline).setOnClickListener(view -> shortcutClicked(shortcut, "offline"));
-                        }
-                        content.addView(item);
+            // Переключаем режим отображения
+            toggleMode(true);
+            // Устанавливаем заголовок
+            ImageView headerIcon = fragment.container().findViewById(R.id.header_icon);
+            TextView headerText = fragment.container().findViewById(R.id.header_text);
+            ImageView headerClose = fragment.container().findViewById(R.id.header_close);
+            if (headerIcon != null) {
+                headerIcon.setImageResource(R.drawable.ic_shortcut);
+            }
+            if (headerText != null) {
+                headerText.setText(R.string.homescreen_shortcuts);
+            }
+            if (headerClose != null) {
+                headerClose.setOnClickListener(view -> route(PICK));
+            }
+            // Отображаем ярлыки
+            ViewGroup content = fragment.container().findViewById(R.id.content);
+            if (content == null) {
+                return;
+            }
+            content.removeAllViews();
+            for (Shortcut shortcut : shortcuts) {
+                ViewGroup item = (ViewGroup) fragment.inflate(R.layout.layout_homescreen_shortcuts_item);
+                ((ImageView) item.findViewById(R.id.image)).setImageResource(shortcut.image);
+                ((TextView) item.findViewById(R.id.title)).setText(shortcut.title);
+                if (shortcut.desc != null) {
+                    ((TextView) item.findViewById(R.id.desc)).setText(shortcut.desc);
+                } else {
+                    try {
+                        View view = item.findViewById(R.id.desc);
+                        ((ViewGroup) view.getParent()).removeView(view);
+                    } catch (Throwable e) {
+                        log.exception(e);
                     }
                 }
-            } catch (Exception e) {
-                log.exception(e);
-                notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                item.setOnClickListener(view -> shortcutClicked(shortcut, "regular"));
+                if ("offline".equals(shortcut.id) || ("room101".equals(shortcut.id) && "create".equals(shortcut.meta))) {
+                    item.findViewById(R.id.separator).setVisibility(View.GONE);
+                    item.findViewById(R.id.offline).setVisibility(View.GONE);
+                } else {
+                    item.findViewById(R.id.offline).setOnClickListener(view -> shortcutClicked(shortcut, "offline"));
+                }
+                content.addView(item);
             }
+        }, throwable -> {
+            log.exception(throwable);
+            notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
         });
     }
 
@@ -386,55 +385,52 @@ public class HomeScreenInteractionFragmentPresenterImpl implements HomeScreenInt
             }
             switch (shortcut.id) {
                 case "offline": case "tab": case "room101": {
-                    addShortcut(shortcut.id, shortcut.meta, mode);
+                    addShortcut(shortcut.id, mode, shortcut.meta);
                     break;
                 }
                 case "schedule_lessons":
                 case "schedule_lessons_offline": {
                     String group = storage.get(activity, Storage.PERMANENT, Storage.USER, "user#group", "");
                     getScheduleLessons(group.isEmpty() ? null : group, (title, query) -> {
-                        try {
+                        thread.run(() -> {
                             addShortcut(
-                                    shortcut.id,
-                                    new JSONObject().put("label", title).put("query", query).toString(),
-                                    mode
+                                    shortcut.id, mode,
+                                    new ShortcutQuery(query, title).toJsonString()
                             );
-                        } catch (Exception e) {
-                            log.exception(e);
+                        }, throwable -> {
+                            log.exception(throwable);
                             notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
-                        }
+                        });
                     });
                     break;
                 }
                 case "schedule_exams": {
                     String group = storage.get(activity, Storage.PERMANENT, Storage.USER, "user#group", "");
                     getScheduleExams(group.isEmpty() ? null : group, (title, query) -> {
-                        try {
+                        thread.run(() -> {
                             addShortcut(
-                                    shortcut.id,
-                                    new JSONObject().put("label", title).put("query", query).toString(),
-                                    mode
+                                    shortcut.id, mode,
+                                    new ShortcutQuery(query, title).toJsonString()
                             );
-                        } catch (Exception e) {
-                            log.exception(e);
+                        }, throwable -> {
+                            log.exception(throwable);
                             notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
-                        }
+                        });
                     });
                     break;
                 }
                 case "schedule_attestations": {
                     String group = storage.get(activity, Storage.PERMANENT, Storage.USER, "user#group", "");
                     getScheduleAttestations(group.isEmpty() ? null : group, (title, query) -> {
-                        try {
+                        thread.run(() -> {
                             addShortcut(
-                                    shortcut.id,
-                                    new JSONObject().put("label", title).put("query", query).toString(),
-                                    mode
+                                    shortcut.id, mode,
+                                    new ShortcutQuery(query, title).toJsonString()
                             );
-                        } catch (Exception e) {
-                            log.exception(e);
+                        }, throwable -> {
+                            log.exception(throwable);
                             notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
-                        }
+                        });
                     });
                     break;
                 }
@@ -455,18 +451,17 @@ public class HomeScreenInteractionFragmentPresenterImpl implements HomeScreenInt
                     arrayAdapter.addAll(labels);
                     new AlertDialog.Builder(activity)
                             .setAdapter(arrayAdapter, (dialogInterface, position) -> {
-                                try {
+                                thread.run(() -> {
                                     String label = labels.get(position);
                                     String query = values.get(position);
                                     addShortcut(
-                                            "university",
-                                            new JSONObject().put("label", label).put("query", query).toString(),
-                                            mode
+                                            "university", mode,
+                                            new ShortcutQuery(query, label).toJsonString()
                                     );
-                                } catch (Exception e) {
-                                    log.exception(e);
+                                }, throwable -> {
+                                    log.exception(throwable);
                                     notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
-                                }
+                                });
                             })
                             .setNegativeButton(R.string.do_cancel, null)
                             .create().show();
@@ -475,13 +470,13 @@ public class HomeScreenInteractionFragmentPresenterImpl implements HomeScreenInt
             }
         });
     }
-    
+
     private void toggleMode(final boolean hide) {
         toggleMode(hide, true);
     }
     
     private void toggleMode(final boolean hide, final boolean animate) {
-        thread.runOnUI(new Runnable() {
+        thread.runOnUI(new ThrowingRunnable() {
             @Override
             public void run() {
                 log.v(TAG, "toggleMode | hide=" + (hide ? "true" : "false") + " | animate=" + (animate ? "true" : "false"));
@@ -580,200 +575,274 @@ public class HomeScreenInteractionFragmentPresenterImpl implements HomeScreenInt
         });
     }
 
-    private void getScheduleLessons(final String scope, final Result callback) {
-        getSchedule(scope, callback, (context, query, handler) -> scheduleLessons.search(context, handler, query));
-    }
-    
-    private void getScheduleExams(final String scope, final Result callback) {
-        getSchedule(scope, callback, (context, query, handler) -> scheduleExams.search(context, handler, query));
-    }
-    
-    private void getScheduleAttestations(final String scope, final Result callback) {
-        getSchedule(scope, callback, (context, query, handler) -> scheduleAttestations.search(context, handler, query));
-    }
-    
-    private void getSchedule(final String scope, final Result callback, final Schedule.ScheduleSearchProvider scheduleSearchProvider) {
-        thread.run(() -> {
-            try {
-                log.v(TAG, "getSchedule | scope=" + scope);
-                final ViewGroup layout = (ViewGroup) fragment.inflate(R.layout.widget_configure_schedule_lessons_create_search);
-                final AlertDialog alertDialog = new AlertDialog.Builder(activity)
-                        .setView(layout)
-                        .setNegativeButton(R.string.do_cancel, null)
-                        .create();
-                final AutoCompleteTextView search_text_view = layout.findViewById(R.id.search_text_view);
-                final ViewGroup search_action = layout.findViewById(R.id.search_action);
-                final ViewGroup search_loading = layout.findViewById(R.id.search_loading);
-                final TeacherPickerAdapter teacherPickerAdapter = new TeacherPickerAdapter(activity, new ArrayList<>());
-                if (scope != null) {
-                    search_text_view.setText(scope);
+    private void getScheduleLessons(String scope, BiConsumer<String, String> callback) {
+        getSchedule(scope, callback, (Schedule.ScheduleSearchProvider<SLessons>) (query, handler) -> {
+            scheduleLessons.search(query, handler);
+        }, schedule -> {
+            log.v(TAG, "getScheduleLessons | onSuccess | type=", schedule.getType());
+            switch (schedule.getType()) {
+                case "group": case "room": case "teacher": {
+                    if (CollectionUtils.isEmpty(schedule.getSchedule())) {
+                        notificationMessage.toast(activity, activity.getString(R.string.schedule_not_found));
+                        return;
+                    }
+                    String query = schedule.getQuery();
+                    String title = ("room".equals(schedule.getType()) ? activity.getString(R.string.room) + " " : "") + schedule.getTitle();
+                    log.v(TAG, "getScheduleLessons | onSuccess | done | query=", query, " | title=", title);
+                    if (alertDialog.isShowing()) {
+                        alertDialog.cancel();
+                    }
+                    callback.accept(title, query);
+                    break;
                 }
-                teacherPickerAdapter.setNotifyOnChange(true);
-                search_text_view.setAdapter(teacherPickerAdapter);
-                search_text_view.addTextChangedListener(new TextWatcher() {
-                    @Override
-                    public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {}
-                    @Override
-                    public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {}
-                    @Override
-                    public void afterTextChanged(Editable editable) {
-                        thread.run(() -> {
-                            teacherPickerAdapter.clear();
-                            search_text_view.dismissDropDown();
-                        });
+                case "teachers": {
+                    teacherPickerAdapter.clear();
+                    if (schedule.getTeachers() == null || CollectionUtils.isEmpty(schedule.getTeachers().getTeachers())) {
+                        notificationMessage.toast(activity, activity.getString(R.string.no_teachers));
+                        return;
                     }
-                });
-                search_action.setOnClickListener(view -> thread.run(() -> {
-                    final String query = search_text_view.getText().toString().trim();
-                    log.v(TAG, "getSchedule | search action | clicked | query=" + query);
-                    if (!query.isEmpty()) {
-                        scheduleSearchProvider.onSearch(activity, query, new Schedule.Handler() {
-                            @Override
-                            public void onSuccess(final JSONObject json, final boolean fromCache) {
-                                log.v(TAG, "getSchedule | search action | onSuccess | json=" + (json == null ? "null" : "notnull"));
-                                thread.run(() -> {
-                                    search_loading.setVisibility(View.GONE);
-                                    search_action.setVisibility(View.VISIBLE);
-                                    if (json == null) {
-                                        notificationMessage.toast(activity, activity.getString(R.string.schedule_not_found));
-                                    } else {
-                                        try {
-                                            final String type = json.getString("type");
-                                            final String query = json.getString("query");
-                                            log.v(TAG, "getSchedule | search action | onSuccess | type=" + type);
-                                            switch (type) {
-                                                case "group": case "room": case "teacher": {
-                                                    JSONArray schedule = json.getJSONArray("schedule");
-                                                    String title = json.getString("title");
-                                                    if (type.equals("room")) {
-                                                        title = activity.getString(R.string.room) + " " + title;
-                                                    }
-                                                    log.v(TAG, "getSchedule | search action | onSuccess | done | query=" + query + " | title=" + title);
-                                                    if (schedule.length() > 0) {
-                                                        if (alertDialog.isShowing()) {
-                                                            alertDialog.cancel();
-                                                        }
-                                                        callback.done(title, query);
-                                                    } else {
-                                                        notificationMessage.toast(activity, activity.getString(R.string.schedule_not_found));
-                                                    }
-                                                    break;
-                                                }
-                                                case "teachers": {
-                                                    teacherPickerAdapter.clear();
-                                                    final JSONArray teachers = json.getJSONArray("schedule");
-                                                    log.v(TAG, "getSchedule | search action | onSuccess | type=" + type + " | length=" + teachers.length());
-                                                    if (teachers.length() == 0) {
-                                                        notificationMessage.toast(activity, activity.getString(R.string.no_teachers));
-                                                    } else if (teachers.length() == 1) {
-                                                        JSONObject teacher = teachers.getJSONObject(0);
-                                                        if (teacher != null) {
-                                                            String pid = teacher.getString("pid");
-                                                            String title = teacher.getString("person");
-                                                            log.v(TAG, "getSchedule | search action | onSuccess | done | query=" + pid + " | title=" + title);
-                                                            if (alertDialog.isShowing()) {
-                                                                alertDialog.cancel();
-                                                            }
-                                                            callback.done(title, pid);
-                                                        } else {
-                                                            notificationMessage.toast(activity, fragment.getString(R.string.something_went_wrong));
-                                                        }
-                                                    } else {
-                                                        ArrayList<JSONObject> arrayList = new ArrayList<>();
-                                                        for (int i = 0; i < teachers.length(); i++) {
-                                                            arrayList.add(teachers.getJSONObject(i));
-                                                        }
-                                                        teacherPickerAdapter.addAll(arrayList);
-                                                        teacherPickerAdapter.addTeachers(arrayList);
-                                                        if (arrayList.size() > 0) {
-                                                            search_text_view.showDropDown();
-                                                        }
-                                                    }
-                                                    break;
-                                                }
-                                                default: {
-                                                    notificationMessage.toast(activity, activity.getString(R.string.something_went_wrong));
-                                                    break;
-                                                }
-                                            }
-                                        } catch (Exception e) {
-                                            log.exception(e);
-                                            notificationMessage.toast(activity, activity.getString(R.string.something_went_wrong));
-                                        }
-                                    }
-                                });
-                            }
-                            @Override
-                            public void onFailure(int state) {
-                                this.onFailure(0, null, state);
-                            }
-                            @Override
-                            public void onFailure(final int statusCode, final Client.Headers headers, final int state) {
-                                thread.run(() -> {
-                                    log.v(TAG, "getSchedule | search action | onFailure | state=" + state);
-                                    search_loading.setVisibility(View.GONE);
-                                    search_action.setVisibility(View.VISIBLE);
-                                    notificationMessage.toast(activity, state == Client.FAILED_SERVER_ERROR ? Client.getFailureMessage(activity, statusCode) : activity.getString(R.string.schedule_not_found));
-                                });
-                            }
-                            @Override
-                            public void onProgress(final int state) {
-                                thread.run(() -> {
-                                    log.v(TAG, "getSchedule | search action | onProgress | state=" + state);
-                                    search_loading.setVisibility(View.VISIBLE);
-                                    search_action.setVisibility(View.GONE);
-                                });
-                            }
-                            @Override
-                            public void onNewRequest(Client.Request request) {
-                                requestHandle = request;
-                            }
-                            @Override
-                            public void onCancelRequest() {
-                                if (requestHandle != null) {
-                                    requestHandle.cancel();
-                                }
-                            }
-                        });
-                    }
-                }));
-                search_text_view.setOnItemClickListener((parent, view, position, id) -> thread.run(() -> {
-                    try {
-                        log.v(TAG, "getSchedule | search list selected");
-                        final JSONObject teacher = teacherPickerAdapter.getItem(position);
-                        if (teacher != null) {
-                            final String query = teacher.getString("pid");
-                            final String title = teacher.getString("person");
-                            log.v(TAG, "getSchedule | search list selected | query=" + query + " | title=" + title);
-                            if (alertDialog.isShowing()) {
-                                alertDialog.cancel();
-                            }
-                            callback.done(title, query);
-                        } else {
+                    ArrayList<STeacher> teachers = schedule.getTeachers().getTeachers();
+                    log.v(TAG, "getScheduleLessons | onSuccess | type=", schedule.getType(), " | length=", teachers.size());
+                    if (teachers.size() == 1) {
+                        STeacher teacher = teachers.get(0);
+                        if (teacher == null) {
                             notificationMessage.toast(activity, fragment.getString(R.string.something_went_wrong));
+                            return;
                         }
-                    } catch (Exception e) {
-                        log.exception(e);
-                        notificationMessage.toast(activity, fragment.getString(R.string.something_went_wrong));
+                        String query = teacher.getPersonId();
+                        String title = teacher.getPerson();
+                        log.v(TAG, "getScheduleLessons | onSuccess | done | query=", query, " | title=", title);
+                        if (alertDialog.isShowing()) {
+                            alertDialog.cancel();
+                        }
+                        callback.accept(title, query);
+                        return;
                     }
-                }));
-                alertDialog.show();
-                search_action.setVisibility(View.VISIBLE);
-            } catch (Exception e) {
-                log.exception(e);
-                notificationMessage.toast(activity, activity.getString(R.string.something_went_wrong));
+                    thread.runOnUI(() -> {
+                        teacherPickerAdapter.addAll(teachers);
+                        teacherPickerAdapter.addTeachers(teachers);
+                        if (teachers.size() > 0) {
+                            searchTextView.showDropDown();
+                        }
+                    });
+                    break;
+                }
+                default: {
+                    notificationMessage.toast(activity, activity.getString(R.string.something_went_wrong));
+                    break;
+                }
             }
         });
     }
-
-    private void addShortcut(final String type, final String data, final String mode) {
-        thread.run(() -> {
-            log.v(TAG, "addShortcut | type=" + type + " | data=" + data);
-            Intent intent = new Intent(ShortcutReceiver.ACTION_ADD_SHORTCUT);
-            intent.putExtra(ShortcutReceiver.EXTRA_TYPE, type);
-            intent.putExtra(ShortcutReceiver.EXTRA_DATA, data);
-            intent.putExtra(ShortcutReceiver.EXTRA_MODE, mode);
-            activity.sendBroadcast(intent);
+    
+    private void getScheduleExams(String scope, BiConsumer<String, String> callback) {
+        getSchedule(scope, callback, (Schedule.ScheduleSearchProvider<SExams>) (query, handler) -> {
+            scheduleExams.search(query, handler);
+        }, schedule -> {
+            log.v(TAG, "getScheduleExams | onSuccess | type=", schedule.getType());
+            switch (schedule.getType()) {
+                case "group": case "teacher": {
+                    if (CollectionUtils.isEmpty(schedule.getSchedule())) {
+                        notificationMessage.toast(activity, activity.getString(R.string.schedule_not_found));
+                        return;
+                    }
+                    String query = schedule.getQuery();
+                    String title = schedule.getTitle();
+                    log.v(TAG, "getScheduleExams | onSuccess | done | query=", query, " | title=", title);
+                    if (alertDialog.isShowing()) {
+                        alertDialog.cancel();
+                    }
+                    callback.accept(title, query);
+                    break;
+                }
+                case "teachers": {
+                    teacherPickerAdapter.clear();
+                    if (schedule.getTeachers() == null || CollectionUtils.isEmpty(schedule.getTeachers().getTeachers())) {
+                        notificationMessage.toast(activity, activity.getString(R.string.no_teachers));
+                        return;
+                    }
+                    ArrayList<STeacher> teachers = schedule.getTeachers().getTeachers();
+                    log.v(TAG, "getScheduleExams | onSuccess | type=", schedule.getType(), " | length=", teachers.size());
+                    if (teachers.size() == 1) {
+                        STeacher teacher = teachers.get(0);
+                        if (teacher == null) {
+                            notificationMessage.toast(activity, fragment.getString(R.string.something_went_wrong));
+                            return;
+                        }
+                        String query = teacher.getPersonId();
+                        String title = teacher.getPerson();
+                        log.v(TAG, "getScheduleExams | onSuccess | done | query=", query, " | title=", title);
+                        if (alertDialog.isShowing()) {
+                            alertDialog.cancel();
+                        }
+                        callback.accept(title, query);
+                        return;
+                    }
+                    thread.runOnUI(() -> {
+                        teacherPickerAdapter.addAll(teachers);
+                        teacherPickerAdapter.addTeachers(teachers);
+                        if (teachers.size() > 0) {
+                            searchTextView.showDropDown();
+                        }
+                    });
+                    break;
+                }
+                default: {
+                    notificationMessage.toast(activity, activity.getString(R.string.something_went_wrong));
+                    break;
+                }
+            }
         });
+    }
+    
+    private void getScheduleAttestations(String scope, BiConsumer<String, String> callback) {
+        getSchedule(scope, callback, (Schedule.ScheduleSearchProvider<SAttestations>) (query, handler) -> {
+            scheduleAttestations.search(query, handler);
+        }, schedule -> {
+            log.v(TAG, "getScheduleAttestations | onSuccess | type=", schedule.getType());
+            switch (schedule.getType()) {
+                case "group": {
+                    if (CollectionUtils.isEmpty(schedule.getSchedule())) {
+                        notificationMessage.toast(activity, activity.getString(R.string.schedule_not_found));
+                        return;
+                    }
+                    String query = schedule.getQuery();
+                    String title = schedule.getTitle();
+                    log.v(TAG, "getScheduleAttestations | onSuccess | done | query=", query, " | title=", title);
+                    if (alertDialog.isShowing()) {
+                        alertDialog.cancel();
+                    }
+                    callback.accept(title, query);
+                    break;
+                }
+                default: {
+                    notificationMessage.toast(activity, activity.getString(R.string.something_went_wrong));
+                    break;
+                }
+            }
+        });
+    }
+    
+    private <T extends ScheduleJsonEntity> void getSchedule(
+            String scope, BiConsumer<String, String> callback,
+            Schedule.ScheduleSearchProvider<T> scheduleSearchProvider,
+            ThrowingConsumer<T, Throwable> onSuccess
+    ) {
+        thread.run(() -> {
+            log.v(TAG, "getSchedule | scope=", scope);
+            ViewGroup layout = (ViewGroup) fragment.inflate(R.layout.widget_configure_schedule_lessons_create_search);
+            searchTextView = layout.findViewById(R.id.search_text_view);
+            teacherPickerAdapter = new TeacherPickerAdapter(activity, new ArrayList<>());
+            alertDialog = new AlertDialog.Builder(activity)
+                    .setView(layout)
+                    .setNegativeButton(R.string.do_cancel, null)
+                    .create();
+            ViewGroup searchAction = layout.findViewById(R.id.search_action);
+            ViewGroup searchLoading = layout.findViewById(R.id.search_loading);
+            if (scope != null) {
+                searchTextView.setText(scope);
+            }
+            teacherPickerAdapter.setNotifyOnChange(true);
+            searchTextView.setAdapter(teacherPickerAdapter);
+            searchTextView.addTextChangedListener(new TextWatcher() {
+                @Override
+                public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {}
+                @Override
+                public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {}
+                @Override
+                public void afterTextChanged(Editable editable) {
+                    thread.run(() -> {
+                        teacherPickerAdapter.clear();
+                        searchTextView.dismissDropDown();
+                    });
+                }
+            });
+            searchAction.setOnClickListener(view -> thread.run(() -> {
+                String query = searchTextView.getText().toString().trim();
+                log.v(TAG, "getSchedule | search action | clicked | query=", query);
+                if (StringUtils.isBlank(query)) {
+                    return;
+                }
+                scheduleSearchProvider.onSearch(query, new Schedule.Handler<T>() {
+                    @Override
+                    public void onSuccess(final T schedule, final boolean fromCache) {
+                        thread.run(() -> {
+                            log.v(TAG, "getSchedule | search action | onSuccess | schedule=", (schedule == null ? "null" : "notnull"));
+                            searchLoading.setVisibility(View.GONE);
+                            searchAction.setVisibility(View.VISIBLE);
+                            if (schedule == null) {
+                                notificationMessage.toast(activity, activity.getString(R.string.schedule_not_found));
+                                return;
+                            }
+                            onSuccess.accept(schedule);
+                        }, throwable -> {
+                            log.exception(throwable);
+                            notificationMessage.toast(activity, activity.getString(R.string.something_went_wrong));
+                        });
+                    }
+                    @Override
+                    public void onFailure(final int statusCode, final Client.Headers headers, final int state) {
+                        thread.run(() -> {
+                            log.v(TAG, "getSchedule | search action | onFailure | state=" + state);
+                            searchLoading.setVisibility(View.GONE);
+                            searchAction.setVisibility(View.VISIBLE);
+                            notificationMessage.toast(activity, state == Client.FAILED_SERVER_ERROR ? Client.getFailureMessage(activity, statusCode) : activity.getString(R.string.schedule_not_found));
+                        });
+                    }
+                    @Override
+                    public void onProgress(final int state) {
+                        thread.run(() -> {
+                            log.v(TAG, "getSchedule | search action | onProgress | state=" + state);
+                            searchLoading.setVisibility(View.VISIBLE);
+                            searchAction.setVisibility(View.GONE);
+                        });
+                    }
+                    @Override
+                    public void onNewRequest(Client.Request request) {
+                        requestHandle = request;
+                    }
+                    @Override
+                    public void onCancelRequest() {
+                        if (requestHandle != null) {
+                            requestHandle.cancel();
+                        }
+                    }
+                });
+            }));
+            searchTextView.setOnItemClickListener((parent, view, position, id) -> {
+                thread.run(() -> {
+                    log.v(TAG, "getSchedule | search list selected");
+                    STeacher teacher = teacherPickerAdapter.getItem(position);
+                    if (teacher == null) {
+                       notificationMessage.toast(activity, fragment.getString(R.string.something_went_wrong));
+                       return;
+                    }
+                    String query = teacher.getPersonId();
+                    String title = teacher.getPerson();
+                    log.v(TAG, "getSchedule | search list selected | query=", query, " | title=", title);
+                    if (alertDialog.isShowing()) {
+                        alertDialog.cancel();
+                    }
+                    callback.accept(title, query);
+                }, throwable -> {
+                    log.exception(throwable);
+                    notificationMessage.toast(activity, fragment.getString(R.string.something_went_wrong));
+                });
+            });
+            alertDialog.show();
+            searchAction.setVisibility(View.VISIBLE);
+        }, throwable -> {
+            log.exception(throwable);
+            notificationMessage.toast(activity, activity.getString(R.string.something_went_wrong));
+        });
+    }
+
+    private void addShortcut(String type, String mode, String data) {
+        log.v(TAG, "addShortcut | type=", type, " | data=", data);
+        Intent intent = new Intent(ShortcutReceiver.ACTION_ADD_SHORTCUT);
+        intent.putExtra(ShortcutReceiver.EXTRA_TYPE, type);
+        intent.putExtra(ShortcutReceiver.EXTRA_MODE, mode);
+        intent.putExtra(ShortcutReceiver.EXTRA_DATA, data);
+        activity.sendBroadcast(intent);
     }
 }

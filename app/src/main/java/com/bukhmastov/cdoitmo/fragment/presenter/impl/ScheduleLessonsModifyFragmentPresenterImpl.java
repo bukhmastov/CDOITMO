@@ -1,7 +1,7 @@
 package com.bukhmastov.cdoitmo.fragment.presenter.impl;
 
 import android.os.Bundle;
-import com.bukhmastov.cdoitmo.object.TeacherSearch;
+import android.support.annotation.IdRes;
 import android.support.annotation.Nullable;
 import android.support.design.widget.TextInputEditText;
 import android.text.Editable;
@@ -23,6 +23,12 @@ import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.fragment.ConnectedFragment;
 import com.bukhmastov.cdoitmo.fragment.presenter.ScheduleLessonsModifyFragmentPresenter;
 import com.bukhmastov.cdoitmo.fragment.presenter.ScheduleLessonsTabHostFragmentPresenter;
+import com.bukhmastov.cdoitmo.function.Consumer;
+import com.bukhmastov.cdoitmo.function.Supplier;
+import com.bukhmastov.cdoitmo.model.schedule.lessons.SLesson;
+import com.bukhmastov.cdoitmo.model.schedule.teachers.STeacher;
+import com.bukhmastov.cdoitmo.model.schedule.teachers.STeachers;
+import com.bukhmastov.cdoitmo.object.TeacherSearch;
 import com.bukhmastov.cdoitmo.object.schedule.ScheduleLessons;
 import com.bukhmastov.cdoitmo.object.schedule.ScheduleLessonsHelper;
 import com.bukhmastov.cdoitmo.util.Log;
@@ -31,12 +37,9 @@ import com.bukhmastov.cdoitmo.util.Storage;
 import com.bukhmastov.cdoitmo.util.TextUtils;
 import com.bukhmastov.cdoitmo.util.Thread;
 import com.bukhmastov.cdoitmo.util.Time;
-import com.bukhmastov.cdoitmo.util.singleton.JsonUtils;
+import com.bukhmastov.cdoitmo.util.singleton.StringUtils;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -51,6 +54,7 @@ public class ScheduleLessonsModifyFragmentPresenterImpl implements ScheduleLesso
     private ConnectedFragment fragment = null;
     private ConnectedActivity activity = null;
     private @TYPE String type;
+    private Integer weekday;
     private boolean blockTimeStart = false;
     private boolean blockTimeEnd = false;
     private boolean blockNextTeacherSearch = false;
@@ -113,102 +117,136 @@ public class ScheduleLessonsModifyFragmentPresenterImpl implements ScheduleLesso
     @Override
     public void onViewCreated() {
         thread.run(() -> {
-            try {
-                if (fragment.extras() == null) {
-                    throw new NullPointerException("extras cannot be null");
-                }
-                type = fragment.extras().getString("action_type");
-                if (type == null) {
-                    throw new NullPointerException("type cannot be null");
-                }
-                switch (type) {
-                    case CREATE: activity.updateToolbar(activity, activity.getString(R.string.lesson_creation), R.drawable.ic_schedule_lessons); break;
-                    case EDIT: activity.updateToolbar(activity, activity.getString(R.string.lesson_editing), R.drawable.ic_schedule_lessons); break;
-                    default:
-                        Exception exception = new Exception("got wrong type from arguments bundle: " + type);
-                        log.wtf(exception);
-                        throw exception;
-                }
-                display();
-            } catch (Exception e) {
-                log.exception(e);
+            if (fragment.extras() == null) {
+                log.e(TAG, "extras cannot be null");
                 fragment.close();
+                return;
             }
+            type = fragment.extras().getString("action_type");
+            if (type == null) {
+                log.e(TAG, "type cannot be null");
+                fragment.close();
+                return;
+            }
+            switch (type) {
+                case CREATE: activity.updateToolbar(activity, activity.getString(R.string.lesson_creation), R.drawable.ic_schedule_lessons); break;
+                case EDIT: activity.updateToolbar(activity, activity.getString(R.string.lesson_editing), R.drawable.ic_schedule_lessons); break;
+                default:
+                    Exception exception = new Exception("got wrong type from arguments bundle: " + type);
+                    log.wtf(exception);
+                    throw exception;
+            }
+            display();
+        }, throwable -> {
+            log.exception(throwable);
+            fragment.close();
         });
     }
 
     private void display() {
         thread.run(() -> {
-            try {
-                JSONObject lessonOriginal = textUtils.string2json(getStringExtra(fragment.extras(), "lesson", true));
-                LessonUnit lesson = convertJson2LessonUnit(lessonOriginal);
-                int weekday = getIntExtra(fragment.extras(), "weekday", true);
-                if (lesson == null) {
-                    throw new NullPointerException("lesson cannot be null");
-                }
-                int week = time.getWeek(activity);
-                String query = getStringExtra(fragment.extras(), "query", true);
-                String type_lesson = getStringExtra(fragment.extras(), "type", true);
-                String title = getStringExtra(fragment.extras(), "title", true);
-                lesson.weekday = weekday;
-
-                initHeader(week, title, type_lesson);
-                initTitle(lesson);
-                initTime(lesson);
-                initWeek(lesson);
-                initDayOfWeek(lesson);
-                initType(lesson);
-                initGroup(lesson);
-                initTeacher(lesson);
-                initRoom(lesson);
-                initBuilding(lesson);
-                initAction(lesson, query, weekday, lessonOriginal);
-            } catch (Exception e) {
-                log.exception(e);
+            Serializable serializable = fragment.extras().getSerializable("lesson");
+            if (!(serializable instanceof SLesson)) {
                 notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
                 fragment.close();
+                return;
+            }
+            SLesson lessonOriginal = (SLesson) serializable;
+            SLesson lesson = new SLesson(lessonOriginal);
+            String query = getStringExtra(fragment.extras(), "query", true);
+            String lessonType = getStringExtra(fragment.extras(), "type", true);
+            String title = getStringExtra(fragment.extras(), "title", true);
+            weekday = getIntExtra(fragment.extras(), "weekday", true);
+
+            switch (StringUtils.defaultIfNull(lesson.getType(), "")) {
+                case "practice": lesson.setType(activity.getString(R.string.practice)); break;
+                case "lecture": lesson.setType(activity.getString(R.string.lecture)); break;
+                case "lab": lesson.setType(activity.getString(R.string.lab)); break;
+                case "iws": lesson.setType(activity.getString(R.string.iws)); break;
+            }
+
+            initHeader(time.getWeek(activity), title, lessonType);
+            initTextField(R.id.lesson_title, lesson::getSubject, lesson::setSubject);
+            initTime(lesson);
+            initWeek(lesson);
+            initDayOfWeek();
+            initAutoCompleteTextField(R.id.lesson_type, lesson::getType, lesson::setType, ArrayAdapter.createFromResource(activity, R.array.lessons_types, R.layout.spinner_simple_padding));
+            initTextField(R.id.lesson_group, lesson::getGroup, lesson::setGroup);
+            initTeacher(lesson);
+            initTextField(R.id.lesson_room, lesson::getRoom, lesson::setRoom);
+            initAutoCompleteTextField(R.id.lesson_building, lesson::getBuilding, lesson::setBuilding, ArrayAdapter.createFromResource(activity, R.array.buildings, R.layout.spinner_simple_padding));
+            initAction(lesson, lessonOriginal, query);
+        }, throwable -> {
+            log.exception(throwable);
+            notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
+            fragment.close();
+        });
+    }
+
+    private void initHeader(int week, String title, String lessonType) {
+        thread.runOnUI(() -> {
+            TextView slcTitle = fragment.container().findViewById(R.id.slc_title);
+            TextView slcDesc = fragment.container().findViewById(R.id.slc_desc);
+            if (slcTitle != null) {
+                slcTitle.setText(scheduleLessons.getScheduleHeader(title, lessonType));
+            }
+            if (slcDesc != null) {
+                slcDesc.setText(scheduleLessons.getScheduleWeek(week));
             }
         });
     }
 
-    private void initHeader(int week, String title, String type_lesson) {
+    private void initTextField(@IdRes int resId, Supplier<String> supplier, Consumer<String> consumer) {
         thread.runOnUI(() -> {
-            TextView slc_title = fragment.container().findViewById(R.id.slc_title);
-            TextView slc_desc = fragment.container().findViewById(R.id.slc_desc);
-            if (slc_title != null) {
-                slc_title.setText(scheduleLessons.getScheduleHeader(activity, title, type_lesson));
+            TextInputEditText editText = fragment.container().findViewById(resId);
+            if (StringUtils.isNotBlank(supplier.get())) {
+                editText.setText(supplier.get());
             }
-            if (slc_desc != null) {
-                slc_desc.setText(scheduleLessons.getScheduleWeek(activity, week));
-            }
-        });
-    }
-
-    private void initTitle(LessonUnit lesson) {
-        thread.runOnUI(() -> {
-            TextInputEditText lesson_title = fragment.container().findViewById(R.id.lesson_title);
-            if (lesson.subject != null) lesson_title.setText(lesson.subject);
-            lesson_title.requestFocus();
-            lesson_title.addTextChangedListener(new TextWatcher() {
+            editText.addTextChangedListener(new TextWatcher() {
                 @Override
                 public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
                 @Override
                 public void onTextChanged(CharSequence s, int start, int before, int count) {}
                 @Override
                 public void afterTextChanged(Editable s) {
-                    lesson.subject = s.toString();
+                    consumer.accept(s.toString());
                 }
             });
         });
     }
 
-    private void initTime(LessonUnit lesson) {
+    private void initAutoCompleteTextField(@IdRes int resId, Supplier<String> supplier, Consumer<String> consumer, ArrayAdapter arrayAdapter) {
         thread.runOnUI(() -> {
-            final TextInputEditText lesson_time_start = fragment.container().findViewById(R.id.lesson_time_start);
-            final TextInputEditText lesson_time_end = fragment.container().findViewById(R.id.lesson_time_end);
-            if (lesson.timeStart != null) lesson_time_start.setText(lesson.timeStart);
-            if (lesson.timeEnd != null) lesson_time_end.setText(lesson.timeEnd);
-            lesson_time_start.addTextChangedListener(new TextWatcher() {
+            AutoCompleteTextView autoCompleteTextView = fragment.container().findViewById(resId);
+            if (StringUtils.isNotBlank(supplier.get())) {
+                autoCompleteTextView.setText(supplier.get());
+            }
+            autoCompleteTextView.setThreshold(1);
+            autoCompleteTextView.setAdapter(arrayAdapter);
+            autoCompleteTextView.addTextChangedListener(new TextWatcher() {
+                @Override
+                public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+                @Override
+                public void onTextChanged(CharSequence s, int start, int before, int count) {}
+                @Override
+                public void afterTextChanged(Editable s) {
+                    consumer.accept(s.toString());
+                }
+            });
+        });
+    }
+
+    private void initTime(SLesson lesson) {
+        thread.runOnUI(() -> {
+            final TextInputEditText lessonTimeStart = fragment.container().findViewById(R.id.lesson_time_start);
+            final TextInputEditText lessonTimeEnd = fragment.container().findViewById(R.id.lesson_time_end);
+            if (StringUtils.isNotBlank(lesson.getTimeStart())) {
+                lessonTimeStart.setText(lesson.getTimeStart());
+            }
+            if (StringUtils.isNotBlank(lesson.getTimeEnd())) {
+                lessonTimeEnd.setText(lesson.getTimeEnd());
+            }
+            lessonTimeStart.addTextChangedListener(new TextWatcher() {
                 @Override
                 public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
                 @Override
@@ -227,21 +265,21 @@ public class ScheduleLessonsModifyFragmentPresenterImpl implements ScheduleLesso
                         st_calendar.set(Calendar.MINUTE, Integer.parseInt(t.group(2)));
                         st_calendar.set(Calendar.SECOND, 0);
                         st = st_calendar.get(Calendar.HOUR_OF_DAY) + ":" + textUtils.ldgZero(st_calendar.get(Calendar.MINUTE));
-                        if (lesson_time_end.getText() == null || lesson_time_end.getText().toString().isEmpty()) {
+                        if (lessonTimeEnd.getText() == null || lessonTimeEnd.getText().toString().isEmpty()) {
                             Calendar nt_calendar = time.getCalendar();
                             nt_calendar.setTime(new Date(st_calendar.getTimeInMillis() + 5400000));
                             blockTimeEnd = true;
                             String insert = nt_calendar.get(Calendar.HOUR_OF_DAY) + ":" + textUtils.ldgZero(nt_calendar.get(Calendar.MINUTE));
-                            lesson.timeEnd = insert;
-                            int selection = lesson_time_end.getSelectionStart();
-                            lesson_time_end.setText(insert);
+                            lesson.setTimeEnd(insert);
+                            int selection = lessonTimeEnd.getSelectionStart();
+                            lessonTimeEnd.setText(insert);
                             try {
-                                lesson_time_end.setSelection(selection);
+                                lessonTimeEnd.setSelection(selection);
                             } catch (Exception ignore) {
                                 // ignore
                             }
                         } else {
-                            String nt = lesson_time_end.getText().toString();
+                            String nt = lessonTimeEnd.getText().toString();
                             Matcher next_time = Pattern.compile("^(\\d{1,2}):(\\d{2})$").matcher(nt);
                             if (next_time.find()) {
                                 Calendar nt_calendar = time.getCalendar();
@@ -252,11 +290,11 @@ public class ScheduleLessonsModifyFragmentPresenterImpl implements ScheduleLesso
                                     nt_calendar.setTime(new Date(st_calendar.getTimeInMillis() + 5400000));
                                     blockTimeEnd = true;
                                     String insert = nt_calendar.get(Calendar.HOUR_OF_DAY) + ":" + textUtils.ldgZero(nt_calendar.get(Calendar.MINUTE));
-                                    lesson.timeEnd = insert;
-                                    int selection = lesson_time_end.getSelectionStart();
-                                    lesson_time_end.setText(insert);
+                                    lesson.setTimeEnd(insert);
+                                    int selection = lessonTimeEnd.getSelectionStart();
+                                    lessonTimeEnd.setText(insert);
                                     try {
-                                        lesson_time_end.setSelection(selection);
+                                        lessonTimeEnd.setSelection(selection);
                                     } catch (Exception ignore) {
                                         // ignore
                                     }
@@ -265,19 +303,19 @@ public class ScheduleLessonsModifyFragmentPresenterImpl implements ScheduleLesso
                         }
                         if (!s.toString().trim().equals(st)) {
                             blockTimeStart = true;
-                            int selection = lesson_time_start.getSelectionStart();
-                            lesson_time_start.setText(st);
+                            int selection = lessonTimeStart.getSelectionStart();
+                            lessonTimeStart.setText(st);
                             try {
-                                lesson_time_start.setSelection(selection);
+                                lessonTimeStart.setSelection(selection);
                             } catch (Exception ignore) {
                                 // ignore
                             }
                         }
                     }
-                    lesson.timeStart = st;
+                    lesson.setTimeStart(st);
                 }
             });
-            lesson_time_end.addTextChangedListener(new TextWatcher() {
+            lessonTimeEnd.addTextChangedListener(new TextWatcher() {
                 @Override
                 public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
                 @Override
@@ -296,21 +334,21 @@ public class ScheduleLessonsModifyFragmentPresenterImpl implements ScheduleLesso
                         et_calendar.set(Calendar.MINUTE, Integer.parseInt(t.group(2)));
                         et_calendar.set(Calendar.SECOND, 0);
                         et = et_calendar.get(Calendar.HOUR_OF_DAY) + ":" + textUtils.ldgZero(et_calendar.get(Calendar.MINUTE));
-                        if (lesson_time_start.getText() == null || lesson_time_start.getText().toString().isEmpty()) {
+                        if (lessonTimeStart.getText() == null || lessonTimeStart.getText().toString().isEmpty()) {
                             Calendar st_calendar = time.getCalendar();
                             st_calendar.setTime(new Date(et_calendar.getTimeInMillis() - 5400000));
                             blockTimeStart = true;
                             String insert = st_calendar.get(Calendar.HOUR_OF_DAY) + ":" + textUtils.ldgZero(st_calendar.get(Calendar.MINUTE));
-                            lesson.timeStart = insert;
-                            int selection = lesson_time_start.getSelectionStart();
-                            lesson_time_start.setText(insert);
+                            lesson.setTimeStart(insert);
+                            int selection = lessonTimeStart.getSelectionStart();
+                            lessonTimeStart.setText(insert);
                             try {
-                                lesson_time_start.setSelection(selection);
+                                lessonTimeStart.setSelection(selection);
                             } catch (Exception ignore) {
                                 // ignore
                             }
                         } else {
-                            String st = lesson_time_start.getText().toString();
+                            String st = lessonTimeStart.getText().toString();
                             Matcher previous_time = Pattern.compile("^(\\d{1,2}):(\\d{2})$").matcher(st);
                             if (previous_time.find()) {
                                 Calendar st_calendar = time.getCalendar();
@@ -321,11 +359,11 @@ public class ScheduleLessonsModifyFragmentPresenterImpl implements ScheduleLesso
                                     st_calendar.setTime(new Date(et_calendar.getTimeInMillis() - 5400000));
                                     blockTimeStart = true;
                                     String insert = st_calendar.get(Calendar.HOUR_OF_DAY) + ":" + textUtils.ldgZero(st_calendar.get(Calendar.MINUTE));
-                                    lesson.timeStart = insert;
-                                    int selection = lesson_time_start.getSelectionStart();
-                                    lesson_time_start.setText(insert);
+                                    lesson.setTimeStart(insert);
+                                    int selection = lessonTimeStart.getSelectionStart();
+                                    lessonTimeStart.setText(insert);
                                     try {
-                                        lesson_time_start.setSelection(selection);
+                                        lessonTimeStart.setSelection(selection);
                                     } catch (Exception ignore) {
                                         // ignore
                                     }
@@ -334,92 +372,56 @@ public class ScheduleLessonsModifyFragmentPresenterImpl implements ScheduleLesso
                         }
                         if (!s.toString().trim().equals(et)) {
                             blockTimeEnd = true;
-                            int selection = lesson_time_end.getSelectionStart();
-                            lesson_time_end.setText(et);
+                            int selection = lessonTimeEnd.getSelectionStart();
+                            lessonTimeEnd.setText(et);
                             try {
-                                lesson_time_end.setSelection(selection);
+                                lessonTimeEnd.setSelection(selection);
                             } catch (Exception ignore) {
                                 // ignore
                             }
                         }
                     }
-                    lesson.timeEnd = et;
+                    lesson.setTimeEnd(et);
                 }
             });
         });
     }
 
-    private void initWeek(LessonUnit lesson) {
+    private void initWeek(SLesson lesson) {
         thread.runOnUI(() -> {
             Spinner lesson_week = fragment.container().findViewById(R.id.lesson_week);
             ArrayAdapter<?> lesson_week_adapter = ArrayAdapter.createFromResource(activity, R.array.week_types_titles, R.layout.spinner_simple);
             lesson_week_adapter.setDropDownViewResource(R.layout.spinner_center);
             lesson_week.setAdapter(lesson_week_adapter);
-            lesson_week.setSelection((lesson.week + 1) % 3);
+            lesson_week.setSelection((lesson.getParity() + 1) % 3);
             lesson_week.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
                 public void onItemSelected(AdapterView<?> parent, View item, int position, long selectedId) {
                     String[] week_types_values = activity.getResources().getStringArray(R.array.week_types_values);
-                    lesson.week = Integer.parseInt(week_types_values[position]);
+                    lesson.setParity(Integer.parseInt(week_types_values[position]));
                 }
                 public void onNothingSelected(AdapterView<?> parent) {}
             });
         });
     }
 
-    private void initDayOfWeek(LessonUnit lesson) {
+    private void initDayOfWeek() {
         thread.runOnUI(() -> {
             final String[] week_types_values = activity.getResources().getStringArray(R.array.days_of_week_values);
             Spinner lesson_day_of_week = fragment.container().findViewById(R.id.lesson_day_of_week);
             ArrayAdapter<?> lesson_day_of_week_adapter = ArrayAdapter.createFromResource(activity, R.array.days_of_week_titles, R.layout.spinner_simple);
             lesson_day_of_week_adapter.setDropDownViewResource(R.layout.spinner_center);
             lesson_day_of_week.setAdapter(lesson_day_of_week_adapter);
-            lesson_day_of_week.setSelection(lesson.weekday < week_types_values.length ? lesson.weekday : 0);
+            lesson_day_of_week.setSelection(weekday < week_types_values.length ? weekday : 0);
             lesson_day_of_week.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
                 public void onItemSelected(AdapterView<?> parent, View item, int position, long selectedId) {
-                    lesson.weekday = Integer.parseInt(week_types_values[position]);
+                    weekday = Integer.parseInt(week_types_values[position]);
                 }
                 public void onNothingSelected(AdapterView<?> parent) {}
             });
         });
     }
 
-    private void initType(LessonUnit lesson) {
-        thread.runOnUI(() -> {
-            final AutoCompleteTextView lesson_type = fragment.container().findViewById(R.id.lesson_type);
-            if (lesson.type != null) lesson_type.setText(lesson.type);
-            lesson_type.setThreshold(1);
-            lesson_type.setAdapter(ArrayAdapter.createFromResource(activity, R.array.lessons_types, R.layout.spinner_simple_padding));
-            lesson_type.addTextChangedListener(new TextWatcher() {
-                @Override
-                public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
-                @Override
-                public void onTextChanged(CharSequence s, int start, int before, int count) {}
-                @Override
-                public void afterTextChanged(Editable s) {
-                    lesson.type = s.toString();
-                }
-            });
-        });
-    }
-
-    private void initGroup(LessonUnit lesson) {
-        thread.runOnUI(() -> {
-            TextInputEditText lesson_group = fragment.container().findViewById(R.id.lesson_group);
-            if (lesson.group != null) lesson_group.setText(lesson.group);
-            lesson_group.addTextChangedListener(new TextWatcher() {
-                @Override
-                public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
-                @Override
-                public void onTextChanged(CharSequence s, int start, int before, int count) {}
-                @Override
-                public void afterTextChanged(Editable s) {
-                    lesson.group = s.toString();
-                }
-            });
-        });
-    }
-
-    private void initTeacher(LessonUnit lesson) {
+    private void initTeacher(SLesson lesson) {
         thread.runOnUI(() -> {
             final AutoCompleteTextView teacherAutoComplete = fragment.container().findViewById(R.id.lesson_teacher);
             final ProgressBar teacherProgressBar = fragment.container().findViewById(R.id.lesson_teacher_bar);
@@ -441,27 +443,23 @@ public class ScheduleLessonsModifyFragmentPresenterImpl implements ScheduleLesso
                     }
                 }
                 @Override
-                public void onSuccess(JSONObject json) {
+                public void onSuccess(STeachers teachers) {
                     thread.runOnUI(() -> {
                         teacherPickerAdapter.clear();
                         teacherAutoComplete.dismissDropDown();
-                        if (json == null) {
+                        if (teachers == null) {
                             return;
                         }
-                        if (!"teachers".equals(JsonUtils.getString(json, "type"))) {
-                            return;
-                        }
-                        ArrayList<JSONObject> teachers = JsonUtils.toArrayListOfJsonObjects(json, "schedule");
-                        teacherPickerAdapter.addAll(teachers);
-                        teacherPickerAdapter.addTeachers(teachers);
-                        if (teachers.size() > 0) {
+                        teacherPickerAdapter.addAll(teachers.getTeachers());
+                        teacherPickerAdapter.addTeachers(teachers.getTeachers());
+                        if (teachers.getTeachers().size() > 0) {
                             teacherAutoComplete.showDropDown();
                         }
                     });
                 }
             };
             teacherAutoComplete.setThreshold(1);
-            teacherAutoComplete.setText(lesson.teacher == null ? "" : lesson.teacher);
+            teacherAutoComplete.setText(StringUtils.isNotBlank(lesson.getTeacherName()) ? lesson.getTeacherName() : "");
             teacherAutoComplete.setAdapter(teacherPickerAdapter);
             teacherAutoComplete.addTextChangedListener(new TextWatcher() {
                 @Override
@@ -475,91 +473,55 @@ public class ScheduleLessonsModifyFragmentPresenterImpl implements ScheduleLesso
                         return;
                     }
                     String teacherName = s.toString().trim();
-                    lesson.teacher = teacherName;
-                    lesson.teacher_id = "";
+                    lesson.setTeacherName(teacherName);
+                    lesson.setTeacherId("");
                     teacherSearch.search(teacherName, teacherSearchCallback);
                 }
             });
             teacherAutoComplete.setOnItemClickListener((parent, view, position, id) -> thread.run(() -> {
-                JSONObject item = teacherPickerAdapter.getItem(position);
-                if (item == null) {
+                STeacher teacher = teacherPickerAdapter.getItem(position);
+                if (teacher == null) {
                     notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
                     return;
                 }
-                lesson.teacher = JsonUtils.getString(item, "person", "");
-                lesson.teacher_id = JsonUtils.getIntAsString(item, "pid", "");
+                lesson.setTeacherName(teacher.getPerson());
+                lesson.setTeacherId(teacher.getPersonId());
                 blockNextTeacherSearch = true;
-                teacherAutoComplete.setTextKeepState(lesson.teacher);
+                teacherAutoComplete.setTextKeepState(lesson.getTeacherName());
                 teacherAutoComplete.dismissDropDown();
             }));
         });
     }
 
-    private void initRoom(LessonUnit lesson) {
+    private void initAction(SLesson lesson, SLesson lessonOriginal, String query) {
         thread.runOnUI(() -> {
-            TextInputEditText lesson_room = fragment.container().findViewById(R.id.lesson_room);
-            if (lesson.room != null) lesson_room.setText(lesson.room);
-            lesson_room.addTextChangedListener(new TextWatcher() {
-                @Override
-                public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
-                @Override
-                public void onTextChanged(CharSequence s, int start, int before, int count) {}
-                @Override
-                public void afterTextChanged(Editable s) {
-                    lesson.room = s.toString();
-                }
-            });
-        });
-    }
-
-    private void initBuilding(LessonUnit lesson) {
-        thread.runOnUI(() -> {
-            AutoCompleteTextView lesson_building = fragment.container().findViewById(R.id.lesson_building);
-            if (lesson.building != null) lesson_building.setText(lesson.building);
-            lesson_building.setThreshold(1);
-            lesson_building.setAdapter(ArrayAdapter.createFromResource(activity, R.array.buildings, R.layout.spinner_simple_padding));
-            lesson_building.addTextChangedListener(new TextWatcher() {
-                @Override
-                public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
-                @Override
-                public void onTextChanged(CharSequence s, int start, int before, int count) {}
-                @Override
-                public void afterTextChanged(Editable s) {
-                    lesson.building = s.toString();
-                }
-            });
-        });
-    }
-
-    private void initAction(LessonUnit lesson, String query, int weekday, JSONObject lessonOriginal) {
-        thread.runOnUI(() -> {
-            Button lesson_create_button = fragment.container().findViewById(R.id.lesson_create_button);
+            Button lessonCreateButton = fragment.container().findViewById(R.id.lesson_create_button);
             switch (type) {
-                case CREATE: lesson_create_button.setText(activity.getString(R.string.create)); break;
-                case EDIT: lesson_create_button.setText(activity.getString(R.string.save)); break;
+                case CREATE: lessonCreateButton.setText(activity.getString(R.string.create)); break;
+                case EDIT: lessonCreateButton.setText(activity.getString(R.string.save)); break;
             }
-            lesson_create_button.setOnClickListener(v -> thread.run(() -> {
-                try {
+            lessonCreateButton.setOnClickListener(v -> {
+                thread.run(() -> {
                     log.v(TAG, "create_button clicked");
-                    if (lesson.subject == null || lesson.subject.isEmpty()) {
-                        log.v(TAG, "lessonUnit.title required");
+                    if (StringUtils.isBlank(lesson.getSubject())) {
+                        log.v(TAG, "lesson.subject required");
                         notificationMessage.snackBar(activity, activity.getString(R.string.lesson_title_required));
                         return;
                     }
-                    if (lesson.timeStart == null || lesson.timeStart.isEmpty()) {
-                        log.v(TAG, "lessonUnit.timeStart required");
+                    if (StringUtils.isBlank(lesson.getTimeStart())) {
+                        log.v(TAG, "lesson.timeStart required");
                         notificationMessage.snackBar(activity, activity.getString(R.string.lesson_time_start_required));
                         return;
                     }
-                    if (lesson.type != null) {
-                        if (lesson.type.toLowerCase().equals(activity.getString(R.string.lecture).toLowerCase())) lesson.type = "lecture";
-                        if (lesson.type.toLowerCase().equals(activity.getString(R.string.practice).toLowerCase())) lesson.type = "practice";
-                        if (lesson.type.toLowerCase().equals(activity.getString(R.string.lab).toLowerCase())) lesson.type = "lab";
-                        if (lesson.type.toLowerCase().equals(activity.getString(R.string.iws).toLowerCase())) lesson.type = "iws";
+                    if (StringUtils.isNotBlank(lesson.getType())) {
+                        if (lesson.getType().toLowerCase().equals(activity.getString(R.string.lecture).toLowerCase())) lesson.setType("lecture");
+                        if (lesson.getType().toLowerCase().equals(activity.getString(R.string.practice).toLowerCase())) lesson.setType("practice");
+                        if (lesson.getType().toLowerCase().equals(activity.getString(R.string.lab).toLowerCase())) lesson.setType("lab");
+                        if (lesson.getType().toLowerCase().equals(activity.getString(R.string.iws).toLowerCase())) lesson.setType("iws");
                     }
                     switch (type) {
                         case CREATE: {
-                            if (scheduleLessonsHelper.createLesson(activity, storage, query, lesson.weekday, convertLessonUnit2Json(lesson), null)) {
+                            if (scheduleLessonsHelper.createLesson(query, weekday, lesson, null)) {
                                 tabHostPresenter.invalidateOnDemand();
                                 fragment.close();
                             } else {
@@ -569,7 +531,7 @@ public class ScheduleLessonsModifyFragmentPresenterImpl implements ScheduleLesso
                             break;
                         }
                         case EDIT: {
-                            if (scheduleLessonsHelper.deleteLesson(activity, storage, query, weekday, lessonOriginal, null) && scheduleLessonsHelper.createLesson(activity, storage, query, lesson.weekday, convertLessonUnit2Json(lesson), null)) {
+                            if (scheduleLessonsHelper.deleteLesson(query, weekday, lessonOriginal, null) && scheduleLessonsHelper.createLesson(query, weekday, lesson, null)) {
                                 tabHostPresenter.invalidateOnDemand();
                                 fragment.close();
                             } else {
@@ -579,63 +541,13 @@ public class ScheduleLessonsModifyFragmentPresenterImpl implements ScheduleLesso
                             break;
                         }
                     }
-                } catch (Exception e) {
-                    log.exception(e);
+                }, throwable -> {
+                    log.exception(throwable);
                     notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
                     fragment.close();
-                }
-            }));
+                });
+            });
         });
-    }
-
-    private LessonUnit convertJson2LessonUnit(JSONObject lesson) {
-        if (lesson == null) {
-            throw new NullPointerException("lesson cannot be null");
-        }
-        LessonUnit lessonUnit = new LessonUnit();
-        lessonUnit.subject = JsonUtils.getString(lesson, "subject", "");
-        lessonUnit.type = JsonUtils.getString(lesson, "type", "");
-        lessonUnit.week = JsonUtils.getInt(lesson, "week", 0);
-        lessonUnit.timeStart = JsonUtils.getString(lesson, "timeStart", "");
-        lessonUnit.timeEnd = JsonUtils.getString(lesson, "timeEnd", "");
-        lessonUnit.group = JsonUtils.getString(lesson, "group", "");
-        lessonUnit.teacher = JsonUtils.getString(lesson, "teacher", "");
-        lessonUnit.teacher_id = JsonUtils.getString(lesson, "teacher_id", "");
-        lessonUnit.room = JsonUtils.getString(lesson, "room", "");
-        lessonUnit.building = JsonUtils.getString(lesson, "building", "");
-        lessonUnit.cdoitmo_type = "synthetic";
-        switch (lessonUnit.type) {
-            case "practice": lessonUnit.type = activity.getString(R.string.practice); break;
-            case "lecture": lessonUnit.type = activity.getString(R.string.lecture); break;
-            case "lab": lessonUnit.type = activity.getString(R.string.lab); break;
-            case "iws": lessonUnit.type = activity.getString(R.string.iws); break;
-        }
-        return lessonUnit;
-    }
-    
-    private JSONObject convertLessonUnit2Json(LessonUnit lessonUnit) throws Exception {
-        if (lessonUnit == null) {
-            throw new NullPointerException("lessonUnit cannot be null");
-        }
-        if (lessonUnit.type != null) {
-            if (lessonUnit.type.toLowerCase().equals(activity.getString(R.string.lecture).toLowerCase())) lessonUnit.type = "lecture";
-            if (lessonUnit.type.toLowerCase().equals(activity.getString(R.string.practice).toLowerCase())) lessonUnit.type = "practice";
-            if (lessonUnit.type.toLowerCase().equals(activity.getString(R.string.lab).toLowerCase())) lessonUnit.type = "lab";
-            if (lessonUnit.type.toLowerCase().equals(activity.getString(R.string.iws).toLowerCase())) lessonUnit.type = "iws";
-        }
-        JSONObject lesson = new JSONObject();
-        lesson.put("subject", lessonUnit.subject);
-        lesson.put("type", lessonUnit.type);
-        lesson.put("week", lessonUnit.week);
-        lesson.put("timeStart", lessonUnit.timeStart);
-        lesson.put("timeEnd", lessonUnit.timeEnd);
-        lesson.put("group", lessonUnit.group);
-        lesson.put("teacher", lessonUnit.teacher);
-        lesson.put("teacher_id", lessonUnit.teacher_id);
-        lesson.put("room", lessonUnit.room);
-        lesson.put("building", lessonUnit.building);
-        lesson.put("cdoitmo_type", lessonUnit.cdoitmo_type);
-        return lesson;
     }
     
     private String getStringExtra(Bundle extras, String key, boolean strict) throws Exception {
@@ -669,20 +581,5 @@ public class ScheduleLessonsModifyFragmentPresenterImpl implements ScheduleLesso
                 return 0;
             }
         }
-    }
-
-    private static class LessonUnit {
-        public String subject;
-        public String type;
-        public int week;
-        public int weekday;
-        public String timeStart;
-        public String timeEnd;
-        public String group;
-        public String teacher;
-        public String teacher_id;
-        public String room;
-        public String building;
-        public String cdoitmo_type;
     }
 }

@@ -12,7 +12,7 @@ import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
-import com.bukhmastov.cdoitmo.object.entity.Suggestion;
+import com.bukhmastov.cdoitmo.model.entity.Suggestion;
 import com.bukhmastov.cdoitmo.util.Log;
 
 import java.util.List;

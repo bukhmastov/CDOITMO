@@ -10,10 +10,6 @@ import com.bukhmastov.cdoitmo.util.TextUtils;
 import com.bukhmastov.cdoitmo.util.Time;
 import com.bukhmastov.cdoitmo.util.singleton.Transliterate;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -142,28 +138,6 @@ public class TextUtilsImpl implements TextUtils {
     }
 
     @Override
-    public JSONArray string2jsonArray(String text) throws JSONException {
-        JSONArray json;
-        if (text == null || text.isEmpty()) {
-            json = new JSONArray();
-        } else {
-            json = new JSONArray(text);
-        }
-        return json;
-    }
-
-    @Override
-    public JSONObject string2json(String text) throws JSONException {
-        JSONObject json;
-        if (text == null || text.isEmpty()) {
-            json = new JSONObject();
-        } else {
-            json = new JSONObject(text);
-        }
-        return json;
-    }
-
-    @Override
     public String prettifyGroupNumber(String group) {
         if (group != null && !group.isEmpty()) {
             Matcher m;
@@ -188,15 +162,6 @@ public class TextUtilsImpl implements TextUtils {
             string.append(alphabet.charAt((int) (rnd.nextFloat() * alphabet.length())));
         }
         return string.toString();
-    }
-
-    @Override
-    public String getStringSafely(JSONObject json, String key, String def) {
-        try {
-            return json.getString(key);
-        } catch (Exception e) {
-            return def;
-        }
     }
 
     @Override

@@ -1,41 +1,26 @@
 package com.bukhmastov.cdoitmo.object.schedule.impl;
 
-import android.content.Context;
-
-import com.bukhmastov.cdoitmo.converter.schedule.exams.ScheduleExamsConverterIfmo;
-import com.bukhmastov.cdoitmo.event.bus.EventBus;
 import com.bukhmastov.cdoitmo.event.bus.annotation.Event;
 import com.bukhmastov.cdoitmo.event.events.ClearCacheEvent;
-import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
-import com.bukhmastov.cdoitmo.network.IfmoClient;
+import com.bukhmastov.cdoitmo.firebase.FirebasePerformanceProvider;
+import com.bukhmastov.cdoitmo.model.parser.ScheduleExamsGroupParser;
+import com.bukhmastov.cdoitmo.model.parser.ScheduleExamsTeacherParser;
+import com.bukhmastov.cdoitmo.model.schedule.exams.SExams;
+import com.bukhmastov.cdoitmo.model.schedule.teachers.STeachers;
 import com.bukhmastov.cdoitmo.network.handlers.ResponseHandler;
 import com.bukhmastov.cdoitmo.network.handlers.RestResponseHandler;
 import com.bukhmastov.cdoitmo.network.model.Client;
 import com.bukhmastov.cdoitmo.object.schedule.ScheduleExams;
-import com.bukhmastov.cdoitmo.parse.schedule.ScheduleExamsGroupParse;
-import com.bukhmastov.cdoitmo.parse.schedule.ScheduleExamsTeacherParse;
-import com.bukhmastov.cdoitmo.util.Log;
-import com.bukhmastov.cdoitmo.util.Thread;
+import com.bukhmastov.cdoitmo.util.singleton.CollectionUtils;
 
 import org.json.JSONObject;
 
-import javax.inject.Inject;
-
-public class ScheduleExamsImpl extends ScheduleImpl implements ScheduleExams {
+public class ScheduleExamsImpl extends ScheduleImpl<SExams> implements ScheduleExams {
 
     private static final String TAG = "ScheduleExams";
 
-    @Inject
-    Log log;
-    @Inject
-    Thread thread;
-    @Inject
-    EventBus eventBus;
-    @Inject
-    IfmoClient ifmoClient;
-
     public ScheduleExamsImpl() {
-        AppComponentProvider.getComponent().inject(this);
+        super();
         eventBus.register(this);
     }
 
@@ -48,170 +33,210 @@ public class ScheduleExamsImpl extends ScheduleImpl implements ScheduleExams {
     }
 
     @Override
-    protected void searchMine(final Context context, final int refreshRate, final boolean forceToCache, final boolean withUserChanges) {
-        log.v(TAG, "searchMine | personal schedule is unavailable");
-        invokePending("mine", withUserChanges, true, handler -> handler.onFailure(FAILED_INVALID_QUERY));
+    protected void searchMine(int refreshRate, boolean forceToCache, boolean withUserChanges) {
+        thread.run(() -> {
+            log.v(TAG, "searchMine | personal schedule is unavailable");
+            invokePendingAndClose("mine", withUserChanges, handler -> handler.onFailure(FAILED_INVALID_QUERY));
+        });
     }
+
     @Override
-    protected void searchGroup(final Context context, final String group, final int refreshRate, final boolean forceToCache, final boolean withUserChanges) {
-        final @Source String source = getSource(context);
-        log.v(TAG, "searchGroup | group=", group, " | refreshRate=", refreshRate, " | forceToCache=", forceToCache, " | withUserChanges=", withUserChanges, " | source=" + source);
-        thread.run(() -> searchByQuery(context, "group", group, refreshRate, withUserChanges, new SearchByQuery() {
-            @Override
-            public boolean isWebAvailable() {
-                return true;
-            }
-            @Override
-            public void onWebRequest(final String query, final String cache, final RestResponseHandler restResponseHandler) {
-                switch (source) {
-                    case SOURCE.ISU: invokePending(query, withUserChanges, true, handler -> handler.onFailure(FAILED_INVALID_QUERY)); break;
-                    case SOURCE.IFMO: ifmoClient.get(context, "ru/exam/0/" + group + "/raspisanie_sessii.htm", null, new ResponseHandler() {
-                        @Override
-                        public void onSuccess(final int statusCode, final Client.Headers headers, final String response) {
-                            thread.run(new ScheduleExamsGroupParse(response, query, json -> restResponseHandler.onSuccess(statusCode, headers, json, null)));
+    protected void searchGroup(String group, int refreshRate, boolean forceToCache, boolean withUserChanges) {
+        thread.run(() -> {
+            @Source String source = getSource();
+            log.v(TAG, "searchGroup | group=", group, " | refreshRate=", refreshRate, " | forceToCache=", forceToCache, " | withUserChanges=", withUserChanges, " | source=", source);
+            searchByQuery(group, source, refreshRate, withUserChanges, new SearchByQuery<SExams>() {
+                @Override
+                public void onWebRequest(String query, String source, RestResponseHandler restResponseHandler) {
+                    switch (source) {
+                        case SOURCE.ISU: invokePendingAndClose(query, withUserChanges, handler -> handler.onFailure(FAILED_INVALID_QUERY)); break;
+                        case SOURCE.IFMO: {
+                            ifmoClient.get(context, "ru/exam/0/" + group + "/raspisanie_sessii.htm", null, new ResponseHandler() {
+                                @Override
+                                public void onSuccess(final int statusCode, final Client.Headers headers, final String response) {
+                                    thread.run(() -> {
+                                        SExams schedule = new ScheduleExamsGroupParser(response, query).parse();
+                                        if (schedule != null) {
+                                            schedule.setQuery(query);
+                                            schedule.setType("group");
+                                            schedule.setTimestamp(time.getTimeInMillis());
+                                            restResponseHandler.onSuccess(statusCode, headers, schedule.toJson(), null);
+                                        } else {
+                                            restResponseHandler.onFailure(statusCode, headers, FAILED_LOAD);
+                                        }
+                                    }, throwable -> {
+                                        restResponseHandler.onFailure(statusCode, headers, FAILED_LOAD);
+                                    });
+                                }
+                                @Override
+                                public void onFailure(int statusCode, Client.Headers headers, int state) {
+                                    restResponseHandler.onFailure(statusCode, headers, state);
+                                }
+                                @Override
+                                public void onProgress(int state) {
+                                    restResponseHandler.onProgress(state);
+                                }
+                                @Override
+                                public void onNewRequest(Client.Request request) {
+                                    restResponseHandler.onNewRequest(request);
+                                }
+                            });
+                            break;
                         }
-                        @Override
-                        public void onFailure(int statusCode, Client.Headers headers, int state) {
-                            restResponseHandler.onFailure(statusCode, headers, state);
-                        }
-                        @Override
-                        public void onProgress(int state) {
-                            restResponseHandler.onProgress(state);
-                        }
-                        @Override
-                        public void onNewRequest(Client.Request request) {
-                            restResponseHandler.onNewRequest(request);
-                        }
-                    }); break;
+                    }
                 }
-            }
-            @Override
-            public void onWebRequestSuccess(final String query, final JSONObject data, final JSONObject template) {
-                switch (source) {
-                    case SOURCE.ISU: break;
-                    case SOURCE.IFMO: ScheduleExamsImpl.this.onWebRequestSuccessIfmo(this, query, data, template); break;
+                @Override
+                public SExams onGetScheduleFromJson(String query, String source, JSONObject json) throws Exception {
+                    return getNewInstance().fromJson(json);
                 }
-            }
-            @Override
-            public void onWebRequestFailed(final int statusCode, final Client.Headers headers, final int state) {
-                invokePending(group, withUserChanges, true, handler -> handler.onFailure(statusCode, headers, state));
-            }
-            @Override
-            public void onWebRequestProgress(final int state) {
-                invokePending(group, withUserChanges, false, handler -> handler.onProgress(state));
-            }
-            @Override
-            public void onWebNewRequest(final Client.Request request) {
-                invokePending(group, withUserChanges, false, handler -> handler.onNewRequest(request));
-            }
-            @Override
-            public void onFound(final String query, final JSONObject data, final boolean putToCache, boolean fromCache) {
-                ScheduleExamsImpl.this.onFound(context, query, data, putToCache, forceToCache, fromCache, withUserChanges);
-            }
-        }));
+                @Override
+                public void onFound(String query, SExams schedule, boolean fromCache) {
+                    onScheduleFound(query, schedule, forceToCache, fromCache, withUserChanges);
+                }
+            });
+        });
     }
+
     @Override
-    protected void searchRoom(final Context context, final String room, final int refreshRate, final boolean forceToCache, final boolean withUserChanges) {
-        log.v(TAG, "searchRoom | actually, rooms unavailable at schedule of exams");
-        invokePending(room, withUserChanges, true, handler -> handler.onFailure(FAILED_INVALID_QUERY));
+    protected void searchRoom(String room, int refreshRate, boolean forceToCache, boolean withUserChanges) {
+        thread.run(() -> {
+            log.v(TAG, "searchRoom | rooms schedule is unavailable");
+            invokePendingAndClose(room, withUserChanges, handler -> handler.onFailure(FAILED_INVALID_QUERY));
+        });
     }
+
     @Override
-    protected void searchTeacher(final Context context, final String teacherId, final int refreshRate, final boolean forceToCache, final boolean withUserChanges) {
-        final @Source String source = getSource(context);
-        log.v(TAG, "searchTeacher | teacherId=", teacherId, " | refreshRate=", refreshRate, " | forceToCache=", forceToCache, " | withUserChanges=", withUserChanges, " | source=" + source);
-        thread.run(() -> searchByQuery(context, "teacher", teacherId, refreshRate, withUserChanges, new SearchByQuery() {
-            @Override
-            public boolean isWebAvailable() {
-                return true;
-            }
-            @Override
-            public void onWebRequest(final String query, final String cache, final RestResponseHandler restResponseHandler) {
-                switch (source) {
-                    case SOURCE.ISU: invokePending(query, withUserChanges, true, handler -> handler.onFailure(FAILED_INVALID_QUERY)); break;
-                    case SOURCE.IFMO: ifmoClient.get(context, "ru/exam/3/" + query + "/raspisanie_sessii.htm", null, new ResponseHandler() {
-                        @Override
-                        public void onSuccess(final int statusCode, final Client.Headers headers, final String response) {
-                            thread.run(new ScheduleExamsTeacherParse(response, query, json -> restResponseHandler.onSuccess(statusCode, headers, json, null)));
+    protected void searchTeacher(String teacherId, int refreshRate, boolean forceToCache, boolean withUserChanges) {
+        thread.run(() -> {
+            @Source String source = getSource();
+            log.v(TAG, "searchTeacher | teacherId=", teacherId, " | refreshRate=", refreshRate, " | forceToCache=", forceToCache, " | withUserChanges=", withUserChanges, " | source=", source);
+            searchByQuery(teacherId, source, refreshRate, withUserChanges, new SearchByQuery<SExams>() {
+                @Override
+                public void onWebRequest(String query, String source, RestResponseHandler restResponseHandler) {
+                    switch (source) {
+                        case SOURCE.ISU: invokePendingAndClose(query, withUserChanges, handler -> handler.onFailure(FAILED_INVALID_QUERY)); break;
+                        case SOURCE.IFMO: {
+                            ifmoClient.get(context, "ru/exam/3/" + query + "/raspisanie_sessii.htm", null, new ResponseHandler() {
+                                @Override
+                                public void onSuccess(final int statusCode, final Client.Headers headers, final String response) {
+                                    thread.run(() -> {
+                                        SExams schedule = new ScheduleExamsTeacherParser(response, query).parse();
+                                        if (schedule != null) {
+                                            schedule.setQuery(query);
+                                            schedule.setType("teacher");
+                                            schedule.setTimestamp(time.getTimeInMillis());
+                                            restResponseHandler.onSuccess(statusCode, headers, schedule.toJson(), null);
+                                        } else {
+                                            restResponseHandler.onFailure(statusCode, headers, FAILED_LOAD);
+                                        }
+                                    }, throwable -> {
+                                        restResponseHandler.onFailure(statusCode, headers, FAILED_LOAD);
+                                    });
+                                }
+                                @Override
+                                public void onFailure(int statusCode, Client.Headers headers, int state) {
+                                    restResponseHandler.onFailure(statusCode, headers, state);
+                                }
+                                @Override
+                                public void onProgress(int state) {
+                                    restResponseHandler.onProgress(state);
+                                }
+                                @Override
+                                public void onNewRequest(Client.Request request) {
+                                    restResponseHandler.onNewRequest(request);
+                                }
+                            });
+                            break;
                         }
-                        @Override
-                        public void onFailure(int statusCode, Client.Headers headers, int state) {
-                            restResponseHandler.onFailure(statusCode, headers, state);
-                        }
-                        @Override
-                        public void onProgress(int state) {
-                            restResponseHandler.onProgress(state);
-                        }
-                        @Override
-                        public void onNewRequest(Client.Request request) {
-                            restResponseHandler.onNewRequest(request);
-                        }
-                    }); break;
+                    }
                 }
-            }
-            @Override
-            public void onWebRequestSuccess(final String query, final JSONObject data, final JSONObject template) {
-                switch (source) {
-                    case SOURCE.ISU: break;
-                    case SOURCE.IFMO: ScheduleExamsImpl.this.onWebRequestSuccessIfmo(this, query, data, template); break;
+                @Override
+                public SExams onGetScheduleFromJson(String query, String source, JSONObject json) throws Exception {
+                    return getNewInstance().fromJson(json);
                 }
-            }
-            @Override
-            public void onWebRequestFailed(final int statusCode, final Client.Headers headers, final int state) {
-                invokePending(teacherId, withUserChanges, true, handler -> handler.onFailure(statusCode, headers, state));
-            }
-            @Override
-            public void onWebRequestProgress(final int state) {
-                invokePending(teacherId, withUserChanges, false, handler -> handler.onProgress(state));
-            }
-            @Override
-            public void onWebNewRequest(final Client.Request request) {
-                invokePending(teacherId, withUserChanges, false, handler -> handler.onNewRequest(request));
-            }
-            @Override
-            public void onFound(final String query, final JSONObject data, final boolean putToCache, boolean fromCache) {
-                ScheduleExamsImpl.this.onFound(context, query, data, putToCache, forceToCache, fromCache, withUserChanges);
-            }
-        }));
+                @Override
+                public void onFound(String query, SExams schedule, boolean fromCache) {
+                    onScheduleFound(query, schedule, forceToCache, fromCache, withUserChanges);
+                }
+            });
+        });
     }
+
     @Override
-    protected boolean searchTeachersAvailable() {
-        return true;
+    protected void searchTeachers(String lastname, boolean withUserChanges) {
+        thread.run(() -> {
+            @Source String source = getSource();
+            log.v(TAG, "searchTeachers | lastname=", lastname);
+            searchByQuery(lastname, source, 0, withUserChanges, new SearchByQuery<SExams>() {
+                @Override
+                public void onWebRequest(String query, String source, RestResponseHandler restResponseHandler) {
+                    switch (source) {
+                        case SOURCE.ISU: invokePendingAndClose(query, withUserChanges, handler -> handler.onFailure(FAILED_INVALID_QUERY)); break;
+                        case SOURCE.IFMO: ifmoRestClient.get(context, "schedule_person?lastname=" + lastname, null, restResponseHandler); break;
+                    }
+                }
+                @Override
+                public SExams onGetScheduleFromJson(String query, String source, JSONObject json) throws Exception {
+                    STeachers teachers = new STeachers().fromJson(json);
+                    if (teachers == null) {
+                        return null;
+                    }
+                    SExams schedule = new SExams();
+                    schedule.setQuery(query);
+                    schedule.setType("teachers");
+                    schedule.setTimestamp(time.getTimeInMillis());
+                    schedule.setTeachers(teachers);
+                    return schedule;
+                }
+                @Override
+                public void onFound(String query, SExams schedule, boolean fromCache) {
+                    onScheduleFound(query, schedule, false, false, withUserChanges);
+                }
+            });
+        });
     }
+
     @Override
     protected String getType() {
         return TYPE;
     }
+
     @Override
-    protected @Source String getDefaultSource() {
+    protected String getDefaultSource() {
         return SOURCE.IFMO;
     }
 
-    private void onWebRequestSuccessIfmo(final SearchByQuery searchByQuery, final String query, final JSONObject data, final JSONObject template) {
-        thread.run(new ScheduleExamsConverterIfmo(data, template, json -> searchByQuery.onFound(query, json, true, false)));
+    @Override
+    protected SExams getNewInstance() {
+        return new SExams();
     }
-    private void onFound(final Context context, final String query, final JSONObject data, final boolean putToCache, final boolean forceToCache, final boolean fromCache, final boolean withUserChanges) {
+
+    @Override
+    protected String getTraceName() {
+        return FirebasePerformanceProvider.Trace.Schedule.EXAMS;
+    }
+
+    private void onScheduleFound(String query, SExams schedule, boolean forceToCache, boolean fromCache, boolean withUserChanges) {
         thread.run(() -> {
-            try {
-                if (context == null || query == null || data == null) {
-                    log.w(TAG, "onFound | some values are null | context=", context, " | query=", query, " | data=", data);
-                    if (query == null) {
-                        return;
-                    }
-                    invokePending(query, withUserChanges, true, handler -> handler.onFailure(FAILED_LOAD));
+            if (context == null || query == null || schedule == null) {
+                log.w(TAG, "onFound | some values are null | context=", context, " | query=", query, " | data=", schedule);
+                if (query == null) {
                     return;
                 }
-                if (data.getJSONArray("schedule").length() == 0) {
-                    invokePending(query, withUserChanges, true, handler -> handler.onFailure(FAILED_NOT_FOUND));
-                } else {
-                    if (putToCache) {
-                        putCache(context, query, data.toString(), forceToCache);
-                    }
-                    invokePending(query, withUserChanges, true, handler -> handler.onSuccess(data, fromCache));
-                }
-            } catch (Exception e) {
-                log.exception(e);
-                invokePending(query, withUserChanges, true, handler -> handler.onFailure(FAILED_LOAD));
+                invokePendingAndClose(query, withUserChanges, handler -> handler.onFailure(FAILED_LOAD));
+                return;
             }
+            if (CollectionUtils.isNotEmpty(schedule.getSchedule())) {
+                if (!fromCache) {
+                    putToCache(query, schedule, forceToCache);
+                }
+                invokePendingAndClose(query, withUserChanges, handler -> handler.onSuccess(schedule, fromCache));
+                return;
+            }
+            invokePendingAndClose(query, withUserChanges, handler -> handler.onFailure(FAILED_NOT_FOUND));
+        }, throwable -> {
+            log.exception(throwable);
+            invokePendingAndClose(query, withUserChanges, handler -> handler.onFailure(FAILED_LOAD));
         });
     }
 }

@@ -95,7 +95,7 @@ public class DeIfmoRestClientImpl extends DeIfmoRestClient {
                     return;
                 }
                 responseHandler.onProgress(STATE_HANDLING);
-                gJson(context, getAbsoluteUrl(protocol, url), query, new RawJsonHandler() {
+                doGetJson(context, getAbsoluteUrl(protocol, url), query, new RawJsonHandler() {
                     @Override
                     public void onDone(final int code, final okhttp3.Headers headers, final String response, final JSONObject responseObj, final JSONArray responseArr) {
                         thread.run(thread.BACKGROUND, () -> {

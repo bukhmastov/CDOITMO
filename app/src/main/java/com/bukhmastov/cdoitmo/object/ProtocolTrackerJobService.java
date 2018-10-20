@@ -4,7 +4,7 @@ import android.app.job.JobParameters;
 import android.app.job.JobService;
 
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
-import com.bukhmastov.cdoitmo.interfaces.Callable;
+import com.bukhmastov.cdoitmo.function.Callable;
 import com.bukhmastov.cdoitmo.util.Log;
 
 import javax.inject.Inject;

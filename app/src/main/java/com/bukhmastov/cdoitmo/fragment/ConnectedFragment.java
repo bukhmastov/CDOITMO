@@ -78,15 +78,22 @@ public abstract class ConnectedFragment extends Fragment {
     public void onViewCreated() {}
 
     public boolean isNotAddedToActivity() {
-        if (!thread.assertUI()) {
-            return true;
+        try {
+            if (!thread.assertUI()) {
+                return true;
+            }
+            FragmentManager fragmentManager = getFragmentManager();
+            if (fragmentManager == null) {
+                return true;
+            }
+            fragmentManager.executePendingTransactions();
+            return !isAdded();
+        } catch (Throwable throwable) {
+            if (!(throwable instanceof IllegalStateException)) {
+                log.exception(throwable);
+            }
+            return false;
         }
-        FragmentManager fragmentManager = getFragmentManager();
-        if (fragmentManager == null) {
-            return true;
-        }
-        fragmentManager.executePendingTransactions();
-        return !isAdded();
     }
 
     public ConnectedActivity activity() {

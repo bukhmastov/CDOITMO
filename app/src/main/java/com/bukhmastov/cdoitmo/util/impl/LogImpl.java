@@ -14,6 +14,10 @@ import com.bukhmastov.cdoitmo.util.singleton.LogMetrics;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.PrintStream;
+import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Locale;
@@ -190,42 +194,37 @@ public class LogImpl implements Log {
         if (logList == null) {
             logList = new ArrayList<>();
         }
-        StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append("-------Device--------").append("\n");
-        stringBuilder.append("DEVICE: ").append(Build.DEVICE).append("\n");
-        stringBuilder.append("MODEL: ").append(Build.MODEL).append("\n");
-        stringBuilder.append("PRODUCT: ").append(Build.PRODUCT).append("\n");
-        stringBuilder.append("DISPLAY: ").append(Build.DISPLAY).append("\n");
-        stringBuilder.append("SDK_INT: ").append(Build.VERSION.SDK_INT).append("\n");
-        stringBuilder.append("-----Application-----").append("\n");
-        stringBuilder.append(App.versionName).append(" (").append(App.versionCode).append(")").append("\n");
-        stringBuilder.append("---------Log---------").append("\n");
+        StringBuilder sb = new StringBuilder();
+        sb.append("-------Device--------").append("\n");
+        sb.append("DEVICE: ").append(Build.DEVICE).append("\n");
+        sb.append("MODEL: ").append(Build.MODEL).append("\n");
+        sb.append("PRODUCT: ").append(Build.PRODUCT).append("\n");
+        sb.append("DISPLAY: ").append(Build.DISPLAY).append("\n");
+        sb.append("SDK_INT: ").append(Build.VERSION.SDK_INT).append("\n");
+        sb.append("-----Application-----").append("\n");
+        sb.append(App.versionName).append(" (").append(App.versionCode).append(")").append("\n");
+        sb.append("---------Log---------").append("\n");
         for (int i = reverse ? (logList.size() - 1) : 0; reverse ? (i >= 0) : (i < logList.size()); i = reverse ? (i - 1) : (i + 1)) {
             LogItem logItem = logList.get(i);
-            if (logItem == null) continue;
-            stringBuilder.append(dateFormat.format(logItem.ts)).append(" | ");
-            switch (logItem.type) {
-                case VERBOSE: stringBuilder.append("VERBOSE").append("/"); break;
-                case DEBUG: stringBuilder.append("DEBUG").append("/"); break;
-                case INFO: stringBuilder.append("INFO").append("/"); break;
-                case WARN: stringBuilder.append("WARN").append("/"); break;
-                case ERROR: stringBuilder.append("ERROR").append("/"); break;
-                case EXCEPTION: stringBuilder.append("EXCEPTION").append(": "); break;
-                case WTF: stringBuilder.append("WTF").append("/"); break;
-                case WTF_EXCEPTION: stringBuilder.append("WTF_EXCEPTION").append(": "); break;
+            if (logItem == null) {
+                continue;
             }
+            sb.append(dateFormat.format(logItem.ts)).append(" | ").append(level2String(logItem.type)).append("/");
             if ((logItem.type == EXCEPTION || logItem.type == WTF_EXCEPTION) && logItem.throwable != null) {
-                stringBuilder.append(logItem.throwable.getMessage());
-                StackTraceElement[] stackTrace = logItem.throwable.getStackTrace();
-                for (StackTraceElement element : stackTrace) {
-                    stringBuilder.append("\n").append("    ").append("at").append(" ").append(element.toString());
+                try (ByteArrayOutputStream os = new ByteArrayOutputStream()) {
+                    try (PrintStream ps = new PrintStream(os)) {
+                        logItem.throwable.printStackTrace(ps);
+                    }
+                    sb.append(new String(os.toByteArray(), StandardCharsets.UTF_8));
+                } catch (IOException e) {
+                    sb.append("~~ FAILED TO APPEND STACK TRACE ~~").append("\n").append(e.getMessage());
                 }
             } else {
-                stringBuilder.append(logItem.TAG).append(" ").append(logItem.log);
+                sb.append(logItem.TAG).append(" ").append(logItem.log);
             }
-            stringBuilder.append("\n");
+            sb.append("\n");
         }
-        return stringBuilder.toString();
+        return sb.toString();
     }
 
     private void addLog(LogItem logItem) {
@@ -239,6 +238,21 @@ public class LogImpl implements Log {
         } catch (Throwable throwable) {
             android.util.Log.e("Log.addLog", null, throwable);
         }
+    }
+
+    @NonNull
+    private String level2String(int level) {
+        switch (level) {
+            case VERBOSE: return "VERBOSE";
+            case DEBUG: return "DEBUG";
+            case INFO: return "INFO";
+            case WARN: return "WARN";
+            case ERROR: return "ERROR";
+            case EXCEPTION: return "EXCEPTION";
+            case WTF: return "WTF";
+            case WTF_EXCEPTION: return "WTF_EXCEPTION";
+        }
+        return "UNKNOWN";
     }
 
     @NonNull

@@ -8,6 +8,8 @@ public interface Time {
 
     Calendar getCalendar();
 
+    long getTimeInMillis();
+
     int getWeek(Context context);
 
     int getWeek(Context context, Calendar calendar);

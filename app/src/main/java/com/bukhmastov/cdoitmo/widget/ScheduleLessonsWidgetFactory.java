@@ -8,12 +8,14 @@ import android.widget.RemoteViewsService;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
+import com.bukhmastov.cdoitmo.model.schedule.lessons.SLesson;
+import com.bukhmastov.cdoitmo.model.schedule.lessons.SLessons;
+import com.bukhmastov.cdoitmo.model.widget.schedule.lessons.WSLSettings;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Time;
+import com.bukhmastov.cdoitmo.util.singleton.StringUtils;
 
-import org.json.JSONArray;
-import org.json.JSONObject;
-
+import java.util.ArrayList;
 import java.util.Calendar;
 
 import javax.inject.Inject;
@@ -25,7 +27,7 @@ public class ScheduleLessonsWidgetFactory implements RemoteViewsService.RemoteVi
     private ScheduleLessonsWidget.Colors colors;
     private String type = "group";
     private int week = -1;
-    private JSONArray lessons;
+    private ArrayList<SLesson> lessons;
 
     @Inject
     Log log;
@@ -38,10 +40,12 @@ public class ScheduleLessonsWidgetFactory implements RemoteViewsService.RemoteVi
         AppComponentProvider.getComponent().inject(this);
         this.context = context;
         this.appWidgetId = intent.getIntExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID);
-        this.lessons = new JSONArray();
+        this.lessons = new ArrayList<>();
         try {
-            JSONObject settings = scheduleLessonsWidgetStorage.getJson(context, appWidgetId, "settings");
-            if (settings == null) throw new NullPointerException("settings cannot be null");
+            WSLSettings settings = scheduleLessonsWidgetStorage.getSettings(appWidgetId);
+            if (settings == null) {
+                throw new NullPointerException("settings cannot be null");
+            }
             colors = ScheduleLessonsWidget.getColors(settings);
         } catch (Exception e) {
             colors = ScheduleLessonsWidget.getColors();
@@ -54,40 +58,22 @@ public class ScheduleLessonsWidgetFactory implements RemoteViewsService.RemoteVi
     @Override
     public void onDataSetChanged() {
         try {
-            JSONObject content = scheduleLessonsWidgetStorage.getJson(context, appWidgetId, "cache_converted");
-            JSONObject settings = scheduleLessonsWidgetStorage.getJson(context, appWidgetId, "settings");
-            if (content == null) throw new NullPointerException("content cannot be null");
-            if (settings == null) throw new NullPointerException("settings cannot be null");
-            try {
-                if (!settings.has("shift")) {
-                    settings.put("shift", 0);
-                }
-                if (!settings.has("shiftAutomatic")) {
-                    settings.put("shiftAutomatic", 0);
-                }
-                final int shift = settings.getInt("shift") + settings.getInt("shiftAutomatic");
-                final Calendar calendar = time.getCalendar();
-                if (shift != 0) {
-                    calendar.add(Calendar.HOUR, shift * 24);
-                }
-                this.week = time.getWeek(context, calendar) % 2;
-                this.type = content.getString("type");
-                final JSONArray schedule = content.getJSONArray("schedule");
-                if (schedule != null) {
-                    final int weekday = time.getWeekDay(calendar);
-                    this.lessons = ScheduleLessonsWidget.getLessonsForWeekday(schedule, week, weekday);
-                } else {
-                    this.lessons = new JSONArray();
-                }
-            } catch (Exception e) {
-                log.exception(e);
-                this.lessons = new JSONArray();
+            this.lessons.clear();
+            WSLSettings settings = scheduleLessonsWidgetStorage.getSettings(appWidgetId);
+            SLessons schedule = scheduleLessonsWidgetStorage.getConverted(appWidgetId);
+            if (settings == null || schedule == null || StringUtils.isBlank(schedule.getType())) {
+                return;
             }
+            int shift = settings.getShift() + settings.getShiftAutomatic();
+            Calendar calendar = time.getCalendar();
+            if (shift != 0) {
+                calendar.add(Calendar.HOUR, shift * 24);
+            }
+            this.week = time.getWeek(context, calendar) % 2;
+            this.type = schedule.getType();
+            this.lessons.addAll(ScheduleLessonsWidget.getLessonsForWeekday(schedule, week, time.getWeekDay(calendar)));
         } catch (Exception e) {
-            if (!("settings cannot be null".equals(e.getMessage()) || "content cannot be null".equals(e.getMessage()))) {
-                log.exception(e);
-            }
-            this.lessons = new JSONArray();
+            log.exception(e);
         }
     }
 
@@ -97,27 +83,31 @@ public class ScheduleLessonsWidgetFactory implements RemoteViewsService.RemoteVi
             if (position >= getCount()) {
                 return null;
             }
-            final JSONObject lesson = this.lessons.getJSONObject(position);
-            if (lesson == null) throw new NullPointerException("lesson cannot be null");
-            final RemoteViews layout = new RemoteViews(context.getPackageName(), R.layout.widget_schedule_lessons_item);
+            SLesson lesson = this.lessons.get(position);
+            if (lesson == null) {
+                throw new NullPointerException("lesson cannot be null");
+            }
+            RemoteViews layout = new RemoteViews(context.getPackageName(), R.layout.widget_schedule_lessons_item);
             layout.setInt(R.id.slw_item_time_start, "setTextColor", colors.text);
             layout.setInt(R.id.slw_item_time_end, "setTextColor", colors.text);
-            layout.setTextViewText(R.id.slw_item_time_start, lesson.getString("timeStart"));
-            layout.setTextViewText(R.id.slw_item_time_end, lesson.getString("timeEnd"));
+            layout.setTextViewText(R.id.slw_item_time_start, lesson.getTimeStart());
+            layout.setTextViewText(R.id.slw_item_time_end, lesson.getTimeEnd());
             layout.setImageViewBitmap(R.id.slw_item_time_icon, ScheduleLessonsWidget.getBitmap(context, R.drawable.ic_widget_time, colors.text));
-            String title = lesson.getString("subject");
-            String type = lesson.getString("type").trim();
+            String title = lesson.getSubject();
+            String type = lesson.getType().trim();
             switch (type) {
                 case "practice": title += " (" + context.getString(R.string.practice) + ")"; break;
                 case "lecture": title += " (" + context.getString(R.string.lecture) + ")"; break;
                 case "lab": title += " (" + context.getString(R.string.lab) + ")"; break;
                 case "iws": title += " (" + context.getString(R.string.iws) + ")"; break;
                 default:
-                    if (!type.isEmpty()) title += " (" + type + ")";
+                    if (StringUtils.isNotBlank(type)){
+                        title += " (" + type + ")";
+                    }
                     break;
             }
             if (this.week == -1) {
-                switch (lesson.getInt("week")){
+                switch (lesson.getParity()){
                     case 0: title += " (" + context.getString(R.string.tab_even) + ")"; break;
                     case 1: title += " (" + context.getString(R.string.tab_odd) + ")"; break;
                 }
@@ -126,22 +116,24 @@ public class ScheduleLessonsWidgetFactory implements RemoteViewsService.RemoteVi
             layout.setInt(R.id.slw_item_title, "setTextColor", colors.text);
             String desc = "";
             switch (this.type) {
-                case "group": desc = lesson.getString("teacher"); break;
-                case "teacher": desc = lesson.getString("group"); break;
+                case "group": desc = lesson.getTeacherName(); break;
+                case "teacher": desc = lesson.getGroup(); break;
                 case "mine":
                 case "room": {
-                    String group = lesson.getString("group");
-                    String teacher = lesson.getString("teacher");
-                    if (group.isEmpty()) {
+                    String group = lesson.getGroup();
+                    String teacher = lesson.getTeacherName();
+                    if (StringUtils.isBlank(group)) {
                         desc = teacher;
                     } else {
                         desc = group;
-                        if (!teacher.isEmpty()) desc += " (" + teacher + ")";
+                        if (StringUtils.isNotBlank(teacher)){
+                            desc += " (" + teacher + ")";
+                        }
                     }
                     break;
                 }
             }
-            if (desc != null && !desc.isEmpty()) {
+            if (StringUtils.isNotBlank(desc)) {
                 layout.setTextViewText(R.id.slw_item_desc, desc);
                 layout.setInt(R.id.slw_item_desc, "setTextColor", colors.text);
             } else {
@@ -152,24 +144,24 @@ public class ScheduleLessonsWidgetFactory implements RemoteViewsService.RemoteVi
                 case "mine":
                 case "group":
                 case "teacher": {
-                    String room = lesson.getString("room");
-                    String building = lesson.getString("building");
-                    if (room.isEmpty()) {
+                    String room = lesson.getRoom();
+                    String building = lesson.getBuilding();
+                    if (StringUtils.isBlank(room)) {
                         meta = building;
                     } else {
                         meta = context.getString(R.string.room_short) + " " + room;
-                        if (!building.isEmpty()) {
+                        if (StringUtils.isNotBlank(building)) {
                             meta += " (" + building + ")";
                         }
                     }
                     break;
                 }
                 case "room": {
-                    meta += lesson.getString("building");
+                    meta += lesson.getBuilding();
                     break;
                 }
             }
-            if (meta != null && !meta.isEmpty()) {
+            if (StringUtils.isNotBlank(meta)) {
                 layout.setTextViewText(R.id.slw_item_meta, meta);
                 layout.setInt(R.id.slw_item_meta, "setTextColor", colors.text);
             } else {
@@ -184,7 +176,7 @@ public class ScheduleLessonsWidgetFactory implements RemoteViewsService.RemoteVi
 
     @Override
     public int getCount() {
-        return this.lessons.length();
+        return lessons.size();
     }
 
     @Override

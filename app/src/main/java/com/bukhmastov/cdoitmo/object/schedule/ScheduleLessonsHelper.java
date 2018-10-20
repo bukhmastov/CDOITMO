@@ -1,33 +1,31 @@
 package com.bukhmastov.cdoitmo.object.schedule;
 
-import android.content.Context;
-
 import com.bukhmastov.cdoitmo.activity.ConnectedActivity;
-import com.bukhmastov.cdoitmo.interfaces.Callable;
-import com.bukhmastov.cdoitmo.util.Storage;
+import com.bukhmastov.cdoitmo.function.Callable;
+import com.bukhmastov.cdoitmo.model.schedule.lessons.SLesson;
 
-import org.json.JSONException;
-import org.json.JSONObject;
+import java.util.Collection;
+import java.util.TreeSet;
 
 public interface ScheduleLessonsHelper {
 
-    boolean clearChanges(final Context context, final Storage storage, final String query, final Callable callback);
+    boolean clearChanges(String query, Callable callback);
 
-    boolean reduceLesson(final Context context, final Storage storage, final String query, final int weekday, final JSONObject lesson, final Callable callback);
+    boolean reduceLesson(String query, int weekday, SLesson lesson, Callable callback);
 
-    boolean restoreLesson(final Context context, final Storage storage, final String query, final int weekday, final JSONObject lesson, final Callable callback);
+    boolean restoreLesson(String query, int weekday, SLesson lesson, Callable callback);
 
-    boolean createLesson(final ConnectedActivity activity, final String query, final String title, final String type, final int weekday, final JSONObject lesson, final Callable callback);
+    boolean createLesson(ConnectedActivity activity, String query, String title, String type, int weekday, SLesson lesson, Callable callback);
 
-    boolean createLesson(final Context context, final Storage storage, final String query, final int weekday, final JSONObject lesson, final Callable callback);
+    boolean createLesson(String query, int weekday, SLesson lesson, Callable callback);
 
-    boolean deleteLesson(final Context context, final Storage storage, final String query, final int weekday, final JSONObject lesson, final Callable callback);
+    boolean deleteLesson(String query, int weekday, SLesson lesson, Callable callback);
 
-    boolean editLesson(final ConnectedActivity activity, final String query, final String title, final String type, final int weekday, final JSONObject lesson, final Callable callback);
+    boolean editLesson(ConnectedActivity activity, String query, String title, String type, int weekday, SLesson lesson, Callable callback);
 
-    // Returns the hash of the lesson
-    String getLessonHash(JSONObject lesson) throws JSONException;
+    String getLessonHash(SLesson lesson) throws Exception;
 
-    // Returns the signature of the lesson
-    String getLessonSignature(JSONObject lesson) throws JSONException;
+    String getLessonSignature(SLesson lesson) throws Exception;
+
+    TreeSet<SLesson> filterAndSortLessons(Collection<SLesson> lessons, int parity, boolean hideReducedLessons);
 }

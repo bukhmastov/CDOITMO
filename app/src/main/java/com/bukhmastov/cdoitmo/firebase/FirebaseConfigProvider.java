@@ -1,6 +1,6 @@
 package com.bukhmastov.cdoitmo.firebase;
 
-import org.json.JSONObject;
+import com.bukhmastov.cdoitmo.model.firebase.config.FBConfigMessage;
 
 public interface FirebaseConfigProvider {
 
@@ -11,10 +11,10 @@ public interface FirebaseConfigProvider {
     interface Result {
         void onResult(String value);
     }
-    interface ResultJson {
-        void onResult(JSONObject value);
+    interface ResultMessage {
+        void onResult(FBConfigMessage configMessage);
     }
 
     void getString(String key, Result result);
-    void getJson(String key, ResultJson result);
+    void getMessage(String key, ResultMessage result);
 }

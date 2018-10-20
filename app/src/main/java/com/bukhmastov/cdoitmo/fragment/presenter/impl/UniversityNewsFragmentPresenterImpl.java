@@ -20,15 +20,21 @@ import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.App;
 import com.bukhmastov.cdoitmo.R;
+import com.bukhmastov.cdoitmo.activity.WebViewActivity;
+import com.bukhmastov.cdoitmo.adapter.rva.RVA;
 import com.bukhmastov.cdoitmo.adapter.rva.RecyclerViewOnScrollListener;
 import com.bukhmastov.cdoitmo.adapter.rva.university.UniversityNewsRVA;
 import com.bukhmastov.cdoitmo.adapter.rva.university.UniversityRVA;
 import com.bukhmastov.cdoitmo.event.bus.EventBus;
 import com.bukhmastov.cdoitmo.event.bus.annotation.Event;
 import com.bukhmastov.cdoitmo.event.events.ClearCacheEvent;
+import com.bukhmastov.cdoitmo.event.events.OpenActivityEvent;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.fragment.presenter.UniversityNewsFragmentPresenter;
+import com.bukhmastov.cdoitmo.model.rva.RVASingleValue;
+import com.bukhmastov.cdoitmo.model.university.news.UNews;
+import com.bukhmastov.cdoitmo.model.university.news.UNewsItem;
 import com.bukhmastov.cdoitmo.network.IfmoRestClient;
 import com.bukhmastov.cdoitmo.network.handlers.RestResponseHandler;
 import com.bukhmastov.cdoitmo.network.model.Client;
@@ -37,14 +43,15 @@ import com.bukhmastov.cdoitmo.util.Storage;
 import com.bukhmastov.cdoitmo.util.StoragePref;
 import com.bukhmastov.cdoitmo.util.Thread;
 import com.bukhmastov.cdoitmo.util.Time;
+import com.bukhmastov.cdoitmo.util.singleton.CollectionUtils;
 import com.bukhmastov.cdoitmo.util.singleton.Color;
-import com.bukhmastov.cdoitmo.util.singleton.JsonUtils;
+import com.bukhmastov.cdoitmo.util.singleton.StringUtils;
 
 import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.Collection;
 
 import javax.inject.Inject;
 
@@ -56,12 +63,11 @@ public class UniversityNewsFragmentPresenterImpl implements UniversityNewsFragme
     private View container;
     private Client.Request requestHandle = null;
     private boolean loaded = false;
-    private JSONObject news = null;
+    private UNews news = null;
     private final int limit = 10;
     private int offset = 0;
     private String search = "";
     private UniversityNewsRVA newsRecyclerViewAdapter = null;
-    private long timestamp = 0;
 
     @Inject
     Log log;
@@ -113,20 +119,24 @@ public class UniversityNewsFragmentPresenterImpl implements UniversityNewsFragme
 
     @Override
     public void onResume() {
-        log.v(TAG, "Fragment resumed");
-        firebaseAnalyticsProvider.setCurrentScreen(activity, fragment);
-        if (!loaded) {
-            loaded = true;
-            load();
-        }
+        thread.run(() -> {
+            log.v(TAG, "Fragment resumed");
+            firebaseAnalyticsProvider.setCurrentScreen(activity, fragment);
+            if (!loaded) {
+                loaded = true;
+                load();
+            }
+        });
     }
 
     @Override
     public void onPause() {
-        log.v(TAG, "Fragment paused");
-        if (requestHandle != null && requestHandle.cancel()) {
-            loaded = false;
-        }
+        thread.run(() -> {
+            log.v(TAG, "Fragment paused");
+            if (requestHandle != null && requestHandle.cancel()) {
+                loaded = false;
+            }
+        });
     }
 
     @Override
@@ -152,135 +162,124 @@ public class UniversityNewsFragmentPresenterImpl implements UniversityNewsFragme
 
     private void load(final String search, final int refresh_rate) {
         thread.run(() -> {
-            log.v(TAG, "load | search=" + search + " | refresh_rate=" + refresh_rate);
-            if (storagePref.get(activity, "pref_use_cache", true) && storagePref.get(activity, "pref_use_university_cache", false)) {
-                String cache = storage.get(activity, Storage.CACHE, Storage.GLOBAL, "university#news").trim();
-                if (!cache.isEmpty()) {
-                    try {
-                        JSONObject cacheJson = new JSONObject(cache);
-                        news = cacheJson.getJSONObject("data");
-                        timestamp = cacheJson.getLong("timestamp");
-                        if (timestamp + refresh_rate * 3600000L < time.getCalendar().getTimeInMillis()) {
-                            load(search, true);
-                        } else {
-                            load(search, false);
-                        }
-                    } catch (JSONException e) {
-                        log.exception(e);
-                        load(search, true);
-                    }
-                } else {
-                    load(search, false);
-                }
+            log.v(TAG, "load | search=", search, " | refresh_rate=", refresh_rate);
+            if (!(storagePref.get(activity, "pref_use_cache", true) && storagePref.get(activity, "pref_use_university_cache", false))) {
+                load(search, false);
+                return;
+            }
+            UNews cache = getFromCache();
+            if (cache == null) {
+                load(search, true);
+                return;
+            }
+            news = cache;
+            if (cache.getTimestamp() + refresh_rate * 3600000L < time.getTimeInMillis()) {
+                load(search, true);
             } else {
                 load(search, false);
             }
+        }, throwable -> {
+            loadFailed();
         });
     }
 
     private void load(final String search, final boolean force) {
         thread.run(() -> {
-            log.v(TAG, "load | search=" + search + " | force=" + (force ? "true" : "false"));
+            log.v(TAG, "load | search=", search, " | force=", force);
             if ((!force || !Client.isOnline(activity)) && news != null) {
                 display();
                 return;
             }
-            if (!App.OFFLINE_MODE) {
-                this.offset = 0;
-                this.search = search;
-                loadProvider(new RestResponseHandler() {
-                    @Override
-                    public void onSuccess(final int statusCode, final Client.Headers headers, final JSONObject json, final JSONArray responseArr) {
-                        thread.run(() -> {
-                            if (statusCode == 200) {
-                                long now = time.getCalendar().getTimeInMillis();
-                                if (json != null && storagePref.get(activity, "pref_use_cache", true) && storagePref.get(activity, "pref_use_university_cache", false)) {
-                                    try {
-                                        storage.put(activity, Storage.CACHE, Storage.GLOBAL, "university#news", new JSONObject()
-                                                .put("timestamp", now)
-                                                .put("data", json)
-                                                .toString()
-                                        );
-                                    } catch (JSONException e) {
-                                        log.exception(e);
-                                    }
-                                }
-                                news = json;
-                                timestamp = now;
-                                display();
-                            } else {
-                                loadFailed();
-                            }
-                        });
-                    }
-                    @Override
-                    public void onFailure(final int statusCode, final Client.Headers headers, final int state) {
-                        thread.runOnUI(() -> {
-                            log.v(TAG, "load | failure " + state);
-                            switch (state) {
-                                case IfmoRestClient.FAILED_OFFLINE:
-                                    draw(R.layout.state_offline_text);
-                                    if (activity != null) {
-                                        View offline_reload = container.findViewById(R.id.offline_reload);
-                                        if (offline_reload != null) {
-                                            offline_reload.setOnClickListener(v -> load());
-                                        }
-                                    }
-                                    break;
-                                case IfmoRestClient.FAILED_CORRUPTED_JSON:
-                                case IfmoRestClient.FAILED_SERVER_ERROR:
-                                case IfmoRestClient.FAILED_TRY_AGAIN:
-                                    draw(R.layout.state_failed_button);
-                                    TextView try_again_message = activity.findViewById(R.id.try_again_message);
-                                    if (try_again_message != null) {
-                                        switch (state) {
-                                            case IfmoRestClient.FAILED_SERVER_ERROR:   try_again_message.setText(IfmoRestClient.getFailureMessage(activity, statusCode)); break;
-                                            case IfmoRestClient.FAILED_CORRUPTED_JSON: try_again_message.setText(R.string.server_provided_corrupted_json); break;
-                                        }
-                                    }
-                                    if (activity != null) {
-                                        View try_again_reload = container.findViewById(R.id.try_again_reload);
-                                        if (try_again_reload != null) {
-                                            try_again_reload.setOnClickListener(v -> load());
-                                        }
-                                    }
-                                    break;
-                            }
-                        });
-                    }
-                    @Override
-                    public void onProgress(final int state) {
-                        thread.runOnUI(() -> {
-                            log.v(TAG, "load | progress " + state);
-                            draw(R.layout.state_loading_text);
-                            if (activity != null) {
-                                TextView loading_message = container.findViewById(R.id.loading_message);
-                                if (loading_message != null) {
-                                    switch (state) {
-                                        case IfmoRestClient.STATE_HANDLING:
-                                            loading_message.setText(R.string.loading);
-                                            break;
-                                    }
-                                }
-                            }
-                        });
-                    }
-                    @Override
-                    public void onNewRequest(Client.Request request) {
-                        requestHandle = request;
-                    }
-                });
-            } else {
+            if (App.OFFLINE_MODE) {
                 thread.runOnUI(() -> {
                     draw(R.layout.state_offline_text);
-                    if (activity != null) {
-                        View offline_reload = activity.findViewById(R.id.offline_reload);
-                        if (offline_reload != null) {
-                            offline_reload.setOnClickListener(v -> load(search));
-                        }
+                    View reload = container.findViewById(R.id.offline_reload);
+                    if (reload != null) {
+                        reload.setOnClickListener(v -> load(search));
                     }
+                }, throwable -> {
+                    loadFailed();
                 });
+                return;
             }
+            this.offset = 0;
+            this.search = search;
+            loadProvider(new RestResponseHandler() {
+                @Override
+                public void onSuccess(final int statusCode, final Client.Headers headers, final JSONObject obj, final JSONArray arr) {
+                    thread.run(() -> {
+                        if (statusCode == 200 && obj != null) {
+                            UNews data = new UNews().fromJson(obj);
+                            data.setTimestamp(time.getTimeInMillis());
+                            if (storagePref.get(activity, "pref_use_cache", true) && storagePref.get(activity, "pref_use_university_cache", false)) {
+                                storage.put(activity, Storage.CACHE, Storage.GLOBAL, "university#news", data.toJsonString());
+                            }
+                            news = data;
+                            display();
+                            return;
+                        }
+                        loadFailed();
+                    }, throwable -> {
+                        loadFailed();
+                    });
+                }
+                @Override
+                public void onFailure(final int statusCode, final Client.Headers headers, final int state) {
+                    thread.runOnUI(() -> {
+                        log.v(TAG, "load | failure ", state);
+                        switch (state) {
+                            case IfmoRestClient.FAILED_OFFLINE: {
+                                draw(R.layout.state_offline_text);
+                                View reload = container.findViewById(R.id.offline_reload);
+                                if (reload != null) {
+                                    reload.setOnClickListener(v -> load());
+                                }
+                                break;
+                            }
+                            case IfmoRestClient.FAILED_CORRUPTED_JSON:
+                            case IfmoRestClient.FAILED_SERVER_ERROR:
+                            case IfmoRestClient.FAILED_TRY_AGAIN: {
+                                draw(R.layout.state_failed_button);
+                                TextView message = activity.findViewById(R.id.try_again_message);
+                                if (message != null) {
+                                    switch (state) {
+                                        case IfmoRestClient.FAILED_SERVER_ERROR:   message.setText(IfmoRestClient.getFailureMessage(activity, statusCode)); break;
+                                        case IfmoRestClient.FAILED_CORRUPTED_JSON: message.setText(R.string.server_provided_corrupted_json); break;
+                                    }
+                                }
+                                View reload = container.findViewById(R.id.try_again_reload);
+                                if (reload != null) {
+                                    reload.setOnClickListener(v -> load());
+                                }
+                                break;
+                            }
+                        }
+                    }, throwable -> {
+                        loadFailed();
+                    });
+                }
+                @Override
+                public void onProgress(final int state) {
+                    thread.runOnUI(() -> {
+                        log.v(TAG, "load | progress " + state);
+                        draw(R.layout.state_loading_text);
+                        TextView message = container.findViewById(R.id.loading_message);
+                        if (message != null) {
+                            switch (state) {
+                                case IfmoRestClient.STATE_HANDLING:
+                                    message.setText(R.string.loading);
+                                    break;
+                            }
+                        }
+                    });
+                }
+                @Override
+                public void onNewRequest(Client.Request request) {
+                    requestHandle = request;
+                }
+            });
+        }, throwable -> {
+            loadFailed();
         });
     }
 
@@ -292,17 +291,17 @@ public class UniversityNewsFragmentPresenterImpl implements UniversityNewsFragme
     private void loadFailed() {
         thread.runOnUI(() -> {
             log.v(TAG, "loadFailed");
-            try {
-                draw(R.layout.state_failed_button);
-                TextView try_again_message = container.findViewById(R.id.try_again_message);
-                if (try_again_message != null) try_again_message.setText(R.string.load_failed);
-                View try_again_reload = container.findViewById(R.id.try_again_reload);
-                if (try_again_reload != null) {
-                    try_again_reload.setOnClickListener(v -> load());
-                }
-            } catch (Exception e) {
-                log.exception(e);
+            draw(R.layout.state_failed_button);
+            TextView message = container.findViewById(R.id.try_again_message);
+            if (message != null) {
+                message.setText(R.string.load_failed);
             }
+            View reload = container.findViewById(R.id.try_again_reload);
+            if (reload != null) {
+                reload.setOnClickListener(v -> load());
+            }
+        }, throwable -> {
+            log.exception(throwable);
         });
     }
 
@@ -313,160 +312,165 @@ public class UniversityNewsFragmentPresenterImpl implements UniversityNewsFragme
                 loadFailed();
                 return;
             }
-            try {
-                draw(R.layout.layout_university_list_infinite);
-                // поиск
-                final EditText search_input = container.findViewById(R.id.search_input);
-                final FrameLayout search_action = container.findViewById(R.id.search_action);
-                search_action.setOnClickListener(v -> load(search_input.getText().toString().trim(), true));
-                search_input.setOnKeyListener((v, keyCode, event) -> {
-                    if (event.getAction() == KeyEvent.ACTION_DOWN && keyCode == KeyEvent.KEYCODE_ENTER) {
-                        load(search_input.getText().toString().trim(), true);
-                        return true;
+            draw(R.layout.layout_university_list_infinite);
+            // поиск
+            final EditText searchInput = container.findViewById(R.id.search_input);
+            final FrameLayout searchAction = container.findViewById(R.id.search_action);
+            searchAction.setOnClickListener(v -> load(searchInput.getText().toString().trim(), true));
+            searchInput.setOnKeyListener((v, keyCode, event) -> {
+                if (event.getAction() == KeyEvent.ACTION_DOWN && keyCode == KeyEvent.KEYCODE_ENTER) {
+                    load(searchInput.getText().toString().trim(), true);
+                    return true;
+                }
+                return false;
+            });
+            searchInput.setText(search);
+            // очищаем сообщение
+            ViewGroup listInfo = container.findViewById(R.id.infinite_list_info);
+            listInfo.removeAllViews();
+            listInfo.setPadding(0, 0, 0, 0);
+            // список
+            if (CollectionUtils.isNotEmpty(news.getNewsItems())) {
+                newsRecyclerViewAdapter = new UniversityNewsRVA(activity);
+                final RecyclerView list = container.findViewById(R.id.infinite_list);
+                if (list != null) {
+                    list.setLayoutManager(new LinearLayoutManager(activity));
+                    list.setAdapter(newsRecyclerViewAdapter);
+                    list.addOnScrollListener(new RecyclerViewOnScrollListener(container));
+                }
+                newsRecyclerViewAdapter.setClickListener(R.id.news_click, (v, entity) -> thread.run(() -> {
+                    if (!(entity.getEntity() instanceof UNewsItem)) {
+                        return;
                     }
-                    return false;
-                });
-                search_input.setText(search);
-                // очищаем сообщение
-                ViewGroup infinite_list_info = container.findViewById(R.id.infinite_list_info);
-                infinite_list_info.removeAllViews();
-                infinite_list_info.setPadding(0, 0, 0, 0);
-                // список
-                JSONArray list = news.getJSONArray("list");
-                if (list.length() > 0) {
-                    newsRecyclerViewAdapter = new UniversityNewsRVA(activity);
-                    final RecyclerView infinite_list = container.findViewById(R.id.infinite_list);
-                    if (infinite_list != null) {
-                        infinite_list.setLayoutManager(new LinearLayoutManager(activity));
-                        infinite_list.setAdapter(newsRecyclerViewAdapter);
-                        infinite_list.addOnScrollListener(new RecyclerViewOnScrollListener(container));
+                    UNewsItem event = (UNewsItem) entity.getEntity();
+                    if (StringUtils.isBlank(event.getUrlWebview())) {
+                        return;
                     }
-                    newsRecyclerViewAdapter.setOnStateClickListener(R.id.load_more, v -> {
-                        offset += limit;
-                        newsRecyclerViewAdapter.setState(R.id.loading_more);
-                        thread.run(() -> loadProvider(new RestResponseHandler() {
-                            @Override
-                            public void onSuccess(final int statusCode, final Client.Headers headers, final JSONObject json, final JSONArray responseArr) {
-                                thread.run(() -> {
-                                    try {
-                                        news.put("count", json.getInt("count"));
-                                        news.put("limit", json.getInt("limit"));
-                                        news.put("offset", json.getInt("offset"));
-                                        JSONArray list_original = news.getJSONArray("list");
-                                        JSONArray list1 = json.getJSONArray("list");
-                                        for (int i = 0; i < list1.length(); i++) {
-                                            list_original.put(list1.getJSONObject(i));
-                                        }
-                                        long now = time.getCalendar().getTimeInMillis();
-                                        timestamp = now;
-                                        if (storagePref.get(activity, "pref_use_cache", true) && storagePref.get(activity, "pref_use_university_cache", false)) {
-                                            try {
-                                                storage.put(activity, Storage.CACHE, Storage.GLOBAL, "university#news", new JSONObject()
-                                                        .put("timestamp", now)
-                                                        .put("data", news)
-                                                        .toString()
-                                                );
-                                            } catch (JSONException e) {
-                                                log.exception(e);
-                                            }
-                                        }
-                                        displayContent(list1);
-                                    } catch (Exception e) {
-                                        log.exception(e);
-                                        thread.runOnUI(() -> newsRecyclerViewAdapter.setState(R.id.load_more));
+                    Bundle extras = new Bundle();
+                    extras.putString("url", event.getUrlWebview().trim());
+                    extras.putString("title", activity.getString(R.string.news));
+                    eventBus.fire(new OpenActivityEvent(WebViewActivity.class, extras));
+                }));
+                newsRecyclerViewAdapter.setClickListener(R.id.load_more, (v, entity) -> thread.run(() -> {
+                    offset += limit;
+                    thread.runOnUI(() -> newsRecyclerViewAdapter.setState(R.id.loading_more));
+                    loadProvider(new RestResponseHandler() {
+                        @Override
+                        public void onSuccess(final int statusCode, final Client.Headers headers, final JSONObject obj, final JSONArray arr) {
+                            thread.run(() -> {
+                                if (statusCode == 200 && obj != null) {
+                                    UNews data = new UNews().fromJson(obj);
+                                    news.getNewsItems().addAll(data.getNewsItems());
+                                    news.setCount(data.getCount());
+                                    news.setLimit(data.getLimit());
+                                    news.setOffset(data.getOffset());
+                                    news.setTimestamp(time.getTimeInMillis());
+                                    if (storagePref.get(activity, "pref_use_cache", true) && storagePref.get(activity, "pref_use_university_cache", false)) {
+                                        storage.put(activity, Storage.CACHE, Storage.GLOBAL, "university#news", data.toJsonString());
                                     }
-                                });
-                            }
-                            @Override
-                            public void onFailure(int statusCode, Client.Headers headers, int state) {
+                                    displayNews(data.getNewsItems());
+                                    return;
+                                }
                                 thread.runOnUI(() -> newsRecyclerViewAdapter.setState(R.id.load_more));
-                            }
-                            @Override
-                            public void onProgress(int state) {}
-                            @Override
-                            public void onNewRequest(Client.Request request) {
-                                requestHandle = request;
-                            }
-                        }));
-                    });
-                    if (timestamp > 0 && timestamp + 5000 < time.getCalendar().getTimeInMillis()) {
-                        UniversityRVA.Item item = new UniversityRVA.Item();
-                        item.type = UniversityRVA.TYPE_INFO_ABOUT_UPDATE_TIME;
-                        item.data = new JSONObject().put("title", activity.getString(R.string.update_date) + " " + time.getUpdateTime(activity, timestamp));
-                        newsRecyclerViewAdapter.addItem(item);
-                    }
-                    displayContent(list);
-                } else {
-                    View view = inflate(R.layout.state_nothing_to_display_compact);
-                    ((TextView) view.findViewById(R.id.ntd_text)).setText(R.string.no_news);
-                    infinite_list_info.addView(view);
-                }
-                // добавляем отступ
-                container.findViewById(R.id.top_panel).post(() -> {
-                    try {
-                        int height = container.findViewById(R.id.top_panel).getHeight();
-                        RecyclerView infinite_list = container.findViewById(R.id.infinite_list);
-                        infinite_list.setPadding(0, height, 0, 0);
-                        infinite_list.scrollToPosition(0);
-                        if (infinite_list_info.getChildCount() > 0) {
-                            infinite_list_info.setPadding(0, height, 0, 0);
+                            }, throwable -> {
+                                log.exception(throwable);
+                                thread.runOnUI(() -> newsRecyclerViewAdapter.setState(R.id.load_more));
+                            });
                         }
-                    } catch (Exception ignore) {
-                        // ignore
-                    }
-                });
-                // работаем со свайпом
-                SwipeRefreshLayout mSwipeRefreshLayout = container.findViewById(R.id.infinite_list_swipe);
-                if (mSwipeRefreshLayout != null) {
-                    mSwipeRefreshLayout.setColorSchemeColors(Color.resolve(activity, R.attr.colorAccent));
-                    mSwipeRefreshLayout.setProgressBackgroundColorSchemeColor(Color.resolve(activity, R.attr.colorBackgroundRefresh));
-                    mSwipeRefreshLayout.setOnRefreshListener(this);
+                        @Override
+                        public void onFailure(int statusCode, Client.Headers headers, int state) {
+                            thread.runOnUI(() -> newsRecyclerViewAdapter.setState(R.id.load_more));
+                        }
+                        @Override
+                        public void onProgress(int state) {}
+                        @Override
+                        public void onNewRequest(Client.Request request) {
+                            requestHandle = request;
+                        }
+                    });
+                }));
+                if (news.getTimestamp() > 0 && news.getTimestamp() + 5000 < time.getCalendar().getTimeInMillis()) {
+                    newsRecyclerViewAdapter.addItem(new UniversityRVA.Item<>(
+                            UniversityRVA.TYPE_INFO_ABOUT_UPDATE_TIME,
+                            new RVASingleValue(activity.getString(R.string.update_date) + " " + time.getUpdateTime(activity, news.getTimestamp()))
+                    ));
                 }
-            } catch (Exception e) {
-                log.exception(e);
-                loadFailed();
+                displayNews(news.getNewsItems());
+            } else {
+                View view = inflate(R.layout.state_nothing_to_display_compact);
+                ((TextView) view.findViewById(R.id.ntd_text)).setText(R.string.no_news);
+                listInfo.addView(view);
             }
+            // добавляем отступ
+            container.findViewById(R.id.top_panel).post(() -> {
+                try {
+                    int height = container.findViewById(R.id.top_panel).getHeight();
+                    RecyclerView list = container.findViewById(R.id.infinite_list);
+                    list.setPadding(0, height, 0, 0);
+                    list.scrollToPosition(0);
+                    if (listInfo.getChildCount() > 0) {
+                        listInfo.setPadding(0, height, 0, 0);
+                    }
+                } catch (Exception ignore) {
+                    // ignore
+                }
+            });
+            // работаем со свайпом
+            SwipeRefreshLayout swipe = container.findViewById(R.id.infinite_list_swipe);
+            if (swipe != null) {
+                swipe.setColorSchemeColors(Color.resolve(activity, R.attr.colorAccent));
+                swipe.setProgressBackgroundColorSchemeColor(Color.resolve(activity, R.attr.colorBackgroundRefresh));
+                swipe.setOnRefreshListener(this);
+            }
+        }, throwable -> {
+            log.exception(throwable);
+            loadFailed();
         });
     }
 
-    private void displayContent(final JSONArray list) {
+    private void displayNews(Collection<UNewsItem> uNews) {
         thread.run(() -> {
-            try {
-                final ArrayList<UniversityNewsRVA.Item> items = new ArrayList<>();
-                for (int i = 0; i < list.length(); i++) {
-                    try {
-                        final JSONObject news = list.getJSONObject(i);
-                        UniversityNewsRVA.Item item = new UniversityNewsRVA.Item();
-                        item.type = JsonUtils.getBoolean(news, "main") ? UniversityNewsRVA.TYPE_MAIN : UniversityNewsRVA.TYPE_MINOR;
-                        item.data = news;
-                        items.add(item);
-                    } catch (Exception e) {
-                        log.exception(e);
-                    }
-                }
-                if (items.size() == 0) {
-                    items.add(new UniversityRVA.Item(UniversityNewsRVA.TYPE_NO_DATA, null));
-                }
-                thread.runOnUI(() -> {
-                    try {
-                        if (newsRecyclerViewAdapter != null) {
-                            newsRecyclerViewAdapter.addItem(items);
-                            if (offset + limit < news.getInt("count")) {
-                                newsRecyclerViewAdapter.setState(R.id.load_more);
-                            } else {
-                                newsRecyclerViewAdapter.setState(R.id.no_more);
-                            }
-                        }
-                    } catch (Exception e) {
-                        log.exception(e);
-                        loadFailed();
-                    }
-                });
-            } catch (Exception e) {
-                log.exception(e);
-                loadFailed();
+            Collection<RVA.Item> items = new ArrayList<>();
+            for (UNewsItem newsItem : uNews) {
+                items.add(new UniversityNewsRVA.Item<>(
+                        newsItem.isMain() ? UniversityNewsRVA.TYPE_MAIN : UniversityNewsRVA.TYPE_MINOR,
+                        newsItem
+                ));
             }
+            if (items.size() == 0) {
+                items.add(new UniversityRVA.Item(UniversityNewsRVA.TYPE_NO_DATA));
+            }
+            thread.runOnUI(() -> {
+                if (newsRecyclerViewAdapter != null) {
+                    newsRecyclerViewAdapter.addItems(items);
+                    if (offset + limit < news.getCount()) {
+                        newsRecyclerViewAdapter.setState(R.id.load_more);
+                    } else {
+                        newsRecyclerViewAdapter.setState(R.id.no_more);
+                    }
+                }
+            }, throwable -> {
+                log.exception(throwable);
+                loadFailed();
+            });
+        }, throwable -> {
+            log.exception(throwable);
+            loadFailed();
         });
+    }
+
+    private UNews getFromCache() {
+        thread.assertNotUI();
+        String cache = storage.get(activity, Storage.CACHE, Storage.GLOBAL, "university#news").trim();
+        if (StringUtils.isBlank(cache)) {
+            return null;
+        }
+        try {
+            return new UNews().fromJsonString(cache);
+        } catch (Exception e) {
+            storage.delete(activity, Storage.CACHE, Storage.GLOBAL, "university#news");
+            return null;
+        }
     }
 
     private void draw(int layoutId) {
@@ -483,10 +487,6 @@ public class UniversityNewsFragmentPresenterImpl implements UniversityNewsFragme
 
     private View inflate(@LayoutRes int layout) throws InflateException {
         LayoutInflater inflater = (LayoutInflater) activity.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        if (inflater == null) {
-            log.e(TAG, "Failed to inflate layout, inflater is null");
-            return null;
-        }
         return inflater.inflate(layout, null);
     }
 }

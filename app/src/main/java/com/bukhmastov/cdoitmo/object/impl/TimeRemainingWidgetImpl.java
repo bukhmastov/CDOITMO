@@ -3,14 +3,15 @@ package com.bukhmastov.cdoitmo.object.impl;
 import android.content.Context;
 
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
+import com.bukhmastov.cdoitmo.model.schedule.lessons.SDay;
+import com.bukhmastov.cdoitmo.model.schedule.lessons.SLesson;
+import com.bukhmastov.cdoitmo.model.schedule.lessons.SLessons;
 import com.bukhmastov.cdoitmo.object.TimeRemainingWidget;
 import com.bukhmastov.cdoitmo.util.Log;
-import com.bukhmastov.cdoitmo.util.Time;
 import com.bukhmastov.cdoitmo.util.TextUtils;
+import com.bukhmastov.cdoitmo.util.Time;
 
-import org.json.JSONArray;
-import org.json.JSONObject;
-
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -25,6 +26,8 @@ public class TimeRemainingWidgetImpl implements TimeRemainingWidget {
     @Inject
     Log log;
     @Inject
+    Context context;
+    @Inject
     Time time;
     @Inject
     TextUtils textUtils;
@@ -34,9 +37,9 @@ public class TimeRemainingWidgetImpl implements TimeRemainingWidget {
     }
 
     @Override
-    public void start(Context context, Delegate delegate, JSONObject schedule) {
+    public void start(SLessons schedule, Delegate delegate) {
         log.v(TAG, "start");
-        executor = new Executor(context, delegate, schedule);
+        executor = new Executor(schedule, delegate);
     }
 
     @Override
@@ -50,22 +53,22 @@ public class TimeRemainingWidgetImpl implements TimeRemainingWidget {
     private class Executor extends Thread {
 
         private static final String TAG = "TRWidget.Executor";
-        private final Context context;
         private final Delegate delegate;
-        private final JSONObject full_schedule;
+        private final SLessons schedule;
         private final long delay = 1000;
-        private boolean running = false;
-        private JSONArray lessons;
-        private boolean first_init = true;
+        private ArrayList<SLesson> lessons;
+        private boolean running;
+        private boolean firstInit;
         private int week = -1;
         private int weekday = -1;
 
-        Executor(Context context, Delegate delegate, JSONObject full_schedule){
+        Executor(SLessons schedule, Delegate delegate){
             log.i(TAG, "started");
-            this.context = context;
             this.delegate = delegate;
-            this.full_schedule = full_schedule;
+            this.schedule = schedule;
+            this.lessons = new ArrayList<>();
             this.running = true;
+            this.firstInit = true;
             start();
         }
 
@@ -73,33 +76,33 @@ public class TimeRemainingWidgetImpl implements TimeRemainingWidget {
             while (!Thread.currentThread().isInterrupted() && running) {
                 try {
                     long ts = System.currentTimeMillis();
-                    if (ts % 3600000L <= 1000 || first_init) {
+                    if (ts % 3600000L <= 1000 || firstInit) {
                         log.v(TAG, "update data");
-                        first_init = false;
+                        firstInit = false;
                         week = time.getWeek(context) % 2;
                         weekday = time.getWeekDay();
-                        lessons = null;
-                        JSONArray schedule = full_schedule.getJSONArray("schedule");
-                        for (int i = 0; i < schedule.length(); i++) {
-                            JSONObject dayObj = schedule.getJSONObject(i);
-                            if (dayObj.getInt("weekday") == weekday) {
-                                lessons = dayObj.getJSONArray("lessons");
-                                break;
+                        lessons.clear();
+                        for (SDay day : schedule.getSchedule()) {
+                            if (day.getWeekday() != weekday) {
+                                continue;
                             }
+                            lessons.addAll(day.getLessons());
+                            break;
                         }
                     }
-                    if (lessons == null) throw new NullPointerException("lessons is null");
                     long current = -1;
-                    long current_15min = -1;
+                    long current15min = -1;
                     long next = -1;
                     long day = -1;
-                    for (int i = 0; i < lessons.length(); i++) {
-                        JSONObject lesson = lessons.getJSONObject(i);
-                        if ("reduced".equals(lesson.getString("cdoitmo_type"))) continue;
-                        int lesson_week = lesson.getInt("week");
-                        if (!(week == lesson_week || lesson_week == 2 || week < 0)) continue;
-                        Matcher timeStart = Pattern.compile("^(\\d{1,2}):(\\d{2})$").matcher(lesson.getString("timeStart"));
-                        Matcher timeEnd = Pattern.compile("^(\\d{1,2}):(\\d{2})$").matcher(lesson.getString("timeEnd"));
+                    for (SLesson lesson : lessons) {
+                        if ("reduced".equals(lesson.getCdoitmoType())) {
+                            continue;
+                        }
+                        if (!(week == lesson.getParity() || lesson.getParity() == 2 || week < 0)) {
+                            continue;
+                        }
+                        Matcher timeStart = Pattern.compile("^(\\d{1,2}):(\\d{2})$").matcher(lesson.getTimeStart());
+                        Matcher timeEnd = Pattern.compile("^(\\d{1,2}):(\\d{2})$").matcher(lesson.getTimeEnd());
                         if (timeStart.find() && timeEnd.find()) {
                             Calendar calendarTS = time.getCalendar();
                             calendarTS.set(Calendar.HOUR_OF_DAY, Integer.parseInt(timeStart.group(1)));
@@ -113,7 +116,7 @@ public class TimeRemainingWidgetImpl implements TimeRemainingWidget {
                             long timestampTE = calendarTE.getTimeInMillis();
                             if (ts >= timestampTS && ts <= timestampTE) {
                                 current = timestampTE - ts;
-                                current_15min = 15 * 60000 - (ts - timestampTS);
+                                current15min = 15 * 60000 - (ts - timestampTS);
                             }
                             if (next == -1 && ts < timestampTS) {
                                 next = timestampTS - ts;
@@ -126,10 +129,18 @@ public class TimeRemainingWidgetImpl implements TimeRemainingWidget {
                     day = day - ts;
                     day = day < 0 ? -1 : day;
                     Data data = new Data();
-                    if (current >= 0) data.current = ts2date(current);
-                    if (current_15min >= 0) data.current_15min = ts2date(current_15min);
-                    if (next >= 0) data.next = ts2date(next);
-                    if (day >= 0) data.day = ts2date(day);
+                    if (current >= 0) {
+                        data.current = ts2date(current);
+                    }
+                    if (current15min >= 0) {
+                        data.current15min = ts2date(current15min);
+                    }
+                    if (next >= 0) {
+                        data.next = ts2date(next);
+                    }
+                    if (day >= 0) {
+                        data.day = ts2date(day);
+                    }
                     delegate.onAction(data);
                     long delta = delay - (System.currentTimeMillis() - ts);
                     try {
@@ -142,7 +153,9 @@ public class TimeRemainingWidgetImpl implements TimeRemainingWidget {
                     this.cancel();
                 }
             }
-            if (!Thread.currentThread().isInterrupted() || running) this.cancel();
+            if (!Thread.currentThread().isInterrupted() || running) {
+                this.cancel();
+            }
         }
 
         public void cancel() {

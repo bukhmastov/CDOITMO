@@ -11,24 +11,23 @@ import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
+import com.bukhmastov.cdoitmo.model.schedule.teachers.STeacher;
 import com.bukhmastov.cdoitmo.util.Log;
-
-import org.json.JSONException;
-import org.json.JSONObject;
+import com.bukhmastov.cdoitmo.util.singleton.StringUtils;
 
 import java.util.ArrayList;
 
 import javax.inject.Inject;
 
-public class TeacherPickerAdapter extends ArrayAdapter<JSONObject> {
+public class TeacherPickerAdapter extends ArrayAdapter<STeacher> {
 
     private final Context context;
-    private ArrayList<JSONObject> teachers;
+    private ArrayList<STeacher> teachers;
 
     @Inject
     Log log;
 
-    public TeacherPickerAdapter(Context context, ArrayList<JSONObject> teachers) {
+    public TeacherPickerAdapter(Context context, ArrayList<STeacher> teachers) {
         super(context, R.layout.spinner_teacher_picker, teachers);
         AppComponentProvider.getComponent().inject(this);
         this.context = context;
@@ -41,7 +40,7 @@ public class TeacherPickerAdapter extends ArrayAdapter<JSONObject> {
     }
 
     @Override
-    public JSONObject getItem(int index) {
+    public STeacher getItem(int index) {
         return teachers.get(index);
     }
 
@@ -50,7 +49,7 @@ public class TeacherPickerAdapter extends ArrayAdapter<JSONObject> {
         return position;
     }
 
-    public void addTeachers(ArrayList<JSONObject> teachers){
+    public void addTeachers(ArrayList<STeacher> teachers){
         this.teachers = teachers;
     }
 
@@ -62,16 +61,16 @@ public class TeacherPickerAdapter extends ArrayAdapter<JSONObject> {
                 LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
                 convertView = inflater.inflate(R.layout.spinner_teacher_picker, parent, false);
             }
-            final JSONObject teacher = getItem(position);
+            STeacher teacher = getItem(position);
             if (teacher != null) {
-                final String post = teacher.getString("post");
+                String post = teacher.getPost();
                 TextView title = convertView.findViewById(R.id.title);
                 TextView meta = convertView.findViewById(R.id.meta);
                 if (title != null) {
-                    title.setText(teacher.getString("person"));
+                    title.setText(teacher.getPerson());
                 }
                 if (meta != null) {
-                    if (post == null || post.equals("null") || post.trim().isEmpty()) {
+                    if (StringUtils.isBlank(post) || post.equals("null")) {
                         meta.setVisibility(View.GONE);
                     } else {
                         meta.setVisibility(View.VISIBLE);
@@ -80,7 +79,7 @@ public class TeacherPickerAdapter extends ArrayAdapter<JSONObject> {
                 }
             }
             return convertView;
-        } catch (JSONException e) {
+        } catch (Exception e) {
             log.exception(e);
             return super.getView(position, convertView, parent);
         }

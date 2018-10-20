@@ -46,7 +46,7 @@ public class Room101ClientImpl extends Room101Client {
             log.v(TAG, "get | url=", url);
             if (Client.isOnline(context)) {
                 responseHandler.onProgress(STATE_HANDLING);
-                g(context, getAbsoluteUrl(protocol, url), query, new RawHandler() {
+                doGet(context, getAbsoluteUrl(protocol, url), query, new RawHandler() {
                     @Override
                     public void onDone(final int code, final okhttp3.Headers headers, final String response) {
                         thread.run(thread.BACKGROUND, () -> {
@@ -88,7 +88,7 @@ public class Room101ClientImpl extends Room101Client {
             log.v(TAG, "post | url=", url);
             if (Client.isOnline(context)) {
                 responseHandler.onProgress(STATE_HANDLING);
-                p(context, getAbsoluteUrl(protocol, url), params, new RawHandler() {
+                doPost(context, getAbsoluteUrl(protocol, url), params, new RawHandler() {
                     @Override
                     public void onDone(final int code, final okhttp3.Headers headers, final String response) {
                         thread.run(thread.BACKGROUND, () -> {

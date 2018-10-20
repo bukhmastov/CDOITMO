@@ -20,6 +20,7 @@ import com.bukhmastov.cdoitmo.util.NotificationMessage;
 import com.bukhmastov.cdoitmo.util.Storage;
 import com.bukhmastov.cdoitmo.util.TextUtils;
 import com.bukhmastov.cdoitmo.util.Thread;
+import com.bukhmastov.cdoitmo.util.singleton.StringUtils;
 import com.bukhmastov.cdoitmo.view.Message;
 
 import java.util.ArrayList;
@@ -90,55 +91,60 @@ public class NavigationMenuImpl implements NavigationMenu {
 
     @Override
     public void displayRemoteMessage(final Activity activity, final FirebaseConfigProvider firebaseConfigProvider, final Storage storage) {
-        thread.run(() -> firebaseConfigProvider.getJson(FirebaseConfigProvider.MESSAGE_MENU, value -> thread.run(() -> {
-            try {
-                if (value == null) return;
-                final int type = value.getInt("type");
-                final String message = value.getString("message");
-                if (message == null || message.trim().isEmpty()) return;
-                final String hash = textUtils.get().crypt(message);
+        thread.run(() -> firebaseConfigProvider.getMessage(FirebaseConfigProvider.MESSAGE_MENU, value -> {
+            thread.run(() -> {
+                if (value == null) {
+                    return;
+                }
+                int type = value.getType();
+                String message = value.getMessage();
+                if (StringUtils.isBlank(message)) {
+                    return;
+                }
+                String hash = textUtils.get().crypt(message);
                 if (hash != null && hash.equals(storage.get(activity, Storage.PERMANENT, Storage.GLOBAL, "firebase#remote_message#menu", ""))) {
                     return;
                 }
                 thread.runOnUI(() -> {
-                    final ViewGroup message_menu = activity.findViewById(R.id.message_menu);
-                    final View message_menu_separator = activity.findViewById(R.id.message_menu_separator);
-                    final View layout = Message.getRemoteMessage(activity, type, message, (context, view) -> {
-                        if (hash != null) {
-                            if (storage.put(activity, Storage.PERMANENT, Storage.GLOBAL, "firebase#remote_message#menu", hash)) {
-                                if (message_menu != null && view != null) {
-                                    message_menu.removeView(view);
-                                    if (message_menu_separator != null) {
-                                        message_menu_separator.setVisibility(View.GONE);
-                                    }
-                                }
-                                notificationMessage.get().snackBar(activity, activity.getString(R.string.notification_dismissed), activity.getString(R.string.undo), v -> thread.run(() -> {
-                                    if (storage.delete(activity, Storage.PERMANENT, Storage.GLOBAL, "firebase#remote_message#menu")) {
-                                        thread.runOnUI(() -> {
-                                            if (message_menu != null && view != null) {
-                                                message_menu.addView(view);
-                                                if (message_menu_separator != null) {
-                                                    message_menu_separator.setVisibility(View.VISIBLE);
-                                                }
-                                            }
-                                        });
-                                    }
-                                }));
+                    ViewGroup messageView = activity.findViewById(R.id.message_menu);
+                    View messageSeparator = activity.findViewById(R.id.message_menu_separator);
+                    View layout = Message.getRemoteMessage(activity, type, message, (context, view) -> {
+                        if (hash == null) {
+                            return;
+                        }
+                        if (!storage.put(activity, Storage.PERMANENT, Storage.GLOBAL, "firebase#remote_message#menu", hash)) {
+                            return;
+                        }
+                        if (messageView != null && view != null) {
+                            messageView.removeView(view);
+                            if (messageSeparator != null) {
+                                messageSeparator.setVisibility(View.GONE);
                             }
                         }
+                        notificationMessage.get().snackBar(activity, activity.getString(R.string.notification_dismissed), activity.getString(R.string.undo), v -> thread.run(() -> {
+                            if (!storage.delete(activity, Storage.PERMANENT, Storage.GLOBAL, "firebase#remote_message#menu")) {
+                                return;
+                            }
+                            thread.runOnUI(() -> {
+                                if (messageView != null && view != null) {
+                                    messageView.addView(view);
+                                    if (messageSeparator != null) {
+                                        messageSeparator.setVisibility(View.VISIBLE);
+                                    }
+                                }
+                            });
+                        }));
                     });
-                    if (layout != null && message_menu != null) {
-                        message_menu.removeAllViews();
-                        message_menu.addView(layout);
-                        if (message_menu_separator != null) {
-                            message_menu_separator.setVisibility(View.VISIBLE);
+                    if (layout != null && messageView != null) {
+                        messageView.removeAllViews();
+                        messageView.addView(layout);
+                        if (messageSeparator != null) {
+                            messageSeparator.setVisibility(View.VISIBLE);
                         }
                     }
                 });
-            } catch (Exception ignore) {
-                // ignore
-            }
-        })));
+            }, throwable -> {});
+        }));
     }
 
     @Override

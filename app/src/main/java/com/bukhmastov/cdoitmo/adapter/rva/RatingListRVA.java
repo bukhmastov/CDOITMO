@@ -12,13 +12,13 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
-
-import org.json.JSONArray;
-import org.json.JSONObject;
+import com.bukhmastov.cdoitmo.model.rating.top.RStudent;
+import com.bukhmastov.cdoitmo.model.rating.top.RatingTopList;
+import com.bukhmastov.cdoitmo.util.singleton.CollectionUtils;
 
 import java.util.ArrayList;
 
-public class RatingListRVA extends RVA {
+public class RatingListRVA extends RVA<RStudent> {
 
     private static final int TYPE_ENTRY = 0;
     private static final int TYPE_ENTRY_MINE = 1;
@@ -27,10 +27,10 @@ public class RatingListRVA extends RVA {
     private final Context context;
     private final SparseIntArray colors = new SparseIntArray();
 
-    public RatingListRVA(@NonNull Context context, @NonNull JSONArray data) {
+    public RatingListRVA(@NonNull Context context, @NonNull RatingTopList rating) {
         super();
         this.context = context;
-        addItems(json2dataset(context, data));
+        addItems(entity2dataset(context, rating));
     }
 
     @Override
@@ -48,21 +48,20 @@ public class RatingListRVA extends RVA {
     @Override
     protected void onBind(View container, Item item) {
         switch (item.type) {
-            case TYPE_ENTRY: bindEntry(container, item, false); break;
-            case TYPE_ENTRY_MINE: bindEntry(container, item, true); break;
-            case TYPE_NO_RATING: bindNoRating(container, item); break;
+            case TYPE_ENTRY:
+            case TYPE_ENTRY_MINE: bindEntry(container, item); break;
+            case TYPE_NO_RATING: bindNoRating(container); break;
         }
     }
 
-    private ArrayList<Item> json2dataset(@NonNull final Context context, @NonNull final JSONArray data) {
+    private ArrayList<Item> entity2dataset(@NonNull final Context context, @NonNull final RatingTopList rating) {
         final ArrayList<Item> dataset = new ArrayList<>();
         try {
-            if (data.length() == 0) {
-                dataset.add(getNewItem(TYPE_NO_RATING, null));
+            if (CollectionUtils.isEmpty(rating.getStudents())) {
+                dataset.add(new Item(TYPE_NO_RATING));
             } else {
-                for (int i = 0; i < data.length(); i++) {
-                    final JSONObject entry = data.getJSONObject(i);
-                    dataset.add(getNewItem(entry.getBoolean("mine") ? TYPE_ENTRY_MINE : TYPE_ENTRY, entry));
+                for (RStudent student : rating.getStudents()) {
+                    dataset.add(new Item<>(student.isMe() ? TYPE_ENTRY_MINE : TYPE_ENTRY, student));
                 }
             }
         } catch (Exception e) {
@@ -71,27 +70,20 @@ public class RatingListRVA extends RVA {
         return dataset;
     }
 
-    private void bindEntry(View container, Item item, boolean mine) {
+    private void bindEntry(View container, Item<RStudent> item) {
         try {
-            // fetch
-            final int dPosition = item.data.getInt("position");
-            final String dFio = item.data.getString("fio");
-            final String dMeta = item.data.getString("meta");
-            final String dChange = item.data.getString("change");
-            final String dDelta = item.data.getString("delta");
-            // draw
             final ImageView crown = container.findViewById(R.id.crown);
             final TextView position = container.findViewById(R.id.position);
             final TextView fio = container.findViewById(R.id.fio);
             final TextView meta = container.findViewById(R.id.meta);
             final ViewGroup delta_container = container.findViewById(R.id.delta_container);
             final TextView delta = container.findViewById(R.id.delta);
-            if (mine) {
+            if (item.data.isMe()) {
                 final View its_me_1 = container.findViewById(R.id.its_me_1);
                 final View its_me_2 = container.findViewById(R.id.its_me_2);
                 int color;
-                if (dPosition > 0 && dPosition < 4) {
-                    switch (dPosition) {
+                if (item.data.getNumber() > 0 && item.data.getNumber() < 4) {
+                    switch (item.data.getNumber()) {
                         case 1: color = R.attr.colorGold; break;
                         case 2: color = R.attr.colorSilver; break;
                         default: case 3: color = R.attr.colorBronze; break;
@@ -104,18 +96,18 @@ public class RatingListRVA extends RVA {
                     color = resolveColor(R.attr.colorRatingHighlightBackground);
                     crown.setVisibility(View.GONE);
                     position.setVisibility(View.VISIBLE);
-                    position.setText(String.valueOf(dPosition));
+                    position.setText(String.valueOf(item.data.getNumber()));
                     position.setTextColor(resolveColor(R.attr.colorRatingHighlightText));
                 }
                 its_me_1.setBackgroundColor(color);
                 its_me_2.setBackgroundColor(color);
                 container.setBackgroundColor(getColorWithAlpha(color, 60));
             } else {
-                if (dPosition > 0 && dPosition < 4) {
+                if (item.data.getNumber() > 0 && item.data.getNumber() < 4) {
                     crown.setVisibility(View.VISIBLE);
                     position.setVisibility(View.GONE);
                     int color;
-                    switch (dPosition) {
+                    switch (item.data.getNumber()) {
                         case 1: color = R.attr.colorGold; break;
                         case 2: color = R.attr.colorSilver; break;
                         default: case 3: color = R.attr.colorBronze; break;
@@ -125,17 +117,17 @@ public class RatingListRVA extends RVA {
                     crown.setVisibility(View.GONE);
                     position.setVisibility(View.VISIBLE);
                     position.setTextColor(resolveColor(android.R.attr.textColorPrimary));
-                    position.setText(String.valueOf(dPosition));
+                    position.setText(String.valueOf(item.data.getNumber()));
                 }
                 container.setBackgroundColor(context.getResources().getColor(android.R.color.transparent));
             }
-            fio.setText(dFio);
-            meta.setText(dMeta);
+            fio.setText(item.data.getFio());
+            meta.setText(item.data.getGroup() + " — " + item.data.getDepartment());
             if (delta != null) {
-                if (!"none".equals(dChange)) {
+                if (!"none".equals(item.data.getChange())) {
                     delta_container.setVisibility(View.VISIBLE);
-                    delta.setText(dDelta);
-                    switch (dChange) {
+                    delta.setText(item.data.getDelta());
+                    switch (item.data.getChange()) {
                         case "up": delta.setTextColor(resolveColor(R.attr.colorPositiveTrend)); break;
                         case "down": delta.setTextColor(resolveColor(R.attr.colorNegativeTrend)); break;
                     }
@@ -147,7 +139,7 @@ public class RatingListRVA extends RVA {
             log.exception(e);
         }
     }
-    private void bindNoRating(View container, Item item) {
+    private void bindNoRating(View container) {
         try {
             ((TextView) container.findViewById(R.id.ntd_text)).setText(R.string.no_rating);
         } catch (Exception e) {
