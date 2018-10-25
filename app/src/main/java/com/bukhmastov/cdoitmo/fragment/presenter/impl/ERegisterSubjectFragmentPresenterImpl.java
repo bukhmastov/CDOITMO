@@ -101,6 +101,7 @@ public class ERegisterSubjectFragmentPresenterImpl implements ERegisterSubjectFr
     @Override
     public void onToolbarSetup(Menu menu) {
         try {
+            thread.assertUI();
             if (menu == null) {
                 return;
             }
@@ -178,6 +179,7 @@ public class ERegisterSubjectFragmentPresenterImpl implements ERegisterSubjectFr
     @Override
     public void onToolbarTeardown(Menu menu) {
         try {
+            thread.assertUI();
             if (menu == null) {
                 return;
             }

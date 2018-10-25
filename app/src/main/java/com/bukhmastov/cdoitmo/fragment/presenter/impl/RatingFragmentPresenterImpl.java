@@ -6,6 +6,8 @@ import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.ArrayMap;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
 
@@ -18,6 +20,7 @@ import com.bukhmastov.cdoitmo.event.bus.EventBus;
 import com.bukhmastov.cdoitmo.event.bus.annotation.Event;
 import com.bukhmastov.cdoitmo.event.events.ClearCacheEvent;
 import com.bukhmastov.cdoitmo.event.events.OpenActivityEvent;
+import com.bukhmastov.cdoitmo.event.events.ShareTextEvent;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.fragment.ConnectedFragment;
@@ -27,6 +30,7 @@ import com.bukhmastov.cdoitmo.model.JsonEntity;
 import com.bukhmastov.cdoitmo.model.parser.RatingPickerAllParser;
 import com.bukhmastov.cdoitmo.model.parser.RatingPickerOwnParser;
 import com.bukhmastov.cdoitmo.model.rating.pickerall.RatingPickerAll;
+import com.bukhmastov.cdoitmo.model.rating.pickerown.RCourse;
 import com.bukhmastov.cdoitmo.model.rating.pickerown.RatingPickerOwn;
 import com.bukhmastov.cdoitmo.network.DeIfmoClient;
 import com.bukhmastov.cdoitmo.network.handlers.ResponseHandler;
@@ -38,8 +42,11 @@ import com.bukhmastov.cdoitmo.util.StoragePref;
 import com.bukhmastov.cdoitmo.util.TextUtils;
 import com.bukhmastov.cdoitmo.util.Thread;
 import com.bukhmastov.cdoitmo.util.Time;
+import com.bukhmastov.cdoitmo.util.singleton.CollectionUtils;
 import com.bukhmastov.cdoitmo.util.singleton.Color;
 import com.bukhmastov.cdoitmo.util.singleton.StringUtils;
+
+import java.util.ArrayList;
 
 import javax.inject.Inject;
 
@@ -108,6 +115,44 @@ public class RatingFragmentPresenterImpl implements RatingFragmentPresenter, Swi
             log.v(TAG, "Fragment destroyed");
             loaded = false;
         });
+    }
+
+    @Override
+    public void onToolbarSetup(Menu menu) {
+        try {
+            thread.assertUI();
+            if (menu == null) {
+                return;
+            }
+            MenuItem share = menu.findItem(R.id.action_share);
+            if (share != null) {
+                if (data.get(OWN) == null || !(data.get(OWN).data instanceof RatingPickerOwn) || CollectionUtils.isEmpty(((RatingPickerOwn) data.get(OWN).data).getCourses())) {
+                    share.setVisible(false);
+                } else {
+                    share.setVisible(true);
+                    share.setOnMenuItemClickListener(item -> {
+                        share();
+                        return false;
+                    });
+                }
+            }
+        } catch (Throwable throwable) {
+            log.exception(throwable);
+        }
+    }
+
+    @Override
+    public void onToolbarTeardown(Menu menu) {
+        try {
+            thread.assertUI();
+            if (menu == null) {
+                return;
+            }
+            MenuItem share = menu.findItem(R.id.action_share);
+            if (share != null) share.setVisible(false);
+        } catch (Throwable throwable) {
+            log.exception(throwable);
+        }
     }
 
     @Override
@@ -411,6 +456,7 @@ public class RatingFragmentPresenterImpl implements RatingFragmentPresenter, Swi
                 });
             });
             thread.runOnUI(() -> {
+                onToolbarSetup(activity.toolbar);
                 fragment.draw(R.layout.layout_rating_list);
                 // set adapter to recycler view
                 final LinearLayoutManager layoutManager = new LinearLayoutManager(activity, LinearLayoutManager.VERTICAL, false);
@@ -434,6 +480,31 @@ public class RatingFragmentPresenterImpl implements RatingFragmentPresenter, Swi
         }, throwable -> {
             log.exception(throwable);
             loadFailed();
+        });
+    }
+
+    private void share() {
+        thread.run(() -> {
+            if (data.get(OWN) == null || !(data.get(OWN).data instanceof RatingPickerOwn) || CollectionUtils.isEmpty(((RatingPickerOwn) data.get(OWN).data).getCourses())) {
+                return;
+            }
+            StringBuilder sb = new StringBuilder();
+            sb.append("Мой рейтинг:").append("\n");
+            ArrayList<RCourse> courses = ((RatingPickerOwn) data.get(OWN).data).getCourses();
+            for (RCourse course : courses) {
+                sb.append(course.getFaculty());
+                sb.append(" ");
+                sb.append(String.valueOf(course.getCourse()));
+                sb.append(" ");
+                sb.append(activity.getString(R.string.course));
+                sb.append(" — ");
+                sb.append(course.getPosition());
+                sb.append("\n");
+            }
+            eventBus.fire(new ShareTextEvent(sb.toString().trim(), "rating_all"));
+        }, throwable -> {
+            log.exception(throwable);
+            notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
         });
     }
 

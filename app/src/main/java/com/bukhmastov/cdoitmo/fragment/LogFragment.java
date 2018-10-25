@@ -24,23 +24,33 @@ public class LogFragment extends ConnectedFragment {
     }
 
     @Override
-    public void onDestroy() {
-        super.onDestroy();
-        presenter.onDestroy();
+    public void onStart() {
+        super.onStart();
+        presenter.onToolbarSetup(activity.toolbar);
     }
 
     @Override
     public void onResume() {
         super.onResume();
         presenter.onResume();
-        presenter.onToolbarSetup(activity.toolbar);
     }
 
     @Override
     public void onPause() {
         super.onPause();
         presenter.onPause();
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
         presenter.onToolbarTeardown(activity.toolbar);
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        presenter.onDestroy();
     }
 
     @Override

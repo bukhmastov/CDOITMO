@@ -20,11 +20,13 @@ import com.bukhmastov.cdoitmo.adapter.rva.ProtocolRVA;
 import com.bukhmastov.cdoitmo.event.bus.EventBus;
 import com.bukhmastov.cdoitmo.event.bus.annotation.Event;
 import com.bukhmastov.cdoitmo.event.events.ClearCacheEvent;
+import com.bukhmastov.cdoitmo.event.events.ShareTextEvent;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.fragment.ConnectedFragment;
 import com.bukhmastov.cdoitmo.fragment.presenter.ProtocolFragmentPresenter;
 import com.bukhmastov.cdoitmo.model.converter.ProtocolConverter;
+import com.bukhmastov.cdoitmo.model.protocol.PChange;
 import com.bukhmastov.cdoitmo.model.protocol.Protocol;
 import com.bukhmastov.cdoitmo.network.DeIfmoRestClient;
 import com.bukhmastov.cdoitmo.network.handlers.RestResponseHandler;
@@ -36,6 +38,7 @@ import com.bukhmastov.cdoitmo.util.StoragePref;
 import com.bukhmastov.cdoitmo.util.TextUtils;
 import com.bukhmastov.cdoitmo.util.Thread;
 import com.bukhmastov.cdoitmo.util.Time;
+import com.bukhmastov.cdoitmo.util.singleton.CollectionUtils;
 import com.bukhmastov.cdoitmo.util.singleton.Color;
 import com.bukhmastov.cdoitmo.util.singleton.StringUtils;
 
@@ -124,36 +127,48 @@ public class ProtocolFragmentPresenterImpl implements ProtocolFragmentPresenter,
     @Override
     public void onToolbarSetup(Menu menu) {
         try {
+            thread.assertUI();
             if (menu == null) {
                 return;
             }
+            MenuItem share = menu.findItem(R.id.action_share);
             MenuItem simple = menu.findItem(R.id.action_mode_simple);
             MenuItem advanced = menu.findItem(R.id.action_mode_post_process);
-            if (simple == null || advanced == null) {
-                return;
-            }
-            switch (storagePref.get(activity, "pref_protocol_changes_mode", "advanced")) {
-                case "simple": advanced.setVisible(true); break;
-                case "advanced": simple.setVisible(true); break;
-            }
-            simple.setOnMenuItemClickListener(item -> {
-                thread.runOnUI(() -> {
-                    storagePref.put(activity, "pref_protocol_changes_mode", "simple");
-                    simple.setVisible(false);
-                    advanced.setVisible(true);
-                    load(false);
+            if (simple != null && advanced != null) {
+                switch (storagePref.get(activity, "pref_protocol_changes_mode", "advanced")) {
+                    case "simple": advanced.setVisible(true); break;
+                    case "advanced": simple.setVisible(true); break;
+                }
+                simple.setOnMenuItemClickListener(item -> {
+                    thread.runOnUI(() -> {
+                        storagePref.put(activity, "pref_protocol_changes_mode", "simple");
+                        simple.setVisible(false);
+                        advanced.setVisible(true);
+                        load(false);
+                    });
+                    return false;
                 });
-                return false;
-            });
-            advanced.setOnMenuItemClickListener(item -> {
-                thread.runOnUI(() -> {
-                    storagePref.put(activity, "pref_protocol_changes_mode", "advanced");
-                    simple.setVisible(true);
-                    advanced.setVisible(false);
-                    load(false);
+                advanced.setOnMenuItemClickListener(item -> {
+                    thread.runOnUI(() -> {
+                        storagePref.put(activity, "pref_protocol_changes_mode", "advanced");
+                        simple.setVisible(true);
+                        advanced.setVisible(false);
+                        load(false);
+                    });
+                    return false;
                 });
-                return false;
-            });
+            }
+            if (share != null) {
+                if (data == null || CollectionUtils.isEmpty(data.getChanges())) {
+                    share.setVisible(false);
+                } else {
+                    share.setVisible(true);
+                    share.setOnMenuItemClickListener(item -> {
+                        share();
+                        return false;
+                    });
+                }
+            }
         } catch (Throwable throwable) {
             log.exception(throwable);
         }
@@ -162,11 +177,14 @@ public class ProtocolFragmentPresenterImpl implements ProtocolFragmentPresenter,
     @Override
     public void onToolbarTeardown(Menu menu) {
         try {
+            thread.assertUI();
             if (menu == null) {
                 return;
             }
+            MenuItem share = menu.findItem(R.id.action_share);
             MenuItem simple = menu.findItem(R.id.action_mode_simple);
             MenuItem advanced = menu.findItem(R.id.action_mode_post_process);
+            if (share != null) share.setVisible(false);
             if (simple != null) simple.setVisible(false);
             if (advanced != null) advanced.setVisible(false);
         } catch (Throwable throwable) {
@@ -413,6 +431,7 @@ public class ProtocolFragmentPresenterImpl implements ProtocolFragmentPresenter,
             }
             ProtocolRVA adapter = new ProtocolRVA(activity, data, "advanced".equals(storagePref.get(activity, "pref_protocol_changes_mode", "advanced")));
             thread.runOnUI(() -> {
+                onToolbarSetup(activity.toolbar);
                 fragment.draw(R.layout.layout_protocol);
                 // set adapter to recycler view
                 LinearLayoutManager layoutManager = new LinearLayoutManager(activity, LinearLayoutManager.VERTICAL, false);
@@ -472,6 +491,32 @@ public class ProtocolFragmentPresenterImpl implements ProtocolFragmentPresenter,
         }, throwable -> {
             log.exception(throwable);
             loadFailed();
+        });
+    }
+
+    private void share() {
+        thread.run(() -> {
+            if (getData() == null || CollectionUtils.isEmpty(getData().getChanges())) {
+                return;
+            }
+            StringBuilder sb = new StringBuilder();
+            sb.append("Мой протокол изменений:").append("\n");
+            for (PChange change : getData().getChanges()) {
+                sb.append(change.getSubject());
+                sb.append(" - ");
+                sb.append(change.getName());
+                sb.append(" (");
+                sb.append(change.getDate());
+                sb.append("): ");
+                sb.append(change.getValue());
+                sb.append("/");
+                sb.append(change.getMax());
+                sb.append("\n");
+            }
+            eventBus.fire(new ShareTextEvent(sb.toString().trim(), "protocol"));
+        }, throwable -> {
+            log.exception(throwable);
+            notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
         });
     }
 

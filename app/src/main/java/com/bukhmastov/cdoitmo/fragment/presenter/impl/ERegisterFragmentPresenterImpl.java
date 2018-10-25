@@ -21,12 +21,14 @@ import com.bukhmastov.cdoitmo.adapter.rva.ERegisterSubjectsRVA;
 import com.bukhmastov.cdoitmo.event.bus.EventBus;
 import com.bukhmastov.cdoitmo.event.bus.annotation.Event;
 import com.bukhmastov.cdoitmo.event.events.ClearCacheEvent;
+import com.bukhmastov.cdoitmo.event.events.ShareTextEvent;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.fragment.ConnectedFragment;
 import com.bukhmastov.cdoitmo.fragment.ERegisterSubjectFragment;
 import com.bukhmastov.cdoitmo.fragment.presenter.ERegisterFragmentPresenter;
 import com.bukhmastov.cdoitmo.function.BiFunction;
+import com.bukhmastov.cdoitmo.model.eregister.ERPoint;
 import com.bukhmastov.cdoitmo.model.eregister.ERSubject;
 import com.bukhmastov.cdoitmo.model.eregister.ERYear;
 import com.bukhmastov.cdoitmo.model.eregister.ERegister;
@@ -40,18 +42,22 @@ import com.bukhmastov.cdoitmo.util.StoragePref;
 import com.bukhmastov.cdoitmo.util.TextUtils;
 import com.bukhmastov.cdoitmo.util.Thread;
 import com.bukhmastov.cdoitmo.util.Time;
+import com.bukhmastov.cdoitmo.util.singleton.CollectionUtils;
 import com.bukhmastov.cdoitmo.util.singleton.Color;
+import com.bukhmastov.cdoitmo.util.singleton.NumberUtils;
 import com.bukhmastov.cdoitmo.util.singleton.StringUtils;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.util.AbstractSet;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.TreeSet;
+import java.util.regex.Pattern;
 
 import javax.inject.Inject;
 
@@ -60,7 +66,9 @@ public class ERegisterFragmentPresenterImpl implements ERegisterFragmentPresente
     private static final String TAG = "ERegisterFragment";
     private ConnectedFragment fragment = null;
     private ConnectedActivity activity = null;
+    private static final Pattern PATTERN_ATTESTATION = Pattern.compile("^.*зач[её]т$|^экзамен$|^тестирование$|^общий\\sрейтинг$", Pattern.CASE_INSENSITIVE);
     private ERegister data = null;
+    private List<String> dataShare = null;
     private String group;
     private int term;
     private boolean spinnerGroupBlocker = true, spinnerPeriodBlocker = true;
@@ -100,6 +108,7 @@ public class ERegisterFragmentPresenterImpl implements ERegisterFragmentPresente
             return;
         }
         data = null;
+        dataShare = null;
         fragment.clearData(fragment);
     }
 
@@ -136,10 +145,12 @@ public class ERegisterFragmentPresenterImpl implements ERegisterFragmentPresente
     @Override
     public void onToolbarSetup(Menu menu) {
         try {
+            thread.assertUI();
             if (menu == null) {
                 return;
             }
             MenuItem info = menu.findItem(R.id.action_info);
+            MenuItem share = menu.findItem(R.id.action_share);
             if (info != null) {
                 info.setVisible(true);
                 info.setOnMenuItemClickListener(item -> {
@@ -157,6 +168,17 @@ public class ERegisterFragmentPresenterImpl implements ERegisterFragmentPresente
                     return false;
                 });
             }
+            if (share != null) {
+                if (CollectionUtils.isEmpty(dataShare)) {
+                    share.setVisible(false);
+                } else {
+                    share.setVisible(true);
+                    share.setOnMenuItemClickListener(item -> {
+                        share();
+                        return false;
+                    });
+                }
+            }
         } catch (Throwable throwable) {
             log.exception(throwable);
         }
@@ -165,11 +187,14 @@ public class ERegisterFragmentPresenterImpl implements ERegisterFragmentPresente
     @Override
     public void onToolbarTeardown(Menu menu) {
         try {
+            thread.assertUI();
             if (menu == null) {
                 return;
             }
             MenuItem info = menu.findItem(R.id.action_info);
+            MenuItem share = menu.findItem(R.id.action_share);
             if (info != null) info.setVisible(false);
+            if (share != null) share.setVisible(false);
         } catch (Throwable throwable) {
             log.exception(throwable);
         }
@@ -402,6 +427,7 @@ public class ERegisterFragmentPresenterImpl implements ERegisterFragmentPresente
                     break;
                 }
             }
+            dataShare = makeShareData(subjects);
             ERegisterSubjectsRVA adapter = new ERegisterSubjectsRVA(activity, subjects);
             adapter.setClickListener(R.id.subject, (v, subject) -> {
                 thread.run(() -> {
@@ -413,6 +439,7 @@ public class ERegisterFragmentPresenterImpl implements ERegisterFragmentPresente
                 });
             });
             thread.runOnUI(() -> {
+                onToolbarSetup(activity.toolbar);
                 fragment.draw(R.layout.layout_eregister);
                 // set adapter to recycler view
                 LinearLayoutManager layoutManager = new LinearLayoutManager(activity, LinearLayoutManager.VERTICAL, false);
@@ -516,6 +543,60 @@ public class ERegisterFragmentPresenterImpl implements ERegisterFragmentPresente
             });
         }, throwable -> {
             loadFailed();
+        });
+    }
+
+    private List<String> makeShareData(AbstractSet<ERSubject> subjects) {
+        List<String> shareData = new ArrayList<>();
+        if (CollectionUtils.isEmpty(subjects)) {
+            return shareData;
+        }
+        for (ERSubject subject : subjects) {
+            Double points = null;
+            if (CollectionUtils.isNotEmpty(subject.getPoints())) {
+                for (ERPoint point : subject.getPoints()) {
+                    Double max = point.getMax();
+                    if (max != null && max == 100.0) {
+                        points = point.getValue();
+                        if (points != null) {
+                            break;
+                        }
+                    }
+                }
+                if (points == null) {
+                    for (ERPoint point : subject.getPoints()) {
+                        if (StringUtils.isBlank(point.getName()) || point.getValue() == null) {
+                            continue;
+                        }
+                        if (PATTERN_ATTESTATION.matcher(point.getName()).find()) {
+                            points = point.getValue();
+                            break;
+                        }
+                    }
+                }
+            }
+            if (points == null || points == 0.0) {
+                continue;
+            }
+            shareData.add(subject.getName() + ": " + NumberUtils.prettyDouble(points));
+        }
+        return shareData;
+    }
+
+    private void share() {
+        thread.run(() -> {
+            if (CollectionUtils.isEmpty(dataShare)) {
+                return;
+            }
+            StringBuilder sb = new StringBuilder();
+            sb.append("Мой электронный журнал:").append("\n");
+            for (String item : dataShare) {
+                sb.append(item).append("\n");
+            }
+            eventBus.fire(new ShareTextEvent(sb.toString().trim(), "eregister"));
+        }, throwable -> {
+            log.exception(throwable);
+            notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
         });
     }
 
