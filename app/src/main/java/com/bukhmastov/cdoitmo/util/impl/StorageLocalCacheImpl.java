@@ -2,6 +2,10 @@ package com.bukhmastov.cdoitmo.util.impl;
 
 import android.support.annotation.NonNull;
 
+import com.bukhmastov.cdoitmo.event.bus.EventBus;
+import com.bukhmastov.cdoitmo.event.bus.annotation.Event;
+import com.bukhmastov.cdoitmo.event.events.ClearCacheEvent;
+import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.util.StorageLocalCache;
 
 import java.util.ArrayList;
@@ -9,6 +13,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import javax.inject.Inject;
 
 public class StorageLocalCacheImpl implements StorageLocalCache {
 
@@ -34,6 +40,22 @@ public class StorageLocalCacheImpl implements StorageLocalCache {
             this.path = path;
             this.data = data;
         }
+    }
+
+    @Inject
+    EventBus eventBus;
+
+    public StorageLocalCacheImpl() {
+        AppComponentProvider.getComponent().inject(this);
+        eventBus.register(this);
+    }
+
+    @Event
+    public void onClearCacheEvent(ClearCacheEvent event) {
+        if (event.isNot(ClearCacheEvent.ALL)) {
+            return;
+        }
+        reset();
     }
 
     @Override

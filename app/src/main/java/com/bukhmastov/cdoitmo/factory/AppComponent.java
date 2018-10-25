@@ -161,6 +161,7 @@ import com.bukhmastov.cdoitmo.util.impl.NotificationMessageImpl;
 import com.bukhmastov.cdoitmo.util.impl.NotificationsImpl;
 import com.bukhmastov.cdoitmo.util.impl.StaticImpl;
 import com.bukhmastov.cdoitmo.util.impl.StorageImpl;
+import com.bukhmastov.cdoitmo.util.impl.StorageLocalCacheImpl;
 import com.bukhmastov.cdoitmo.util.impl.StoragePrefImpl;
 import com.bukhmastov.cdoitmo.util.impl.TextUtilsImpl;
 import com.bukhmastov.cdoitmo.util.impl.ThemeImpl;
@@ -355,6 +356,7 @@ public interface AppComponent {
     void inject(StaticImpl staticUtil);
     void inject(StorageImpl storage);
     void inject(StoragePrefImpl storagePref);
+    void inject(StorageLocalCacheImpl storageLocalCache);
     void inject(TextUtilsImpl textUtils);
     void inject(ThemeImpl theme);
     void inject(ThreadImpl thread);
