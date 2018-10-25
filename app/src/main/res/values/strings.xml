@@ -302,7 +302,7 @@
     <string name="hours">Часы</string>
     <string name="minutes">Минуты</string>
     <string name="seconds">Секунды</string>
-    <string name="pref_protocol_changes_mode_title">Режим отображения</string>
+    <string name="pref_mode_title">Режим отображения</string>
     <string name="protocol_changes_mode_simple">Простой список изменений</string>
     <string name="protocol_changes_mode_advanced">Группированный список изменений</string>
     <string name="enable_offline_mode">Перейти в оффлайн режим</string>
@@ -519,5 +519,7 @@
     <string name="share_schedule">Поделиться расписанием</string>
     <string name="unspecified_points">Не распределенные баллы</string>
     <string name="outdated_file_version">Файл был создан в устаревшей версии приложения и более не поддерживается</string>
+    <string name="mode_simple">Простой режим</string>
+    <string name="mode_post_process">Режим с постобработкой</string>
 
 </resources>

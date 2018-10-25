@@ -212,7 +212,7 @@ public abstract class ConnectedFragment extends Fragment {
         }
     }
 
-    public static Data getData(Context context, Class connectedFragment) {
+    public static @NonNull Data getData(Context context, Class connectedFragment) {
         if (connectedFragment == ERegisterFragment.class) return new Data(connectedFragment, context.getString(R.string.e_journal), R.drawable.ic_e_journal);
         if (connectedFragment == ProtocolFragment.class) return new Data(connectedFragment, context.getString(R.string.protocol_changes), R.drawable.ic_protocol_changes);
         if (connectedFragment == RatingFragment.class) return new Data(connectedFragment, context.getString(R.string.rating), R.drawable.ic_rating);
@@ -221,7 +221,7 @@ public abstract class ConnectedFragment extends Fragment {
         if (connectedFragment == ScheduleLessonsFragment.class) return new Data(connectedFragment, context.getString(R.string.schedule_lessons), R.drawable.ic_schedule_lessons);
         if (connectedFragment == ScheduleAttestationsFragment.class) return new Data(connectedFragment, context.getString(R.string.schedule_attestations), R.drawable.ic_schedule_attestations);
         if (connectedFragment == UniversityFragment.class) return new Data(connectedFragment, context.getString(R.string.university), R.drawable.ic_university);
-        if (connectedFragment == SubjectShowFragment.class) return new Data(connectedFragment, context.getString(R.string.e_journal), R.drawable.ic_e_journal);
+        if (connectedFragment == ERegisterSubjectFragment.class) return new Data(connectedFragment, context.getString(R.string.e_journal), R.drawable.ic_e_journal);
         if (connectedFragment == RatingListFragment.class) return new Data(connectedFragment, context.getString(R.string.top_rating), R.drawable.ic_rating);
         if (connectedFragment == ScheduleLessonsModifyFragment.class) return new Data(connectedFragment, context.getString(R.string.lesson_creation), R.drawable.ic_schedule_lessons);
         if (connectedFragment == ScheduleLessonsShareFragment.class) return new Data(connectedFragment, context.getString(R.string.share_changes), R.drawable.ic_share);
@@ -240,6 +240,6 @@ public abstract class ConnectedFragment extends Fragment {
         if (connectedFragment == AboutFragment.class) return new Data(connectedFragment, context.getString(R.string.about), R.drawable.ic_info_outline);
         if (connectedFragment == LogFragment.class) return new Data(connectedFragment, context.getString(R.string.log), R.drawable.ic_info_outline);
         if (connectedFragment == LinkedAccountsFragment.class) return new Data(connectedFragment, context.getString(R.string.linked_accounts), R.drawable.ic_account_box);
-        return null;
+        throw new IllegalStateException("Connected fragment class without declaration at ConnectedFragment#getData, class = " + connectedFragment.getName());
     }
 }

@@ -31,6 +31,20 @@
         android:visible="false" />
 
     <item
+        android:id="@+id/action_mode_simple"
+        android:title="@string/mode_simple"
+        android:icon="@drawable/ic_mode_simple_white"
+        app:showAsAction="ifRoom"
+        android:visible="false" />
+
+    <item
+        android:id="@+id/action_mode_post_process"
+        android:title="@string/mode_post_process"
+        android:icon="@drawable/ic_mode_postprocess_white"
+        app:showAsAction="ifRoom"
+        android:visible="false" />
+
+    <item
         android:id="@+id/action_share"
         android:title="@string/share"
         android:icon="@drawable/ic_toolbar_share"

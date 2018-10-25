@@ -43,7 +43,7 @@ public abstract class ConnectedActivity extends AppCompatActivity {
     private static final String STATE_STORED_FRAGMENT_DATA = "storedFragmentData";
     private static final String STATE_STORED_FRAGMENT_EXTRA = "storedFragmentExtra";
     public final static String ACTIVITY_WITH_MENU = "connected_activity_with_align";
-    public boolean layout_with_menu = true;
+    public boolean layoutWithMenu = true;
     public Menu toolbar = null;
     public static String storedFragmentName = null;
     public static String storedFragmentData = null;
@@ -107,11 +107,13 @@ public abstract class ConnectedActivity extends AppCompatActivity {
     public boolean openActivityOrFragment(Class connectedFragmentClass, Bundle extras) {
         return openActivityOrFragment(TYPE.STACKABLE, connectedFragmentClass, extras);
     }
+
     public boolean openActivityOrFragment(@Type String type, Class connectedFragmentClass, Bundle extras) {
         return openActivityOrFragment(new StackElement(type, connectedFragmentClass, extras));
     }
+
     public boolean openActivityOrFragment(StackElement stackElement) {
-        log.v(TAG, "openActivityOrFragment | type=" + stackElement.type + " | class=" + stackElement.connectedFragmentClass.toString());
+        log.v(TAG, "openActivityOrFragment | type=", stackElement.type, " | class=", stackElement.connectedFragmentClass.toString());
         if (App.tablet) {
             return openFragment(stackElement);
         } else {
@@ -122,39 +124,33 @@ public abstract class ConnectedActivity extends AppCompatActivity {
     public boolean openFragment(Class connectedFragmentClass, Bundle extras) {
         return openFragment(TYPE.STACKABLE, connectedFragmentClass, extras);
     }
+
     public boolean openFragment(@Type String type, Class connectedFragmentClass, Bundle extras) {
         return openFragment(new StackElement(type, connectedFragmentClass, extras));
     }
+
     public boolean openFragment(StackElement stackElement) {
-        log.v(TAG, "openFragment | type=" + stackElement.type + " | class=" + stackElement.connectedFragmentClass.toString());
+        log.v(TAG, "openFragment | type=", stackElement.type, " | class=", stackElement.connectedFragmentClass.toString());
         try {
             ConnectedFragment.Data data = ConnectedFragment.getData(this, stackElement.connectedFragmentClass);
-            if (data == null) {
-                throw new NullPointerException("data cannot be null");
-            }
-            ViewGroup root_layout = findViewById(getRootViewId());
-            if (root_layout != null) {
-                root_layout.removeAllViews();
+            ViewGroup rootLayout = findViewById(getRootViewId());
+            if (rootLayout != null) {
+                rootLayout.removeAllViews();
             }
             ConnectedFragment connectedFragment = (ConnectedFragment) data.connectedFragmentClass.newInstance();
             if (stackElement.extras != null) {
                 connectedFragment.setArguments(stackElement.extras);
             }
             FragmentManager fragmentManager = getSupportFragmentManager();
-            if (fragmentManager != null) {
-                FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
-                if (fragmentTransaction != null) {
-                    fragmentTransaction.replace(getRootViewId(), connectedFragment);
-                    fragmentTransaction.commitAllowingStateLoss();
-                    pushFragment(stackElement);
-                    updateToolbar(this, data.title, layout_with_menu ? data.image : null);
-                    return true;
-                } else {
-                    return false;
-                }
-            } else {
+            if (fragmentManager == null) {
                 return false;
             }
+            FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+            fragmentTransaction.replace(getRootViewId(), connectedFragment);
+            fragmentTransaction.commitAllowingStateLoss();
+            pushFragment(stackElement);
+            updateToolbar(this, data.title, layoutWithMenu ? data.image : null);
+            return true;
         } catch (Exception e) {
             log.exception(e);
             return false;
@@ -164,14 +160,13 @@ public abstract class ConnectedActivity extends AppCompatActivity {
     public boolean openActivity(Class connectedFragmentClass, Bundle extras) {
         return openActivity(TYPE.STACKABLE, connectedFragmentClass, extras);
     }
+
     public boolean openActivity(@Type String type, Class connectedFragmentClass, Bundle extras) {
         return openActivity(new StackElement(type, connectedFragmentClass, extras));
     }
+
     public boolean openActivity(StackElement stackElement) {
-        log.v(TAG, "openActivity | type=" + stackElement.type + " | class=" + stackElement.connectedFragmentClass.toString());
-        /*
-         * We don't care about type. This is a harsh life :c
-         */
+        log.v(TAG, "openActivity | type=", stackElement.type, " | class=", stackElement.connectedFragmentClass.toString());
         try {
             Bundle bundle = new Bundle();
             bundle.putSerializable("class", stackElement.connectedFragmentClass);
@@ -185,7 +180,7 @@ public abstract class ConnectedActivity extends AppCompatActivity {
     }
 
     public boolean back() {
-        log.v(TAG, "back | stack.size=" + stack.size());
+        log.v(TAG, "back | stack.size=", stack.size());
         if (stack.size() > 0) {
             int index = stack.size() - 1;
             if (stack.get(index).type.equals(TYPE.ROOT)) {
@@ -206,49 +201,51 @@ public abstract class ConnectedActivity extends AppCompatActivity {
     }
 
     public void pushFragment(StackElement stackElement) {
-        log.v(TAG, "pushFragment | type=" + stackElement.type + " | class=" + stackElement.connectedFragmentClass.toString());
+        log.v(TAG, "pushFragment | type=", stackElement.type, " | class=", stackElement.connectedFragmentClass.toString());
         if (stackElement.type.equals(TYPE.ROOT)) {
             stack.clear();
         }
         stack.add(stackElement);
-        log.v(TAG, "stack.size() = " + stack.size());
+        log.v(TAG, "stack.size() = ", stack.size());
     }
+
     public void removeFragment(Class connectedFragmentClass) {
-        log.v(TAG, "removeFragment | class=" + connectedFragmentClass.toString());
+        log.v(TAG, "removeFragment | class=", connectedFragmentClass.toString());
         for (int i = stack.size() - 1; i >= 0; i--) {
             StackElement stackElement = stack.get(i);
             if (stackElement.connectedFragmentClass == connectedFragmentClass) {
                 if (!stackElement.type.equals(TYPE.ROOT)) {
                     stack.remove(stackElement);
                 } else {
-                    log.e(TAG, "removeFragment | Root fragment removal from the stack prevented");
+                    log.e(TAG, "removeFragment | prevented root fragment removal from the stack");
                 }
                 break;
             }
         }
-        log.v(TAG, "stack.size() = " + stack.size());
+        log.v(TAG, "stack.size() = ", stack.size());
     }
 
-    public void updateToolbar(final Context context, final String title, final Integer image) {
+    public void updateToolbar(Context context, String title, Integer image) {
         thread.runOnUI(() -> {
             ActionBar actionBar = getSupportActionBar();
-            if (actionBar != null) {
-                actionBar.setTitle(title);
-                if (image == null || !App.tablet) {
-                    actionBar.setHomeButtonEnabled(true);
-                    actionBar.setLogo(null);
-                } else {
-                    actionBar.setHomeButtonEnabled(false);
-                    Drawable drawable = getDrawable(image);
-                    if (drawable != null) {
-                        try {
-                            drawable.setTint(Color.resolve(context, R.attr.colorToolbarContent));
-                        } catch (Exception ignore) {
-                            // ignore
-                        }
-                        actionBar.setLogo(drawable);
-                    }
+            if (actionBar == null) {
+                return;
+            }
+            actionBar.setTitle(title);
+            if (image == null || !App.tablet) {
+                actionBar.setHomeButtonEnabled(true);
+                actionBar.setLogo(null);
+                return;
+            }
+            actionBar.setHomeButtonEnabled(false);
+            Drawable drawable = getDrawable(image);
+            if (drawable != null) {
+                try {
+                    drawable.setTint(Color.resolve(context, R.attr.colorToolbarContent));
+                } catch (Exception ignore) {
+                    // ignore
                 }
+                actionBar.setLogo(drawable);
             }
         });
     }
@@ -265,6 +262,7 @@ public abstract class ConnectedActivity extends AppCompatActivity {
         }
         return inflater.inflate(layout, null);
     }
+
     public void draw(int layoutId) {
         try {
             draw(inflate(layoutId));
@@ -272,6 +270,7 @@ public abstract class ConnectedActivity extends AppCompatActivity {
             log.exception(e);
         }
     }
+
     public void draw(View view) {
         try {
             ViewGroup vg = findViewById(getRootViewId());

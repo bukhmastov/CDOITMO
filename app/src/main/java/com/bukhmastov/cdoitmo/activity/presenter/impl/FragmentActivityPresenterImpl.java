@@ -65,61 +65,54 @@ public class FragmentActivityPresenterImpl implements FragmentActivityPresenter,
     public void onCreate(@Nullable Bundle savedInstanceState) {
         thread.runOnUI(() -> {
             log.i(TAG, "Activity created");
-            try {
-                final Intent intent = activity.getIntent();
-                if (intent == null) {
-                    throw new NullPointerException("Intent cannot be null");
-                }
-                final Bundle extras = intent.getExtras();
-                final Class fragment_class;
-                final Bundle fragment_extras;
-                if (extras != null) {
-                    if (extras.containsKey("class")) {
-                        fragment_class = (Class) extras.get("class");
-                    } else {
-                        throw new NullPointerException("Intent's extras should contains 'class'");
-                    }
-                    if (extras.containsKey("extras")) {
-                        fragment_extras = (Bundle) extras.get("extras");
-                    } else {
-                        throw new NullPointerException("Intent's extras should contains 'extras'");
-                    }
-                    if (fragment_extras != null && fragment_extras.containsKey(ConnectedActivity.ACTIVITY_WITH_MENU)) {
-                        activity.layout_with_menu = fragment_extras.getBoolean(ConnectedActivity.ACTIVITY_WITH_MENU);
-                        fragment_extras.remove(ConnectedActivity.ACTIVITY_WITH_MENU);
-                    }
-                } else {
-                    throw new NullPointerException("Intent's extras cannot be null");
-                }
-                activity.setContentView(activity.layout_with_menu ? R.layout.activity_fragment : R.layout.activity_fragment_without_menu);
-                final Toolbar toolbar = activity.findViewById(R.id.toolbar_fragment);
-                if (toolbar != null) {
-                    theme.applyToolbarTheme(activity, toolbar);
-                    activity.setSupportActionBar(toolbar);
-                }
-                final ActionBar actionBar = activity.getSupportActionBar();
-                if (actionBar != null) {
-                    actionBar.setHomeButtonEnabled(true);
-                    actionBar.setDisplayHomeAsUpEnabled(true);
-                }
-                if (activity.layout_with_menu) {
-                    NavigationView navigationView = activity.findViewById(R.id.nav_view);
-                    if (navigationView != null) {
-                        navigationView.setNavigationItemSelectedListener(this);
-                    }
-                }
-                invoke(fragment_class, fragment_extras);
-            } catch (Exception e) {
-                log.exception(e);
-                activity.finish();
+            Intent intent = activity.getIntent();
+            if (intent == null) {
+                throw new NullPointerException("Intent cannot be null");
             }
+            Bundle extras = intent.getExtras();
+            if (extras == null) {
+                throw new NullPointerException("Intent's extras cannot be null");
+            }
+            if (!extras.containsKey("class")) {
+                throw new IllegalStateException("Intent's extras should contains 'class'");
+            }
+            Class fragmentClass = (Class) extras.get("class");
+            if (!extras.containsKey("extras")) {
+                throw new IllegalStateException("Intent's extras should contains 'extras'");
+            }
+            Bundle fragmentExtras = (Bundle) extras.get("extras");
+            if (fragmentExtras != null && fragmentExtras.containsKey(ConnectedActivity.ACTIVITY_WITH_MENU)) {
+                activity.layoutWithMenu = fragmentExtras.getBoolean(ConnectedActivity.ACTIVITY_WITH_MENU);
+                fragmentExtras.remove(ConnectedActivity.ACTIVITY_WITH_MENU);
+            }
+            activity.setContentView(activity.layoutWithMenu ? R.layout.activity_fragment : R.layout.activity_fragment_without_menu);
+            Toolbar toolbar = activity.findViewById(R.id.toolbar_fragment);
+            if (toolbar != null) {
+                theme.applyToolbarTheme(activity, toolbar);
+                activity.setSupportActionBar(toolbar);
+            }
+            ActionBar actionBar = activity.getSupportActionBar();
+            if (actionBar != null) {
+                actionBar.setHomeButtonEnabled(true);
+                actionBar.setDisplayHomeAsUpEnabled(true);
+            }
+            if (activity.layoutWithMenu) {
+                NavigationView navigationView = activity.findViewById(R.id.nav_view);
+                if (navigationView != null) {
+                    navigationView.setNavigationItemSelectedListener(this);
+                }
+            }
+            invoke(fragmentClass, fragmentExtras);
+        }, throwable -> {
+            log.exception(throwable);
+            activity.finish();
         });
     }
 
     @Override
     public void onResume() {
         thread.runOnUI(() -> {
-            if (activity.layout_with_menu) {
+            if (activity.layoutWithMenu) {
                 NavigationView navigationView = activity.findViewById(R.id.nav_view);
                 navigationMenu.displayEnableDisableOfflineButton(navigationView);
                 navigationMenu.hideIfUnauthorizedMode(navigationView);
@@ -152,11 +145,11 @@ public class FragmentActivityPresenterImpl implements FragmentActivityPresenter,
 
     @Override
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-        if (activity.layout_with_menu) {
-            log.v(TAG, "NavigationItemSelected " + item.getTitle());
-            DrawerLayout drawer_layout = activity.findViewById(R.id.drawer_layout);
-            if (drawer_layout != null) {
-                drawer_layout.closeDrawer(GravityCompat.START);
+        if (activity.layoutWithMenu) {
+            log.v(TAG, "NavigationItemSelected ", item.getTitle());
+            DrawerLayout drawer = activity.findViewById(R.id.drawer_layout);
+            if (drawer != null) {
+                drawer.closeDrawer(GravityCompat.START);
             }
             eventBus.fire(new MainActivityEvent.MenuSelectedItemChangedEvent(item));
             activity.finish();
@@ -167,7 +160,7 @@ public class FragmentActivityPresenterImpl implements FragmentActivityPresenter,
     @Override
     public boolean onBackPressed() {
         try {
-            if (!activity.layout_with_menu) {
+            if (!activity.layoutWithMenu) {
                 throw new Exception("");
             }
             DrawerLayout drawer = activity.findViewById(R.id.drawer_layout);
@@ -188,34 +181,29 @@ public class FragmentActivityPresenterImpl implements FragmentActivityPresenter,
         return false;
     }
 
-    private void invoke(final Class connectedFragmentClass, final Bundle extras) {
-        final FragmentManager fragmentManager = activity.getSupportFragmentManager();
+    private void invoke(Class connectedFragmentClass, Bundle extras) {
+        FragmentManager fragmentManager = activity.getSupportFragmentManager();
         thread.runOnUI(() -> {
-            log.v(TAG, "invoke | " + connectedFragmentClass.toString());
-            try {
-                ConnectedFragment.Data data = ConnectedFragment.getData(activity, connectedFragmentClass);
-                if (data == null) {
-                    throw new NullPointerException("data cannot be null");
-                }
-                activity.updateToolbar(activity, data.title, null);
-                ViewGroup root = activity.findViewById(activity.getRootViewId());
-                if (root != null) {
-                    root.removeAllViews();
-                }
-                Fragment fragment = (Fragment) data.connectedFragmentClass.newInstance();
-                if (extras != null) {
-                    fragment.setArguments(extras);
-                }
-                if (fragmentManager != null) {
-                    FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
-                    fragmentTransaction.replace(activity.getRootViewId(), fragment);
-                    fragmentTransaction.commitAllowingStateLoss();
-                    activity.pushFragment(new ConnectedActivity.StackElement(ConnectedActivity.TYPE.ROOT, connectedFragmentClass, extras));
-                }
-            } catch (Exception e) {
-                log.exception(e);
-                activity.finish();
+            log.v(TAG, "invoke | ", connectedFragmentClass.toString());
+            ConnectedFragment.Data data = ConnectedFragment.getData(activity, connectedFragmentClass);
+            activity.updateToolbar(activity, data.title, null);
+            ViewGroup root = activity.findViewById(activity.getRootViewId());
+            if (root != null) {
+                root.removeAllViews();
             }
+            Fragment fragment = (Fragment) data.connectedFragmentClass.newInstance();
+            if (extras != null) {
+                fragment.setArguments(extras);
+            }
+            if (fragmentManager != null) {
+                FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+                fragmentTransaction.replace(activity.getRootViewId(), fragment);
+                fragmentTransaction.commitAllowingStateLoss();
+                activity.pushFragment(new ConnectedActivity.StackElement(ConnectedActivity.TYPE.ROOT, data.connectedFragmentClass, extras));
+            }
+        }, throwable -> {
+            log.exception(throwable);
+            activity.finish();
         });
     }
 }

@@ -136,36 +136,38 @@ public class ProtocolFragmentPresenterImpl implements ProtocolFragmentPresenter,
                 return;
             }
             firebaseAnalyticsProvider.setCurrentScreen(activity, fragment);
-            if (activity != null && activity.toolbar != null) {
-                thread.runOnUI(() -> {
-                    MenuItem simple = activity.toolbar.findItem(R.id.action_protocol_changes_switch_to_simple);
-                    MenuItem advanced = activity.toolbar.findItem(R.id.action_protocol_changes_switch_to_advanced);
-                    if (simple != null && advanced != null) {
-                        switch (storagePref.get(activity, "pref_protocol_changes_mode", "advanced")) {
-                            case "simple": advanced.setVisible(true); break;
-                            case "advanced": simple.setVisible(true); break;
-                        }
-                        simple.setOnMenuItemClickListener(item -> {
-                            thread.runOnUI(() -> {
-                                storagePref.put(activity, "pref_protocol_changes_mode", "simple");
-                                simple.setVisible(false);
-                                advanced.setVisible(true);
-                                load(false);
-                            });
-                            return false;
-                        });
-                        advanced.setOnMenuItemClickListener(item -> {
-                            thread.runOnUI(() -> {
-                                storagePref.put(activity, "pref_protocol_changes_mode", "advanced");
-                                simple.setVisible(true);
-                                advanced.setVisible(false);
-                                load(false);
-                            });
-                            return false;
-                        });
-                    }
+            thread.runOnUI(() -> {
+                if (activity == null || activity.toolbar == null) {
+                    return;
+                }
+                MenuItem simple = activity.toolbar.findItem(R.id.action_protocol_changes_switch_to_simple);
+                MenuItem advanced = activity.toolbar.findItem(R.id.action_protocol_changes_switch_to_advanced);
+                if (simple == null || advanced == null) {
+                    return;
+                }
+                switch (storagePref.get(activity, "pref_protocol_changes_mode", "advanced")) {
+                    case "simple": advanced.setVisible(true); break;
+                    case "advanced": simple.setVisible(true); break;
+                }
+                simple.setOnMenuItemClickListener(item -> {
+                    thread.runOnUI(() -> {
+                        storagePref.put(activity, "pref_protocol_changes_mode", "simple");
+                        simple.setVisible(false);
+                        advanced.setVisible(true);
+                        load(false);
+                    });
+                    return false;
                 });
-            }
+                advanced.setOnMenuItemClickListener(item -> {
+                        thread.runOnUI(() -> {
+                            storagePref.put(activity, "pref_protocol_changes_mode", "advanced");
+                            simple.setVisible(true);
+                            advanced.setVisible(false);
+                            load(false);
+                        });
+                        return false;
+                    });
+            });
             if (!loaded) {
                 loaded = true;
                 if (getData() == null) {

@@ -294,7 +294,7 @@
     <string name="hours">Hours</string>
     <string name="minutes">Minutes</string>
     <string name="seconds">Seconds</string>
-    <string name="pref_protocol_changes_mode_title">Display mode</string>
+    <string name="pref_mode_title">Display mode</string>
     <string name="protocol_changes_mode_simple">Simple list of changes</string>
     <string name="protocol_changes_mode_advanced">Grouped list of changes</string>
     <string name="enable_offline_mode">Go to offline mode</string>
@@ -511,5 +511,7 @@
     <string name="share_schedule">Share timetable</string>
     <string name="unspecified_points">Unspecified points</string>
     <string name="outdated_file_version">This file was created in an outdated version of the application and is no longer supported</string>
+    <string name="mode_simple">Simple mode</string>
+    <string name="mode_post_process">Post process mode</string>
 
 </resources>

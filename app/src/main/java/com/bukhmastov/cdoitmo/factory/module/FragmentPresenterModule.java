@@ -2,6 +2,7 @@ package com.bukhmastov.cdoitmo.factory.module;
 
 import com.bukhmastov.cdoitmo.fragment.presenter.AboutFragmentPresenter;
 import com.bukhmastov.cdoitmo.fragment.presenter.ERegisterFragmentPresenter;
+import com.bukhmastov.cdoitmo.fragment.presenter.ERegisterSubjectFragmentPresenter;
 import com.bukhmastov.cdoitmo.fragment.presenter.HomeScreenInteractionFragmentPresenter;
 import com.bukhmastov.cdoitmo.fragment.presenter.LinkedAccountsFragmentPresenter;
 import com.bukhmastov.cdoitmo.fragment.presenter.LogFragmentPresenter;
@@ -18,7 +19,6 @@ import com.bukhmastov.cdoitmo.fragment.presenter.ScheduleLessonsModifyFragmentPr
 import com.bukhmastov.cdoitmo.fragment.presenter.ScheduleLessonsShareFragmentPresenter;
 import com.bukhmastov.cdoitmo.fragment.presenter.ScheduleLessonsTabFragmentPresenter;
 import com.bukhmastov.cdoitmo.fragment.presenter.ScheduleLessonsTabHostFragmentPresenter;
-import com.bukhmastov.cdoitmo.fragment.presenter.SubjectShowFragmentPresenter;
 import com.bukhmastov.cdoitmo.fragment.presenter.UniversityBuildingsFragmentPresenter;
 import com.bukhmastov.cdoitmo.fragment.presenter.UniversityEventsFragmentPresenter;
 import com.bukhmastov.cdoitmo.fragment.presenter.UniversityFacultiesFragmentPresenter;
@@ -44,7 +44,7 @@ import com.bukhmastov.cdoitmo.fragment.presenter.impl.ScheduleLessonsModifyFragm
 import com.bukhmastov.cdoitmo.fragment.presenter.impl.ScheduleLessonsShareFragmentPresenterImpl;
 import com.bukhmastov.cdoitmo.fragment.presenter.impl.ScheduleLessonsTabFragmentPresenterImpl;
 import com.bukhmastov.cdoitmo.fragment.presenter.impl.ScheduleLessonsTabHostFragmentPresenterImpl;
-import com.bukhmastov.cdoitmo.fragment.presenter.impl.SubjectShowFragmentPresenterImpl;
+import com.bukhmastov.cdoitmo.fragment.presenter.impl.ERegisterSubjectFragmentPresenterImpl;
 import com.bukhmastov.cdoitmo.fragment.presenter.impl.UniversityBuildingsFragmentPresenterImpl;
 import com.bukhmastov.cdoitmo.fragment.presenter.impl.UniversityEventsFragmentPresenterImpl;
 import com.bukhmastov.cdoitmo.fragment.presenter.impl.UniversityFacultiesFragmentPresenterImpl;
@@ -169,8 +169,8 @@ public class FragmentPresenterModule {
 
     @Provides
     @Singleton
-    public SubjectShowFragmentPresenter provideSubjectShowFragmentPresenter() {
-        return new SubjectShowFragmentPresenterImpl();
+    public ERegisterSubjectFragmentPresenter provideERegisterSubjectFragmentPresenter() {
+        return new ERegisterSubjectFragmentPresenterImpl();
     }
 
     @Provides

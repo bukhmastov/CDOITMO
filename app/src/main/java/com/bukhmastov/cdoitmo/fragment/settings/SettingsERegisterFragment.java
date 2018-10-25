@@ -16,6 +16,7 @@ public class SettingsERegisterFragment extends SettingsTemplatePreferencesFragme
     static {
         preferences = new ArrayList<>();
         preferences.add(new PreferenceList("pref_e_journal_term", "0", R.string.term_picker, R.array.pref_e_journal_term_titles, R.array.pref_e_journal_term_values, true));
+        preferences.add(new PreferenceList("pref_eregister_mode", "advanced", R.string.pref_mode_title, R.array.pref_eregister_mode_titles, R.array.pref_eregister_mode_values, true));
     }
 
     @Override

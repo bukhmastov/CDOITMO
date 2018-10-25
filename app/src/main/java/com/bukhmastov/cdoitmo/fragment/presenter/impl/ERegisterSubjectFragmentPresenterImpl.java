@@ -5,6 +5,7 @@ import android.support.annotation.Nullable;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.ArrayAdapter;
 
@@ -16,27 +17,31 @@ import com.bukhmastov.cdoitmo.event.events.ShareTextEvent;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.fragment.ConnectedFragment;
-import com.bukhmastov.cdoitmo.fragment.presenter.SubjectShowFragmentPresenter;
+import com.bukhmastov.cdoitmo.fragment.presenter.ERegisterSubjectFragmentPresenter;
 import com.bukhmastov.cdoitmo.model.eregister.ERMark;
 import com.bukhmastov.cdoitmo.model.eregister.ERPoint;
 import com.bukhmastov.cdoitmo.model.eregister.ERSubject;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.NotificationMessage;
+import com.bukhmastov.cdoitmo.util.StoragePref;
 import com.bukhmastov.cdoitmo.util.Thread;
 import com.bukhmastov.cdoitmo.util.singleton.CollectionUtils;
 import com.bukhmastov.cdoitmo.util.singleton.StringUtils;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 import java.util.Objects;
 
 import javax.inject.Inject;
 
-public class SubjectShowFragmentPresenterImpl implements SubjectShowFragmentPresenter {
+public class ERegisterSubjectFragmentPresenterImpl implements ERegisterSubjectFragmentPresenter {
 
-    private static final String TAG = "SubjectShowFragment";
+    private static final String TAG = "ERegisterSubjectFragment";
     private ConnectedFragment fragment = null;
     private ConnectedActivity activity = null;
     private ERSubject subject = null;
+    private List<ShareEntity> shareEntities = null;
     private class ShareEntity {
         public String attestation = "";
         public String mark = "";
@@ -51,11 +56,13 @@ public class SubjectShowFragmentPresenterImpl implements SubjectShowFragmentPres
     @Inject
     EventBus eventBus;
     @Inject
+    StoragePref storagePref;
+    @Inject
     NotificationMessage notificationMessage;
     @Inject
     FirebaseAnalyticsProvider firebaseAnalyticsProvider;
 
-    public SubjectShowFragmentPresenterImpl() {
+    public ERegisterSubjectFragmentPresenterImpl() {
         AppComponentProvider.getComponent().inject(this);
     }
 
@@ -88,14 +95,92 @@ public class SubjectShowFragmentPresenterImpl implements SubjectShowFragmentPres
 
     @Override
     public void onDestroy() {
+        log.v(TAG, "Fragment destroyed");
+    }
+
+    @Override
+    public void onToolbarSetup(Menu menu) {
         thread.runOnUI(() -> {
-            log.v(TAG, "Fragment destroyed");
-            if (activity != null && activity.toolbar != null) {
-                MenuItem action_share = activity.toolbar.findItem(R.id.action_share);
-                if (action_share != null) {
-                    action_share.setVisible(false);
-                }
+            if (menu == null) {
+                return;
             }
+            MenuItem share = menu.findItem(R.id.action_share);
+            MenuItem simple = menu.findItem(R.id.action_mode_simple);
+            MenuItem advanced = menu.findItem(R.id.action_mode_post_process);
+            if (simple != null && advanced != null) {
+                switch (storagePref.get(activity, "pref_eregister_mode", "advanced")) {
+                    case "simple": advanced.setVisible(true); break;
+                    case "advanced": simple.setVisible(true); break;
+                }
+                simple.setOnMenuItemClickListener(item -> {
+                    thread.runOnUI(() -> {
+                        storagePref.put(activity, "pref_eregister_mode", "simple");
+                        simple.setVisible(false);
+                        advanced.setVisible(true);
+                        display();
+                    });
+                    return false;
+                });
+                advanced.setOnMenuItemClickListener(item -> {
+                    thread.runOnUI(() -> {
+                        storagePref.put(activity, "pref_eregister_mode", "advanced");
+                        simple.setVisible(true);
+                        advanced.setVisible(false);
+                        display();
+                    });
+                    return false;
+                });
+            }
+            if (share != null) {
+                if (shareEntities == null) {
+                    shareEntities = makeShareEntities();
+                }
+                if (shareEntities.size() == 0) {
+                    share.setVisible(false);
+                    return;
+                }
+                share.setVisible(true);
+                share.setOnMenuItemClickListener(menuItem -> {
+                    thread.runOnUI(() -> {
+                        if (shareEntities.size() == 1) {
+                            eventBus.fire(new ShareTextEvent(shareEntities.get(0).text, "subject"));
+                            return;
+                        }
+                        if (activity.isFinishing() || activity.isDestroyed()) {
+                            return;
+                        }
+                        ArrayList<String> labels = new ArrayList<>();
+                        for (ShareEntity shareEntity : shareEntities) {
+                            labels.add(StringUtils.isNotBlank(shareEntity.attestation) ? shareEntity.attestation : subject.getName());
+                        }
+                        ArrayAdapter<String> arrayAdapter = new ArrayAdapter<>(activity, R.layout.spinner_center);
+                        arrayAdapter.addAll(labels);
+                        new AlertDialog.Builder(activity)
+                                .setAdapter(arrayAdapter, (dialogInterface, position) -> eventBus.fire(new ShareTextEvent(shareEntities.get(position).text, "subject")))
+                                .setNegativeButton(R.string.do_cancel, null)
+                                .create().show();
+                    }, throwable -> {
+                        log.exception(throwable);
+                        notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                    });
+                    return false;
+                });
+            }
+        });
+    }
+
+    @Override
+    public void onToolbarTeardown(Menu menu) {
+        thread.runOnUI(() -> {
+            if (menu == null) {
+                return;
+            }
+            MenuItem share = activity.toolbar.findItem(R.id.action_share);
+            MenuItem simple = activity.toolbar.findItem(R.id.action_mode_simple);
+            MenuItem advanced = activity.toolbar.findItem(R.id.action_mode_post_process);
+            if (share != null) share.setVisible(false);
+            if (simple != null) simple.setVisible(false);
+            if (advanced != null) advanced.setVisible(false);
         });
     }
 
@@ -123,105 +208,56 @@ public class SubjectShowFragmentPresenterImpl implements SubjectShowFragmentPres
         display();
     }
 
-    @Override
-    public void toggleShare() {
-        thread.run(() -> {
-            if (subject == null || activity.toolbar == null) {
-                return;
-            }
-            if (StringUtils.isBlank(subject.getName()) || CollectionUtils.isEmpty(subject.getMarks()) || CollectionUtils.isEmpty(subject.getPoints())) {
-                return;
-            }
-            ArrayList<ShareEntity> shareEntities = new ArrayList<>();
-            for (ERMark mark : subject.getMarks()) {
-                Double value = -1.0;
-                for (ERPoint point : subject.getPoints()) {
-                    if (point == null) {
-                        continue;
-                    }
-                    if (Objects.equals(mark.getWorkType(), point.getName())) {
-                        value = point.getValue();
-                        break;
-                    }
-                }
-                if (value == null) {
-                    value = 0.0;
-                }
-                if (value < 0.0) {
+    private List<ShareEntity> makeShareEntities() {
+        List<ShareEntity> shareEntities = new ArrayList<>();
+        if (subject == null || StringUtils.isBlank(subject.getName()) || CollectionUtils.isEmpty(subject.getMarks()) || CollectionUtils.isEmpty(subject.getPoints())) {
+            return shareEntities;
+        }
+        for (ERMark mark : subject.getMarks()) {
+            Double value = -1.0;
+            for (ERPoint point : subject.getPoints()) {
+                if (point == null) {
                     continue;
                 }
+                if (Objects.equals(mark.getWorkType(), point.getName())) {
+                    value = point.getValue();
+                    break;
+                }
+            }
+            if (value == null) {
+                value = 0.0;
+            }
+            if (value < 0.0) {
+                continue;
+            }
+            ShareEntity shareEntity = new ShareEntity();
+            shareEntity.attestation = mark.getWorkType();
+            shareEntity.mark = mark.getMark();
+            shareEntity.value = value;
+            shareEntity.text = getShareText(subject.getName(), shareEntity);
+            shareEntities.add(shareEntity);
+        }
+        if (shareEntities.size() == 0) {
+            Double value = -1.0;
+            for (ERPoint point : subject.getPoints()) {
+                if (point == null) {
+                    continue;
+                }
+                if (point.getMax() != null && point.getMax() == 100.0) {
+                    value = point.getValue();
+                    break;
+                }
+            }
+            if (value >= 0.0) {
                 ShareEntity shareEntity = new ShareEntity();
-                shareEntity.attestation = mark.getWorkType();
-                shareEntity.mark = mark.getMark();
+                shareEntity.attestation = null;
+                shareEntity.mark = null;
                 shareEntity.value = value;
                 shareEntity.text = getShareText(subject.getName(), shareEntity);
                 shareEntities.add(shareEntity);
             }
-            if (shareEntities.size() == 0) {
-                Double value = -1.0;
-                for (ERPoint point : subject.getPoints()) {
-                    if (point == null) {
-                        continue;
-                    }
-                    if (point.getMax() != null && point.getMax() == 100.0) {
-                        value = point.getValue();
-                        break;
-                    }
-                }
-                if (value >= 0.0) {
-                    ShareEntity shareEntity = new ShareEntity();
-                    shareEntity.attestation = null;
-                    shareEntity.mark = null;
-                    shareEntity.value = value;
-                    shareEntity.text = getShareText(subject.getName(), shareEntity);
-                    shareEntities.add(shareEntity);
-                }
-            }
-            if (shareEntities.size() == 0) {
-                return;
-            }
-            thread.runOnUI(() -> {
-                if (activity == null || activity.toolbar == null) {
-                    return;
-                }
-                final MenuItem share = activity.toolbar.findItem(R.id.action_share);
-                if (share == null) {
-                    return;
-                }
-                share.setVisible(true);
-                share.setOnMenuItemClickListener(menuItem -> {
-                    thread.runOnUI(() -> {
-                        if (shareEntities.size() == 1) {
-                            eventBus.fire(new ShareTextEvent(shareEntities.get(0).text, "subject"));
-                            return;
-                        }
-                        if (activity.isFinishing() || activity.isDestroyed()) {
-                            return;
-                        }
-                        final ArrayList<String> labels = new ArrayList<>();
-                        for (ShareEntity shareEntity : shareEntities) {
-                            labels.add(StringUtils.isNotBlank(shareEntity.attestation) ? shareEntity.attestation : subject.getName());
-                        }
-                        final ArrayAdapter<String> arrayAdapter = new ArrayAdapter<>(activity, R.layout.spinner_center);
-                        arrayAdapter.addAll(labels);
-                        new AlertDialog.Builder(activity)
-                                .setAdapter(arrayAdapter, (dialogInterface, position) -> eventBus.fire(new ShareTextEvent(shareEntities.get(position).text, "subject")))
-                                .setNegativeButton(R.string.do_cancel, null)
-                                .create().show();
-                    }, throwable -> {
-                        log.exception(throwable);
-                        notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
-                    });
-                    return false;
-                });
-            }, throwable -> {
-                log.exception(throwable);
-                notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
-            });
-        }, throwable -> {
-            log.exception(throwable);
-            notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
-        });
+        }
+        return shareEntities;
     }
 
     private void display() {
@@ -230,7 +266,8 @@ public class SubjectShowFragmentPresenterImpl implements SubjectShowFragmentPres
         }
         thread.run(() -> {
             log.v(TAG, "display");
-            ERegisterSubjectViewRVA adapter = new ERegisterSubjectViewRVA(activity, subject, true /* TODO eregister simple mode */);
+            shareEntities = makeShareEntities();
+            ERegisterSubjectViewRVA adapter = new ERegisterSubjectViewRVA(activity, subject, "advanced".equals(storagePref.get(activity, "pref_eregister_mode", "advanced")));
             thread.runOnUI(() -> {
                 // отображаем заголовок
                 activity.updateToolbar(activity, subject.getName(), R.drawable.ic_e_journal);

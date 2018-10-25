@@ -2,10 +2,11 @@ package com.bukhmastov.cdoitmo.fragment.presenter;
 
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.view.Menu;
 
 import com.bukhmastov.cdoitmo.fragment.ConnectedFragment;
 
-public interface SubjectShowFragmentPresenter {
+public interface ERegisterSubjectFragmentPresenter {
 
     void setFragment(ConnectedFragment fragment);
 
@@ -13,11 +14,13 @@ public interface SubjectShowFragmentPresenter {
 
     void onDestroy();
 
+    void onToolbarSetup(Menu menu);
+
+    void onToolbarTeardown(Menu menu);
+
     void onResume();
 
     void onPause();
 
     void onViewCreated();
-
-    void toggleShare();
 }

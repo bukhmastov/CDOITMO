@@ -82,7 +82,7 @@ import com.bukhmastov.cdoitmo.fragment.ScheduleLessonsModifyFragment;
 import com.bukhmastov.cdoitmo.fragment.ScheduleLessonsShareFragment;
 import com.bukhmastov.cdoitmo.fragment.ScheduleLessonsTabFragment;
 import com.bukhmastov.cdoitmo.fragment.ScheduleLessonsTabHostFragment;
-import com.bukhmastov.cdoitmo.fragment.SubjectShowFragment;
+import com.bukhmastov.cdoitmo.fragment.ERegisterSubjectFragment;
 import com.bukhmastov.cdoitmo.fragment.UniversityBuildingsFragment;
 import com.bukhmastov.cdoitmo.fragment.UniversityEventsFragment;
 import com.bukhmastov.cdoitmo.fragment.UniversityFacultiesFragment;
@@ -108,7 +108,7 @@ import com.bukhmastov.cdoitmo.fragment.presenter.impl.ScheduleLessonsModifyFragm
 import com.bukhmastov.cdoitmo.fragment.presenter.impl.ScheduleLessonsShareFragmentPresenterImpl;
 import com.bukhmastov.cdoitmo.fragment.presenter.impl.ScheduleLessonsTabFragmentPresenterImpl;
 import com.bukhmastov.cdoitmo.fragment.presenter.impl.ScheduleLessonsTabHostFragmentPresenterImpl;
-import com.bukhmastov.cdoitmo.fragment.presenter.impl.SubjectShowFragmentPresenterImpl;
+import com.bukhmastov.cdoitmo.fragment.presenter.impl.ERegisterSubjectFragmentPresenterImpl;
 import com.bukhmastov.cdoitmo.fragment.presenter.impl.UniversityBuildingsFragmentPresenterImpl;
 import com.bukhmastov.cdoitmo.fragment.presenter.impl.UniversityEventsFragmentPresenterImpl;
 import com.bukhmastov.cdoitmo.fragment.presenter.impl.UniversityFacultiesFragmentPresenterImpl;
@@ -241,7 +241,7 @@ public interface AppComponent {
     void inject(ScheduleLessonsShareFragment scheduleLessonsShareFragment);
     void inject(ScheduleLessonsTabFragment scheduleLessonsTabFragment);
     void inject(ScheduleLessonsTabHostFragment scheduleLessonsTabHostFragment);
-    void inject(SubjectShowFragment subjectShowFragment);
+    void inject(ERegisterSubjectFragment subjectShowFragment);
     void inject(UniversityBuildingsFragment universityBuildingsFragment);
     void inject(UniversityEventsFragment universityEventsFragment);
     void inject(UniversityFacultiesFragment universityFacultiesFragment);
@@ -272,7 +272,7 @@ public interface AppComponent {
     void inject(ScheduleLessonsFragmentPresenterImpl scheduleLessonsFragmentPresenter);
     void inject(ScheduleLessonsModifyFragmentPresenterImpl scheduleLessonsModifyFragmentPresenter);
     void inject(ScheduleLessonsShareFragmentPresenterImpl scheduleLessonsShareFragmentPresenter);
-    void inject(SubjectShowFragmentPresenterImpl subjectShowFragmentPresenter);
+    void inject(ERegisterSubjectFragmentPresenterImpl subjectShowFragmentPresenter);
     void inject(UniversityFragmentPresenterImpl universityFragmentPresenter);
     void inject(UniversityBuildingsFragmentPresenterImpl universityBuildingsFragmentPresenter);
     void inject(UniversityEventsFragmentPresenterImpl universityEventsFragmentPresenter);

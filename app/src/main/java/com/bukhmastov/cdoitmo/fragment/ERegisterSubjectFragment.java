@@ -8,14 +8,14 @@ import android.view.View;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
-import com.bukhmastov.cdoitmo.fragment.presenter.SubjectShowFragmentPresenter;
+import com.bukhmastov.cdoitmo.fragment.presenter.ERegisterSubjectFragmentPresenter;
 
 import javax.inject.Inject;
 
-public class SubjectShowFragment extends ConnectedFragment {
+public class ERegisterSubjectFragment extends ConnectedFragment {
 
     @Inject
-    SubjectShowFragmentPresenter presenter;
+    ERegisterSubjectFragmentPresenter presenter;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -41,18 +41,20 @@ public class SubjectShowFragment extends ConnectedFragment {
     public void onResume() {
         super.onResume();
         presenter.onResume();
+        presenter.onToolbarSetup(activity.toolbar);
     }
 
     @Override
     public void onPause() {
         super.onPause();
         presenter.onPause();
+        presenter.onToolbarTeardown(activity.toolbar);
     }
 
     @Override
     public void onPrepareOptionsMenu(Menu menu) {
         super.onPrepareOptionsMenu(menu);
-        presenter.toggleShare();
+        presenter.onToolbarSetup(menu);
     }
 
     @Override

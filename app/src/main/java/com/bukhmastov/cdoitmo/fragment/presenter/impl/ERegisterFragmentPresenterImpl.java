@@ -23,7 +23,7 @@ import com.bukhmastov.cdoitmo.event.events.ClearCacheEvent;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.fragment.ConnectedFragment;
-import com.bukhmastov.cdoitmo.fragment.SubjectShowFragment;
+import com.bukhmastov.cdoitmo.fragment.ERegisterSubjectFragment;
 import com.bukhmastov.cdoitmo.fragment.presenter.ERegisterFragmentPresenter;
 import com.bukhmastov.cdoitmo.function.BiFunction;
 import com.bukhmastov.cdoitmo.model.eregister.ERSubject;
@@ -392,7 +392,7 @@ public class ERegisterFragmentPresenterImpl implements ERegisterFragmentPresente
                 thread.run(() -> {
                     Bundle extras = new Bundle();
                     extras.putSerializable("subject", subject);
-                    thread.runOnUI(() -> activity.openActivityOrFragment(SubjectShowFragment.class, extras));
+                    thread.runOnUI(() -> activity.openActivityOrFragment(ERegisterSubjectFragment.class, extras));
                 }, throwable -> {
                     notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
                 });
