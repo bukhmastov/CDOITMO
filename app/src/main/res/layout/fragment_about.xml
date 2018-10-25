@@ -378,30 +378,13 @@
             android:layout_margin="@dimen/item_padding_half">
 
             <TextView
+                android:id="@+id/text_disclaimer"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:padding="1dp"
                 android:text="@string/app_info_disclaimer"
                 android:textAlignment="center"
                 android:textColor="?android:attr/textColorPrimary"
-                android:textSize="@dimen/font_size_14" />
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:autoLink="web"
-                android:padding="2dp"
-                android:text="http://www.ifmo.ru"
-                android:textAlignment="center"
-                android:textSize="@dimen/font_size_14" />
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:autoLink="web"
-                android:padding="2dp"
-                android:text="http://de.ifmo.ru"
-                android:textAlignment="center"
                 android:textSize="@dimen/font_size_14" />
 
         </LinearLayout>

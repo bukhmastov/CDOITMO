@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.text.method.LinkMovementMethod;
 import android.view.View;
 import android.widget.TextView;
 
@@ -165,6 +166,11 @@ public class AboutFragmentPresenterImpl implements AboutFragmentPresenter {
                     firebaseAnalyticsProvider.logBasicEvent(activity, "donate clicked");
                     eventBus.fire(new OpenIntentEvent(new Intent(Intent.ACTION_VIEW, Uri.parse("http://yasobe.ru/na/cdoifmo"))));
                 }));
+            }
+
+            TextView text_disclaimer = fragment.container().findViewById(R.id.text_disclaimer);
+            if (text_disclaimer != null) {
+                text_disclaimer.setMovementMethod(LinkMovementMethod.getInstance());
             }
         });
     }

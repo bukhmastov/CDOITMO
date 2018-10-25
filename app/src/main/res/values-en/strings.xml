@@ -72,7 +72,7 @@
     <string name="pref_white_theme_ext">White theme</string>
     <string name="pref_black_theme_ext">Black theme</string>
     <string name="about">About</string>
-    <string name="app_info_disclaimer">This application uses and processes data from the servers of the ITMO University. Personal data is stored only on this device and transmitted only to the servers of the ITMO University. Please note that this application is not official.</string>
+    <string name="app_info_disclaimer">Please note that this application is not official.\n<a href="https://bukhmastov.github.io/cdoitmo/policy">Privacy policy</a></string>
     <string name="app_info_dev">Bukhmastov Alex</string>
     <string name="offline_mode">Offline mode</string>
     <string name="schedule_lessons">Schedule of lessons</string>
@@ -513,5 +513,6 @@
     <string name="outdated_file_version">This file was created in an outdated version of the application and is no longer supported</string>
     <string name="mode_simple">Simple mode</string>
     <string name="mode_post_process">Post process mode</string>
+    <string name="privacy_policy">Privacy policy</string>
 
 </resources>

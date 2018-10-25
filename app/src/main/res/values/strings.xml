@@ -75,7 +75,7 @@
     <string name="pref_white_theme_ext">Блистательно белая тема</string>
     <string name="pref_black_theme_ext">Невероятно черная тема</string>
     <string name="about">О приложении</string>
-    <string name="app_info_disclaimer">Данное приложение использует и обрабатывает данные с серверов университета ИТМО. Персональные данные хранятся только на данном устройстве и передаются только на сервера университета ИТМО. Обратите внимание, что данное приложение не является официальным.</string>
+    <string name="app_info_disclaimer">Обратите внимание, что данное приложение не является официальным.\n<a href="https://bukhmastov.github.io/cdoitmo/policy">Политика конфиденциальности</a></string>
     <string name="app_info_dev">Бухмастов Алексей</string>
     <string name="app_info_mail_dev" translatable="false">bukhmastov-alex@ya.ru</string>
     <string name="offline_mode">Оффлайн режим</string>
