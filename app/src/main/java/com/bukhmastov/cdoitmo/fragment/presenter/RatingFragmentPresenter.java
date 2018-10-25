@@ -1,26 +1,13 @@
 package com.bukhmastov.cdoitmo.fragment.presenter;
 
-import android.os.Bundle;
-import android.support.annotation.Nullable;
 import android.support.annotation.StringDef;
 
-import com.bukhmastov.cdoitmo.fragment.ConnectedFragment;
 import com.bukhmastov.cdoitmo.model.JsonEntity;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
-public interface RatingFragmentPresenter {
-
-    void setFragment(ConnectedFragment fragment);
-
-    void onCreate(@Nullable Bundle savedInstanceState);
-
-    void onDestroy();
-
-    void onResume();
-
-    void onPause();
+public interface RatingFragmentPresenter extends ConnectedFragmentPresenter {
 
     @Retention(RetentionPolicy.SOURCE)
     @StringDef({COMMON, OWN})

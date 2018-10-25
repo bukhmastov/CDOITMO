@@ -10,23 +10,9 @@
         android:visible="false"/>
 
     <item
-        android:id="@+id/action_search"
-        android:title="@string/search"
-        android:icon="@drawable/ic_toolbar_search"
-        app:showAsAction="ifRoom"
-        android:visible="false" />
-
-    <item
-        android:id="@+id/action_protocol_changes_switch_to_simple"
-        android:title="@string/protocol_changes_mode_simple"
-        android:icon="@drawable/ic_toolbar_protocol_changes_simple"
-        app:showAsAction="ifRoom"
-        android:visible="false" />
-
-    <item
-        android:id="@+id/action_protocol_changes_switch_to_advanced"
-        android:title="@string/protocol_changes_mode_advanced"
-        android:icon="@drawable/ic_toolbar_protocol_changes_advanced"
+        android:id="@+id/action_share"
+        android:title="@string/share"
+        android:icon="@drawable/ic_toolbar_share"
         app:showAsAction="ifRoom"
         android:visible="false" />
 
@@ -45,9 +31,16 @@
         android:visible="false" />
 
     <item
-        android:id="@+id/action_share"
-        android:title="@string/share"
-        android:icon="@drawable/ic_toolbar_share"
+        android:id="@+id/action_restore"
+        android:title="@string/reset_preferences"
+        android:icon="@drawable/ic_settings_restore"
+        app:showAsAction="ifRoom"
+        android:visible="false" />
+
+    <item
+        android:id="@+id/action_search"
+        android:title="@string/search"
+        android:icon="@drawable/ic_toolbar_search"
         app:showAsAction="ifRoom"
         android:visible="false" />
 
@@ -55,13 +48,6 @@
         android:id="@+id/action_info"
         android:title="@string/help"
         android:icon="@drawable/ic_toolbar_info"
-        app:showAsAction="ifRoom"
-        android:visible="false" />
-
-    <item
-        android:id="@+id/action_restore"
-        android:title="@string/reset_preferences"
-        android:icon="@drawable/ic_settings_restore"
         app:showAsAction="ifRoom"
         android:visible="false" />
 

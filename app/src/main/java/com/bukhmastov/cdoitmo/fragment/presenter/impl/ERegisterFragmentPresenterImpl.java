@@ -6,6 +6,7 @@ import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
@@ -129,13 +130,49 @@ public class ERegisterFragmentPresenterImpl implements ERegisterFragmentPresente
         thread.runOnUI(() -> {
             log.v(TAG, "Fragment destroyed");
             loaded = false;
-            if (activity != null && activity.toolbar != null) {
-                MenuItem action_info = activity.toolbar.findItem(R.id.action_info);
-                if (action_info != null) {
-                    action_info.setVisible(false);
-                }
-            }
         });
+    }
+
+    @Override
+    public void onToolbarSetup(Menu menu) {
+        try {
+            if (menu == null) {
+                return;
+            }
+            MenuItem info = menu.findItem(R.id.action_info);
+            if (info != null) {
+                info.setVisible(true);
+                info.setOnMenuItemClickListener(item -> {
+                    thread.runOnUI(() -> {
+                        if (activity.isFinishing() || activity.isDestroyed()) {
+                            return;
+                        }
+                        new AlertDialog.Builder(activity)
+                                .setIcon(R.drawable.ic_info_outline)
+                                .setTitle(R.string.e_journal)
+                                .setMessage(R.string.e_journal_help)
+                                .setNegativeButton(R.string.close, null)
+                                .create().show();
+                    });
+                    return false;
+                });
+            }
+        } catch (Throwable throwable) {
+            log.exception(throwable);
+        }
+    }
+
+    @Override
+    public void onToolbarTeardown(Menu menu) {
+        try {
+            if (menu == null) {
+                return;
+            }
+            MenuItem info = menu.findItem(R.id.action_info);
+            if (info != null) info.setVisible(false);
+        } catch (Throwable throwable) {
+            log.exception(throwable);
+        }
     }
 
     @Override
@@ -146,28 +183,6 @@ public class ERegisterFragmentPresenterImpl implements ERegisterFragmentPresente
                 return;
             }
             firebaseAnalyticsProvider.setCurrentScreen(activity, fragment);
-            if (activity != null && activity.toolbar != null) {
-                thread.runOnUI(() -> {
-                    MenuItem action_info = activity.toolbar.findItem(R.id.action_info);
-                    if (action_info != null) {
-                        action_info.setVisible(true);
-                        action_info.setOnMenuItemClickListener(item -> {
-                            thread.runOnUI(() -> {
-                                if (activity.isFinishing() || activity.isDestroyed()) {
-                                    return;
-                                }
-                                new AlertDialog.Builder(activity)
-                                        .setIcon(R.drawable.ic_info_outline)
-                                        .setTitle(R.string.e_journal)
-                                        .setMessage(R.string.e_journal_help)
-                                        .setNegativeButton(R.string.close, null)
-                                        .create().show();
-                            });
-                            return false;
-                        });
-                    }
-                });
-            }
             if (!loaded) {
                 loaded = true;
                 if (getData() == null) {

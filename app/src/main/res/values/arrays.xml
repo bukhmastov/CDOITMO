@@ -113,8 +113,8 @@
     </string-array>
 
     <string-array name="pref_protocol_changes_mode_titles">
-        <item>@string/protocol_changes_mode_simple</item>
-        <item>@string/protocol_changes_mode_advanced</item>
+        <item>@string/mode_simple</item>
+        <item>@string/mode_post_process</item>
     </string-array>
     <string-array name="pref_protocol_changes_mode_values" translatable="false">
         <item>simple</item>

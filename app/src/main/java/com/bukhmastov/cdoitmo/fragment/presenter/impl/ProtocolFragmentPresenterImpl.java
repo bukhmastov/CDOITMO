@@ -5,6 +5,7 @@ import android.support.annotation.Nullable;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
@@ -116,16 +117,61 @@ public class ProtocolFragmentPresenterImpl implements ProtocolFragmentPresenter,
 
     @Override
     public void onDestroy() {
-        thread.runOnUI(() -> {
-            log.v(TAG, "Fragment destroyed");
-            loaded = false;
-            if (activity != null && activity.toolbar != null) {
-                MenuItem simple = activity.toolbar.findItem(R.id.action_protocol_changes_switch_to_simple);
-                MenuItem advanced = activity.toolbar.findItem(R.id.action_protocol_changes_switch_to_advanced);
-                if (simple != null) simple.setVisible(false);
-                if (advanced != null) advanced.setVisible(false);
+        log.v(TAG, "Fragment destroyed");
+        loaded = false;
+    }
+
+    @Override
+    public void onToolbarSetup(Menu menu) {
+        try {
+            if (menu == null) {
+                return;
             }
-        });
+            MenuItem simple = menu.findItem(R.id.action_mode_simple);
+            MenuItem advanced = menu.findItem(R.id.action_mode_post_process);
+            if (simple == null || advanced == null) {
+                return;
+            }
+            switch (storagePref.get(activity, "pref_protocol_changes_mode", "advanced")) {
+                case "simple": advanced.setVisible(true); break;
+                case "advanced": simple.setVisible(true); break;
+            }
+            simple.setOnMenuItemClickListener(item -> {
+                thread.runOnUI(() -> {
+                    storagePref.put(activity, "pref_protocol_changes_mode", "simple");
+                    simple.setVisible(false);
+                    advanced.setVisible(true);
+                    load(false);
+                });
+                return false;
+            });
+            advanced.setOnMenuItemClickListener(item -> {
+                thread.runOnUI(() -> {
+                    storagePref.put(activity, "pref_protocol_changes_mode", "advanced");
+                    simple.setVisible(true);
+                    advanced.setVisible(false);
+                    load(false);
+                });
+                return false;
+            });
+        } catch (Throwable throwable) {
+            log.exception(throwable);
+        }
+    }
+
+    @Override
+    public void onToolbarTeardown(Menu menu) {
+        try {
+            if (menu == null) {
+                return;
+            }
+            MenuItem simple = menu.findItem(R.id.action_mode_simple);
+            MenuItem advanced = menu.findItem(R.id.action_mode_post_process);
+            if (simple != null) simple.setVisible(false);
+            if (advanced != null) advanced.setVisible(false);
+        } catch (Throwable throwable) {
+            log.exception(throwable);
+        }
     }
 
     @Override
@@ -136,38 +182,6 @@ public class ProtocolFragmentPresenterImpl implements ProtocolFragmentPresenter,
                 return;
             }
             firebaseAnalyticsProvider.setCurrentScreen(activity, fragment);
-            thread.runOnUI(() -> {
-                if (activity == null || activity.toolbar == null) {
-                    return;
-                }
-                MenuItem simple = activity.toolbar.findItem(R.id.action_protocol_changes_switch_to_simple);
-                MenuItem advanced = activity.toolbar.findItem(R.id.action_protocol_changes_switch_to_advanced);
-                if (simple == null || advanced == null) {
-                    return;
-                }
-                switch (storagePref.get(activity, "pref_protocol_changes_mode", "advanced")) {
-                    case "simple": advanced.setVisible(true); break;
-                    case "advanced": simple.setVisible(true); break;
-                }
-                simple.setOnMenuItemClickListener(item -> {
-                    thread.runOnUI(() -> {
-                        storagePref.put(activity, "pref_protocol_changes_mode", "simple");
-                        simple.setVisible(false);
-                        advanced.setVisible(true);
-                        load(false);
-                    });
-                    return false;
-                });
-                advanced.setOnMenuItemClickListener(item -> {
-                        thread.runOnUI(() -> {
-                            storagePref.put(activity, "pref_protocol_changes_mode", "advanced");
-                            simple.setVisible(true);
-                            advanced.setVisible(false);
-                            load(false);
-                        });
-                        return false;
-                    });
-            });
             if (!loaded) {
                 loaded = true;
                 if (getData() == null) {

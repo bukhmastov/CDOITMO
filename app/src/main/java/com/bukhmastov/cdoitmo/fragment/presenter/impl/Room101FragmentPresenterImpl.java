@@ -185,7 +185,7 @@ public class Room101FragmentPresenterImpl implements Room101FragmentPresenter, S
     }
 
     @Override
-    public void execute(final Context context, final String scope, final ResponseHandler responseHandler) {
+    public void execute(Context context, String scope, ResponseHandler responseHandler) {
         thread.run(Thread.BACKGROUND, () -> {
             injectProvider.getLog().v(TAG, "execute | scope=" + scope);
             HashMap<String, String> params = new HashMap<>();
@@ -262,7 +262,7 @@ public class Room101FragmentPresenterImpl implements Room101FragmentPresenter, S
     }
 
     @Override
-    public void onDenyRequest(final int reid, final int status) {
+    public void onDenyRequest(int reid, int status) {
         thread.runOnUI(() -> {
             log.v(TAG, "onDenyRequest | reid=", reid, " | status=", status);
             if (App.OFFLINE_MODE) {
@@ -287,7 +287,7 @@ public class Room101FragmentPresenterImpl implements Room101FragmentPresenter, S
         });
     }
 
-    private void denyRequest(final int reid, final int status) {
+    private void denyRequest(int reid, int status) {
         thread.run(() -> {
             log.v(TAG, "denyRequest | reid=", reid, " | status=", status);
             staticUtil.lockOrientation(activity, true);
@@ -477,7 +477,7 @@ public class Room101FragmentPresenterImpl implements Room101FragmentPresenter, S
         thread.run(() -> load(storagePref.get(activity, "pref_use_cache", true) ? Integer.parseInt(storagePref.get(activity, "pref_dynamic_refresh", "0")) : 0));
     }
 
-    private void load(final int refresh_rate) {
+    private void load(int refresh_rate) {
         thread.run(() -> {
             log.v(TAG, "load | refresh_rate=" + refresh_rate);
             if (!storagePref.get(activity, "pref_use_cache", true)) {
@@ -500,11 +500,11 @@ public class Room101FragmentPresenterImpl implements Room101FragmentPresenter, S
         });
     }
 
-    private void load(final boolean force) {
+    private void load(boolean force) {
         thread.run(() -> load(force, null));
     }
 
-    private void load(final boolean force, final Room101Requests cached) {
+    private void load(boolean force, Room101Requests cached) {
         thread.run(() -> {
             log.v(TAG, "load | force=" + (force ? "true" : "false"));
             if ((!force || !Client.isOnline(activity)) && storagePref.get(activity, "pref_use_cache", true)) {

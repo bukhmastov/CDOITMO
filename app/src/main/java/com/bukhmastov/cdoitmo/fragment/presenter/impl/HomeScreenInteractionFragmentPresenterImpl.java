@@ -141,10 +141,8 @@ public class HomeScreenInteractionFragmentPresenterImpl implements HomeScreenInt
         thread.runOnUI(() -> {
             log.v(TAG, "Fragment created");
             firebaseAnalyticsProvider.logCurrentScreen(activity, fragment);
-            ConnectedFragment.Data data = ConnectedFragment.getData(activity, this.getClass());
-            if (data != null) {
-                activity.updateToolbar(activity, data.title, data.image);
-            }
+            ConnectedFragment.Data data = ConnectedFragment.getData(activity, fragment.getClass());
+            activity.updateToolbar(activity, data.title, data.image);
             // Инициализируем приложения
             apps.clear();
             apps.add(new App("time_remaining_widget", activity.getString(R.string.time_remaining_widget), activity.getString(R.string.time_remaining_widget_desc), activity.getString(R.string.need_to_choose_schedule), R.mipmap.ic_shortcut_time_remaining_widget));

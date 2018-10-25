@@ -1,27 +1,11 @@
 package com.bukhmastov.cdoitmo.fragment.presenter;
 
-import android.os.Bundle;
-import android.support.annotation.Nullable;
 import android.support.annotation.StringDef;
-
-import com.bukhmastov.cdoitmo.fragment.ConnectedFragment;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
-public interface ScheduleLessonsModifyFragmentPresenter {
-
-    void setFragment(ConnectedFragment fragment);
-
-    void onCreate(@Nullable Bundle savedInstanceState);
-
-    void onDestroy();
-
-    void onResume();
-
-    void onPause();
-
-    void onViewCreated();
+public interface ScheduleLessonsModifyFragmentPresenter extends ConnectedFragmentPresenter {
 
     @Retention(RetentionPolicy.SOURCE)
     @StringDef({CREATE, EDIT})
