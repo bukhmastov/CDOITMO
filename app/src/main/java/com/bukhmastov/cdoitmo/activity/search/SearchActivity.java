@@ -206,9 +206,10 @@ public abstract class SearchActivity extends AppCompatActivity {
                             if (CollectionUtils.isEmpty(recent.getSuggestions())) {
                                 return;
                             }
-                            for (String item : recent.getSuggestions()) {
+                            for (int i = 0; i < recent.getSuggestions().size(); i++) {
+                                String item = recent.getSuggestions().get(i);
                                 if (SearchActivity.equals(item, suggestion.query) || SearchActivity.equals(item, suggestion.title)) {
-                                    recent.getSuggestions().remove(item);
+                                    recent.getSuggestions().remove(i);
                                     storage.put(context, Storage.PERMANENT, Storage.USER, "schedule_" + getType() + "#recent", recent.toJsonString());
                                     setSuggestions(getSuggestions(""));
                                     break;
@@ -261,9 +262,10 @@ public abstract class SearchActivity extends AppCompatActivity {
                     if (recent.getSuggestions() == null) {
                         recent.setSuggestions(new ArrayList<>());
                     } else {
-                        for (String item : recent.getSuggestions()) {
+                        for (int i = 0; i < recent.getSuggestions().size(); i++) {
+                            String item = recent.getSuggestions().get(i);
                             if (equals(item, query) || equals(item, title)) {
-                                recent.getSuggestions().remove(item);
+                                recent.getSuggestions().remove(i);
                                 break;
                             }
                         }
@@ -278,9 +280,6 @@ public abstract class SearchActivity extends AppCompatActivity {
                     return false;
                 });
                 if (saveCurrentSuggestion) {
-                    for (int i = recent.getSuggestions().size() - 1; i >= 0; i--) {
-                        recent.getSuggestions().add(i + 1, recent.getSuggestions().get(i));
-                    }
                     recent.getSuggestions().add(0, title);
                     if (recent.getSuggestions().size() > maxCountOfSuggestionsToStore) {
                         for (int i = maxCountOfSuggestionsToStore; i < recent.getSuggestions().size(); i++) {

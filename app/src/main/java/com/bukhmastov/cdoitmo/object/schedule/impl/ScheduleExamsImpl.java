@@ -226,6 +226,14 @@ public class ScheduleExamsImpl extends ScheduleImpl<SExams> implements ScheduleE
                 invokePendingAndClose(query, withUserChanges, handler -> handler.onFailure(FAILED_LOAD));
                 return;
             }
+            if ("teachers".equals(schedule.getType()) && schedule.getTeachers() != null) {
+                if (CollectionUtils.isNotEmpty(schedule.getTeachers().getTeachers())) {
+                    invokePendingAndClose(query, withUserChanges, handler -> handler.onSuccess(schedule, fromCache));
+                } else {
+                    invokePendingAndClose(query, withUserChanges, handler -> handler.onFailure(FAILED_NOT_FOUND));
+                }
+                return;
+            }
             if (CollectionUtils.isNotEmpty(schedule.getSchedule())) {
                 if (!fromCache) {
                     putToCache(query, schedule, forceToCache);

@@ -112,9 +112,8 @@ public class ScheduleExamsTabFragmentPresenterImpl implements ScheduleExamsTabFr
                             subjects.add(subject);
                         }
                     }
-                    schedule.setSchedule(subjects);
                     // get rva adapter
-                    ScheduleExamsRVA adapter = new ScheduleExamsRVA(schedule, type);
+                    ScheduleExamsRVA adapter = new ScheduleExamsRVA(schedule, subjects, type);
                     adapter.setClickListener(R.id.schedule_lessons_menu, ScheduleExamsTabFragmentPresenterImpl.this::examsMenu);
                     adapter.setClickListener(R.id.exam_touch_icon, ScheduleExamsTabFragmentPresenterImpl.this::subjectMenu);
                     adapter.setClickListener(R.id.teacher_picker_item, ScheduleExamsTabFragmentPresenterImpl.this::teacherSelected);

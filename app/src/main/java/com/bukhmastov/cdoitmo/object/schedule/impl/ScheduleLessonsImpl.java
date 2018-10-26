@@ -198,14 +198,24 @@ public class ScheduleLessonsImpl extends ScheduleImpl<SLessons> implements Sched
                 invokePendingAndClose(query, withUserChanges, handler -> handler.onFailure(FAILED_LOAD));
                 return;
             }
-            boolean valid = false;
-            for (SDay day : schedule.getSchedule()) {
-                if (day == null) {
-                    continue;
+            if ("teachers".equals(schedule.getType()) && schedule.getTeachers() != null) {
+                if (CollectionUtils.isNotEmpty(schedule.getTeachers().getTeachers())) {
+                    invokePendingAndClose(query, withUserChanges, handler -> handler.onSuccess(schedule, fromCache));
+                } else {
+                    invokePendingAndClose(query, withUserChanges, handler -> handler.onFailure(FAILED_NOT_FOUND));
                 }
-                if (CollectionUtils.isNotEmpty(day.getLessons())) {
-                    valid = true;
-                    break;
+                return;
+            }
+            boolean valid = false;
+            if (CollectionUtils.isNotEmpty(schedule.getSchedule())) {
+                for (SDay day : schedule.getSchedule()) {
+                    if (day == null) {
+                        continue;
+                    }
+                    if (CollectionUtils.isNotEmpty(day.getLessons())) {
+                        valid = true;
+                        break;
+                    }
                 }
             }
             if (valid) {

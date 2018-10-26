@@ -14,7 +14,7 @@ public class STeacher extends JsonEntity {
     private String post;
 
     @JsonProperty("pid")
-    private String personId;
+    private int personId;
 
     public STeacher() {
         super();
@@ -37,10 +37,14 @@ public class STeacher extends JsonEntity {
     }
 
     public String getPersonId() {
+        return String.valueOf(personId);
+    }
+
+    public int getPersonIdAsNumber() {
         return personId;
     }
 
-    public void setPersonId(String personId) {
+    public void setPersonId(int personId) {
         this.personId = personId;
     }
 
@@ -64,7 +68,7 @@ public class STeacher extends JsonEntity {
         return "STeacher{" +
                 "person='" + person + '\'' +
                 ", post='" + post + '\'' +
-                ", personId='" + personId + '\'' +
+                ", personId=" + personId +
                 '}';
     }
 }

@@ -339,7 +339,7 @@ public class ProtocolTrackerServiceImpl implements ProtocolTrackerService {
                 .append(change.getMax())
                 .append(" — ")
                 .append(change.getName());
-        if (change.getCdoitmoDeltaDouble() != 0.0) {
+        if (change.getCdoitmoDeltaDouble() != null && change.getCdoitmoDeltaDouble() != 0.0) {
             text.append(" (").append(change.getCdoitmoDelta()).append(")");
         }
         return text.toString();

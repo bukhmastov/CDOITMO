@@ -26,6 +26,7 @@ import com.bukhmastov.cdoitmo.util.singleton.StringUtils;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collection;
 import java.util.Date;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -61,13 +62,13 @@ public class ScheduleExamsRVA extends RVA<RVAExams> {
     private final int mode; // 0 - exam, 1 - credit
     private String type = "";
 
-    public ScheduleExamsRVA(SExams data, int mode) {
+    public ScheduleExamsRVA(SExams data, Collection<SSubject> events, int mode) {
         super();
         AppComponentProvider.getComponent().inject(this);
         this.data = data;
         this.mode = mode;
         this.type = data.getType();
-        addItems(entity2dataset(data));
+        addItems(entity2dataset(data, events));
     }
 
     @Override
@@ -314,7 +315,7 @@ public class ScheduleExamsRVA extends RVA<RVAExams> {
         }
     }
 
-    private ArrayList<Item> entity2dataset(SExams schedule) {
+    private ArrayList<Item> entity2dataset(SExams schedule, Collection<SSubject> events) {
         final ArrayList<Item> dataset = new ArrayList<>();
         // check
         if (!ScheduleExams.TYPE.equals(schedule.getScheduleType())) {
@@ -340,7 +341,7 @@ public class ScheduleExamsRVA extends RVA<RVAExams> {
         )));
         // schedule
         int exams_count = 0;
-        for (SSubject subject : schedule.getSchedule()) {
+        for (SSubject subject : events) {
             dataset.add(new Item<>(TYPE_EXAM, subject));
             exams_count++;
         }

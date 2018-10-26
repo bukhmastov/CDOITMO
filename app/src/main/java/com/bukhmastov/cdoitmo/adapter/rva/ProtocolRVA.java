@@ -147,8 +147,8 @@ public class ProtocolRVA extends RVA {
                     rvaChange.setMeta(("..".equals(change.getTeacher()) ? "" : change.getTeacher() + " | ") + change.getDate());
                     rvaChange.setValue(change.getValue());
                     rvaChange.setDelta(change.getCdoitmoDelta());
-                    rvaChange.setDeltaExists(change.getCdoitmoDeltaDouble() != 0.0);
-                    rvaChange.setDeltaNegative(change.getCdoitmoDeltaDouble() < 0.0);
+                    rvaChange.setDeltaExists(change.getCdoitmoDeltaDouble() != null && change.getCdoitmoDeltaDouble() != 0.0);
+                    rvaChange.setDeltaNegative(change.getCdoitmoDeltaDouble() != null && change.getCdoitmoDeltaDouble() < 0.0);
                     dataset.add(new Item<>(TYPE_CHANGE_SIMPLE, rvaChange));
                 }
             } else {
@@ -208,8 +208,8 @@ public class ProtocolRVA extends RVA {
                         rvaChange.setMeta(("..".equals(change.getTeacher()) ? "" : change.getTeacher() + " | ") + change.getDate());
                         rvaChange.setValue(change.getValue());
                         rvaChange.setDelta(change.getCdoitmoDelta());
-                        rvaChange.setDeltaExists(change.getCdoitmoDeltaDouble() != 0.0);
-                        rvaChange.setDeltaNegative(change.getCdoitmoDeltaDouble() < 0.0);
+                        rvaChange.setDeltaExists(change.getCdoitmoDeltaDouble() != null && change.getCdoitmoDeltaDouble() != 0.0);
+                        rvaChange.setDeltaNegative(change.getCdoitmoDeltaDouble() != null && change.getCdoitmoDeltaDouble() < 0.0);
                         dataset.add(new Item<>(TYPE_CHANGE, rvaChange));
                         if (j < length - 1) {
                             dataset.add(new Item(TYPE_SEPARATOR));
