@@ -61,9 +61,9 @@
     <string name="pref_notify_vibrate">Вибрация</string>
     <string name="pref_category_system">Системные настройки</string>
     <string name="pref_allow_send_reports">Отправлять отчеты об ошибках</string>
-    <string name="pref_allow_send_reports_summary">Поможет разработчику оперативно исправлять ошибки. Отчеты не содержат конфиденциальных данных.</string>
+    <string name="pref_allow_send_reports_summary">Отчеты собираются и обрабатываются при помощи Firebase Crashlytics. Сбор отчетов о сбоях помогает оперативно исправлять ошибки</string>
     <string name="pref_allow_collect_analytics">Отправлять статистику использования</string>
-    <string name="pref_allow_collect_analytics_summary">Сбор анонимной статистики поможет разработчику совершенствовать приложение.</string>
+    <string name="pref_allow_collect_analytics_summary">Статистика собирается и обрабатывается при помощи Google Analytics for Firebase. Сбор анонимной статистики помогает совершенствовать приложение</string>
     <string name="attention">Внимание</string>
     <string name="action_1">событие</string>
     <string name="action_2">события</string>

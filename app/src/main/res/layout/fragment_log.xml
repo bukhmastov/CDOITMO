@@ -186,7 +186,7 @@
                         android:layout_height="wrap_content"
                         android:textSize="@dimen/font_size_14"
                         android:textColor="?android:attr/textColorSecondary"
-                        android:text="@string/send_reports_on_failures_summary" />
+                        android:text="@string/pref_allow_send_reports_summary" />
 
                 </LinearLayout>
 
