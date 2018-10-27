@@ -1,6 +1,6 @@
 package com.bukhmastov.cdoitmo.util.singleton;
 
-import android.support.annotation.Nullable;
+import androidx.annotation.Nullable;
 
 import java.util.Calendar;
 

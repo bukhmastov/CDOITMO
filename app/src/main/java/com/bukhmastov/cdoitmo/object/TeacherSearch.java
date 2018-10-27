@@ -3,7 +3,7 @@ package com.bukhmastov.cdoitmo.object;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
-import android.support.annotation.IntDef;
+import androidx.annotation.IntDef;
 
 import com.bukhmastov.cdoitmo.model.schedule.teachers.STeachers;
 

@@ -1,9 +1,9 @@
 package com.bukhmastov.cdoitmo.object.preference;
 
 import android.content.Context;
-import android.support.annotation.LayoutRes;
-import android.support.annotation.Nullable;
-import android.support.annotation.StringRes;
+import androidx.annotation.LayoutRes;
+import androidx.annotation.Nullable;
+import androidx.annotation.StringRes;
 import dagger.Lazy;
 
 import android.view.InflateException;

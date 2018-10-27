@@ -2,7 +2,7 @@ package com.bukhmastov.cdoitmo.adapter.rva.university;
 
 import android.content.Context;
 import android.graphics.Color;
-import android.support.annotation.LayoutRes;
+import androidx.annotation.LayoutRes;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;

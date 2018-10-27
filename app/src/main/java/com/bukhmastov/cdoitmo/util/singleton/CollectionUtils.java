@@ -1,6 +1,6 @@
 package com.bukhmastov.cdoitmo.util.singleton;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import java.util.Collection;
 import java.util.Collections;

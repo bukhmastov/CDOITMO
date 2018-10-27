@@ -1,21 +1,13 @@
 package com.bukhmastov.cdoitmo.model.parser;
 
-import android.content.Context;
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import com.bukhmastov.cdoitmo.exception.SilentException;
-import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebasePerformanceProvider;
 import com.bukhmastov.cdoitmo.model.JsonEntity;
-import com.bukhmastov.cdoitmo.util.Log;
-import com.bukhmastov.cdoitmo.util.Time;
 
 import org.htmlcleaner.HtmlCleaner;
 import org.htmlcleaner.TagNode;
-
-import javax.inject.Inject;
-
-import dagger.Lazy;
 
 public abstract class Parser<T extends JsonEntity> extends ParserBase {
 

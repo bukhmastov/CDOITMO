@@ -1,6 +1,6 @@
 package com.bukhmastov.cdoitmo.util.singleton;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 public class StringUtils {
 

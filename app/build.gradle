@@ -29,8 +29,7 @@ android {
 }
 
 ext {
-    androidSupportVersion = "28.0.0"
-    //androidXVersion = "1.0.0"
+    androidXVersion = "1.0.0"
     firebaseCoreVersion = "16.0.4"
     firebaseMessagingVersion = "17.3.4"
     firebaseConfigVersion = "16.1.0"
@@ -47,18 +46,12 @@ ext {
 
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
-    // support
-    implementation "com.android.support:design:${androidSupportVersion}"
-    implementation "com.android.support:support-v4:${androidSupportVersion}"
-    implementation "com.android.support:appcompat-v7:${androidSupportVersion}"
-    implementation "com.android.support:cardview-v7:${androidSupportVersion}"
-    implementation "com.android.support:recyclerview-v7:${androidSupportVersion}"
     // android x
-    //implementation "com.google.android.material:material:${androidXVersion}"
-    //implementation "androidx.legacy:legacy-support-v4:${androidXVersion}"
-    //implementation "androidx.appcompat:appcompat:${androidXVersion}"
-    //implementation "androidx.cardview:cardview:${androidXVersion}"
-    //implementation "androidx.recyclerview:recyclerview:${androidXVersion}"
+    implementation "com.google.android.material:material:${androidXVersion}"
+    implementation "androidx.legacy:legacy-support-v4:${androidXVersion}"
+    implementation "androidx.appcompat:appcompat:${androidXVersion}"
+    implementation "androidx.cardview:cardview:${androidXVersion}"
+    implementation "androidx.recyclerview:recyclerview:${androidXVersion}"
     // firebase
     implementation "com.google.firebase:firebase-core:${firebaseCoreVersion}"
     implementation "com.google.firebase:firebase-messaging:${firebaseMessagingVersion}"

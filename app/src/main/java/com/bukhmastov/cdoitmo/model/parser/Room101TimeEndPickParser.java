@@ -1,6 +1,6 @@
 package com.bukhmastov.cdoitmo.model.parser;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import com.bukhmastov.cdoitmo.firebase.FirebasePerformanceProvider;
 import com.bukhmastov.cdoitmo.model.room101.request.ROption;

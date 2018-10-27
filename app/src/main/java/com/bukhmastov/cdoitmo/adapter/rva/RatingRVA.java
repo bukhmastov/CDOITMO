@@ -1,8 +1,8 @@
 package com.bukhmastov.cdoitmo.adapter.rva;
 
 import android.content.Context;
-import android.support.annotation.LayoutRes;
-import android.support.annotation.NonNull;
+import androidx.annotation.LayoutRes;
+import androidx.annotation.NonNull;
 import android.util.ArrayMap;
 import android.view.View;
 import android.widget.AdapterView;
@@ -30,7 +30,6 @@ import com.bukhmastov.cdoitmo.util.singleton.StringUtils;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
-import java.util.Objects;
 
 import javax.inject.Inject;
 

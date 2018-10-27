@@ -1,6 +1,6 @@
 package com.bukhmastov.cdoitmo.object.schedule;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import com.bukhmastov.cdoitmo.model.schedule.ScheduleJsonEntity;
 import com.bukhmastov.cdoitmo.network.model.Client;

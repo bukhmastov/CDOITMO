@@ -1,7 +1,7 @@
 package com.bukhmastov.cdoitmo.adapter.rva;
 
 import android.content.Context;
-import android.support.annotation.LayoutRes;
+import androidx.annotation.LayoutRes;
 import android.util.SparseIntArray;
 import android.view.InflateException;
 import android.view.LayoutInflater;
@@ -29,7 +29,6 @@ import com.bukhmastov.cdoitmo.util.singleton.StringUtils;
 
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.List;
 import java.util.TreeSet;
 
 import javax.inject.Inject;

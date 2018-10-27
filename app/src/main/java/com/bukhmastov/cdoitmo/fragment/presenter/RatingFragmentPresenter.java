@@ -1,6 +1,6 @@
 package com.bukhmastov.cdoitmo.fragment.presenter;
 
-import android.support.annotation.StringDef;
+import androidx.annotation.StringDef;
 
 import com.bukhmastov.cdoitmo.model.JsonEntity;
 

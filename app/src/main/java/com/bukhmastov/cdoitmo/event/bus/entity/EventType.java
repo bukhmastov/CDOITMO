@@ -1,6 +1,6 @@
 package com.bukhmastov.cdoitmo.event.bus.entity;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 public class EventType {
 

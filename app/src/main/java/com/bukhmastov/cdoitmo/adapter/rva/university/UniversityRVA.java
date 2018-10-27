@@ -1,28 +1,22 @@
 package com.bukhmastov.cdoitmo.adapter.rva.university;
 
 import android.content.Context;
-import android.support.annotation.IdRes;
+import androidx.annotation.IdRes;
 import android.view.View;
 import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.adapter.rva.RVA;
-import com.bukhmastov.cdoitmo.event.bus.EventBus;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
-import com.bukhmastov.cdoitmo.model.JsonEntity;
 import com.bukhmastov.cdoitmo.model.rva.RVASingleValue;
 import com.bukhmastov.cdoitmo.model.rva.RVAUniversity;
-import com.bukhmastov.cdoitmo.util.NotificationMessage;
 import com.bukhmastov.cdoitmo.util.Static;
 import com.bukhmastov.cdoitmo.util.StoragePref;
 import com.bukhmastov.cdoitmo.util.TextUtils;
-import com.bukhmastov.cdoitmo.util.Thread;
 
 import java.util.Collection;
 
 import javax.inject.Inject;
-
-import dagger.Lazy;
 
 public abstract class UniversityRVA extends RVA<RVAUniversity> {
 
