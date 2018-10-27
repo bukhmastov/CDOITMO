@@ -747,7 +747,7 @@ public class ScheduleLessonsShareFragmentPresenterImpl implements ScheduleLesson
             firebaseAnalyticsProvider.logEvent(
                     activity,
                     FirebaseAnalyticsProvider.Event.SHARE,
-                    firebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.TYPE, "schedule_lessons")
+                    firebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.TYPE, "file_slessons_changes")
             );
         } catch (Exception ignore) {
             notificationMessage.toast(activity, activity.getString(R.string.failed_to_share_file));

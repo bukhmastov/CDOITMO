@@ -503,7 +503,7 @@ public class ProtocolFragmentPresenterImpl implements ProtocolFragmentPresenter,
             sb.append("Мой протокол изменений:").append("\n");
             for (PChange change : getData().getChanges()) {
                 sb.append(change.getSubject());
-                sb.append(" - ");
+                sb.append(" — ");
                 sb.append(change.getName());
                 sb.append(" (");
                 sb.append(change.getDate());
@@ -513,7 +513,7 @@ public class ProtocolFragmentPresenterImpl implements ProtocolFragmentPresenter,
                 sb.append(change.getMax());
                 sb.append("\n");
             }
-            eventBus.fire(new ShareTextEvent(sb.toString().trim(), "protocol"));
+            eventBus.fire(new ShareTextEvent(sb.toString().trim(), "txt_protocol"));
         }, throwable -> {
             log.exception(throwable);
             notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));

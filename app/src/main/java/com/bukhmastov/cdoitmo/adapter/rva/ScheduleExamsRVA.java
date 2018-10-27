@@ -58,14 +58,16 @@ public class ScheduleExamsRVA extends RVA<RVAExams> {
     @Inject
     TextUtils textUtils;
 
-    private final SExams data;
+    private final String query;
+    private final Collection<SSubject> events;
     private final int mode; // 0 - exam, 1 - credit
     private String type = "";
 
     public ScheduleExamsRVA(SExams data, Collection<SSubject> events, int mode) {
         super();
         AppComponentProvider.getComponent().inject(this);
-        this.data = data;
+        this.query = data.getQuery();
+        this.events = events;
         this.mode = mode;
         this.type = data.getType();
         addItems(entity2dataset(data, events));
@@ -137,7 +139,12 @@ public class ScheduleExamsRVA extends RVA<RVAExams> {
             } else {
                 ((ViewGroup) weekView.getParent()).removeView(weekView);
             }
+            View createAction = container.findViewById(R.id.schedule_lessons_create);
+            if (createAction != null) {
+                createAction.setVisibility(View.GONE);
+            }
             tryRegisterClickListener(container, R.id.schedule_lessons_menu, null);
+            tryRegisterClickListener(container, R.id.schedule_lessons_share, new RVAExams(new ArrayList<>(events)));
         } catch (Exception e) {
             log.exception(e);
         }
@@ -324,12 +331,12 @@ public class ScheduleExamsRVA extends RVA<RVAExams> {
         // teacher picker mode
         if ("teachers".equals(schedule.getType())) {
             if (schedule.getTeachers() != null && CollectionUtils.isNotEmpty(schedule.getTeachers().getTeachers())) {
-                dataset.add(new Item<>(TYPE_PICKER_HEADER, new RVASingleValue(data.getQuery())));
+                dataset.add(new Item<>(TYPE_PICKER_HEADER, new RVASingleValue(query)));
                 for (STeacher teacher : schedule.getTeachers().getTeachers()) {
                     dataset.add(new Item<>(TYPE_PICKER_ITEM, teacher));
                 }
             } else {
-                dataset.add(new Item<>(TYPE_PICKER_NO_TEACHERS, new RVASingleValue(data.getQuery())));
+                dataset.add(new Item<>(TYPE_PICKER_NO_TEACHERS, new RVASingleValue(query)));
             }
             return dataset;
         }

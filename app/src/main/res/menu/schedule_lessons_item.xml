@@ -17,24 +17,28 @@
         android:id="@+id/open_location"
         android:title="@string/open_location" />
 
-    <item
-        android:id="@+id/edit_lesson"
-        android:title="@string/edit_lesson" />
+    <item android:title="@string/extra_actions" >
+        <menu>
+            <item
+                android:id="@+id/edit_lesson"
+                android:title="@string/edit_lesson" />
 
-    <item
-        android:id="@+id/copy_lesson"
-        android:title="@string/copy_lesson" />
+            <item
+                android:id="@+id/copy_lesson"
+                android:title="@string/copy_lesson" />
 
-    <item
-        android:id="@+id/reduce_lesson"
-        android:title="@string/reduce_lesson" />
+            <item
+                android:id="@+id/reduce_lesson"
+                android:title="@string/reduce_lesson" />
 
-    <item
-        android:id="@+id/restore_lesson"
-        android:title="@string/restore_lesson" />
+            <item
+                android:id="@+id/restore_lesson"
+                android:title="@string/restore_lesson" />
 
-    <item
-        android:id="@+id/delete_lesson"
-        android:title="@string/delete_lesson" />
+            <item
+                android:id="@+id/delete_lesson"
+                android:title="@string/delete_lesson" />
+        </menu>
+    </item>
 
 </menu>

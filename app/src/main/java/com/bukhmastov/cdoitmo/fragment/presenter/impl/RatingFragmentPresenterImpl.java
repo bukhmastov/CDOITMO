@@ -501,7 +501,7 @@ public class RatingFragmentPresenterImpl implements RatingFragmentPresenter, Swi
                 sb.append(course.getPosition());
                 sb.append("\n");
             }
-            eventBus.fire(new ShareTextEvent(sb.toString().trim(), "rating_all"));
+            eventBus.fire(new ShareTextEvent(sb.toString().trim(), "txt_rating_all"));
         }, throwable -> {
             log.exception(throwable);
             notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));

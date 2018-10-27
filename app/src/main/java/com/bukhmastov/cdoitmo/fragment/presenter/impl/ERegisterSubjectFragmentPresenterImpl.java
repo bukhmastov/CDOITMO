@@ -148,7 +148,7 @@ public class ERegisterSubjectFragmentPresenterImpl implements ERegisterSubjectFr
                 share.setOnMenuItemClickListener(menuItem -> {
                     thread.runOnUI(() -> {
                         if (shareEntities.size() == 1) {
-                            eventBus.fire(new ShareTextEvent(shareEntities.get(0).text, "subject"));
+                            eventBus.fire(new ShareTextEvent(shareEntities.get(0).text, "txt_eregister_subject"));
                             return;
                         }
                         if (activity.isFinishing() || activity.isDestroyed()) {
@@ -161,7 +161,7 @@ public class ERegisterSubjectFragmentPresenterImpl implements ERegisterSubjectFr
                         ArrayAdapter<String> arrayAdapter = new ArrayAdapter<>(activity, R.layout.spinner_center);
                         arrayAdapter.addAll(labels);
                         new AlertDialog.Builder(activity)
-                                .setAdapter(arrayAdapter, (dialogInterface, position) -> eventBus.fire(new ShareTextEvent(shareEntities.get(position).text, "subject")))
+                                .setAdapter(arrayAdapter, (dialogInterface, position) -> eventBus.fire(new ShareTextEvent(shareEntities.get(position).text, "txt_eregister_subject")))
                                 .setNegativeButton(R.string.do_cancel, null)
                                 .create().show();
                     }, throwable -> {

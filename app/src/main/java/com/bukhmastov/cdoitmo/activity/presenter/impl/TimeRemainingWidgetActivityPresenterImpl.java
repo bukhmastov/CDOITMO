@@ -311,7 +311,7 @@ public class TimeRemainingWidgetActivityPresenterImpl implements TimeRemainingWi
                 return;
             }
             if (data.current == null && data.next == null && data.day == null) {
-                eventBus.fire(new ShareTextEvent(activity.getString(R.string.time_remaining_widget_share_1), "time_remaining_widget"));
+                eventBus.fire(new ShareTextEvent(activity.getString(R.string.time_remaining_widget_share_1), "txt_widget_remaining_time"));
                 return;
             }
             new BottomSheetDialog(
@@ -323,13 +323,13 @@ public class TimeRemainingWidgetActivityPresenterImpl implements TimeRemainingWi
             ).setListener(tag -> {
                 switch (tag) {
                     case "current":
-                        eventBus.fire(new ShareTextEvent(activity.getString(R.string.time_remaining_widget_share_2) + " " + time2readable(data.current), "time_remaining_widget"));
+                        eventBus.fire(new ShareTextEvent(activity.getString(R.string.time_remaining_widget_share_2) + " " + time2readable(data.current), "txt_widget_remaining_time"));
                         break;
                     case "next":
-                        eventBus.fire(new ShareTextEvent(activity.getString(R.string.time_remaining_widget_share_3) + " " + time2readable(data.next), "time_remaining_widget"));
+                        eventBus.fire(new ShareTextEvent(activity.getString(R.string.time_remaining_widget_share_3) + " " + time2readable(data.next), "txt_widget_remaining_time"));
                         break;
                     case "day":
-                        eventBus.fire(new ShareTextEvent(activity.getString(R.string.time_remaining_widget_share_4) + " " + time2readable(data.day), "time_remaining_widget"));
+                        eventBus.fire(new ShareTextEvent(activity.getString(R.string.time_remaining_widget_share_4) + " " + time2readable(data.day), "txt_widget_remaining_time"));
                         break;
                 }
             }).show();

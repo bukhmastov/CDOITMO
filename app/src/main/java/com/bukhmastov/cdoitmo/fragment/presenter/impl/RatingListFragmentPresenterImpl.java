@@ -366,7 +366,7 @@ public class RatingListFragmentPresenterImpl implements RatingListFragmentPresen
                             eventBus.fire(new ShareTextEvent("Я на %position% позиции в рейтинге %faculty%!"
                                     .replace("%position%", String.valueOf(minePosition))
                                     .replace("%faculty%", mineFaculty.isEmpty() ? "факультета" : mineFaculty)
-                                    , "rating")
+                                    , "txt_rating_certain")
                             );
                         } catch (Exception e) {
                             log.exception(e);

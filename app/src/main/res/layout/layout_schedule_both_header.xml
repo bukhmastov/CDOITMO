@@ -15,7 +15,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_centerVertical="true"
-            android:layout_toStartOf="@+id/schedule_lessons_menu"
+            android:layout_toStartOf="@+id/schedule_lessons_controls"
             android:orientation="vertical">
 
             <TextView
@@ -36,22 +36,66 @@
 
         </LinearLayout>
 
-        <FrameLayout
-            android:id="@+id/schedule_lessons_menu"
-            android:layout_width="@dimen/schedule_cache_button"
-            android:layout_height="@dimen/schedule_cache_button"
+        <LinearLayout
+            android:id="@+id/schedule_lessons_controls"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:layout_alignParentEnd="true"
             android:layout_centerVertical="true"
-            android:background="?android:attr/selectableItemBackgroundBorderless"
-            android:focusable="true"
-            android:clickable="true" >
+            android:orientation="horizontal">
 
-            <ImageView
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                app:srcCompat="@drawable/ic_expand_more" />
+            <FrameLayout
+                android:id="@+id/schedule_lessons_create"
+                android:layout_width="@dimen/schedule_cache_button"
+                android:layout_height="@dimen/schedule_cache_button"
+                android:layout_marginStart="0dp"
+                android:layout_marginEnd="2dp"
+                android:background="?android:attr/selectableItemBackgroundBorderless"
+                android:focusable="true"
+                android:clickable="true" >
 
-        </FrameLayout>
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    app:srcCompat="@drawable/ic_add" />
+
+            </FrameLayout>
+
+            <FrameLayout
+                android:id="@+id/schedule_lessons_share"
+                android:layout_width="@dimen/schedule_cache_button"
+                android:layout_height="@dimen/schedule_cache_button"
+                android:layout_marginStart="0dp"
+                android:layout_marginEnd="2dp"
+                android:background="?android:attr/selectableItemBackgroundBorderless"
+                android:focusable="true"
+                android:clickable="true" >
+
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    app:srcCompat="@drawable/ic_share" />
+
+            </FrameLayout>
+
+            <FrameLayout
+                android:id="@+id/schedule_lessons_menu"
+                android:layout_width="@dimen/schedule_cache_button"
+                android:layout_height="@dimen/schedule_cache_button"
+                android:background="?android:attr/selectableItemBackgroundBorderless"
+                android:focusable="true"
+                android:clickable="true" >
+
+                <ImageView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    app:srcCompat="@drawable/ic_expand_more" />
+
+            </FrameLayout>
+
+        </LinearLayout>
 
     </RelativeLayout>
 

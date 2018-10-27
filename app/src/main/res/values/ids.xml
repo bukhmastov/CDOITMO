@@ -7,6 +7,16 @@
     <item name="university_tile_mail" type="id"/>
     <item name="university_tile_person" type="id"/>
 
+    <!-- Days -->
+    <item name="monday" type="id"/>
+    <item name="tuesday" type="id"/>
+    <item name="wednesday" type="id"/>
+    <item name="thursday" type="id"/>
+    <item name="friday" type="id"/>
+    <item name="saturday" type="id"/>
+    <item name="sunday" type="id"/>
+    <item name="undefined" type="id"/>
+
     <!-- Others -->
     <item name="visible" type="id"/>
     <item name="masked" type="id"/>

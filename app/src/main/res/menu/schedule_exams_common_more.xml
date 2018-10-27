@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/toggle_cache"
+        android:checkable="true"
+        android:checked="true"
+        android:title="@string/add_to_cache" />
+
+    <item
+        android:id="@+id/open_settings"
+        android:title="@string/open_settings" />
+
+</menu>

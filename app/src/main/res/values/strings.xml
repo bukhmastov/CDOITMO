@@ -75,7 +75,7 @@
     <string name="pref_white_theme_ext">Блистательно белая тема</string>
     <string name="pref_black_theme_ext">Невероятно черная тема</string>
     <string name="about">О приложении</string>
-    <string name="app_info_disclaimer">Обратите внимание, что данное приложение не является официальным.\n<a href="https://bukhmastov.github.io/cdoitmo/policy">Политика конфиденциальности</a></string>
+    <string name="app_info_disclaimer">Обратите внимание, что данное приложение не является официальным\n<a href="https://bukhmastov.github.io/cdoitmo/policy">Политика конфиденциальности</a></string>
     <string name="app_info_dev">Бухмастов Алексей</string>
     <string name="app_info_mail_dev" translatable="false">bukhmastov-alex@ya.ru</string>
     <string name="offline_mode">Оффлайн режим</string>
@@ -516,10 +516,15 @@
     <string name="reset_preferences">Сбросить настройки</string>
     <string name="reset_preference_message">Вы собираетесь сбросить настройки приложения до значений по умолчанию</string>
     <string name="open_search">Открыть поиск</string>
-    <string name="share_schedule">Поделиться расписанием</string>
+    <string name="share_all_schedule">Поделиться всем расписанием</string>
     <string name="unspecified_points">Не распределенные баллы</string>
     <string name="outdated_file_version">Файл был создан в устаревшей версии приложения и более не поддерживается</string>
     <string name="mode_simple">Простой режим</string>
     <string name="mode_post_process">Режим с постобработкой</string>
+    <string name="privacy_policy">Политика конфиденциальности</string>
+    <string name="extra_actions">Дополнительные действия</string>
+    <string name="share_daily_schedule">Поделиться днём расписания</string>
+    <string name="share_exam_schedule">Поделиться экзаменом</string>
+    <string name="share_attestations_schedule">Поделиться предметом</string>
 
 </resources>

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/share_all_schedule"
+        android:title="@string/share_all_schedule" />
+
+    <item
+        android:id="@+id/share_daily_schedule"
+        android:title="@string/share_daily_schedule" >
+
+        <menu android:id="@+id/share_daily_schedule_menu" />
+
+    </item>
+
+    <item
+        android:id="@+id/share_changes"
+        android:title="@string/share_changes" />
+
+</menu>

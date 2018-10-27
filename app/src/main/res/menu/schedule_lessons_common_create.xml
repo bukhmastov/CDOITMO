@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/add_lesson"
+        android:title="@string/add_lesson" />
+
+    <item
+        android:id="@+id/add_military_day"
+        android:title="@string/add_military_day">
+        <menu>
+            <item
+                android:id="@+id/add_military_day_monday"
+                android:title="@string/monday"/>
+
+            <item
+                android:id="@+id/add_military_day_tuesday"
+                android:title="@string/tuesday"/>
+
+            <item
+                android:id="@+id/add_military_day_wednesday"
+                android:title="@string/wednesday"/>
+
+            <item
+                android:id="@+id/add_military_day_thursday"
+                android:title="@string/thursday"/>
+
+            <item
+                android:id="@+id/add_military_day_friday"
+                android:title="@string/friday"/>
+
+            <item
+                android:id="@+id/add_military_day_saturday"
+                android:title="@string/saturday"/>
+
+            <item
+                android:id="@+id/add_military_day_sunday"
+                android:title="@string/sunday"/>
+        </menu>
+    </item>
+</menu>

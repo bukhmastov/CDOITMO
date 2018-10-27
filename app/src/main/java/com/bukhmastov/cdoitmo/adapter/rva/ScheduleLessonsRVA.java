@@ -29,6 +29,7 @@ import com.bukhmastov.cdoitmo.util.singleton.StringUtils;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.List;
 import java.util.TreeSet;
 
 import javax.inject.Inject;
@@ -59,8 +60,10 @@ public class ScheduleLessonsRVA extends RVA<RVALessons> {
     @Inject
     Time time;
 
-    private final SLessons data;
+    private final String type;
+    private final String query;
     private final int parity;
+    private final ArrayList<SDay> days = new ArrayList<>();
     private final SparseIntArray daysPositions = new SparseIntArray();
     private final String reducedLessonMode;
     private int colorScheduleFlagTEXT = -1, colorScheduleFlagCommonBG = -1, colorScheduleFlagPracticeBG = -1, colorScheduleFlagLectureBG = -1, colorScheduleFlagLabBG = -1, colorScheduleFlagIwsBG = -1;
@@ -69,7 +72,8 @@ public class ScheduleLessonsRVA extends RVA<RVALessons> {
         super();
         AppComponentProvider.getComponent().inject(this);
         this.context = context;
-        this.data = data;
+        this.type = data.getType();
+        this.query = data.getQuery();
         this.parity = parity;
         this.reducedLessonMode = reducedLessonMode;
         addItems(entity2dataset(data, weekday));
@@ -162,6 +166,8 @@ public class ScheduleLessonsRVA extends RVA<RVALessons> {
                 ((ViewGroup) weekView.getParent()).removeView(weekView);
             }
             tryRegisterClickListener(container, R.id.schedule_lessons_menu, null);
+            tryRegisterClickListener(container, R.id.schedule_lessons_share, new RVALessons(days));
+            tryRegisterClickListener(container, R.id.schedule_lessons_create, new RVALessons(parity));
         } catch (Exception e) {
             log.exception(e);
         }
@@ -200,7 +206,7 @@ public class ScheduleLessonsRVA extends RVA<RVALessons> {
             ((TextView) container.findViewById(R.id.lesson_time_end)).setText(lesson.getTimeEnd());
             // desc
             TextView lessonDesc = container.findViewById(R.id.lesson_desc);
-            String desc = getLessonDesc(lesson, data.getType());
+            String desc = getLessonDesc(lesson, type);
             if (StringUtils.isNotBlank(desc)) {
                 lessonDesc.setText(desc);
             } else {
@@ -229,7 +235,7 @@ public class ScheduleLessonsRVA extends RVA<RVALessons> {
             }
             // meta
             TextView lessonMeta = container.findViewById(R.id.lesson_meta);
-            String meta = getLessonMeta(lesson, data.getType());
+            String meta = getLessonMeta(lesson, type);
             if (StringUtils.isNotBlank(meta)) {
                 lessonMeta.setText(meta);
             } else {
@@ -310,12 +316,12 @@ public class ScheduleLessonsRVA extends RVA<RVALessons> {
         // teacher picker mode
         if (schedule.getType().equals("teachers")) {
             if (schedule.getTeachers() != null && CollectionUtils.isNotEmpty(schedule.getTeachers().getTeachers())) {
-                dataset.add(new Item<>(TYPE_PICKER_HEADER, new RVASingleValue(data.getQuery())));
+                dataset.add(new Item<>(TYPE_PICKER_HEADER, new RVASingleValue(query)));
                 for (STeacher teacher : schedule.getTeachers().getTeachers()) {
                     dataset.add(new Item<>(TYPE_PICKER_ITEM, teacher));
                 }
             } else {
-                dataset.add(new Item<>(TYPE_PICKER_NO_TEACHERS, new RVASingleValue(data.getQuery())));
+                dataset.add(new Item<>(TYPE_PICKER_NO_TEACHERS, new RVASingleValue(query)));
             }
             return dataset;
         }
@@ -337,8 +343,9 @@ public class ScheduleLessonsRVA extends RVA<RVALessons> {
             if (CollectionUtils.isEmpty(lessons)) {
                 continue;
             }
-            dataset.add(new Item<>(TYPE_DAY, new RVASingleValue(getDayTitle(day))));
+            days.add(new SDay(day.getWeekday(), new ArrayList<>(lessons)));
             daysPositions.append(day.getWeekday(), position++);
+            dataset.add(new Item<>(TYPE_DAY, new RVASingleValue(getDayTitle(day))));
             int lessonsLength = lessons.size();
             int index = 0;
             for (SLesson lesson : lessons) {

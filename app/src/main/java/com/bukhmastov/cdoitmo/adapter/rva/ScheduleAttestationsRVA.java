@@ -9,6 +9,7 @@ import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
+import com.bukhmastov.cdoitmo.model.rva.RVAAttestations;
 import com.bukhmastov.cdoitmo.model.rva.RVADualValue;
 import com.bukhmastov.cdoitmo.model.rva.RVASingleValue;
 import com.bukhmastov.cdoitmo.model.schedule.attestations.SAttestation;
@@ -24,7 +25,7 @@ import java.util.ArrayList;
 
 import javax.inject.Inject;
 
-public class ScheduleAttestationsRVA extends RVA<SSubject> {
+public class ScheduleAttestationsRVA extends RVA<RVAAttestations> {
 
     private static final String TAG = "ScheduleAttestationsRVA";
 
@@ -41,6 +42,8 @@ public class ScheduleAttestationsRVA extends RVA<SSubject> {
     ScheduleAttestations scheduleAttestations;
     @Inject
     Time time;
+
+    private final ArrayList<SSubject> subjects = new ArrayList<>();
 
     public ScheduleAttestationsRVA(SAttestations data, int weekday) {
         super();
@@ -91,7 +94,12 @@ public class ScheduleAttestationsRVA extends RVA<SSubject> {
             } else {
                 ((ViewGroup) weekView.getParent()).removeView(weekView);
             }
+            View createAction = container.findViewById(R.id.schedule_lessons_create);
+            if (createAction != null) {
+                createAction.setVisibility(View.GONE);
+            }
             tryRegisterClickListener(container, R.id.schedule_lessons_menu, null);
+            tryRegisterClickListener(container, R.id.schedule_lessons_share, new RVAAttestations(subjects));
         } catch (Exception e) {
             log.exception(e);
         }
@@ -145,6 +153,7 @@ public class ScheduleAttestationsRVA extends RVA<SSubject> {
                 if (subject == null || CollectionUtils.isEmpty(subject.getAttestations())) {
                     continue;
                 }
+                subjects.add(subject);
                 dataset.add(new Item<>(TYPE_SUBJECT, new RVADualValue(
                         subject.getName(),
                         subject.getTerm() == 1 ? context.getString(R.string.term_autumn) : context.getString(R.string.term_spring)

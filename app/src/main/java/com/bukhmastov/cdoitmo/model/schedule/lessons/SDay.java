@@ -28,6 +28,12 @@ public class SDay extends JsonEntity {
         super();
     }
 
+    public SDay(int weekday, ArrayList<SLesson> lessons) {
+        super();
+        this.weekday = weekday;
+        this.lessons = lessons;
+    }
+
     public int getWeekday() {
         return weekday;
     }

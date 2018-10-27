@@ -9,6 +9,7 @@ import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.PopupMenu;
 import android.support.v7.widget.RecyclerView;
+import android.util.SparseArray;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -21,11 +22,14 @@ import com.bukhmastov.cdoitmo.activity.search.ScheduleAttestationsSearchActivity
 import com.bukhmastov.cdoitmo.adapter.rva.ScheduleAttestationsRVA;
 import com.bukhmastov.cdoitmo.event.bus.EventBus;
 import com.bukhmastov.cdoitmo.event.events.OpenActivityEvent;
+import com.bukhmastov.cdoitmo.event.events.ShareTextEvent;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.fragment.ConnectedFragment;
 import com.bukhmastov.cdoitmo.fragment.presenter.ScheduleAttestationsFragmentPresenter;
 import com.bukhmastov.cdoitmo.fragment.settings.SettingsScheduleAttestationsFragment;
+import com.bukhmastov.cdoitmo.model.rva.RVAAttestations;
+import com.bukhmastov.cdoitmo.model.schedule.attestations.SAttestation;
 import com.bukhmastov.cdoitmo.model.schedule.attestations.SAttestations;
 import com.bukhmastov.cdoitmo.model.schedule.attestations.SSubject;
 import com.bukhmastov.cdoitmo.network.model.Client;
@@ -36,8 +40,11 @@ import com.bukhmastov.cdoitmo.util.NotificationMessage;
 import com.bukhmastov.cdoitmo.util.Storage;
 import com.bukhmastov.cdoitmo.util.Thread;
 import com.bukhmastov.cdoitmo.util.Time;
+import com.bukhmastov.cdoitmo.util.singleton.CollectionUtils;
 import com.bukhmastov.cdoitmo.util.singleton.Color;
 import com.bukhmastov.cdoitmo.util.singleton.StringUtils;
+
+import java.util.ArrayList;
 
 import javax.inject.Inject;
 
@@ -92,7 +99,8 @@ public class ScheduleAttestationsFragmentPresenterImpl implements ScheduleAttest
                     ScheduleAttestationsFragmentPresenterImpl.this.schedule = schedule;
                     int week = time.getWeek(activity);
                     ScheduleAttestationsRVA adapter = new ScheduleAttestationsRVA(schedule, week);
-                    adapter.setClickListener(R.id.schedule_lessons_menu, ScheduleAttestationsFragmentPresenterImpl.this::attestationsMenu);
+                    adapter.setClickListener(R.id.schedule_lessons_menu, ScheduleAttestationsFragmentPresenterImpl.this::attestationsMenuMore);
+                    adapter.setClickListener(R.id.schedule_lessons_share, ScheduleAttestationsFragmentPresenterImpl.this::attestationsMenuShare);
                     thread.runOnUI(() -> {
                         fragment.draw(R.layout.layout_schedule_both_recycle_list);
                         // prepare
@@ -397,7 +405,50 @@ public class ScheduleAttestationsFragmentPresenterImpl implements ScheduleAttest
 
     // -->- Attestations global menu ->--
 
-    private void attestationsMenu(View view, SSubject entity) {
+    private void attestationsMenuShare(View view, RVAAttestations entity) {
+        thread.runOnUI(() -> {
+            if (schedule == null) {
+                notificationMessage.snackBar(activity, activity.getString(R.string.cache_failed));
+                return;
+            }
+            SparseArray<SSubject> menuSubjectsMap = new SparseArray<>();
+            PopupMenu popup = new PopupMenu(activity, view);
+            popup.inflate(R.menu.schedule_attestations_common_share);
+            if (CollectionUtils.isEmpty(entity.getSubjects())) {
+                popup.getMenu().findItem(R.id.share_attestations_schedule).setVisible(false);
+            } else {
+                Menu subMenu = popup.getMenu().findItem(R.id.share_attestations_schedule).getSubMenu();
+                for (SSubject subject : entity.getSubjects()) {
+                    int id = View.generateViewId();
+                    subMenu.add(Menu.NONE, id, Menu.NONE, subject.getName() + " (" + (subject.getTerm() == 1 ? activity.getString(R.string.term_autumn) : activity.getString(R.string.term_spring)) + ")");
+                    menuSubjectsMap.put(id, subject);
+                }
+            }
+            popup.setOnMenuItemClickListener(menuItem -> {
+                thread.run(() -> {
+                    switch (menuItem.getItemId()) {
+                        case R.id.share_all_schedule: shareSchedule(entity.getSubjects()); break;
+                        default:
+                            SSubject subject = menuSubjectsMap.get(menuItem.getItemId());
+                            if (subject != null) {
+                                shareSchedule(subject);
+                            }
+                            break;
+                    }
+                }, throwable -> {
+                    log.exception(throwable);
+                    notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                });
+                return false;
+            });
+            popup.show();
+        }, throwable -> {
+            log.exception(throwable);
+            notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
+        });
+    }
+
+    private void attestationsMenuMore(View view, RVAAttestations entity) {
         thread.run(() -> {
             if (schedule == null) {
                 notificationMessage.snackBar(activity, activity.getString(R.string.cache_failed));
@@ -407,11 +458,22 @@ public class ScheduleAttestationsFragmentPresenterImpl implements ScheduleAttest
             boolean isCached = cacheToken != null && StringUtils.isNotBlank(storage.get(activity, Storage.CACHE, Storage.GLOBAL, "schedule_attestations#lessons#" + cacheToken, ""));
             thread.runOnUI(() -> {
                 PopupMenu popup = new PopupMenu(activity, view);
-                Menu menu = popup.getMenu();
-                popup.getMenuInflater().inflate(R.menu.schedule_attestations, menu);
-                menu.findItem(isCached ? R.id.add_to_cache : R.id.remove_from_cache).setVisible(false);
-                popup.setOnMenuItemClickListener(item -> {
-                    attestationsMenuSelected(item);
+                popup.inflate(R.menu.schedule_attestations_common_more);
+                popup.getMenu().findItem(R.id.toggle_cache).setChecked(isCached);
+                popup.setOnMenuItemClickListener(menuItem -> {
+                    thread.run(() -> {
+                        switch (menuItem.getItemId()) {
+                            case R.id.toggle_cache:
+                                if (toggleCache()) {
+                                    thread.runOnUI(() -> menuItem.setChecked(!isCached));
+                                }
+                                break;
+                            case R.id.open_settings: activity.openActivityOrFragment(ConnectedActivity.TYPE.STACKABLE, SettingsScheduleAttestationsFragment.class, null); break;
+                        }
+                    }, throwable -> {
+                        log.exception(throwable);
+                        notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                    });
                     return false;
                 });
                 popup.show();
@@ -425,43 +487,90 @@ public class ScheduleAttestationsFragmentPresenterImpl implements ScheduleAttest
         });
     }
 
-    private void attestationsMenuSelected(MenuItem item) {
-        log.v(TAG, "Attestations menu | popup item | clicked | " + item.getTitle().toString());
-        switch (item.getItemId()) {
-            case R.id.add_to_cache:
-            case R.id.remove_from_cache: toggleCache(); break;
-            case R.id.open_settings: activity.openActivityOrFragment(ConnectedActivity.TYPE.STACKABLE, SettingsScheduleAttestationsFragment.class, null); break;
+    private boolean toggleCache() throws Throwable {
+        thread.assertNotUI();
+        if (schedule == null) {
+            notificationMessage.snackBar(activity, activity.getString(R.string.cache_failed));
+            return false;
+        }
+        String cacheToken = schedule.getQuery() == null ? null : schedule.getQuery().toLowerCase();
+        if (cacheToken == null) {
+            notificationMessage.snackBar(activity, activity.getString(R.string.cache_failed));
+            return false;
+        }
+        if (storage.exists(activity, Storage.CACHE, Storage.GLOBAL, "schedule_attestations#lessons#" + cacheToken)) {
+            if (storage.delete(activity, Storage.CACHE, Storage.GLOBAL, "schedule_attestations#lessons#" + cacheToken)) {
+                notificationMessage.snackBar(activity, activity.getString(R.string.cache_false));
+                return true;
+            } else {
+                notificationMessage.snackBar(activity, activity.getString(R.string.cache_failed));
+                return false;
+            }
+        }
+        if (storage.put(activity, Storage.CACHE, Storage.GLOBAL, "schedule_attestations#lessons#" + cacheToken, schedule.toJsonString())) {
+            notificationMessage.snackBar(activity, activity.getString(R.string.cache_true));
+            return true;
+        } else {
+            notificationMessage.snackBar(activity, activity.getString(R.string.cache_failed));
+            return false;
         }
     }
 
-    private void toggleCache() {
-        thread.run(() -> {
-            if (schedule == null) {
-                notificationMessage.snackBar(activity, activity.getString(R.string.cache_failed));
-                return;
-            }
-            String cacheToken = schedule.getQuery() == null ? null : schedule.getQuery().toLowerCase();
-            if (cacheToken == null) {
-                notificationMessage.snackBar(activity, activity.getString(R.string.cache_failed));
-                return;
-            }
-            if (storage.exists(activity, Storage.CACHE, Storage.GLOBAL, "schedule_attestations#lessons#" + cacheToken)) {
-                if (storage.delete(activity, Storage.CACHE, Storage.GLOBAL, "schedule_attestations#lessons#" + cacheToken)) {
-                    notificationMessage.snackBar(activity, activity.getString(R.string.cache_false));
-                } else {
-                    notificationMessage.snackBar(activity, activity.getString(R.string.cache_failed));
+    private void shareSchedule(ArrayList<SSubject> subjects) {
+        thread.assertNotUI();
+        if (schedule == null) {
+            notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
+            return;
+        }
+        StringBuilder sb = new StringBuilder();
+        sb.append(scheduleAttestations.getScheduleHeader(schedule.getTitle(), schedule.getType()));
+        sb.append("\n");
+        if (CollectionUtils.isEmpty(subjects)) {
+            sb.append(activity.getString(R.string.no_attestations));
+        } else {
+            int examsThisTerm = 0;
+            for (SSubject subject : subjects) {
+                if (subject == null) {
+                    continue;
                 }
-                return;
+                examsThisTerm++;
+                sb.append("\n");
+                shareScheduleAppendSubject(sb, subject);
             }
-            if (storage.put(activity, Storage.CACHE, Storage.GLOBAL, "schedule_attestations#lessons#" + cacheToken, schedule.toJsonString())) {
-                notificationMessage.snackBar(activity, activity.getString(R.string.cache_true));
-            } else {
-                notificationMessage.snackBar(activity, activity.getString(R.string.cache_failed));
+            if (examsThisTerm == 0) {
+                sb.append(activity.getString(R.string.no_attestations));
             }
-        }, throwable -> {
-            log.exception(throwable);
-            notificationMessage.snackBar(activity, activity.getString(R.string.cache_failed));
-        });
+        }
+        eventBus.fire(new ShareTextEvent(sb.toString().trim(), "txt_sattest_all"));
+    }
+
+    private void shareSchedule(SSubject subject) {
+        thread.assertNotUI();
+        if (schedule == null || subject == null) {
+            notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
+            return;
+        }
+        StringBuilder sb = new StringBuilder();
+        sb.append(scheduleAttestations.getScheduleHeader(schedule.getTitle(), schedule.getType()));
+        sb.append("\n");
+        shareScheduleAppendSubject(sb, subject);
+        eventBus.fire(new ShareTextEvent(sb.toString().trim(), "txt_sattest_subject"));
+    }
+
+    private void shareScheduleAppendSubject(StringBuilder sb, SSubject subject) {
+        if (CollectionUtils.isEmpty(subject.getAttestations())) {
+            return;
+        }
+        sb.append(subject.getName());
+        sb.append(" (");
+        sb.append(subject.getTerm() == 1 ? activity.getString(R.string.term_autumn) : activity.getString(R.string.term_spring));
+        sb.append(")\n");
+        for (SAttestation attestation : subject.getAttestations()) {
+            sb.append(attestation.getName());
+            sb.append(" — ");
+            sb.append(attestation.getWeek());
+            sb.append("\n");
+        }
     }
 
     // -<-- Attestations global menu --<-

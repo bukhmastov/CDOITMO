@@ -9,6 +9,7 @@ import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.PopupMenu;
 import android.support.v7.widget.RecyclerView;
+import android.util.SparseArray;
 import android.view.InflateException;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -50,6 +51,8 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.regex.Matcher;
 
 import javax.inject.Inject;
@@ -114,7 +117,8 @@ public class ScheduleExamsTabFragmentPresenterImpl implements ScheduleExamsTabFr
                     }
                     // get rva adapter
                     ScheduleExamsRVA adapter = new ScheduleExamsRVA(schedule, subjects, type);
-                    adapter.setClickListener(R.id.schedule_lessons_menu, ScheduleExamsTabFragmentPresenterImpl.this::examsMenu);
+                    adapter.setClickListener(R.id.schedule_lessons_menu, ScheduleExamsTabFragmentPresenterImpl.this::examsMenuMore);
+                    adapter.setClickListener(R.id.schedule_lessons_share, ScheduleExamsTabFragmentPresenterImpl.this::examsMenuShare);
                     adapter.setClickListener(R.id.exam_touch_icon, ScheduleExamsTabFragmentPresenterImpl.this::subjectMenu);
                     adapter.setClickListener(R.id.teacher_picker_item, ScheduleExamsTabFragmentPresenterImpl.this::teacherSelected);
                     thread.runOnUI(() -> {
@@ -420,7 +424,50 @@ public class ScheduleExamsTabFragmentPresenterImpl implements ScheduleExamsTabFr
 
     // -->- Exams global menu ->--
 
-    private void examsMenu(View view, RVAExams entity) {
+    private void examsMenuShare(View view, RVAExams entity) {
+        thread.runOnUI(() -> {
+            if (schedule == null) {
+                notificationMessage.snackBar(activity, activity.getString(R.string.cache_failed));
+                return;
+            }
+            SparseArray<SSubject> menuSubjectsMap = new SparseArray<>();
+            PopupMenu popup = new PopupMenu(activity, view);
+            popup.inflate(R.menu.schedule_exams_common_share);
+            if (CollectionUtils.isEmpty(entity.getEvents())) {
+                popup.getMenu().findItem(R.id.share_exam_schedule).setVisible(false);
+            } else {
+                Menu subMenu = popup.getMenu().findItem(R.id.share_exam_schedule).getSubMenu();
+                for (SSubject subject : entity.getEvents()) {
+                    int id = View.generateViewId();
+                    subMenu.add(Menu.NONE, id, Menu.NONE, subject.getSubject());
+                    menuSubjectsMap.put(id, subject);
+                }
+            }
+            popup.setOnMenuItemClickListener(menuItem -> {
+                thread.run(() -> {
+                    switch (menuItem.getItemId()) {
+                        case R.id.share_all_schedule: shareSchedule(entity.getEvents()); break;
+                        default:
+                            SSubject subject = menuSubjectsMap.get(menuItem.getItemId());
+                            if (subject != null) {
+                                shareSchedule(subject);
+                            }
+                            break;
+                    }
+                }, throwable -> {
+                    log.exception(throwable);
+                    notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                });
+                return false;
+            });
+            popup.show();
+        }, throwable -> {
+            log.exception(throwable);
+            notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
+        });
+    }
+
+    private void examsMenuMore(View view, RVAExams entity) {
         thread.run(() -> {
             if (schedule == null) {
                 notificationMessage.snackBar(activity, activity.getString(R.string.cache_failed));
@@ -430,11 +477,22 @@ public class ScheduleExamsTabFragmentPresenterImpl implements ScheduleExamsTabFr
             boolean isCached = cacheToken != null && StringUtils.isNotBlank(storage.get(activity, Storage.CACHE, Storage.GLOBAL, "schedule_exams#lessons#" + cacheToken, ""));
             thread.runOnUI(() -> {
                 PopupMenu popup = new PopupMenu(activity, view);
-                Menu menu = popup.getMenu();
-                popup.getMenuInflater().inflate(R.menu.schedule_exams, menu);
-                menu.findItem(isCached ? R.id.add_to_cache : R.id.remove_from_cache).setVisible(false);
+                popup.inflate(R.menu.schedule_exams_common_more);
+                popup.getMenu().findItem(R.id.toggle_cache).setChecked(isCached);
                 popup.setOnMenuItemClickListener(menuItem -> {
-                    examsMenuSelected(menuItem);
+                    thread.run(() -> {
+                        switch (menuItem.getItemId()) {
+                            case R.id.toggle_cache:
+                                if (toggleCache()) {
+                                    thread.runOnUI(() -> menuItem.setChecked(!isCached));
+                                }
+                                break;
+                            case R.id.open_settings: activity.openActivityOrFragment(ConnectedActivity.TYPE.STACKABLE, SettingsScheduleExamsFragment.class, null); break;
+                        }
+                    }, throwable -> {
+                        log.exception(throwable);
+                        notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                    });
                     return false;
                 });
                 popup.show();
@@ -448,91 +506,95 @@ public class ScheduleExamsTabFragmentPresenterImpl implements ScheduleExamsTabFr
         });
     }
 
-    private void examsMenuSelected(MenuItem item) {
-        log.v(TAG, "Exams menu | popup item | clicked | " + item.getTitle().toString());
-        switch (item.getItemId()) {
-            case R.id.add_to_cache:
-            case R.id.remove_from_cache: toggleCache(); break;
-            case R.id.share_schedule: shareSchedule(); break;
-            case R.id.open_settings: activity.openActivityOrFragment(ConnectedActivity.TYPE.STACKABLE, SettingsScheduleExamsFragment.class, null); break;
+    private boolean toggleCache() throws Throwable {
+        thread.assertNotUI();
+        if (schedule == null) {
+            notificationMessage.snackBar(activity, activity.getString(R.string.cache_failed));
+            return false;
+        }
+        String cacheToken = schedule.getQuery() == null ? null : schedule.getQuery().toLowerCase();
+        if (cacheToken == null) {
+            notificationMessage.snackBar(activity, activity.getString(R.string.cache_failed));
+            return false;
+        }
+        if (storage.exists(activity, Storage.CACHE, Storage.GLOBAL, "schedule_exams#lessons#" + cacheToken)) {
+            if (storage.delete(activity, Storage.CACHE, Storage.GLOBAL, "schedule_exams#lessons#" + cacheToken)) {
+                notificationMessage.snackBar(activity, activity.getString(R.string.cache_false));
+                return true;
+            } else {
+                notificationMessage.snackBar(activity, activity.getString(R.string.cache_failed));
+                return false;
+            }
+        }
+        if (storage.put(activity, Storage.CACHE, Storage.GLOBAL, "schedule_exams#lessons#" + cacheToken, schedule.toJsonString())) {
+            notificationMessage.snackBar(activity, activity.getString(R.string.cache_true));
+            return true;
+        } else {
+            notificationMessage.snackBar(activity, activity.getString(R.string.cache_failed));
+            return false;
         }
     }
 
-    private void toggleCache() {
-        thread.run(() -> {
-            if (schedule == null) {
-                notificationMessage.snackBar(activity, activity.getString(R.string.cache_failed));
-                return;
-            }
-            String cacheToken = schedule.getQuery() == null ? null : schedule.getQuery().toLowerCase();
-            if (cacheToken == null) {
-                notificationMessage.snackBar(activity, activity.getString(R.string.cache_failed));
-                return;
-            }
-            if (storage.exists(activity, Storage.CACHE, Storage.GLOBAL, "schedule_exams#lessons#" + cacheToken)) {
-                if (storage.delete(activity, Storage.CACHE, Storage.GLOBAL, "schedule_exams#lessons#" + cacheToken)) {
-                    notificationMessage.snackBar(activity, activity.getString(R.string.cache_false));
-                } else {
-                    notificationMessage.snackBar(activity, activity.getString(R.string.cache_failed));
+    private void shareSchedule(ArrayList<SSubject> events) {
+        thread.assertNotUI();
+        if (schedule == null) {
+            notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
+            return;
+        }
+        StringBuilder sb = new StringBuilder();
+        sb.append(scheduleExams.getScheduleHeader(schedule.getTitle(), schedule.getType()));
+        sb.append("\n");
+        if (CollectionUtils.isEmpty(events)) {
+            sb.append(activity.getString(R.string.no_exams));
+        } else {
+            int examsThisTerm = 0;
+            for (SSubject subject : events) {
+                if (subject == null) {
+                    continue;
                 }
-                return;
+                examsThisTerm++;
+                sb.append("\n");
+                shareScheduleAppendSubject(sb, subject);
             }
-            if (storage.put(activity, Storage.CACHE, Storage.GLOBAL, "schedule_exams#lessons#" + cacheToken, schedule.toJsonString())) {
-                notificationMessage.snackBar(activity, activity.getString(R.string.cache_true));
-            } else {
-                notificationMessage.snackBar(activity, activity.getString(R.string.cache_failed));
+            if (examsThisTerm == 0) {
+                sb.append(activity.getString(R.string.no_exams));
             }
-        }, throwable -> {
-            log.exception(throwable);
-            notificationMessage.snackBar(activity, activity.getString(R.string.cache_failed));
-        });
+        }
+        eventBus.fire(new ShareTextEvent(sb.toString().trim(), "txt_sexams_all"));
     }
 
-    private void shareSchedule() {
-        thread.run(() -> {
-            if (schedule == null) {
-                notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
-                return;
-            }
-            StringBuilder sb = new StringBuilder();
-            sb.append(scheduleExams.getScheduleHeader(schedule.getTitle(), schedule.getType()));
+    private void shareSchedule(SSubject subject) {
+        thread.assertNotUI();
+        if (schedule == null || subject == null) {
+            notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
+            return;
+        }
+        StringBuilder sb = new StringBuilder();
+        sb.append(scheduleExams.getScheduleHeader(schedule.getTitle(), schedule.getType()));
+        sb.append("\n");
+        shareScheduleAppendSubject(sb, subject);
+        eventBus.fire(new ShareTextEvent(sb.toString().trim(), "txt_sexams_subject"));
+    }
+
+    private void shareScheduleAppendSubject(StringBuilder sb, SSubject subject) {
+        String desc = null;
+        switch (schedule.getType()) {
+            case "group": desc = subject.getTeacherName(); break;
+            case "teacher": desc = subject.getGroup(); break;
+        }
+        sb.append(subject.getSubject());
+        if (StringUtils.isNotBlank(desc)) {
+            sb.append(" (").append(desc).append(")");
+        }
+        sb.append("\n");
+        if (subject.getAdvice() != null && StringUtils.isNotBlank(subject.getAdvice().getDate())) {
+            shareScheduleAppendEvent(sb, subject.getAdvice(), activity.getString(R.string.consult));
             sb.append("\n");
-            if (CollectionUtils.isEmpty(schedule.getSchedule())) {
-                sb.append(activity.getString(R.string.no_exams));
-            } else {
-                int examsThisTerm = 0;
-                for (SSubject subject : schedule.getSchedule()) {
-                    if (subject == null) {
-                        continue;
-                    }
-                    examsThisTerm++;
-                    String desc = null;
-                    switch (schedule.getType()) {
-                        case "group": desc = subject.getTeacherName(); break;
-                        case "teacher": desc = subject.getGroup(); break;
-                    }
-                    sb.append("\n");
-                    sb.append(subject);
-                    if (StringUtils.isNotBlank(desc)) {
-                        sb.append(" (").append(desc).append(")");
-                    }
-                    sb.append("\n");
-                    if (subject.getAdvice() != null && StringUtils.isNotBlank(subject.getAdvice().getDate())) {
-                        shareScheduleAppendEvent(sb, subject.getAdvice(), activity.getString(R.string.consult));
-                    }
-                    if (subject.getExam() != null && StringUtils.isNotBlank(subject.getExam().getDate())) {
-                        shareScheduleAppendEvent(sb, subject.getExam(), activity.getString("credit".equals(subject.getType()) ? R.string.credit : R.string.exam));
-                    }
-                }
-                if (examsThisTerm == 0) {
-                    sb.append(activity.getString(R.string.no_exams));
-                }
-            }
-            eventBus.fire(new ShareTextEvent(sb.toString().trim(), "schedule_exams_plain"));
-        }, throwable -> {
-            log.exception(throwable);
-            notificationMessage.snackBar(activity, activity.getString(R.string.cache_failed));
-        });
+        }
+        if (subject.getExam() != null && StringUtils.isNotBlank(subject.getExam().getDate())) {
+            shareScheduleAppendEvent(sb, subject.getExam(), activity.getString("credit".equals(subject.getType()) ? R.string.credit : R.string.exam));
+            sb.append("\n");
+        }
     }
 
     private void shareScheduleAppendEvent(StringBuilder sb, SExam event, String title) {
@@ -551,11 +613,17 @@ public class ScheduleExamsTabFragmentPresenterImpl implements ScheduleExamsTabFr
         sb.append(title);
         sb.append(": ");
         sb.append(date);
+        if (StringUtils.isNotBlank(room) || StringUtils.isNotBlank(building)) {
+            sb.append(",");
+        }
         if (StringUtils.isNotBlank(room)) {
-            sb.append(", ");
+            sb.append(" ");
             sb.append(room);
         }
-        sb.append("\n");
+        if (StringUtils.isNotBlank(building)) {
+            sb.append(" ");
+            sb.append(building);
+        }
     }
 
     // -<-- Exams global menu --<- || -->- Subject menu ->--

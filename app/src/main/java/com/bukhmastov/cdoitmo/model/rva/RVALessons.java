@@ -2,16 +2,14 @@ package com.bukhmastov.cdoitmo.model.rva;
 
 import com.bukhmastov.cdoitmo.model.JsonEntity;
 import com.bukhmastov.cdoitmo.model.JsonProperty;
+import com.bukhmastov.cdoitmo.model.schedule.lessons.SDay;
 import com.bukhmastov.cdoitmo.model.schedule.lessons.SLesson;
-import com.bukhmastov.cdoitmo.model.schedule.lessons.SLessons;
 import com.bukhmastov.cdoitmo.model.schedule.teachers.STeacher;
 
+import java.util.ArrayList;
 import java.util.Objects;
 
 public class RVALessons extends JsonEntity {
-
-    @JsonProperty("lessons")
-    private SLessons lessons;
 
     @JsonProperty("lesson")
     private SLesson lesson;
@@ -22,32 +20,39 @@ public class RVALessons extends JsonEntity {
     @JsonProperty("teacher")
     private STeacher teacher;
 
+    @JsonProperty("parity")
+    private int parity;
+
+    @JsonProperty("parity")
+    private ArrayList<SDay> days;
+
     public RVALessons() {
         super();
     }
 
-    public RVALessons(SLessons lessons) {
-        super();
-        this.lessons = lessons;
-    }
-
+    // lesson click
     public RVALessons(SLesson lesson, int weekday) {
         super();
         this.lesson = lesson;
         this.weekday = weekday;
     }
 
+    // teacher click
     public RVALessons(STeacher teacher) {
         super();
         this.teacher = teacher;
     }
 
-    public SLessons getLessons() {
-        return lessons;
+    // menu create click
+    public RVALessons(int parity) {
+        super();
+        this.parity = parity;
     }
 
-    public void setLessons(SLessons lessons) {
-        this.lessons = lessons;
+    // menu share click
+    public RVALessons(ArrayList<SDay> days) {
+        super();
+        this.days = days;
     }
 
     public SLesson getLesson() {
@@ -58,20 +63,16 @@ public class RVALessons extends JsonEntity {
         return weekday;
     }
 
-    public void setWeekday(int weekday) {
-        this.weekday = weekday;
-    }
-
-    public void setLesson(SLesson lesson) {
-        this.lesson = lesson;
-    }
-
     public STeacher getTeacher() {
         return teacher;
     }
 
-    public void setTeacher(STeacher teacher) {
-        this.teacher = teacher;
+    public int getParity() {
+        return parity;
+    }
+
+    public ArrayList<SDay> getDays() {
+        return days;
     }
 
     @Override
@@ -80,23 +81,25 @@ public class RVALessons extends JsonEntity {
         if (!(o instanceof RVALessons)) return false;
         RVALessons that = (RVALessons) o;
         return weekday == that.weekday &&
-                Objects.equals(lessons, that.lessons) &&
+                parity == that.parity &&
                 Objects.equals(lesson, that.lesson) &&
-                Objects.equals(teacher, that.teacher);
+                Objects.equals(teacher, that.teacher) &&
+                Objects.equals(days, that.days);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(lessons, lesson, weekday, teacher);
+        return Objects.hash(lesson, weekday, teacher, parity, days);
     }
 
     @Override
     public String toString() {
         return "RVALessons{" +
-                "lessons=" + lessons +
-                ", lesson=" + lesson +
+                "lesson=" + lesson +
                 ", weekday=" + weekday +
                 ", teacher=" + teacher +
+                ", parity=" + parity +
+                ", days=" + days +
                 '}';
     }
 }

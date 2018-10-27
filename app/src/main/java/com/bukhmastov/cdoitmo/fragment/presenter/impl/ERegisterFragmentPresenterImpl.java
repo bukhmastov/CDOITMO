@@ -593,7 +593,7 @@ public class ERegisterFragmentPresenterImpl implements ERegisterFragmentPresente
             for (String item : dataShare) {
                 sb.append(item).append("\n");
             }
-            eventBus.fire(new ShareTextEvent(sb.toString().trim(), "eregister"));
+            eventBus.fire(new ShareTextEvent(sb.toString().trim(), "txt_eregister"));
         }, throwable -> {
             log.exception(throwable);
             notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));

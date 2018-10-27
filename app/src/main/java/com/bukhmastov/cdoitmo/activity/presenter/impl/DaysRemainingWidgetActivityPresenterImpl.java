@@ -286,7 +286,7 @@ public class DaysRemainingWidgetActivityPresenterImpl implements DaysRemainingWi
                 return;
             }
             if (data.size() == 0) {
-                eventBus.fire(new ShareTextEvent("У меня закончились экзамены!", "days_remaining_widget"));
+                eventBus.fire(new ShareTextEvent("У меня закончились экзамены!", "txt_widget_remaining_days"));
                 return;
             }
             DaysRemainingWidget.Data currentData = data.get(0);
@@ -357,7 +357,7 @@ public class DaysRemainingWidgetActivityPresenterImpl implements DaysRemainingWi
             String pattern = "Следующий экзамен %scope% уже через %time%";
             pattern = pattern.replace("%scope%", scope.trim());
             pattern = pattern.replace("%time%", time.trim());
-            eventBus.fire(new ShareTextEvent(pattern, "days_remaining_widget"));
+            eventBus.fire(new ShareTextEvent(pattern, "txt_widget_remaining_days"));
         });
     }
 
