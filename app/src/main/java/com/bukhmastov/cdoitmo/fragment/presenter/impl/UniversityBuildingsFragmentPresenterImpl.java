@@ -185,6 +185,7 @@ public class UniversityBuildingsFragmentPresenterImpl implements UniversityBuild
             if (list != null) {
                 list.setOnClickListener(v -> openList());
             }
+            // its ok
             SupportMapFragment mapFragment = (SupportMapFragment) fragment.getChildFragmentManager().findFragmentById(R.id.buildings_map);
             if (mapFragment != null) {
                 mapFragment.getMapAsync(this);
@@ -487,7 +488,7 @@ public class UniversityBuildingsFragmentPresenterImpl implements UniversityBuild
                     View item = inflate(R.layout.layout_university_faculties_divisions_list_item);
                     ((TextView) item.findViewById(R.id.title)).setText(building.getTitle());
                     item.setOnClickListener(v -> {
-                        thread.run(() -> {
+                        thread.runOnUI(() -> {
                             for (Marker marker : markers) {
                                 UBuilding building1 = (UBuilding) marker.getTag();
                                 if (building1 == null) {

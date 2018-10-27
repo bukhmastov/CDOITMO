@@ -32,7 +32,7 @@ public class UPerson extends JsonEntity {
     private String status;
 
     @JsonProperty("cis_id")
-    private String cisId;
+    private int cisId;
 
     @JsonProperty("www")
     private String www;
@@ -53,7 +53,7 @@ public class UPerson extends JsonEntity {
     private String degree;
 
     @JsonProperty("year")
-    private String year;
+    private int year;
 
     @JsonProperty("pub_art")
     private boolean isPubArt;
@@ -132,11 +132,11 @@ public class UPerson extends JsonEntity {
         this.status = status;
     }
 
-    public String getCisId() {
+    public int getCisId() {
         return cisId;
     }
 
-    public void setCisId(String cisId) {
+    public void setCisId(int cisId) {
         this.cisId = cisId;
     }
 
@@ -188,11 +188,11 @@ public class UPerson extends JsonEntity {
         this.degree = degree;
     }
 
-    public String getYear() {
+    public int getYear() {
         return year;
     }
 
-    public void setYear(String year) {
+    public void setYear(int year) {
         this.year = year;
     }
 
@@ -247,14 +247,14 @@ public class UPerson extends JsonEntity {
                 ", isOutput=" + isOutput +
                 ", isPublic=" + isPublic +
                 ", status='" + status + '\'' +
-                ", cisId='" + cisId + '\'' +
+                ", cisId=" + cisId +
                 ", www='" + www + '\'' +
                 ", email='" + email + '\'' +
                 ", phone='" + phone + '\'' +
                 ", post='" + post + '\'' +
                 ", rank='" + rank + '\'' +
                 ", degree='" + degree + '\'' +
-                ", year='" + year + '\'' +
+                ", year=" + year +
                 ", isPubArt=" + isPubArt +
                 ", lastUp='" + lastUp + '\'' +
                 ", image='" + image + '\'' +

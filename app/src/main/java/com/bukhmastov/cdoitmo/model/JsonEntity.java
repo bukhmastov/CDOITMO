@@ -75,21 +75,32 @@ public abstract class JsonEntity implements Entity {
             }
             field.setAccessible(true);
             EntityMetaData meta = fields.get(fieldName);
-            if (!input.has(meta.key)) {
+            if (input.isNull(meta.key)) {
+                // value is null or not present, we are skipping value
                 continue;
             }
             if (!meta.isArray) {
                 try {
                     if (meta.isDerivedFromEntity) {
-                        field.set(this, castObject(input.getJSONObject(meta.key), meta.entityType));
+                        JsonEntity data = castObject(input.getJSONObject(meta.key), meta.entityType);
+                        if (data == null) {
+                            // value is null, we are skipping value
+                            continue;
+                        }
+                        field.set(this, data);
                     } else {
                         Object data = input.get(meta.key);
+                        if (data == null || data instanceof JSONObject) {
+                            // value is null or invalid, we are skipping value
+                            continue;
+                        }
                         field.set(this, data);
                     }
                 } catch (IllegalArgumentException | JSONException ignore) {
                     // field#set(), json#getJSONObject(), probably servers returned changed value type
                     // so we are skipping changed value
                 }
+                continue;
             }
             JSONArray array;
             try {
@@ -97,29 +108,43 @@ public abstract class JsonEntity implements Entity {
             } catch (Throwable t) {
                 array = null;
             }
-            if (array != null) {
-                List list = (List) getNewInstance(meta.collectionType);
-                if (meta.isDerivedFromEntity) {
-                    for (int i = 0; i < array.length(); i++) {
-                        try {
-                            list.add(castObject(array.getJSONObject(i), meta.entityType));
-                        } catch (JSONException ignore) {
-                            // json#getJSONObject(), probably servers returned changed value type
-                            // so we are skipping changed value
+            if (array == null) {
+                // value is null or invalid, we are skipping value
+                continue;
+            }
+            List list = (List) getNewInstance(meta.collectionType);
+            if (meta.isDerivedFromEntity) {
+                for (int i = 0; i < array.length(); i++) {
+                    try {
+                        JsonEntity data = castObject(array.getJSONObject(i), meta.entityType);
+                        if (data == null) {
+                            // value is null, we are skipping value
+                            continue;
                         }
-                    }
-                } else {
-                    for (int i = 0; i < array.length(); i++) {
-                        Object data = array.get(i);
                         list.add(data);
+                    } catch (JSONException ignore) {
+                        // json#getJSONObject(), probably servers returned changed value type
+                        // so we are skipping changed value
                     }
                 }
-                try {
-                    field.set(this, list);
-                } catch (IllegalArgumentException ignore) {
-                    // field#set(), probably servers returned changed value type
-                    // so we are skipping changed value
+            } else {
+                for (int i = 0; i < array.length(); i++) {
+                    Object data = array.get(i);
+                    if (data == null || data instanceof JSONObject) {
+                        // value is null or invalid, we are skipping value
+                        continue;
+                    }
+                    list.add(data);
                 }
+            }
+            try {
+                if (list == null) {
+                    continue;
+                }
+                field.set(this, list);
+            } catch (IllegalArgumentException ignore) {
+                // field#set(), probably servers returned changed value type
+                // so we are skipping changed value
             }
         }
         return (T) this;
