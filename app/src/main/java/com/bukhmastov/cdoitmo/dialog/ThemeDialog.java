@@ -45,7 +45,7 @@ public class ThemeDialog extends Dialog {
     private final static String DEFAULT_THEME_DARK = "dark";
 
     // auto theme enabled
-    private boolean auto_enabled = false;
+    private boolean auto_enabled;
 
     // static theme value
     private String static_value = DEFAULT_THEME;

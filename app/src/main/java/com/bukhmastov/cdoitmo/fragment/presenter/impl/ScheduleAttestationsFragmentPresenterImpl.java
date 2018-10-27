@@ -109,7 +109,7 @@ public class ScheduleAttestationsFragmentPresenterImpl implements ScheduleAttest
                         if (swipe == null || recyclerView == null) {
                             return;
                         }
-                        LinearLayoutManager layoutManager = new LinearLayoutManager(activity, LinearLayoutManager.VERTICAL, false);
+                        LinearLayoutManager layoutManager = new LinearLayoutManager(activity, RecyclerView.VERTICAL, false);
                         // swipe
                         swipe.setColorSchemeColors(Color.resolve(activity, R.attr.colorAccent));
                         swipe.setProgressBackgroundColorSchemeColor(Color.resolve(activity, R.attr.colorBackgroundRefresh));

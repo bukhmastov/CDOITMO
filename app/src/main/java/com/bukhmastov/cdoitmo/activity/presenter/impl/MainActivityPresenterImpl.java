@@ -391,7 +391,7 @@ public class MainActivityPresenterImpl implements MainActivityPresenter, Navigat
                     drawer_layout.addDrawerListener(mDrawerToggle);
                     mDrawerToggle.syncState();
                     if (App.isFirstLaunchEver) {
-                        drawer_layout.openDrawer(Gravity.START);
+                        drawer_layout.openDrawer(GravityCompat.START);
                     }
                 }
             } else {

@@ -1,7 +1,6 @@
 package com.bukhmastov.cdoitmo.model.rva;
 
 import com.bukhmastov.cdoitmo.model.JsonEntity;
-import com.bukhmastov.cdoitmo.model.JsonProperty;
 
 import java.util.Objects;
 

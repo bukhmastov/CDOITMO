@@ -198,10 +198,7 @@
     <string name="cache_cleared">Cache cleared</string>
     <string name="current_group">Current group</string>
     <string name="choose_schedule">Select schedule</string>
-    <string name="clear_cache">Clear all cache</string>
     <string name="clear_schedule_cache">Clear schedule\'s cache</string>
-    <string name="clear_schedule_lessons_cache">Clear schedule of lessons cache</string>
-    <string name="clear_schedule_exams_cache">Clear schedule of exams cache</string>
     <string name="term_picker">Selection of the term</string>
     <string name="period_picker">Period of changes for</string>
     <string name="default_schedule">Default schedule</string>
@@ -295,8 +292,6 @@
     <string name="minutes">Minutes</string>
     <string name="seconds">Seconds</string>
     <string name="pref_mode_title">Display mode</string>
-    <string name="protocol_changes_mode_simple">Simple list of changes</string>
-    <string name="protocol_changes_mode_advanced">Grouped list of changes</string>
     <string name="enable_offline_mode">Go to offline mode</string>
     <string name="disable_offline_mode">Exit offline mode</string>
     <string name="no_points">No points</string>
@@ -373,7 +368,6 @@
     <string name="open_source_software">Open source software</string>
     <string name="view_source_code">View source code</string>
     <string name="send_reports_on_failures">Automatically send bug reports</string>
-    <string name="send_reports_on_failures_summary">Will help the developer to quickly correct bugs</string>
     <string name="track_logs">Record logs</string>
     <string name="track_logs_summary">With the ability to view, download and send to the developer manually</string>
     <string name="tracked_logs">Recorded logs</string>
@@ -387,7 +381,6 @@
     <string name="pref_group_force_override_hint">Group number</string>
     <string name="no_rating">No rating available</string>
     <string name="add_to_cache">Add to cache</string>
-    <string name="remove_from_cache">Remove from cache</string>
     <string name="add_lesson">Add lesson</string>
     <string name="share_changes">Share changes</string>
     <string name="remove_changes">Clear changes</string>
@@ -415,7 +408,6 @@
     <string name="failed_to_handle_file">Failed to process file</string>
     <string name="error_while_handle_file">Error processing file</string>
     <string name="file_doesnot_supported">The opened file is not supported by the application</string>
-    <string name="failed_to_decode_file">Failed to parse file</string>
     <string name="failed_to_display_file">Error displaying file</string>
     <string name="corrupted_file">File has corrupted content</string>
     <string name="file_requires_auth">To process the file, you need to authorize in the application</string>
@@ -474,8 +466,6 @@
     <string name="term_autumn">Autumn term</string>
     <string name="term_spring">Spring term</string>
     <string name="no_attestations">No attestations</string>
-    <string name="clear_schedule_attestations_cache">Clear schedule of attestations cache</string>
-    <string name="clear_university_cache">Clear \"University\" cache</string>
     <string name="pref_notify_type">Notification display type</string>
     <string name="pref_notify_type_value_0">United notifications</string>
     <string name="pref_notify_type_value_1">Single notifications</string>
@@ -509,11 +499,9 @@
     <string name="reset_preference_message">You are about to reset the application settings to the default values</string>
     <string name="open_search">Open search</string>
     <string name="share_all_schedule">Share all timetable</string>
-    <string name="unspecified_points">Unspecified points</string>
     <string name="outdated_file_version">This file was created in an outdated version of the application and is no longer supported</string>
     <string name="mode_simple">Simple mode</string>
     <string name="mode_post_process">Post process mode</string>
-    <string name="privacy_policy">Privacy policy</string>
     <string name="extra_actions">Extra actions</string>
     <string name="share_daily_schedule">Share daily timetable</string>
     <string name="share_exam_schedule">Share exam</string>

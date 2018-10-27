@@ -281,7 +281,7 @@ public class ERegisterSubjectFragmentPresenterImpl implements ERegisterSubjectFr
                 // отображаем заголовок
                 activity.updateToolbar(activity, subject.getName(), R.drawable.ic_e_journal);
                 // отображаем список
-                final LinearLayoutManager layoutManager = new LinearLayoutManager(activity, LinearLayoutManager.VERTICAL, false);
+                final LinearLayoutManager layoutManager = new LinearLayoutManager(activity, RecyclerView.VERTICAL, false);
                 final RecyclerView recyclerView = fragment.container().findViewById(R.id.points_list);
                 if (recyclerView == null) {
                     activity.back();

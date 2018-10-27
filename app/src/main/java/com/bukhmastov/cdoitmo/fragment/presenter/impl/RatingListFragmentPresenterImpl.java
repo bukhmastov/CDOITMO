@@ -331,7 +331,7 @@ public class RatingListFragmentPresenterImpl implements RatingListFragmentPresen
             thread.runOnUI(() -> {
                 fragment.draw(R.layout.layout_rating_list);
                 // set adapter to recycler view
-                final LinearLayoutManager layoutManager = new LinearLayoutManager(activity, LinearLayoutManager.VERTICAL, false);
+                final LinearLayoutManager layoutManager = new LinearLayoutManager(activity, RecyclerView.VERTICAL, false);
                 final RecyclerView recyclerView = fragment.container().findViewById(R.id.rating_list);
                 if (recyclerView != null) {
                     recyclerView.setLayoutManager(layoutManager);

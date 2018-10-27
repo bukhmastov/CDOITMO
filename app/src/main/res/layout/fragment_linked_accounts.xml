@@ -11,7 +11,6 @@
         android:layout_height="wrap_content">
 
         <LinearLayout
-            android:id="@+id/account_cdo_container"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="?attr/colorBackgroundSection"
@@ -78,7 +77,6 @@
         <include layout="@layout/separator"/>
 
         <LinearLayout
-            android:id="@+id/container_linked_accounts"
             android:orientation="vertical"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

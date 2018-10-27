@@ -434,7 +434,7 @@ public class ProtocolFragmentPresenterImpl implements ProtocolFragmentPresenter,
                 onToolbarSetup(activity.toolbar);
                 fragment.draw(R.layout.layout_protocol);
                 // set adapter to recycler view
-                LinearLayoutManager layoutManager = new LinearLayoutManager(activity, LinearLayoutManager.VERTICAL, false);
+                LinearLayoutManager layoutManager = new LinearLayoutManager(activity, RecyclerView.VERTICAL, false);
                 RecyclerView recyclerView = fragment.container().findViewById(R.id.protocol_list);
                 if (recyclerView != null) {
                     recyclerView.setLayoutManager(layoutManager);

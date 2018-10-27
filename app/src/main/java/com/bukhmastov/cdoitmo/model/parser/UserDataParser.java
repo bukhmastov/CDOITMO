@@ -18,7 +18,7 @@ public class UserDataParser extends Parser<UserData> {
     }
 
     @Override
-    protected UserData doParse(TagNode root) throws Throwable {
+    protected UserData doParse(TagNode root) {
         UserData userData = new UserData();
         userData.setName("");
         userData.setAvatar("");

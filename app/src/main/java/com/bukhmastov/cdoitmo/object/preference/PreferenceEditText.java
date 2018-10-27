@@ -14,10 +14,10 @@ import com.bukhmastov.cdoitmo.provider.InjectProvider;
 
 public class PreferenceEditText extends Preference {
 
-    public @StringRes int message = 0;
-    public @StringRes int hint = 0;
-    public boolean changeSummary = true;
-    public Callback callback = null;
+    public @StringRes int message;
+    public @StringRes int hint;
+    public boolean changeSummary;
+    public Callback callback;
 
     public interface Callback {
         String onSetText(final Context context, final InjectProvider injectProvider, final String value);

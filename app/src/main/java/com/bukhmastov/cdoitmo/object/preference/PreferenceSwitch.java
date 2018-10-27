@@ -26,7 +26,7 @@ public class PreferenceSwitch extends Preference {
         void onApproveChange(ConnectedActivity activity, PreferenceSwitch preference, boolean value, ApproveChangeCallback callback);
     }
 
-    private Callback callback = null;
+    private Callback callback;
     private ArrayList<String> dependencies = new ArrayList<>();
     public boolean enabled = false;
 

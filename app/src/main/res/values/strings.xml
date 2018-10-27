@@ -202,10 +202,7 @@
     <string name="cache_cleared">Кэш очищен</string>
     <string name="current_group">Текущая группа</string>
     <string name="choose_schedule">Выбрать расписание</string>
-    <string name="clear_cache">Очистить весь кэш</string>
     <string name="clear_schedule_cache">Очистить кэш расписаний</string>
-    <string name="clear_schedule_lessons_cache">Очистить кэш расписаний занятий</string>
-    <string name="clear_schedule_exams_cache">Очистить кэш расписаний сессии</string>
     <string name="term_picker">Выбор семестра</string>
     <string name="period_picker">Период изменений за</string>
     <string name="default_schedule">Расписание по умолчанию</string>
@@ -303,8 +300,6 @@
     <string name="minutes">Минуты</string>
     <string name="seconds">Секунды</string>
     <string name="pref_mode_title">Режим отображения</string>
-    <string name="protocol_changes_mode_simple">Простой список изменений</string>
-    <string name="protocol_changes_mode_advanced">Группированный список изменений</string>
     <string name="enable_offline_mode">Перейти в оффлайн режим</string>
     <string name="disable_offline_mode">Выйти из оффлайн режима</string>
     <string name="no_points">Баллов нет</string>
@@ -381,7 +376,6 @@
     <string name="open_source_software">Открытое программное обеспечение</string>
     <string name="view_source_code">Посмотреть исходный код</string>
     <string name="send_reports_on_failures">Автоматически отправлять отчеты об ошибках</string>
-    <string name="send_reports_on_failures_summary">Поможет разработчику оперативно исправлять ошибки</string>
     <string name="track_logs">Записывать логи</string>
     <string name="track_logs_summary">С возможностью просмотреть, скачать и отослать разработчику вручную</string>
     <string name="tracked_logs">Записанные логи</string>
@@ -395,7 +389,6 @@
     <string name="pref_group_force_override_hint">Номер группы</string>
     <string name="no_rating">Рейтинга нет</string>
     <string name="add_to_cache">Добавить в кэш</string>
-    <string name="remove_from_cache">Удалить из кэша</string>
     <string name="add_lesson">Добавить занятие</string>
     <string name="share_changes">Поделиться изменениями</string>
     <string name="remove_changes">Очистить изменения</string>
@@ -423,7 +416,6 @@
     <string name="failed_to_handle_file">Не удалось обработать файл</string>
     <string name="error_while_handle_file">Ошибка обработки файла</string>
     <string name="file_doesnot_supported">Открытый файл не поддерживается приложением</string>
-    <string name="failed_to_decode_file">Не удалось разобрать файл</string>
     <string name="failed_to_display_file">Ошибка отображения файла</string>
     <string name="corrupted_file">Файл имеет поврежденный контент</string>
     <string name="file_requires_auth">Для обработки файла Вам необходимо произвести авторизацию в приложении</string>
@@ -482,8 +474,6 @@
     <string name="term_autumn">Осенний семестр</string>
     <string name="term_spring">Весенний семестр</string>
     <string name="no_attestations">Аттестаций нет</string>
-    <string name="clear_schedule_attestations_cache">Очистить кэш расписаний аттестаций</string>
-    <string name="clear_university_cache">Очистить кэш \"Университет\"</string>
     <string name="pref_notify_type">Способ отображения уведомлений</string>
     <string name="pref_notify_type_value_0">Объединенные уведомления</string>
     <string name="pref_notify_type_value_1">Одиночные уведомления</string>
@@ -517,11 +507,9 @@
     <string name="reset_preference_message">Вы собираетесь сбросить настройки приложения до значений по умолчанию</string>
     <string name="open_search">Открыть поиск</string>
     <string name="share_all_schedule">Поделиться всем расписанием</string>
-    <string name="unspecified_points">Не распределенные баллы</string>
     <string name="outdated_file_version">Файл был создан в устаревшей версии приложения и более не поддерживается</string>
     <string name="mode_simple">Простой режим</string>
     <string name="mode_post_process">Режим с постобработкой</string>
-    <string name="privacy_policy">Политика конфиденциальности</string>
     <string name="extra_actions">Дополнительные действия</string>
     <string name="share_daily_schedule">Поделиться днём расписания</string>
     <string name="share_exam_schedule">Поделиться экзаменом</string>

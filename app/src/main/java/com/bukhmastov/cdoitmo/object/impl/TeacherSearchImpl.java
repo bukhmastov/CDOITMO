@@ -1,6 +1,5 @@
 package com.bukhmastov.cdoitmo.object.impl;
 
-import android.content.Context;
 import android.os.Handler;
 
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;

@@ -442,7 +442,7 @@ public class ERegisterFragmentPresenterImpl implements ERegisterFragmentPresente
                 onToolbarSetup(activity.toolbar);
                 fragment.draw(R.layout.layout_eregister);
                 // set adapter to recycler view
-                LinearLayoutManager layoutManager = new LinearLayoutManager(activity, LinearLayoutManager.VERTICAL, false);
+                LinearLayoutManager layoutManager = new LinearLayoutManager(activity, RecyclerView.VERTICAL, false);
                 RecyclerView recyclerView = fragment.container().findViewById(R.id.erl_list_view);
                 if (recyclerView != null) {
                     recyclerView.setLayoutManager(layoutManager);

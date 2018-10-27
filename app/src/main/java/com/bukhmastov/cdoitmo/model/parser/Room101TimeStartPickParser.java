@@ -18,7 +18,7 @@ public class Room101TimeStartPickParser extends Parser<Room101Request> {
     }
 
     @Override
-    protected Room101Request doParse(TagNode root) throws Throwable {
+    protected Room101Request doParse(TagNode root) {
         Room101Request room101Request = new Room101Request();
         room101Request.setType("time_start_pick");
         room101Request.setOptions(new ArrayList<>());

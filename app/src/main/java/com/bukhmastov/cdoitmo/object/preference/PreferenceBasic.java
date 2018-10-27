@@ -11,7 +11,7 @@ import com.bukhmastov.cdoitmo.provider.InjectProvider;
 
 public class PreferenceBasic extends Preference {
 
-    private boolean changeSummary = true;
+    private boolean changeSummary;
     private final Callback callback;
 
     public interface OnPreferenceClickedCallback {

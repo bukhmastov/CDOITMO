@@ -20,7 +20,7 @@ public class ScheduleLessonsItmoConverter extends Converter<ITMOSLessons, SLesso
     }
 
     @Override
-    protected SLessons doConvert(ITMOSLessons entity) throws Throwable {
+    protected SLessons doConvert(ITMOSLessons entity) {
         ArrayList<SDay> days = new ArrayList<>();
         if (CollectionUtils.isNotEmpty(entity.getSchedule())) {
             for (ITMOSLesson itmoLesson : entity.getSchedule()) {

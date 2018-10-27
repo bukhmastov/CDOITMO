@@ -49,7 +49,7 @@ public class DaysRemainingWidgetImpl implements DaysRemainingWidget {
         private final Delegate delegate;
         private final SExams schedule;
         private final long delay = 1000;
-        private boolean running = false;
+        private boolean running;
 
         private Executor(SExams schedule, Delegate delegate) {
             log.i(TAG, "started");

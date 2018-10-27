@@ -16,7 +16,7 @@ public class RecyclerViewOnScrollListener extends RecyclerView.OnScrollListener 
     private int scrolled = 0;
     private int scrolledDistance = 0;
     private boolean controlsVisible = true;
-    private View container = null;
+    private View container;
 
     public RecyclerViewOnScrollListener(View container) {
         this.container = container;

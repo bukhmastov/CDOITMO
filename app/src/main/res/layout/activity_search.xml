@@ -47,7 +47,7 @@
                 android:hint="@string/search"
                 android:textSize="@dimen/font_size_16"
                 android:textColor="?attr/colorToolbarContentInvert"
-                android:textColorHint="?attr/colorToolbarContentInvert"/>
+                android:textColorHint="?attr/colorToolbarContentInvert" />
 
         </FrameLayout>
 

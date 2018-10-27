@@ -8,9 +8,7 @@
     <item
         android:id="@+id/share_daily_schedule"
         android:title="@string/share_daily_schedule" >
-
-        <menu android:id="@+id/share_daily_schedule_menu" />
-
+        <menu/>
     </item>
 
     <item

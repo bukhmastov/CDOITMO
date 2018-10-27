@@ -61,7 +61,7 @@ public class ScheduleExamsRVA extends RVA<RVAExams> {
     private final String query;
     private final Collection<SSubject> events;
     private final int mode; // 0 - exam, 1 - credit
-    private String type = "";
+    private String type;
 
     public ScheduleExamsRVA(SExams data, Collection<SSubject> events, int mode) {
         super();

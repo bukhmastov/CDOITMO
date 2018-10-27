@@ -25,10 +25,10 @@ public class PreferenceList extends Preference {
         void onCheckedChanged(CompoundButton buttonView, boolean isChecked, int index);
     }
 
-    private  @ArrayRes int arrayTitles = 0;
-    private @ArrayRes int arrayValues = 0;
+    private  @ArrayRes int arrayTitles;
+    private @ArrayRes int arrayValues;
     private @ArrayRes int arrayDesc = 0;
-    private boolean changeSummary = true;
+    private boolean changeSummary;
 
     public PreferenceList(String key, Object defaultValue, @StringRes int title, @StringRes int summary, @ArrayRes int arrayTitles, @ArrayRes int arrayDesc, @ArrayRes int arrayValues, boolean changeSummary) {
         super(key, defaultValue, title, summary);

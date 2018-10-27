@@ -5,9 +5,7 @@
         android:id="@+id/add_lesson"
         android:title="@string/add_lesson" />
 
-    <item
-        android:id="@+id/add_military_day"
-        android:title="@string/add_military_day">
+    <item android:title="@string/add_military_day">
         <menu>
             <item
                 android:id="@+id/add_military_day_monday"

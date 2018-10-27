@@ -70,13 +70,8 @@ public class DeIfmoRestClientImpl extends DeIfmoRestClient {
                         public void onFailure(int statusCode, Client.Headers headers, int state) {
                             switch (state) {
                                 case DeIfmoClient.FAILED_OFFLINE:
-                                    state = FAILED_OFFLINE;
-                                    break;
                                 case DeIfmoClient.FAILED_SERVER_ERROR:
-                                    state = FAILED_SERVER_ERROR;
-                                    break;
                                 case DeIfmoClient.FAILED_INTERRUPTED:
-                                    state = FAILED_INTERRUPTED;
                                     break;
                                 case DeIfmoClient.FAILED_TRY_AGAIN:
                                 case DeIfmoClient.FAILED_AUTH_TRY_AGAIN:

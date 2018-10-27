@@ -24,8 +24,8 @@ public class StorageLocalCacheImpl implements StorageLocalCache {
     private final HashMap<String, ElementData> stackOfData = new HashMap<>();
 
     private static class ElementMeta {
-        String path = "";
-        double priority = 1;
+        String path;
+        double priority;
         long requests = 0;
         double rate = 0;
         ElementMeta(String path, double priority){
@@ -34,8 +34,8 @@ public class StorageLocalCacheImpl implements StorageLocalCache {
         }
     }
     private static class ElementData {
-        String path = "";
-        String data = "";
+        String path;
+        String data;
         ElementData(String path, String data){
             this.path = path;
             this.data = data;
@@ -92,8 +92,8 @@ public class StorageLocalCacheImpl implements StorageLocalCache {
 
     @Override
     public void delete(@NonNull String path) {
-        if (stackOfMeta.containsKey(path)) stackOfMeta.remove(path);
-        if (stackOfData.containsKey(path)) stackOfData.remove(path);
+        stackOfMeta.remove(path);
+        stackOfData.remove(path);
     }
 
     @Override

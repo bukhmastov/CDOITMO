@@ -450,7 +450,7 @@ public class DeIfmoClientImpl extends DeIfmoClient {
                             }
                         }, new ThrowingConsumer<Throwable, Throwable>() {
                             @Override
-                            public void accept(Throwable throwable) throws Throwable {
+                            public void accept(Throwable throwable) {
                                 log.exception(throwable);
                                 responseHandler.onFailure(code, new Headers(headers), FAILED_TRY_AGAIN);
                             }

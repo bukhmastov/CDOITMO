@@ -20,7 +20,7 @@ public class Room101DatePickParser extends Parser<Room101Request> {
     }
 
     @Override
-    protected Room101Request doParse(TagNode root) throws Throwable {
+    protected Room101Request doParse(TagNode root) {
         Room101Request room101Request = new Room101Request();
         room101Request.setType("date_pick");
         room101Request.setOptions(new ArrayList<>());

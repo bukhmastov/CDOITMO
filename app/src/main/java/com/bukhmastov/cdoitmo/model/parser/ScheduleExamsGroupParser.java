@@ -25,7 +25,7 @@ public class ScheduleExamsGroupParser extends Parser<SExams> {
     }
 
     @Override
-    protected SExams doParse(TagNode root) throws Throwable {
+    protected SExams doParse(TagNode root) {
         TagNode[] titles = root.getElementsByAttValue("class", "page-header", true, false);
         TagNode[] containers = root.getElementsByAttValue("class", "rasp_tabl_day", true, false);
         String title = query;
