@@ -5,6 +5,8 @@ import androidx.annotation.Nullable;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+
+import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
@@ -30,6 +32,7 @@ import com.bukhmastov.cdoitmo.network.model.Client;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.NotificationMessage;
 import com.bukhmastov.cdoitmo.util.Storage;
+import com.bukhmastov.cdoitmo.util.StoragePref;
 import com.bukhmastov.cdoitmo.util.TextUtils;
 import com.bukhmastov.cdoitmo.util.Thread;
 import com.bukhmastov.cdoitmo.util.Time;
@@ -64,6 +67,8 @@ public class RatingListFragmentPresenterImpl implements RatingListFragmentPresen
     EventBus eventBus;
     @Inject
     Storage storage;
+    @Inject
+    StoragePref storagePref;
     @Inject
     DeIfmoClient deIfmoClient;
     @Inject
@@ -109,8 +114,53 @@ public class RatingListFragmentPresenterImpl implements RatingListFragmentPresen
             log.v(TAG, "Fragment destroyed");
             loaded = false;
             fragment.clearData(fragment);
-            hideShareButton();
         });
+    }
+
+    @Override
+    public void onToolbarSetup(Menu menu) {
+        if (menu == null) {
+            return;
+        }
+        showShareButton(menu);
+        MenuItem beer = menu.findItem(R.id.action_beer);
+        MenuItem crown = menu.findItem(R.id.action_crown);
+        if (beer != null && crown != null) {
+            switch (storagePref.get(activity, "pref_rating_list_icon", "crown")) {
+                case "crown": beer.setVisible(true); break;
+                case "beer": crown.setVisible(true); break;
+            }
+            crown.setOnMenuItemClickListener(item -> {
+                thread.runOnUI(() -> {
+                    storagePref.put(activity, "pref_rating_list_icon", "crown");
+                    crown.setVisible(false);
+                    beer.setVisible(true);
+                    load();
+                });
+                return false;
+            });
+            beer.setOnMenuItemClickListener(item -> {
+                thread.runOnUI(() -> {
+                    storagePref.put(activity, "pref_rating_list_icon", "beer");
+                    beer.setVisible(false);
+                    crown.setVisible(true);
+                    load();
+                });
+                return false;
+            });
+        }
+    }
+
+    @Override
+    public void onToolbarTeardown(Menu menu) {
+        if (menu == null) {
+            return;
+        }
+        hideShareButton(menu);
+        MenuItem beer = menu.findItem(R.id.action_beer);
+        MenuItem crown = menu.findItem(R.id.action_crown);
+        if (beer != null) beer.setVisible(false);
+        if (crown != null) crown.setVisible(false);
     }
 
     @Override
@@ -182,7 +232,7 @@ public class RatingListFragmentPresenterImpl implements RatingListFragmentPresen
             activity.updateToolbar(activity, activity.getString(R.string.top_rating), R.drawable.ic_rating);
             minePosition = -1;
             mineFaculty = "";
-            hideShareButton();
+            thread.runOnUI(() -> hideShareButton(activity.toolbar));
             if (App.OFFLINE_MODE) {
                 thread.runOnUI(() -> {
                     notificationMessage.snackBar(activity, activity.getString(R.string.offline_mode_on));
@@ -305,7 +355,7 @@ public class RatingListFragmentPresenterImpl implements RatingListFragmentPresen
             activity.updateToolbar(activity, title, R.drawable.ic_rating);
             minePosition = -1;
             mineFaculty = "";
-            hideShareButton();
+            thread.runOnUI(() -> hideShareButton(activity.toolbar));
             // получаем список для отображения рейтинга
             if (CollectionUtils.isNotEmpty(data.getStudents())) {
                 for (RStudent student : data.getStudents()) {
@@ -325,9 +375,9 @@ public class RatingListFragmentPresenterImpl implements RatingListFragmentPresen
                 }
             }
             if (minePosition != -1) {
-                showShareButton();
+                thread.runOnUI(() -> showShareButton(activity.toolbar));
             }
-            RatingListRVA adapter = new RatingListRVA(activity, data);
+            RatingListRVA adapter = new RatingListRVA(activity, data, "beer".equals(storagePref.get(activity, "pref_rating_list_icon", "crown")));
             thread.runOnUI(() -> {
                 fragment.draw(R.layout.layout_rating_list);
                 // set adapter to recycler view
@@ -354,43 +404,41 @@ public class RatingListFragmentPresenterImpl implements RatingListFragmentPresen
             loadFailed();
         });
     }
-    
-    private void showShareButton() {
-        thread.runOnUI(() -> {
-            if (activity.toolbar != null) {
-                MenuItem share = activity.toolbar.findItem(R.id.action_share);
-                if (share != null && minePosition != -1) {
-                    share.setVisible(true);
-                    share.setOnMenuItemClickListener(menuItem -> {
-                        try {
-                            eventBus.fire(new ShareTextEvent("Я на %position% позиции в рейтинге %faculty%!"
-                                    .replace("%position%", String.valueOf(minePosition))
-                                    .replace("%faculty%", mineFaculty.isEmpty() ? "факультета" : mineFaculty)
-                                    , "txt_rating_certain")
-                            );
-                        } catch (Exception e) {
-                            log.exception(e);
-                            notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
-                        }
-                        return false;
-                    });
-                }
+
+    private void showShareButton(Menu menu) {
+        if (menu == null) {
+            return;
+        }
+        MenuItem share = menu.findItem(R.id.action_share);
+        if (share != null) {
+            if (minePosition != -1) {
+                share.setVisible(true);
+                share.setOnMenuItemClickListener(menuItem -> {
+                    try {
+                        eventBus.fire(new ShareTextEvent("Я на %position% позиции в рейтинге %faculty%!"
+                                .replace("%position%", String.valueOf(minePosition))
+                                .replace("%faculty%", mineFaculty.isEmpty() ? "факультета" : mineFaculty)
+                                , "txt_rating_certain")
+                        );
+                    } catch (Exception e) {
+                        log.exception(e);
+                        notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                    }
+                    return false;
+                });
+            } else {
+                share.setVisible(false);
             }
-        }, throwable -> {
-            log.exception(throwable);
-        });
+        }
     }
-    
-    private void hideShareButton() {
-        thread.runOnUI(() -> {
-            if (activity != null && activity.toolbar != null) {
-                MenuItem share = activity.toolbar.findItem(R.id.action_share);
-                if (share != null) {
-                    share.setVisible(false);
-                }
-            }
-        }, throwable -> {
-            log.exception(throwable);
-        });
+
+    private void hideShareButton(Menu menu) {
+        if (menu == null) {
+            return;
+        }
+        MenuItem share = menu.findItem(R.id.action_share);
+        if (share != null) {
+            share.setVisible(false);
+        }
     }
 }

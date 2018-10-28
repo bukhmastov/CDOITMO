@@ -25,12 +25,14 @@ public class RatingListRVA extends RVA<RStudent> {
     private static final int TYPE_NO_RATING = 2;
 
     private final Context context;
+    private final boolean isShowBeer;
     private final SparseIntArray colors = new SparseIntArray();
 
-    public RatingListRVA(@NonNull Context context, @NonNull RatingTopList rating) {
+    public RatingListRVA(@NonNull Context context, @NonNull RatingTopList rating, boolean isShowBeer) {
         super();
         this.context = context;
-        addItems(entity2dataset(context, rating));
+        this.isShowBeer = isShowBeer;
+        addItems(entity2dataset(rating));
     }
 
     @Override
@@ -54,7 +56,7 @@ public class RatingListRVA extends RVA<RStudent> {
         }
     }
 
-    private ArrayList<Item> entity2dataset(@NonNull final Context context, @NonNull final RatingTopList rating) {
+    private ArrayList<Item> entity2dataset(@NonNull RatingTopList rating) {
         final ArrayList<Item> dataset = new ArrayList<>();
         try {
             if (CollectionUtils.isEmpty(rating.getStudents())) {
@@ -91,6 +93,7 @@ public class RatingListRVA extends RVA<RStudent> {
                     color = resolveColor(color);
                     position.setVisibility(View.GONE);
                     crown.setVisibility(View.VISIBLE);
+                    crown.setImageResource(isShowBeer ? R.drawable.ic_beer : R.drawable.ic_crown);
                     crown.setImageTintList(ColorStateList.valueOf(resolveColor(R.attr.colorRatingHighlightText)));
                 } else {
                     color = resolveColor(R.attr.colorRatingHighlightBackground);
@@ -104,14 +107,15 @@ public class RatingListRVA extends RVA<RStudent> {
                 container.setBackgroundColor(getColorWithAlpha(color, 60));
             } else {
                 if (item.data.getNumber() > 0 && item.data.getNumber() < 4) {
-                    crown.setVisibility(View.VISIBLE);
-                    position.setVisibility(View.GONE);
                     int color;
                     switch (item.data.getNumber()) {
                         case 1: color = R.attr.colorGold; break;
                         case 2: color = R.attr.colorSilver; break;
                         default: case 3: color = R.attr.colorBronze; break;
                     }
+                    position.setVisibility(View.GONE);
+                    crown.setVisibility(View.VISIBLE);
+                    crown.setImageResource(isShowBeer ? R.drawable.ic_beer : R.drawable.ic_crown);
                     crown.setImageTintList(ColorStateList.valueOf(resolveColor(color)));
                 } else {
                     crown.setVisibility(View.GONE);

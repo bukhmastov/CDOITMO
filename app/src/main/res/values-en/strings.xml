@@ -506,5 +506,7 @@
     <string name="share_daily_schedule">Share daily timetable</string>
     <string name="share_exam_schedule">Share exam</string>
     <string name="share_attestations_schedule">Share attestation</string>
+    <string name="crown">Display crowns</string>
+    <string name="beer">Display beers</string>
 
 </resources>

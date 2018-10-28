@@ -33,7 +33,7 @@
     <item
         android:id="@+id/action_restore"
         android:title="@string/reset_preferences"
-        android:icon="@drawable/ic_settings_restore"
+        android:icon="@drawable/ic_toolbar_settings_restore"
         app:showAsAction="ifRoom"
         android:visible="false" />
 
@@ -56,6 +56,22 @@
         android:title="@string/about"
         android:icon="@drawable/ic_toolbar_info"
         app:showAsAction="ifRoom"
+        android:visible="false" />
+
+    <!-- App bar's overflow menu -->
+
+    <item
+        android:id="@+id/action_crown"
+        android:title="@string/crown"
+        android:icon="@drawable/ic_toolbar_crown"
+        app:showAsAction="never"
+        android:visible="false" />
+
+    <item
+        android:id="@+id/action_beer"
+        android:title="@string/beer"
+        android:icon="@drawable/ic_toolbar_beer"
+        app:showAsAction="never"
         android:visible="false" />
 
 </menu>
