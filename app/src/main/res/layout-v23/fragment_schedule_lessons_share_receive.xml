@@ -83,7 +83,7 @@
                 android:layout_weight="1"
                 android:text="@string/accept"
                 android:visibility="gone"
-                style="@android:style/Widget.Material.Button.Borderless.Colored"/>
+                style="@android:style/Widget.Material.Button.Colored"/>
 
         </LinearLayout>
 

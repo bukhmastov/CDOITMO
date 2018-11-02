@@ -48,7 +48,7 @@ public class LoginActivity extends ConnectedActivity {
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.toolbar, menu);
         toolbar = menu;
-        presenter.onToolbarSetup();
+        presenter.onToolbarSetup(menu);
         return true;
     }
 

@@ -1,11 +1,7 @@
 package com.bukhmastov.cdoitmo.fragment.presenter.impl;
 
+import android.app.AlertDialog;
 import android.os.Bundle;
-import androidx.annotation.Nullable;
-import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
-import androidx.appcompat.app.AlertDialog;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -60,6 +56,11 @@ import java.util.TreeSet;
 import java.util.regex.Pattern;
 
 import javax.inject.Inject;
+
+import androidx.annotation.Nullable;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 public class ERegisterFragmentPresenterImpl implements ERegisterFragmentPresenter, SwipeRefreshLayout.OnRefreshListener {
 

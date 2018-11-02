@@ -76,7 +76,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:padding="@dimen/search_offset_start"
-                    app:srcCompat="@drawable/ic_search_black" />
+                    android:src="@drawable/ic_search_black" />
 
             </FrameLayout>
 

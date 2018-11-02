@@ -6,12 +6,14 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
+    android:background="?attr/colorBackground"
     android:fitsSystemWindows="true"
     tools:openDrawer="start">
 
-    <androidx.appcompat.widget.Toolbar
+    <android.widget.Toolbar
         android:id="@+id/toolbar_fragment"
         android:theme="@style/AppTheme.Toolbar"
+        android:popupTheme="@style/AppTheme.Toolbar.Popup"
         android:layout_width="match_parent"
         android:layout_height="?android:attr/actionBarSize"
         android:background="?attr/colorPrimary"
@@ -40,6 +42,7 @@
             android:layout_height="match_parent"
             android:layout_gravity="start"
             android:fitsSystemWindows="true"
+            android:background="?attr/colorBackgroundNavigation"
             app:headerLayout="@layout/activity_main_nav_header"
             app:menu="@menu/activity_main_drawer"
             app:itemTextAppearance="@style/AppTheme.NavigationViewTextStyle"

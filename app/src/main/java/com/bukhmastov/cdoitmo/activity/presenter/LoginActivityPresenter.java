@@ -1,6 +1,8 @@
 package com.bukhmastov.cdoitmo.activity.presenter;
 
 import android.os.Bundle;
+import android.view.Menu;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
@@ -14,5 +16,5 @@ public interface LoginActivityPresenter {
 
     void onDestroy();
 
-    void onToolbarSetup();
+    void onToolbarSetup(Menu menu);
 }

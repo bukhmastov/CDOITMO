@@ -2,16 +2,13 @@ package com.bukhmastov.cdoitmo.fragment.presenter.impl;
 
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
+import android.app.AlertDialog;
 import android.appwidget.AppWidgetManager;
 import android.appwidget.AppWidgetProviderInfo;
 import android.content.ComponentName;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
-import androidx.annotation.DrawableRes;
-import androidx.annotation.Nullable;
-import androidx.annotation.StringDef;
-import androidx.appcompat.app.AlertDialog;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.View;
@@ -56,6 +53,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 import javax.inject.Inject;
+
+import androidx.annotation.DrawableRes;
+import androidx.annotation.Nullable;
+import androidx.annotation.StringDef;
 
 public class HomeScreenInteractionFragmentPresenterImpl implements HomeScreenInteractionFragmentPresenter {
 

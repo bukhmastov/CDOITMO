@@ -28,7 +28,7 @@
                 android:layout_height="wrap_content"
                 android:gravity="center_vertical"
                 android:text="@string/lorem_ipsum"
-                android:textAppearance="@style/TextAppearance.AppCompat.Body1"
+                android:textColor="?android:attr/textColorPrimary"
                 android:textSize="@dimen/font_size_16" />
 
             <TextView
@@ -37,7 +37,6 @@
                 android:layout_height="wrap_content"
                 android:gravity="center_vertical"
                 android:text="@string/lorem_ipsum"
-                android:textAppearance="@android:style/TextAppearance.Material.Small"
                 android:textColor="?android:attr/textColorSecondary"
                 android:textSize="@dimen/font_size_14" />
 
@@ -45,7 +44,6 @@
                 android:id="@+id/meta"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:fontFamily="sans-serif"
                 android:gravity="center_vertical"
                 android:text="@string/lorem_ipsum"
                 android:textAllCaps="false"
@@ -72,7 +70,7 @@
                 android:paddingBottom="5dp"
                 android:paddingTop="5dp"
                 android:text="99.99"
-                android:textAppearance="@style/TextAppearance.AppCompat.Button"
+                android:fontFamily="@string/font_bold"
                 android:textColor="?android:attr/textColorPrimary"
                 android:textSize="@dimen/font_size_18" />
 

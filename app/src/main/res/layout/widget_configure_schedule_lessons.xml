@@ -4,9 +4,10 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent" >
 
-    <androidx.appcompat.widget.Toolbar
+    <android.widget.Toolbar
         android:id="@+id/toolbar_widget"
         android:theme="@style/AppTheme.Toolbar"
+        android:popupTheme="@style/AppTheme.Toolbar.Popup"
         android:layout_width="match_parent"
         android:layout_height="?android:attr/actionBarSize"
         android:background="?attr/colorPrimary"
@@ -418,7 +419,7 @@
             android:layout_height="wrap_content"
             android:text="@string/add_widget"
             android:textSize="@dimen/font_size_14"
-            style="@style/Widget.AppCompat.Button.Colored"/>
+            style="@android:style/Widget.Material.Button.Borderless.Colored"/>
 
     </LinearLayout>
 

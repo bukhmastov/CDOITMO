@@ -1,7 +1,7 @@
 package com.bukhmastov.cdoitmo.activity;
 
+import android.app.Activity;
 import android.os.Bundle;
-import androidx.appcompat.app.AppCompatActivity;
 import android.view.MenuItem;
 
 import com.bukhmastov.cdoitmo.R;
@@ -11,7 +11,7 @@ import com.bukhmastov.cdoitmo.util.Theme;
 
 import javax.inject.Inject;
 
-public class WebViewActivity extends AppCompatActivity {
+public class WebViewActivity extends Activity {
 
     @Inject
     WebViewActivityPresenter presenter;

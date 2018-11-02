@@ -90,6 +90,7 @@ public class DaysRemainingWidgetActivityPresenterImpl implements DaysRemainingWi
                 close();
                 return;
             }
+            isMessageDisplaying = null;
             query = shortcutQuery.getQuery();
             log.v(TAG, "query=", query);
             View container = activity.findViewById(R.id.wr_container);

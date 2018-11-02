@@ -18,7 +18,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center_vertical"
-        app:srcCompat="@drawable/ic_settings"
+        android:src="@drawable/ic_settings"
         android:contentDescription="@string/general"
         android:tint="?android:attr/textColorPrimary"
         android:paddingStart="0dp"

@@ -16,7 +16,7 @@
         <ImageView
             android:layout_width="match_parent"
             android:layout_height="32dp"
-            app:srcCompat="@drawable/ic_search"
+            android:src="@drawable/ic_search"
             android:tint="?attr/colorIcXml"/>
 
         <TextView

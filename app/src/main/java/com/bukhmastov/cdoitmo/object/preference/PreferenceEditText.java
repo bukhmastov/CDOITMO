@@ -1,9 +1,7 @@
 package com.bukhmastov.cdoitmo.object.preference;
 
+import android.app.AlertDialog;
 import android.content.Context;
-import androidx.annotation.Nullable;
-import androidx.annotation.StringRes;
-import androidx.appcompat.app.AlertDialog;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -11,6 +9,9 @@ import android.widget.TextView;
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activity.ConnectedActivity;
 import com.bukhmastov.cdoitmo.provider.InjectProvider;
+
+import androidx.annotation.Nullable;
+import androidx.annotation.StringRes;
 
 public class PreferenceEditText extends Preference {
 

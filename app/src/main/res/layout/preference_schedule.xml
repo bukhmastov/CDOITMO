@@ -89,7 +89,7 @@
                 <ImageView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    app:srcCompat="@drawable/ic_search"
+                    android:src="@drawable/ic_search"
                     android:tint="?android:attr/textColorPrimary"/>
 
             </FrameLayout>
@@ -123,7 +123,7 @@
                 <ImageView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    app:srcCompat="@drawable/ic_done"
+                    android:src="@drawable/ic_done"
                     android:tint="?attr/colorPositiveTrend"/>
 
             </FrameLayout>

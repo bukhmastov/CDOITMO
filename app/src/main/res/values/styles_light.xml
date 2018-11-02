@@ -5,8 +5,12 @@
 
         <item name="colorPrimaryLight">@color/colorPrimaryLight</item>
         <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="android:colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryD</item>
+        <item name="android:colorPrimaryDark">@color/colorPrimaryD</item>
+        <item name="android:statusBarColor">@color/colorPrimaryD</item>
         <item name="colorAccent">@color/colorAccent</item>
+        <item name="android:colorAccent">@color/colorAccent</item>
 
         <item name="android:windowBackground">@color/colorBackground</item>
         <item name="colorBackground">@color/colorBackground</item>
@@ -66,8 +70,11 @@
         <item name="android:colorControlActivated">@color/colorToolbarContentOpacity</item>
         <item name="android:colorControlHighlight">@color/colorToolbarContentOpacity</item>
     </style>
+    <style name="AppTheme.Toolbar.Popup" parent="AppTheme" />
     <style name="AppTheme.Popup" parent="AppTheme">
         <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowTranslucentStatus">true</item>
+        <item name="android:windowTranslucentNavigation">true</item>
         <item name="android:windowBackground">@android:color/transparent</item>
         <item name="android:windowContentOverlay">@null</item>
         <item name="android:windowNoTitle">true</item>
@@ -97,6 +104,7 @@
         <item name="android:background">@color/colorBackgroundAlert</item>
         <item name="android:tint">#000000</item>
         <item name="colorAccent">@color/colorAccent</item>
+        <item name="android:colorAccent">@color/colorAccent</item>
     </style>
 
 </resources>

@@ -1,13 +1,11 @@
 package com.bukhmastov.cdoitmo.activity.search;
 
+import android.app.Activity;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.speech.RecognizerIntent;
-import androidx.annotation.Nullable;
-import androidx.annotation.StringDef;
-import androidx.appcompat.app.AppCompatActivity;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.KeyEvent;
@@ -23,15 +21,15 @@ import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.model.entity.Suggestion;
 import com.bukhmastov.cdoitmo.model.entity.Suggestions;
 import com.bukhmastov.cdoitmo.model.schedule.lessons.SLessons;
-import com.bukhmastov.cdoitmo.util.NotificationMessage;
-import com.bukhmastov.cdoitmo.util.singleton.CollectionUtils;
-import com.bukhmastov.cdoitmo.util.singleton.CtxWrapper;
 import com.bukhmastov.cdoitmo.util.Log;
+import com.bukhmastov.cdoitmo.util.NotificationMessage;
 import com.bukhmastov.cdoitmo.util.Storage;
 import com.bukhmastov.cdoitmo.util.StoragePref;
 import com.bukhmastov.cdoitmo.util.TextUtils;
 import com.bukhmastov.cdoitmo.util.Theme;
 import com.bukhmastov.cdoitmo.util.Thread;
+import com.bukhmastov.cdoitmo.util.singleton.CollectionUtils;
+import com.bukhmastov.cdoitmo.util.singleton.CtxWrapper;
 import com.bukhmastov.cdoitmo.util.singleton.StringUtils;
 import com.bukhmastov.cdoitmo.util.singleton.Transliterate;
 
@@ -43,7 +41,10 @@ import java.util.Locale;
 
 import javax.inject.Inject;
 
-public abstract class SearchActivity extends AppCompatActivity {
+import androidx.annotation.Nullable;
+import androidx.annotation.StringDef;
+
+public abstract class SearchActivity extends Activity {
 
     private static final String TAG = "SearchActivity";
     private static final int REQ_CODE_SPEECH_INPUT = 1337;

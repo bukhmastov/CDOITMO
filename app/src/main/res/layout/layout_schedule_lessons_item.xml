@@ -31,7 +31,7 @@
             android:id="@+id/lesson_time_icon"
             android:layout_width="match_parent"
             android:layout_height="@dimen/dimen_16dp"
-            app:srcCompat="@drawable/ic_access_time"
+            android:src="@drawable/ic_access_time"
             android:tint="?android:attr/textColorPrimary"/>
 
         <TextView
@@ -82,7 +82,7 @@
                 android:layout_width="@dimen/schedule_data_icon"
                 android:layout_height="@dimen/schedule_data_icon"
                 android:padding="2dp"
-                app:srcCompat="@drawable/ic_visibility_off"
+                android:src="@drawable/ic_visibility_off"
                 android:tint="?android:attr/textColorPrimary" />
 
             <ImageView
@@ -90,14 +90,14 @@
                 android:layout_width="@dimen/schedule_data_icon"
                 android:layout_height="@dimen/schedule_data_icon"
                 android:padding="2dp"
-                app:srcCompat="@drawable/ic_synthetic"
+                android:src="@drawable/ic_synthetic"
                 android:tint="?android:attr/textColorPrimary" />
 
             <ImageView
                 android:id="@+id/lesson_touch_icon"
                 android:layout_width="@dimen/schedule_data_icon"
                 android:layout_height="@dimen/schedule_data_icon"
-                app:srcCompat="@drawable/ic_more_vert"
+                android:src="@drawable/ic_more_vert"
                 android:tint="?android:attr/textColorPrimary"
                 android:background="?android:attr/selectableItemBackgroundBorderless" />
 

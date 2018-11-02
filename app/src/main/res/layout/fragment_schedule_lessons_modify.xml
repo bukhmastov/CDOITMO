@@ -41,7 +41,7 @@
 
         <Button
             android:id="@+id/lesson_create_button"
-            style="@style/Widget.AppCompat.Button.Borderless"
+            style="@android:style/Widget.Material.Button.Borderless"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentEnd="true"

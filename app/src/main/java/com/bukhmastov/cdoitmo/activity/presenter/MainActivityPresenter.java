@@ -1,6 +1,8 @@
 package com.bukhmastov.cdoitmo.activity.presenter;
 
 import android.os.Bundle;
+import android.view.MenuItem;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
@@ -22,15 +24,15 @@ public interface MainActivityPresenter {
 
     void onToolbarSetup();
 
-    boolean onBackPressed();
+    boolean onToolbarSelected(MenuItem item);
+
+    boolean onBackButtonPressed();
 
     void authorize(int state);
 
     void authorized();
 
     void selectSection(int section);
-
-    void reconnect();
 
     boolean isInitialized();
 }

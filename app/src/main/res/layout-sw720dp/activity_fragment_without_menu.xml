@@ -9,9 +9,10 @@
     android:fitsSystemWindows="true"
     tools:openDrawer="start">
 
-    <androidx.appcompat.widget.Toolbar
+    <android.widget.Toolbar
         android:id="@+id/toolbar_fragment"
         android:theme="@style/AppTheme.Toolbar"
+        android:popupTheme="@style/AppTheme.Toolbar.Popup"
         android:layout_width="match_parent"
         android:layout_height="?android:attr/actionBarSize"
         android:background="?attr/colorPrimary"

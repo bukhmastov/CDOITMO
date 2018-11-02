@@ -2,7 +2,7 @@ package com.bukhmastov.cdoitmo.util.impl;
 
 import android.app.Activity;
 import android.content.Context;
-import androidx.appcompat.widget.Toolbar;
+import android.widget.Toolbar;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.dialog.ThemeDialog;
@@ -27,7 +27,7 @@ public class ThemeImpl implements Theme {
     }
 
     @Override
-    public String getAppTheme(final Context context) {
+    public String getAppTheme(Context context) {
         if (app_theme == null) {
             updateAppTheme(context);
         }
@@ -35,36 +35,39 @@ public class ThemeImpl implements Theme {
     }
 
     @Override
-    public void updateAppTheme(final Context context) {
+    public void updateAppTheme(Context context) {
         app_theme = ThemeDialog.getTheme(context, storagePref, time);
     }
 
     @Override
-    public void applyActivityTheme(final Activity activity) {
-        if (activity != null) {
-            switch (getAppTheme(activity)) {
-                case "light":
-                default: activity.setTheme(R.style.AppTheme); break;
-                case "dark": activity.setTheme(R.style.AppTheme_Dark); break;
-                case "white": activity.setTheme(R.style.AppTheme_White); break;
-                case "black": activity.setTheme(R.style.AppTheme_Black); break;
-            }
+    public void applyActivityTheme(Activity activity) {
+        if (activity == null) {
+            return;
+        }
+        switch (getAppTheme(activity)) {
+            case "light":
+            default: activity.setTheme(R.style.AppTheme); break;
+            case "dark": activity.setTheme(R.style.AppTheme_Dark); break;
+            case "white": activity.setTheme(R.style.AppTheme_White); break;
+            case "black": activity.setTheme(R.style.AppTheme_Black); break;
         }
     }
 
     @Override
-    public void applyToolbarTheme(final Context context, final Toolbar toolbar) {
-        if (toolbar != null) {
-            Context toolbar_context = toolbar.getContext();
-            if (toolbar_context != null) {
-                switch (getAppTheme(context)) {
-                    case "light":
-                    default: toolbar_context.setTheme(R.style.AppTheme_Toolbar); break;
-                    case "dark": toolbar_context.setTheme(R.style.AppTheme_Toolbar_Dark); break;
-                    case "white": toolbar_context.setTheme(R.style.AppTheme_Toolbar_White); break;
-                    case "black": toolbar_context.setTheme(R.style.AppTheme_Toolbar_Black); break;
-                }
-            }
+    public void applyToolbarTheme(Context context, Toolbar toolbar) {
+        if (context == null || toolbar == null) {
+            return;
+        }
+        Context toolbarContext = toolbar.getContext();
+        if (toolbarContext == null) {
+            return;
+        }
+        switch (getAppTheme(context)) {
+            case "light":
+            default: toolbarContext.setTheme(R.style.AppTheme_Toolbar); break;
+            case "dark": toolbarContext.setTheme(R.style.AppTheme_Toolbar_Dark); break;
+            case "white": toolbarContext.setTheme(R.style.AppTheme_Toolbar_White); break;
+            case "black": toolbarContext.setTheme(R.style.AppTheme_Toolbar_Black); break;
         }
     }
 }

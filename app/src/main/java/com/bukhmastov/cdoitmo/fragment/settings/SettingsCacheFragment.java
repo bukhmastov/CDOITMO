@@ -1,7 +1,6 @@
 package com.bukhmastov.cdoitmo.fragment.settings;
 
-import androidx.fragment.app.Fragment;
-import androidx.appcompat.app.AlertDialog;
+import android.app.AlertDialog;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activity.ConnectedActivity;
@@ -15,6 +14,8 @@ import com.bukhmastov.cdoitmo.provider.InjectProvider;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
+import androidx.fragment.app.Fragment;
 
 public class SettingsCacheFragment extends SettingsTemplatePreferencesFragment {
 

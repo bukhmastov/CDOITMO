@@ -24,7 +24,7 @@
                 android:contentDescription="@string/cdo"
                 android:tint="?attr/colorDeIfmo"
                 android:tintMode="src_atop"
-                app:srcCompat="@drawable/cdo" />
+                android:src="@drawable/cdo" />
 
             <View
                 android:layout_width="@dimen/separator"
@@ -108,7 +108,7 @@
                 <ImageView
                     android:layout_width="match_parent"
                     android:layout_height="@dimen/dp28"
-                    app:srcCompat="@drawable/ic_visibility_off" />
+                    android:src="@drawable/ic_visibility_off" />
 
                 <TextView
                     tools:ignore="HardcodedText"

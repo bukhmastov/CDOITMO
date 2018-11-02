@@ -1,11 +1,14 @@
 <resources>
 
-    <style name="AppTheme.Splash" parent="Theme.AppCompat.NoActionBar">
+    <style name="AppTheme.Splash" parent="Theme.MaterialComponents.NoActionBar">
         <item name="android:windowTranslucentStatus">true</item>
         <item name="android:windowBackground">@drawable/splash_background</item>
         <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="android:colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryD</item>
+        <item name="android:colorPrimaryDark">@color/colorPrimaryD</item>
         <item name="colorAccent">@color/colorAccent</item>
+        <item name="android:colorAccent">@color/colorAccent</item>
     </style>
     <style name="AppTheme.Transparent" parent="AppTheme">
         <item name="android:windowIsTranslucent">true</item>
@@ -15,6 +18,7 @@
         <item name="colorBackgroundPopup">@android:color/transparent</item>
         <item name="colorBackgroundPopupFill">@android:color/transparent</item>
         <item name="colorPrimaryDark">@android:color/transparent</item>
+        <item name="android:colorPrimaryDark">@android:color/transparent</item>
     </style>
     <style name="AppTheme.NavigationViewTextStyle">
         <item name="android:textSize">@dimen/font_size_14</item>

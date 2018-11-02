@@ -6,7 +6,8 @@
     android:layout_height="match_parent"
     android:background="?attr/colorBackgroundPopup"
     android:elevation="0dp"
-    android:keepScreenOn="true">
+    android:keepScreenOn="true"
+    android:fitsSystemWindows="true">
 
     <FrameLayout
         android:id="@+id/wr_container"

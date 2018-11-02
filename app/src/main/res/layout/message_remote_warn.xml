@@ -22,7 +22,7 @@
             android:layout_gravity="center_vertical"
             android:layout_marginStart="0dp"
             android:layout_marginEnd="@dimen/item_padding_quarter"
-            app:srcCompat="@drawable/ic_warning"
+            android:src="@drawable/ic_warning"
             android:tint="?attr/colorNegativeTrend"
             android:layout_alignParentStart="true"
             android:layout_alignParentTop="true"/>
@@ -43,7 +43,7 @@
             android:layout_width="@dimen/dp16"
             android:layout_height="@dimen/dp16"
             android:layout_gravity="center_vertical"
-            app:srcCompat="@drawable/ic_close"
+            android:src="@drawable/ic_close"
             android:layout_alignParentEnd="true"
             android:layout_alignParentTop="true"/>
 

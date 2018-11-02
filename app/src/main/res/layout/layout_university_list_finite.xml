@@ -62,7 +62,7 @@
                     android:layout_height="match_parent"
                     android:layout_gravity="center"
                     android:padding="@dimen/search_offset_start"
-                    app:srcCompat="@drawable/ic_arrow_back_white"
+                    android:src="@drawable/ic_arrow_back_white"
                     android:tint="?attr/colorToolbarContent"/>
 
             </FrameLayout>
@@ -80,7 +80,7 @@
                     android:layout_height="match_parent"
                     android:layout_gravity="center"
                     android:padding="@dimen/search_offset_start"
-                    app:srcCompat="@drawable/ic_web"
+                    android:src="@drawable/ic_web"
                     android:tint="?attr/colorToolbarContent"/>
 
             </FrameLayout>

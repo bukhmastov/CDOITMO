@@ -1,13 +1,13 @@
 package com.bukhmastov.cdoitmo.view;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
-import androidx.annotation.Nullable;
-import androidx.appcompat.widget.AppCompatTextView;
 import android.util.AttributeSet;
+import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
@@ -15,7 +15,10 @@ import com.bukhmastov.cdoitmo.util.Log;
 
 import javax.inject.Inject;
 
-public class OutlineTextView extends AppCompatTextView {
+import androidx.annotation.Nullable;
+
+@SuppressLint("AppCompatCustomView")
+public class OutlineTextView extends TextView {
 
     private static final int DEFAULT_OUTLINE_SIZE = 0;
     private static final int DEFAULT_OUTLINE_COLOR = Color.TRANSPARENT;

@@ -1,5 +1,6 @@
 package com.bukhmastov.cdoitmo.activity;
 
+import android.app.ActionBar;
 import android.content.Context;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
@@ -8,8 +9,6 @@ import androidx.annotation.LayoutRes;
 import androidx.annotation.StringDef;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
-import androidx.appcompat.app.ActionBar;
-import androidx.appcompat.app.AppCompatActivity;
 import android.view.InflateException;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -35,7 +34,7 @@ import java.util.ArrayList;
 
 import javax.inject.Inject;
 
-public abstract class ConnectedActivity extends AppCompatActivity {
+public abstract class ConnectedActivity extends androidx.fragment.app.FragmentActivity {
 
     private static final String TAG = "ConnectedActivity";
     private final ArrayList<StackElement> stack = new ArrayList<>();
@@ -227,7 +226,7 @@ public abstract class ConnectedActivity extends AppCompatActivity {
 
     public void updateToolbar(Context context, String title, Integer image) {
         thread.runOnUI(() -> {
-            ActionBar actionBar = getSupportActionBar();
+            ActionBar actionBar = getActionBar();
             if (actionBar == null) {
                 return;
             }

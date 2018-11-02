@@ -2,15 +2,15 @@ package com.bukhmastov.cdoitmo.util;
 
 import android.app.Activity;
 import android.content.Context;
-import androidx.appcompat.widget.Toolbar;
+import android.widget.Toolbar;
 
 public interface Theme {
 
-    String getAppTheme(final Context context);
+    String getAppTheme(Context context);
 
-    void updateAppTheme(final Context context);
+    void updateAppTheme(Context context);
 
-    void applyActivityTheme(final Activity activity);
+    void applyActivityTheme(Activity activity);
 
-    void applyToolbarTheme(final Context context, final Toolbar toolbar);
+    void applyToolbarTheme(Context context, Toolbar toolbar);
 }

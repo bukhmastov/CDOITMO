@@ -1,8 +1,7 @@
 package com.bukhmastov.cdoitmo.object.impl;
 
+import android.app.AlertDialog;
 import android.content.Context;
-import androidx.annotation.LayoutRes;
-import androidx.appcompat.app.AlertDialog;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.InflateException;
@@ -25,6 +24,8 @@ import com.bukhmastov.cdoitmo.object.schedule.Schedule;
 import com.bukhmastov.cdoitmo.util.singleton.StringUtils;
 
 import java.util.ArrayList;
+
+import androidx.annotation.LayoutRes;
 
 public abstract class SettingsSchedule<T extends ScheduleJsonEntity> extends SettingsScheduleBase implements Schedule.Handler<T> {
 

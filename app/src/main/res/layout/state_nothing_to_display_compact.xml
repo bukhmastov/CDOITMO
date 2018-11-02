@@ -12,7 +12,7 @@
     <ImageView
         android:layout_width="match_parent"
         android:layout_height="@dimen/dp28"
-        app:srcCompat="@drawable/ic_visibility_off" />
+        android:src="@drawable/ic_visibility_off" />
 
     <TextView
         android:id="@+id/ntd_text"

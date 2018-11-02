@@ -3,15 +3,8 @@ package com.bukhmastov.cdoitmo.activity.presenter.impl;
 import android.content.pm.PackageInfo;
 import android.os.Build;
 import android.os.Bundle;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import com.google.android.material.navigation.NavigationView;
-import androidx.core.view.GravityCompat;
-import androidx.drawerlayout.widget.DrawerLayout;
-import androidx.appcompat.app.ActionBarDrawerToggle;
-import androidx.appcompat.widget.Toolbar;
-import android.view.Gravity;
 import android.view.MenuItem;
+import android.widget.Toolbar;
 
 import com.bukhmastov.cdoitmo.App;
 import com.bukhmastov.cdoitmo.R;
@@ -50,8 +43,15 @@ import com.bukhmastov.cdoitmo.util.StoragePref;
 import com.bukhmastov.cdoitmo.util.Theme;
 import com.bukhmastov.cdoitmo.util.Thread;
 import com.bukhmastov.cdoitmo.util.singleton.Migration;
+import com.google.android.material.navigation.NavigationView;
 
 import javax.inject.Inject;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.ActionBarDrawerToggle;
+import androidx.core.view.GravityCompat;
+import androidx.drawerlayout.widget.DrawerLayout;
 
 public class MainActivityPresenterImpl implements MainActivityPresenter, NavigationView.OnNavigationItemSelectedListener {
 
@@ -175,24 +175,27 @@ public class MainActivityPresenterImpl implements MainActivityPresenter, Navigat
     }
 
     @Override
-    public boolean onBackPressed() {
-        try {
-            DrawerLayout drawer = activity.findViewById(R.id.drawer_layout);
-            if (drawer == null) {
-                throw new Exception("");
-            } else {
-                if (drawer.isDrawerOpen(GravityCompat.START)) {
-                    drawer.closeDrawer(GravityCompat.START);
-                } else {
-                    throw new Exception("");
-                }
-            }
-        } catch (Exception e) {
-            if (activity.back()) {
-                return true;
-            }
+    public boolean onToolbarSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.offline_mode: reconnect(); return true;
+            case android.R.id.home: toggleDrawer(); return true;
+            default: return false;
         }
-        return false;
+    }
+
+    @Override
+    public boolean onBackButtonPressed() {
+        DrawerLayout drawerLayout = activity.findViewById(R.id.drawer_layout);
+        if (drawerLayout == null) {
+            return activity.back();
+        }
+        int drawerLockMode = drawerLayout.getDrawerLockMode(GravityCompat.START);
+        if (drawerLayout.isDrawerVisible(GravityCompat.START)
+                && (drawerLockMode != DrawerLayout.LOCK_MODE_LOCKED_OPEN)) {
+            drawerLayout.closeDrawer(GravityCompat.START);
+            return false;
+        }
+        return activity.back();
     }
 
     @Override
@@ -321,11 +324,6 @@ public class MainActivityPresenterImpl implements MainActivityPresenter, Navigat
     }
 
     @Override
-    public void reconnect() {
-        authorize(LoginActivity.SIGNAL_RECONNECT);
-    }
-
-    @Override
     public boolean isInitialized() {
         return initialized;
     }
@@ -378,21 +376,22 @@ public class MainActivityPresenterImpl implements MainActivityPresenter, Navigat
     private void setup(@NonNull ConnectedActivity activity, @Nullable Bundle savedInstanceState) {
         thread.runOnUI(() -> {
             // setup toolbar and drawer layout
-            final Toolbar toolbar = activity.findViewById(R.id.toolbar_main);
-            final DrawerLayout drawer_layout = activity.findViewById(R.id.drawer_layout);
+            Toolbar toolbar = activity.findViewById(R.id.toolbar_main);
+            DrawerLayout drawerLayout = activity.findViewById(R.id.drawer_layout);
             if (toolbar != null) {
                 theme.applyToolbarTheme(activity, toolbar);
-                activity.setSupportActionBar(toolbar);
+                activity.setActionBar(toolbar);
+                activity.getActionBar().setDisplayHomeAsUpEnabled(true);
+                activity.getActionBar().setHomeButtonEnabled(true);
             }
-            if (drawer_layout != null) {
+            if (drawerLayout != null) {
                 App.tablet = false;
-                if (toolbar != null) {
-                    ActionBarDrawerToggle mDrawerToggle = new ActionBarDrawerToggle(activity, drawer_layout, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
-                    drawer_layout.addDrawerListener(mDrawerToggle);
-                    mDrawerToggle.syncState();
-                    if (App.isFirstLaunchEver) {
-                        drawer_layout.openDrawer(GravityCompat.START);
-                    }
+                ActionBarDrawerToggle mDrawerToggle = new ActionBarDrawerToggle(activity, drawerLayout, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+                mDrawerToggle.setDrawerIndicatorEnabled(true);
+                drawerLayout.addDrawerListener(mDrawerToggle);
+                mDrawerToggle.syncState();
+                if (App.isFirstLaunchEver) {
+                    drawerLayout.openDrawer(GravityCompat.START);
                 }
             } else {
                 App.tablet = true;
@@ -454,6 +453,24 @@ public class MainActivityPresenterImpl implements MainActivityPresenter, Navigat
             // activity ready to be loaded
             loaded = false;
         });
+    }
+
+    private void reconnect() {
+        authorize(LoginActivity.SIGNAL_RECONNECT);
+    }
+
+    private void toggleDrawer() {
+        DrawerLayout drawerLayout = activity.findViewById(R.id.drawer_layout);
+        if (drawerLayout == null) {
+            return;
+        }
+        int drawerLockMode = drawerLayout.getDrawerLockMode(GravityCompat.START);
+        if (drawerLayout.isDrawerVisible(GravityCompat.START)
+                && (drawerLockMode != DrawerLayout.LOCK_MODE_LOCKED_OPEN)) {
+            drawerLayout.closeDrawer(GravityCompat.START);
+        } else if (drawerLockMode != DrawerLayout.LOCK_MODE_LOCKED_CLOSED) {
+            drawerLayout.openDrawer(GravityCompat.START);
+        }
     }
 
     private int applySectionUnAuthorizedMode(int section) {

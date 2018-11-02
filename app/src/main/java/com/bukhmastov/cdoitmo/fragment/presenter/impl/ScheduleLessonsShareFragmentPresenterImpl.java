@@ -1,11 +1,9 @@
 package com.bukhmastov.cdoitmo.fragment.presenter.impl;
 
+import android.app.AlertDialog;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
-import androidx.annotation.Nullable;
-import androidx.core.content.FileProvider;
-import androidx.appcompat.app.AlertDialog;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
@@ -56,6 +54,9 @@ import java.util.ArrayList;
 import java.util.Objects;
 
 import javax.inject.Inject;
+
+import androidx.annotation.Nullable;
+import androidx.core.content.FileProvider;
 
 public class ScheduleLessonsShareFragmentPresenterImpl implements ScheduleLessonsShareFragmentPresenter {
 

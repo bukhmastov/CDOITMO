@@ -1,10 +1,7 @@
 package com.bukhmastov.cdoitmo.fragment.presenter.impl;
 
+import android.app.AlertDialog;
 import android.os.Bundle;
-import androidx.annotation.Nullable;
-import androidx.appcompat.app.AlertDialog;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.ArrayAdapter;
@@ -33,6 +30,10 @@ import java.util.List;
 import java.util.Objects;
 
 import javax.inject.Inject;
+
+import androidx.annotation.Nullable;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 public class ERegisterSubjectFragmentPresenterImpl implements ERegisterSubjectFragmentPresenter {
 

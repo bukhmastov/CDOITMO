@@ -5,6 +5,8 @@
         <item name="colorBackgroundSearchToolbar">@color/colorBackgroundSearchToolbarDark</item>
         <item name="colorBackgroundSearch">@color/colorBackgroundSearchDark</item>
         <item name="colorPrimaryDark">@color/colorSearchPrimaryDarkDark</item>
+        <item name="android:colorPrimaryDark">@color/colorSearchPrimaryDarkDark</item>
+        <item name="android:statusBarColor">@color/colorSearchPrimaryDarkDark</item>
         <item name="android:windowLightStatusBar">true</item>
     </style>
 

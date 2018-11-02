@@ -48,8 +48,6 @@ dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
     // android x
     implementation "com.google.android.material:material:${androidXVersion}"
-    implementation "androidx.legacy:legacy-support-v4:${androidXVersion}"
-    implementation "androidx.appcompat:appcompat:${androidXVersion}"
     implementation "androidx.cardview:cardview:${androidXVersion}"
     implementation "androidx.recyclerview:recyclerview:${androidXVersion}"
     // firebase

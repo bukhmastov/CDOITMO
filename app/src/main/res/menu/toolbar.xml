@@ -1,61 +1,62 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto">
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:ignore="AppCompatResource">
 
     <item
         android:id="@+id/offline_mode"
         android:title="@string/offline_mode"
         android:icon="@drawable/ic_toolbar_disconnected"
-        app:showAsAction="ifRoom"
+        android:showAsAction="ifRoom"
         android:visible="false"/>
 
     <item
         android:id="@+id/action_share"
         android:title="@string/share"
         android:icon="@drawable/ic_toolbar_share"
-        app:showAsAction="ifRoom"
+        android:showAsAction="ifRoom"
         android:visible="false" />
 
     <item
         android:id="@+id/action_mode_simple"
         android:title="@string/mode_simple"
         android:icon="@drawable/ic_mode_simple_white"
-        app:showAsAction="ifRoom"
+        android:showAsAction="ifRoom"
         android:visible="false" />
 
     <item
         android:id="@+id/action_mode_post_process"
         android:title="@string/mode_post_process"
         android:icon="@drawable/ic_mode_postprocess_white"
-        app:showAsAction="ifRoom"
+        android:showAsAction="ifRoom"
         android:visible="false" />
 
     <item
         android:id="@+id/action_restore"
         android:title="@string/reset_preferences"
         android:icon="@drawable/ic_toolbar_settings_restore"
-        app:showAsAction="ifRoom"
+        android:showAsAction="ifRoom"
         android:visible="false" />
 
     <item
         android:id="@+id/action_search"
         android:title="@string/search"
         android:icon="@drawable/ic_toolbar_search"
-        app:showAsAction="ifRoom"
+        android:showAsAction="ifRoom"
         android:visible="false" />
 
     <item
         android:id="@+id/action_info"
         android:title="@string/help"
         android:icon="@drawable/ic_toolbar_info"
-        app:showAsAction="ifRoom"
+        android:showAsAction="ifRoom"
         android:visible="false" />
 
     <item
         android:id="@+id/action_about"
         android:title="@string/about"
         android:icon="@drawable/ic_toolbar_info"
-        app:showAsAction="ifRoom"
+        android:showAsAction="ifRoom"
         android:visible="false" />
 
     <!-- App bar's overflow menu -->
@@ -64,14 +65,14 @@
         android:id="@+id/action_crown"
         android:title="@string/crown"
         android:icon="@drawable/ic_toolbar_crown"
-        app:showAsAction="never"
+        android:showAsAction="never"
         android:visible="false" />
 
     <item
         android:id="@+id/action_beer"
         android:title="@string/beer"
         android:icon="@drawable/ic_toolbar_beer"
-        app:showAsAction="never"
+        android:showAsAction="never"
         android:visible="false" />
 
 </menu>

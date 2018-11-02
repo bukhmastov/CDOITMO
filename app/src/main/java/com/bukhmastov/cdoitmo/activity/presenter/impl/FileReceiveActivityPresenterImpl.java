@@ -1,5 +1,6 @@
 package com.bukhmastov.cdoitmo.activity.presenter.impl;
 
+import android.app.ActionBar;
 import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
@@ -8,12 +9,11 @@ import android.os.ParcelFileDescriptor;
 import android.provider.OpenableColumns;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.appcompat.app.ActionBar;
-import androidx.appcompat.widget.Toolbar;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+import android.widget.Toolbar;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activity.ConnectedActivity;
@@ -83,9 +83,9 @@ public class FileReceiveActivityPresenterImpl implements FileReceiveActivityPres
             Toolbar toolbar = activity.findViewById(R.id.toolbar_file);
             if (toolbar != null) {
                 theme.applyToolbarTheme(activity, toolbar);
-                activity.setSupportActionBar(toolbar);
+                activity.setActionBar(toolbar);
             }
-            ActionBar actionBar = activity.getSupportActionBar();
+            ActionBar actionBar = activity.getActionBar();
             if (actionBar != null) {
                 actionBar.setHomeButtonEnabled(true);
                 actionBar.setDisplayHomeAsUpEnabled(true);

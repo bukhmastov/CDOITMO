@@ -1,9 +1,6 @@
 package com.bukhmastov.cdoitmo.object.preference;
 
-import androidx.annotation.ArrayRes;
-import androidx.annotation.Nullable;
-import androidx.annotation.StringRes;
-import androidx.appcompat.app.AlertDialog;
+import android.app.AlertDialog;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CompoundButton;
@@ -18,6 +15,10 @@ import com.bukhmastov.cdoitmo.provider.InjectProvider;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
+import androidx.annotation.ArrayRes;
+import androidx.annotation.Nullable;
+import androidx.annotation.StringRes;
 
 public class PreferenceList extends Preference {
 

@@ -50,7 +50,7 @@ public class MainActivity extends ConnectedActivity {
 
     @Override
     public void onBackPressed() {
-        if (presenter.onBackPressed()) {
+        if (presenter.onBackButtonPressed()) {
             super.onBackPressed();
         }
     }
@@ -65,10 +65,7 @@ public class MainActivity extends ConnectedActivity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.offline_mode: presenter.reconnect(); return true;
-            default: return false;
-        }
+        return presenter.onToolbarSelected(item);
     }
 
     @Override

@@ -81,7 +81,7 @@
             android:layout_width="@dimen/room101_deny_button"
             android:layout_height="@dimen/room101_deny_button"
             android:padding="@dimen/room101_deny_button_padding"
-            app:srcCompat="@drawable/ic_close"
+            android:src="@drawable/ic_close"
             android:background="?android:attr/selectableItemBackground" />
 
     </FrameLayout>

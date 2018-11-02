@@ -18,7 +18,7 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:padding="@dimen/search_offset_start"
-            app:srcCompat="@drawable/ic_arrow_back" />
+            android:src="@drawable/ic_arrow_back" />
 
     </FrameLayout>
 

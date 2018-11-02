@@ -1,6 +1,7 @@
 package com.bukhmastov.cdoitmo.activity.presenter.impl;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.WallpaperManager;
 import android.appwidget.AppWidgetManager;
 import android.content.Context;
@@ -10,11 +11,6 @@ import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Bundle;
-import androidx.annotation.LayoutRes;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.widget.Toolbar;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.InflateException;
@@ -27,6 +23,7 @@ import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.Switch;
 import android.widget.TextView;
+import android.widget.Toolbar;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activity.ScheduleLessonsWidgetConfigureActivity;
@@ -55,6 +52,10 @@ import com.bukhmastov.cdoitmo.widget.ScheduleLessonsWidgetStorage;
 import java.util.ArrayList;
 
 import javax.inject.Inject;
+
+import androidx.annotation.LayoutRes;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 public class ScheduleLessonsWidgetConfigureActivityPresenterImpl implements ScheduleLessonsWidgetConfigureActivityPresenter {
 
@@ -103,7 +104,7 @@ public class ScheduleLessonsWidgetConfigureActivityPresenterImpl implements Sche
             if (toolbar != null) {
                 theme.applyToolbarTheme(activity, toolbar);
                 toolbar.setTitle(R.string.configure_schedule_widget);
-                activity.setSupportActionBar(toolbar);
+                activity.setActionBar(toolbar);
             }
             Intent intent = activity.getIntent();
             Bundle extras = intent.getExtras();

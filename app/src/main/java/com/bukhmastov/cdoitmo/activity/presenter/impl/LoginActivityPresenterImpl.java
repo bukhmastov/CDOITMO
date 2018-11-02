@@ -1,14 +1,9 @@
 package com.bukhmastov.cdoitmo.activity.presenter.impl;
 
+import android.app.AlertDialog;
 import android.content.Intent;
 import android.content.res.TypedArray;
 import android.os.Bundle;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.appcompat.app.ActionBar;
-import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.widget.PopupMenu;
-import androidx.appcompat.widget.Toolbar;
 import android.text.TextUtils;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -16,7 +11,9 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.LinearLayout;
+import android.widget.PopupMenu;
 import android.widget.TextView;
+import android.widget.Toolbar;
 
 import com.bukhmastov.cdoitmo.App;
 import com.bukhmastov.cdoitmo.R;
@@ -48,6 +45,9 @@ import com.bukhmastov.cdoitmo.util.singleton.StringUtils;
 import com.bukhmastov.cdoitmo.view.Message;
 
 import javax.inject.Inject;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 public class LoginActivityPresenterImpl implements LoginActivityPresenter {
 
@@ -110,14 +110,11 @@ public class LoginActivityPresenterImpl implements LoginActivityPresenter {
             Toolbar toolbar = activity.findViewById(R.id.toolbar_login);
             if (toolbar != null) {
                 theme.applyToolbarTheme(activity, toolbar);
-                activity.setSupportActionBar(toolbar);
-            }
-            ActionBar actionBar = activity.getSupportActionBar();
-            if (actionBar != null) {
-                actionBar.setTitle(activity.getString(R.string.title_activity_login));
+                toolbar.setTitle("");
                 TypedArray resource = activity.obtainStyledAttributes(new int[]{R.attr.ic_toolbar_security});
-                actionBar.setLogo(resource.getDrawable(0));
+                toolbar.setLogo(resource.getDrawable(0));
                 resource.recycle();
+                activity.setActionBar(toolbar);
             }
             displayRemoteMessage();
             if (autoLogout) {
@@ -140,17 +137,17 @@ public class LoginActivityPresenterImpl implements LoginActivityPresenter {
     }
 
     @Override
-    public void onToolbarSetup() {
+    public void onToolbarSetup(Menu menu) {
         thread.runOnUI(() -> {
-            if (activity.toolbar == null) {
+            if (menu == null) {
                 return;
             }
-            MenuItem action_about = activity.toolbar.findItem(R.id.action_about);
-            if (action_about != null) {
-                action_about.setVisible(true);
-                action_about.setOnMenuItemClickListener(item -> {
+            MenuItem about = menu.findItem(R.id.action_about);
+            if (about != null) {
+                about.setVisible(true);
+                about.setOnMenuItemClickListener(item -> {
                     thread.runOnUI(() -> {
-                        final Bundle extras = new Bundle();
+                        Bundle extras = new Bundle();
                         extras.putBoolean(ConnectedActivity.ACTIVITY_WITH_MENU, false);
                         activity.openActivity(AboutFragment.class, extras);
                     });
@@ -160,7 +157,7 @@ public class LoginActivityPresenterImpl implements LoginActivityPresenter {
         });
     }
 
-    private void route(final int signal) {
+    private void route(int signal) {
         thread.run(() -> {
             log.i(TAG, "route | signal=", signal);
             App.OFFLINE_MODE = false;
@@ -273,24 +270,24 @@ public class LoginActivityPresenterImpl implements LoginActivityPresenter {
         });
     }
 
-    private void appendNewUserView(final ViewGroup container) {
-        final ViewGroup new_user_tile = (ViewGroup) activity.inflate(R.layout.layout_login_new_user_tile);
-        final EditText input_login = new_user_tile.findViewById(R.id.input_login);
-        final EditText input_password = new_user_tile.findViewById(R.id.input_password);
-        new_user_tile.findViewById(R.id.login).setOnClickListener(v -> {
+    private void appendNewUserView(ViewGroup container) {
+        ViewGroup newUserTile = (ViewGroup) activity.inflate(R.layout.layout_login_new_user_tile);
+        EditText inputLogin = newUserTile.findViewById(R.id.input_login);
+        EditText inputPassword = newUserTile.findViewById(R.id.input_password);
+        newUserTile.findViewById(R.id.login).setOnClickListener(v -> {
             log.v(TAG, "new_user_tile login clicked");
             String login = "";
             String password = "";
-            if (input_login != null) {
-                login = input_login.getText().toString();
+            if (inputLogin != null) {
+                login = inputLogin.getText().toString();
             }
-            if (input_password != null) {
-                password = input_password.getText().toString();
+            if (inputPassword != null) {
+                password = inputPassword.getText().toString();
             }
             // we support only 'student' role at the moment
             login(login, password, "student", true);
         });
-        new_user_tile.findViewById(R.id.help).setOnClickListener(view -> {
+        newUserTile.findViewById(R.id.help).setOnClickListener(view -> {
             firebaseAnalyticsProvider.logBasicEvent(activity, "Help with login clicked");
             if (activity.isFinishing() || activity.isDestroyed()) {
                 return;
@@ -308,10 +305,10 @@ public class LoginActivityPresenterImpl implements LoginActivityPresenter {
                     .setNegativeButton(R.string.close, null)
                     .create().show();
         });
-        container.addView(new_user_tile);
+        container.addView(newUserTile);
     }
 
-    private void appendAllUsersView(final ViewGroup container) {
+    private void appendAllUsersView(ViewGroup container) {
         UsersList acs = accounts.get(activity);
         for (String acLogin : CollectionUtils.emptyIfNull(acs.getLogins())) {
             try {
@@ -319,15 +316,15 @@ public class LoginActivityPresenterImpl implements LoginActivityPresenter {
                 // danger zone begins
                 log.v(TAG, "show | account in accounts | login=", acLogin);
                 storage.put(activity, Storage.PERMANENT, Storage.GLOBAL, "users#current_login", acLogin);
-                final String login = storage.get(activity, Storage.PERMANENT, Storage.USER, "user#deifmo#login");
-                final String password = storage.get(activity, Storage.PERMANENT, Storage.USER, "user#deifmo#password");
-                final String role = storage.get(activity, Storage.PERMANENT, Storage.USER, "user#role");
-                final String name = storage.get(activity, Storage.PERMANENT, Storage.USER, "user#name").trim();
+                String login = storage.get(activity, Storage.PERMANENT, Storage.USER, "user#deifmo#login");
+                String password = storage.get(activity, Storage.PERMANENT, Storage.USER, "user#deifmo#password");
+                String role = storage.get(activity, Storage.PERMANENT, Storage.USER, "user#role");
+                String name = storage.get(activity, Storage.PERMANENT, Storage.USER, "user#name").trim();
                 storage.delete(activity, Storage.PERMANENT, Storage.GLOBAL, "users#current_login");
                 // danger zone ends
-                final ViewGroup user_tile = (ViewGroup) activity.inflate(R.layout.layout_login_user_tile);
-                final View nameView = user_tile.findViewById(R.id.name);
-                final View descView = user_tile.findViewById(R.id.desc);
+                ViewGroup userTile = (ViewGroup) activity.inflate(R.layout.layout_login_user_tile);
+                View nameView = userTile.findViewById(R.id.name);
+                View descView = userTile.findViewById(R.id.desc);
                 String desc = "";
                 if (!login.isEmpty()) {
                     desc += login;
@@ -357,15 +354,14 @@ public class LoginActivityPresenterImpl implements LoginActivityPresenter {
                         staticUtil.removeView(descView);
                     }
                 }
-                user_tile.findViewById(R.id.auth).setOnClickListener(v -> {
+                userTile.findViewById(R.id.auth).setOnClickListener(v -> {
                     log.v(TAG, "user_tile login clicked");
                     login(login, password, role, false);
                 });
-                user_tile.findViewById(R.id.expand_auth_menu).setOnClickListener(view -> {
+                userTile.findViewById(R.id.expand_auth_menu).setOnClickListener(view -> {
                     log.v(TAG, "user_tile expand_auth_menu clicked");
-                    final PopupMenu popup = new PopupMenu(activity, view);
-                    final Menu menu = popup.getMenu();
-                    popup.getMenuInflater().inflate(R.menu.auth_expanded_menu, menu);
+                    PopupMenu popup = new PopupMenu(activity, view);
+                    popup.inflate(R.menu.auth_expanded_menu);
                     popup.setOnMenuItemClickListener(item -> {
                         log.v(TAG, "auth_expanded_menu | popup.MenuItem clicked | ", item.getTitle().toString());
                         switch (item.getItemId()) {
@@ -389,9 +385,9 @@ public class LoginActivityPresenterImpl implements LoginActivityPresenter {
                                         if (activity.isFinishing() || activity.isDestroyed()) {
                                             return;
                                         }
-                                        final View layout = activity.inflate(R.layout.preference_dialog_input);
-                                        final EditText editText = layout.findViewById(R.id.edittext);
-                                        final TextView message = layout.findViewById(R.id.message);
+                                        View layout = activity.inflate(R.layout.preference_dialog_input);
+                                        EditText editText = layout.findViewById(R.id.edittext);
+                                        TextView message = layout.findViewById(R.id.message);
                                         editText.setHint(R.string.new_password);
                                         message.setText(activity.getString(R.string.change_password_message).replace("%login%", login));
                                         new AlertDialog.Builder(activity)
@@ -428,25 +424,25 @@ public class LoginActivityPresenterImpl implements LoginActivityPresenter {
                     });
                     popup.show();
                 });
-                container.addView(user_tile);
+                container.addView(userTile);
             } catch (Exception e) {
                 log.exception(e);
             }
         }
     }
 
-    private void appendAnonUserView(final ViewGroup container) {
-        final ViewGroup anonymous_user_tile = (ViewGroup) activity.inflate(R.layout.layout_login_anonymous_user_tile);
-        final EditText input_group = anonymous_user_tile.findViewById(R.id.input_group);
+    private void appendAnonUserView(ViewGroup container) {
+        ViewGroup anonymousUserTile = (ViewGroup) activity.inflate(R.layout.layout_login_anonymous_user_tile);
+        EditText inputGroup = anonymousUserTile.findViewById(R.id.input_group);
         // grab current groups of anon user
         // not really danger zone begins
         storage.put(activity, Storage.PERMANENT, Storage.GLOBAL, "users#current_login", Account.USER_UNAUTHORIZED);
-        input_group.setText(storage.get(activity, Storage.PERMANENT, Storage.USER, "user#groups", ""));
+        inputGroup.setText(storage.get(activity, Storage.PERMANENT, Storage.USER, "user#groups", ""));
         storage.delete(activity, Storage.PERMANENT, Storage.GLOBAL, "users#current_login");
         // not really danger zone ends
-        anonymous_user_tile.findViewById(R.id.login).setOnClickListener(view -> {
+        anonymousUserTile.findViewById(R.id.login).setOnClickListener(view -> {
             log.v(TAG, "anonymous_user_tile login clicked");
-            String group = textUtils.prettifyGroupNumber(input_group.getText().toString());
+            String group = textUtils.prettifyGroupNumber(inputGroup.getText().toString());
             String[] groups = group.split(",\\s|\\s|,");
             // set anon user info
             // not really danger zone begins
@@ -470,11 +466,10 @@ public class LoginActivityPresenterImpl implements LoginActivityPresenter {
             // not really danger zone ends
             login(Account.USER_UNAUTHORIZED, Account.USER_UNAUTHORIZED, "anonymous", false);
         });
-        anonymous_user_tile.findViewById(R.id.expand_auth_menu).setOnClickListener(view -> {
+        anonymousUserTile.findViewById(R.id.expand_auth_menu).setOnClickListener(view -> {
             log.v(TAG, "anonymous_user_tile expand_auth_menu clicked");
-            final PopupMenu popup = new PopupMenu(activity, view);
-            final Menu menu = popup.getMenu();
-            popup.getMenuInflater().inflate(R.menu.auth_anonymous_expanded_menu, menu);
+            PopupMenu popup = new PopupMenu(activity, view);
+            popup.inflate(R.menu.auth_anonymous_expanded_menu);
             popup.setOnMenuItemClickListener(item -> {
                 log.v(TAG, "auth_expanded_menu | popup.MenuItem clicked | ", item.getTitle().toString());
                 switch (item.getItemId()) {
@@ -488,7 +483,7 @@ public class LoginActivityPresenterImpl implements LoginActivityPresenter {
             });
             popup.show();
         });
-        anonymous_user_tile.findViewById(R.id.info).setOnClickListener(view -> {
+        anonymousUserTile.findViewById(R.id.info).setOnClickListener(view -> {
             firebaseAnalyticsProvider.logBasicEvent(activity, "Help with anonymous login clicked");
             if (activity.isFinishing() || activity.isDestroyed()) {
                 return;
@@ -505,10 +500,10 @@ public class LoginActivityPresenterImpl implements LoginActivityPresenter {
                     .setNegativeButton(R.string.close, null)
                     .create().show();
         });
-        container.addView(anonymous_user_tile);
+        container.addView(anonymousUserTile);
     }
 
-    private void login(final String login, final String password, final String role, final boolean isNewUser) {
+    private void login(String login, String password, String role, boolean isNewUser) {
         log.v(TAG, "login | login=", login, " | role=", role, " | isNewUser=", isNewUser);
         staticUtil.lockOrientation(activity, true);
         eventBus.fire(new ClearCacheEvent());
@@ -545,9 +540,9 @@ public class LoginActivityPresenterImpl implements LoginActivityPresenter {
                 log.v(TAG, "login | onProgress | text=", text);
                 activity.draw(R.layout.state_auth);
                 if (isNewUser) {
-                    View interrupt_auth_container = activity.findViewById(R.id.interrupt_auth_container);
-                    if (interrupt_auth_container != null) {
-                        interrupt_auth_container.setVisibility(View.GONE);
+                    View interruptAuthContainer = activity.findViewById(R.id.interrupt_auth_container);
+                    if (interruptAuthContainer != null) {
+                        interruptAuthContainer.setVisibility(View.GONE);
                     }
                 } else {
                     View interrupt_auth = activity.findViewById(R.id.interrupt_auth);
@@ -573,7 +568,7 @@ public class LoginActivityPresenterImpl implements LoginActivityPresenter {
         });
     }
 
-    private void logout(final String login) {
+    private void logout(String login) {
         log.v(TAG, "logout | login=", login);
         staticUtil.lockOrientation(activity, true);
         account.logout(activity, login, new Account.LogoutHandler() {

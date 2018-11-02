@@ -1,9 +1,8 @@
 package com.bukhmastov.cdoitmo.fragment.settings;
 
+import android.app.AlertDialog;
 import android.content.Context;
 import android.content.Intent;
-import androidx.fragment.app.Fragment;
-import androidx.appcompat.app.AlertDialog;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activity.ConnectedActivity;
@@ -20,6 +19,8 @@ import com.bukhmastov.cdoitmo.util.NotificationMessage;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
+
+import androidx.fragment.app.Fragment;
 
 public class SettingsGeneralFragment extends SettingsTemplatePreferencesFragment {
 

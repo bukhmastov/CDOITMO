@@ -28,7 +28,7 @@
         android:layout_height="match_parent"
         android:elevation="4dp" >
 
-        <androidx.appcompat.widget.Toolbar
+        <android.widget.Toolbar
             android:id="@+id/toolbar_fragment"
             android:theme="@style/AppTheme.Toolbar"
             android:layout_width="match_parent"

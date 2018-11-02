@@ -22,7 +22,7 @@
             android:layout_height="@dimen/university_person_card_big_avatar"
             android:layout_gravity="center_vertical"
             android:layout_margin="@dimen/item_padding_half"
-            app:srcCompat="@drawable/ic_sentiment_very_satisfied"
+            android:src="@drawable/ic_sentiment_very_satisfied"
             android:tint="?attr/colorImageMultiply"
             android:tintMode="multiply" />
 
@@ -59,7 +59,7 @@
                     <ImageView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        app:srcCompat="@drawable/ic_web"
+                        android:src="@drawable/ic_web"
                         android:tint="?android:attr/textColorSecondary"/>
 
                 </FrameLayout>
@@ -92,7 +92,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:padding="@dimen/item_padding_quarter"
-                app:srcCompat="@drawable/ic_close" />
+                android:src="@drawable/ic_close" />
 
         </FrameLayout>
 

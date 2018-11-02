@@ -10,8 +10,7 @@ import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
-import androidx.appcompat.app.ActionBar;
-import androidx.appcompat.widget.Toolbar;
+import android.widget.Toolbar;
 import android.view.MenuItem;
 import android.view.ViewGroup;
 
@@ -89,12 +88,9 @@ public class FragmentActivityPresenterImpl implements FragmentActivityPresenter,
             Toolbar toolbar = activity.findViewById(R.id.toolbar_fragment);
             if (toolbar != null) {
                 theme.applyToolbarTheme(activity, toolbar);
-                activity.setSupportActionBar(toolbar);
-            }
-            ActionBar actionBar = activity.getSupportActionBar();
-            if (actionBar != null) {
-                actionBar.setHomeButtonEnabled(true);
-                actionBar.setDisplayHomeAsUpEnabled(true);
+                activity.setActionBar(toolbar);
+                activity.getActionBar().setDisplayHomeAsUpEnabled(true);
+                activity.getActionBar().setHomeButtonEnabled(true);
             }
             if (activity.layoutWithMenu) {
                 NavigationView navigationView = activity.findViewById(R.id.nav_view);

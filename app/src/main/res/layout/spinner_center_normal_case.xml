@@ -10,6 +10,7 @@
     android:paddingBottom="@dimen/item_vertical_padding"
     android:text="@string/lorem_ipsum"
     android:textAlignment="center"
+    android:fontFamily="@string/font_bold"
+    android:textColor="?android:attr/textColorPrimary"
     android:textAllCaps="false"
-    android:textAppearance="@style/TextAppearance.AppCompat.Button"
     android:textSize="@dimen/font_size_14" />

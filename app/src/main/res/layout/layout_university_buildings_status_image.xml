@@ -15,7 +15,7 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_margin="@dimen/dp12"
-            app:srcCompat="@drawable/ic_disconnected" />
+            android:src="@drawable/ic_disconnected" />
 
     </FrameLayout>
 

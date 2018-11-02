@@ -54,7 +54,7 @@
                     android:layout_height="match_parent"
                     android:padding="@dimen/item_padding_half"
                     android:tint="?android:attr/textColorPrimary"
-                    app:srcCompat="@drawable/ic_list" />
+                    android:src="@drawable/ic_list" />
 
             </FrameLayout>
 

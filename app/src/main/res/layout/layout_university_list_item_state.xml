@@ -23,7 +23,7 @@
             android:layout_height="@dimen/dp16"
             android:layout_marginStart="@dimen/item_padding_quarter"
             android:layout_marginEnd="@dimen/item_padding_quarter"
-            app:srcCompat="@drawable/ic_refresh" />
+            android:src="@drawable/ic_refresh" />
 
         <TextView
             android:layout_width="wrap_content"
@@ -77,7 +77,7 @@
             android:layout_height="@dimen/dp16"
             android:layout_marginStart="@dimen/item_padding_quarter"
             android:layout_marginEnd="@dimen/item_padding_quarter"
-            app:srcCompat="@drawable/ic_visibility" />
+            android:src="@drawable/ic_visibility" />
 
         <TextView
             android:layout_width="wrap_content"

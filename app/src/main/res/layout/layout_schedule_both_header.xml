@@ -58,7 +58,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center"
-                    app:srcCompat="@drawable/ic_add" />
+                    android:src="@drawable/ic_add" />
 
             </FrameLayout>
 
@@ -76,7 +76,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center"
-                    app:srcCompat="@drawable/ic_share" />
+                    android:src="@drawable/ic_share" />
 
             </FrameLayout>
 
@@ -91,7 +91,7 @@
                 <ImageView
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    app:srcCompat="@drawable/ic_expand_more" />
+                    android:src="@drawable/ic_expand_more" />
 
             </FrameLayout>
 

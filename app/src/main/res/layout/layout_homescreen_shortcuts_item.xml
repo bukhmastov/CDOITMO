@@ -21,7 +21,7 @@
             android:layout_alignParentStart="true"
             android:layout_marginTop="@dimen/item_vertical_padding"
             android:layout_marginBottom="@dimen/item_vertical_padding"
-            app:srcCompat="@mipmap/ic_shortcut_e_journal"
+            android:src="@mipmap/ic_shortcut_e_journal"
             android:tint="?attr/colorImageMultiply"
             android:tintMode="multiply" />
 
@@ -77,7 +77,7 @@
                 android:layout_height="@dimen/dp20"
                 android:layout_gravity="center_vertical"
                 android:layout_centerInParent="true"
-                app:srcCompat="@drawable/ic_disconnected"
+                android:src="@drawable/ic_disconnected"
                 android:tint="?attr/colorImageMultiply"
                 android:tintMode="multiply" />
 

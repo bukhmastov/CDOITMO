@@ -1,19 +1,34 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <androidx.appcompat.widget.Toolbar
+    <android.widget.Toolbar
         android:id="@+id/toolbar_login"
         android:theme="@style/AppTheme.Toolbar"
+        android:popupTheme="@style/AppTheme.Toolbar.Popup"
         android:layout_width="match_parent"
         android:layout_height="?android:attr/actionBarSize"
         android:elevation="4dp"
         android:background="?attr/colorPrimary"
-        app:titleMarginStart="24dp"/>
+        android:logo="@drawable/ic_toolbar_security">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:text="@string/title_activity_login"
+            android:singleLine="true"
+            android:ellipsize="end"
+            android:textColor="?attr/colorToolbarContent"
+            android:textSize="21sp"
+            android:fontFamily="sans-serif-medium"
+            android:textStyle="normal"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:gravity="center_vertical" />
+
+    </android.widget.Toolbar>
 
     <FrameLayout
         android:layout_width="match_parent"

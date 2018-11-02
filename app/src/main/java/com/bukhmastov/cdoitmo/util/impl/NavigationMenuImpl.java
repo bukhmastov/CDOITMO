@@ -1,9 +1,8 @@
 package com.bukhmastov.cdoitmo.util.impl;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.Context;
-import com.google.android.material.navigation.NavigationView;
-import androidx.appcompat.app.AlertDialog;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -22,6 +21,7 @@ import com.bukhmastov.cdoitmo.util.TextUtils;
 import com.bukhmastov.cdoitmo.util.Thread;
 import com.bukhmastov.cdoitmo.util.singleton.StringUtils;
 import com.bukhmastov.cdoitmo.view.Message;
+import com.google.android.material.navigation.NavigationView;
 
 import java.util.ArrayList;
 import java.util.List;

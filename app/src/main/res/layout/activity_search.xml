@@ -23,7 +23,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:padding="15dp"
-                app:srcCompat="@drawable/ic_arrow_back"
+                android:src="@drawable/ic_arrow_back"
                 android:tint="?attr/colorToolbarContentInvert"/>
 
         </FrameLayout>
@@ -63,7 +63,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:padding="15dp"
-                app:srcCompat="@drawable/ic_close"
+                android:src="@drawable/ic_close"
                 android:tint="?attr/colorToolbarContentInvert"
                 android:visibility="gone"/>
 

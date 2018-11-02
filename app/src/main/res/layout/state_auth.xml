@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical">
@@ -18,7 +17,9 @@
         android:layout_height="wrap_content"
         android:text="@string/auth_check"
         android:textAlignment="center"
-        android:textAppearance="@style/TextAppearance.AppCompat.Button"
+        android:fontFamily="@string/font_bold"
+        android:textColor="?android:attr/textColorPrimary"
+        android:textAllCaps="true"
         android:textSize="@dimen/font_size_14" />
 
     <FrameLayout
@@ -43,7 +44,7 @@
                 android:layout_height="@dimen/login_interrupt_icon_width"
                 android:layout_gravity="center_vertical"
                 android:padding="@dimen/login_interrupt_icon_padding"
-                app:srcCompat="@drawable/ic_disconnected" />
+                android:src="@drawable/ic_disconnected" />
 
             <LinearLayout
                 android:layout_width="match_parent"

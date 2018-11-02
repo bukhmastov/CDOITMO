@@ -52,6 +52,6 @@
         android:focusable="true"
         android:clickable="true"
         android:contentDescription="@string/lorem_ipsum"
-        app:srcCompat="@drawable/ic_chevron_right" />
+        android:src="@drawable/ic_chevron_right" />
 
 </RelativeLayout>

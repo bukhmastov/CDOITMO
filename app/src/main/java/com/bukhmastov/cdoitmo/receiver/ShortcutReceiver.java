@@ -147,14 +147,14 @@ public class ShortcutReceiver extends BroadcastReceiver {
                 case "time_remaining_widget": {
                     Bundle extras = new Bundle();
                     extras.putString("mode", shortcutMode);
-                    extras.putString("shortcutData", shortcutData);
+                    extras.putString("shortcut_data", shortcutData);
                     eventBus.fire(new OpenActivityEvent(TimeRemainingWidgetActivity.class, extras, App.intentFlagRestart));
                     break;
                 }
                 case "days_remaining_widget": {
                     Bundle extras = new Bundle();
                     extras.putString("mode", shortcutMode);
-                    extras.putString("shortcutData", shortcutData);
+                    extras.putString("shortcut_data", shortcutData);
                     eventBus.fire(new OpenActivityEvent(DaysRemainingWidgetActivity.class, extras, App.intentFlagRestart));
                     break;
                 }
