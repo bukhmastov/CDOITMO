@@ -13,10 +13,9 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.ImageView;
-import android.widget.ListView;
 
 import com.bukhmastov.cdoitmo.R;
-import com.bukhmastov.cdoitmo.adapter.SuggestionsListView;
+import com.bukhmastov.cdoitmo.adapter.rva.SearchSuggestionsRVA;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.model.entity.Suggestion;
 import com.bukhmastov.cdoitmo.model.entity.Suggestions;
@@ -43,6 +42,8 @@ import javax.inject.Inject;
 
 import androidx.annotation.Nullable;
 import androidx.annotation.StringDef;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 public abstract class SearchActivity extends Activity {
 
@@ -182,45 +183,43 @@ public abstract class SearchActivity extends Activity {
     }
 
     private void setSuggestions(final List<Suggestion> suggestions) {
-        thread.runOnUI(() -> {
-            log.v(TAG, "setSuggestions | type=", getType());
-            ListView searchSuggestions = findViewById(R.id.search_suggestions);
-            if (searchSuggestions != null) {
-                searchSuggestions.setDividerHeight(0);
-                searchSuggestions.setDivider(null);
-                searchSuggestions.setAdapter(new SuggestionsListView(context, suggestions, new SuggestionsListView.OnClickCallback() {
-                    @Override
-                    public void onClick(Suggestion suggestion) {
-                        done(suggestion.query, suggestion.title);
+        thread.run(() -> {
+            SearchSuggestionsRVA adapter = new SearchSuggestionsRVA(context, suggestions);
+            adapter.setClickListener(R.id.click, (v, suggestion) -> {
+                done(suggestion.query, suggestion.title);
+            });
+            adapter.setClickListener(R.id.remove, (v, suggestion) -> thread.run(() -> {
+                if (!suggestion.removable) {
+                    return;
+                }
+                String recentString = storage.get(context, Storage.PERMANENT, Storage.USER, "schedule_" + getType() + "#recent", "");
+                if (StringUtils.isBlank(recentString)) {
+                    return;
+                }
+                Suggestions recent = new Suggestions().fromJsonString(recentString);
+                if (CollectionUtils.isEmpty(recent.getSuggestions())) {
+                    return;
+                }
+                for (int i = 0; i < recent.getSuggestions().size(); i++) {
+                    String item = recent.getSuggestions().get(i);
+                    if (SearchActivity.equals(item, suggestion.query) || SearchActivity.equals(item, suggestion.title)) {
+                        recent.getSuggestions().remove(i);
+                        storage.put(context, Storage.PERMANENT, Storage.USER, "schedule_" + getType() + "#recent", recent.toJsonString());
+                        setSuggestions(getSuggestions(""));
+                        break;
                     }
-                    @Override
-                    public void onRemove(Suggestion suggestion) {
-                        thread.run(() -> {
-                            if (!suggestion.removable) {
-                                return;
-                            }
-                            String recentString = storage.get(context, Storage.PERMANENT, Storage.USER, "schedule_" + getType() + "#recent", "");
-                            if (StringUtils.isBlank(recentString)) {
-                                return;
-                            }
-                            Suggestions recent = new Suggestions().fromJsonString(recentString);
-                            if (CollectionUtils.isEmpty(recent.getSuggestions())) {
-                                return;
-                            }
-                            for (int i = 0; i < recent.getSuggestions().size(); i++) {
-                                String item = recent.getSuggestions().get(i);
-                                if (SearchActivity.equals(item, suggestion.query) || SearchActivity.equals(item, suggestion.title)) {
-                                    recent.getSuggestions().remove(i);
-                                    storage.put(context, Storage.PERMANENT, Storage.USER, "schedule_" + getType() + "#recent", recent.toJsonString());
-                                    setSuggestions(getSuggestions(""));
-                                    break;
-                                }
-                            }
-                        }, throwable -> {});
-                    }
-                }));
-                searchSuggestions.setOnItemClickListener((parent, view, position, id) -> done(suggestions.get(position).query, suggestions.get(position).title));
-            }
+                }
+            }, throwable -> {}));
+            thread.runOnUI(() -> {
+                RecyclerView recyclerView = findViewById(R.id.search_suggestions);
+                if (recyclerView != null) {
+                    recyclerView.setLayoutManager(new LinearLayoutManager(context, RecyclerView.VERTICAL, false));
+                    recyclerView.setAdapter(adapter);
+                    recyclerView.setHasFixedSize(true);
+                }
+            }, throwable -> {
+                log.exception(throwable);
+            });
         }, throwable -> {
             log.exception(throwable);
         });

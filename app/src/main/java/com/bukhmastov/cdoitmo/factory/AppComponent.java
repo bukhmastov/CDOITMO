@@ -33,7 +33,6 @@ import com.bukhmastov.cdoitmo.activity.search.SearchActivity;
 import com.bukhmastov.cdoitmo.adapter.PagerExamsAdapter;
 import com.bukhmastov.cdoitmo.adapter.PagerLessonsAdapter;
 import com.bukhmastov.cdoitmo.adapter.PagerUniversityAdapter;
-import com.bukhmastov.cdoitmo.adapter.SuggestionsListView;
 import com.bukhmastov.cdoitmo.adapter.TeacherPickerAdapter;
 import com.bukhmastov.cdoitmo.adapter.rva.RVABase;
 import com.bukhmastov.cdoitmo.adapter.rva.RatingRVA;
@@ -66,6 +65,7 @@ import com.bukhmastov.cdoitmo.firebase.impl.FirebasePerformanceProviderImpl;
 import com.bukhmastov.cdoitmo.fragment.AboutFragment;
 import com.bukhmastov.cdoitmo.fragment.ConnectedFragment;
 import com.bukhmastov.cdoitmo.fragment.ERegisterFragment;
+import com.bukhmastov.cdoitmo.fragment.ERegisterSubjectFragment;
 import com.bukhmastov.cdoitmo.fragment.HomeScreenInteractionFragment;
 import com.bukhmastov.cdoitmo.fragment.LinkedAccountsFragment;
 import com.bukhmastov.cdoitmo.fragment.LogFragment;
@@ -82,7 +82,6 @@ import com.bukhmastov.cdoitmo.fragment.ScheduleLessonsModifyFragment;
 import com.bukhmastov.cdoitmo.fragment.ScheduleLessonsShareFragment;
 import com.bukhmastov.cdoitmo.fragment.ScheduleLessonsTabFragment;
 import com.bukhmastov.cdoitmo.fragment.ScheduleLessonsTabHostFragment;
-import com.bukhmastov.cdoitmo.fragment.ERegisterSubjectFragment;
 import com.bukhmastov.cdoitmo.fragment.UniversityBuildingsFragment;
 import com.bukhmastov.cdoitmo.fragment.UniversityEventsFragment;
 import com.bukhmastov.cdoitmo.fragment.UniversityFacultiesFragment;
@@ -92,6 +91,7 @@ import com.bukhmastov.cdoitmo.fragment.UniversityPersonsFragment;
 import com.bukhmastov.cdoitmo.fragment.UniversityUnitsFragment;
 import com.bukhmastov.cdoitmo.fragment.presenter.impl.AboutFragmentPresenterImpl;
 import com.bukhmastov.cdoitmo.fragment.presenter.impl.ERegisterFragmentPresenterImpl;
+import com.bukhmastov.cdoitmo.fragment.presenter.impl.ERegisterSubjectFragmentPresenterImpl;
 import com.bukhmastov.cdoitmo.fragment.presenter.impl.HomeScreenInteractionFragmentPresenterImpl;
 import com.bukhmastov.cdoitmo.fragment.presenter.impl.LinkedAccountsFragmentPresenterImpl;
 import com.bukhmastov.cdoitmo.fragment.presenter.impl.LogFragmentPresenterImpl;
@@ -108,7 +108,6 @@ import com.bukhmastov.cdoitmo.fragment.presenter.impl.ScheduleLessonsModifyFragm
 import com.bukhmastov.cdoitmo.fragment.presenter.impl.ScheduleLessonsShareFragmentPresenterImpl;
 import com.bukhmastov.cdoitmo.fragment.presenter.impl.ScheduleLessonsTabFragmentPresenterImpl;
 import com.bukhmastov.cdoitmo.fragment.presenter.impl.ScheduleLessonsTabHostFragmentPresenterImpl;
-import com.bukhmastov.cdoitmo.fragment.presenter.impl.ERegisterSubjectFragmentPresenterImpl;
 import com.bukhmastov.cdoitmo.fragment.presenter.impl.UniversityBuildingsFragmentPresenterImpl;
 import com.bukhmastov.cdoitmo.fragment.presenter.impl.UniversityEventsFragmentPresenterImpl;
 import com.bukhmastov.cdoitmo.fragment.presenter.impl.UniversityFacultiesFragmentPresenterImpl;
@@ -284,7 +283,6 @@ public interface AppComponent {
 
     // Adapters
     void inject(TeacherPickerAdapter teacherPickerAdapter);
-    void inject(SuggestionsListView suggestionsListView);
     void inject(PagerUniversityAdapter pagerUniversityAdapter);
     void inject(PagerLessonsAdapter pagerLessonsAdapter);
     void inject(PagerExamsAdapter pagerExamsAdapter);

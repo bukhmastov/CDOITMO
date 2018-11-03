@@ -71,11 +71,13 @@
 
     </RelativeLayout>
 
-    <ListView
+    <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/search_suggestions"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:fadeScrollbars="true"
+        android:scrollbarSize="@dimen/scroll_thumb_size"
         android:divider="?attr/colorSeparator"
-        android:dividerHeight="@dimen/separator" />
+        android:dividerHeight="@dimen/separator"/>
 
 </LinearLayout>
