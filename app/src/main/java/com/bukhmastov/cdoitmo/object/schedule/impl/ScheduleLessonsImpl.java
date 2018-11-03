@@ -223,7 +223,7 @@ public class ScheduleLessonsImpl extends ScheduleImpl<SLessons> implements Sched
                     putToCache(query, schedule, forceToCache);
                 }
                 if (withUserChanges) {
-                    SLessons converted = new ScheduleLessonsAdditionalConverter(schedule).convert();
+                    SLessons converted = new ScheduleLessonsAdditionalConverter(schedule.copy()).convert();
                     invokePendingAndClose(query, true, handler -> handler.onSuccess(converted != null ? converted : schedule, fromCache));
                 } else {
                     invokePendingAndClose(query, false, handler -> handler.onSuccess(schedule, fromCache));

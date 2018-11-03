@@ -22,10 +22,8 @@ import com.bukhmastov.cdoitmo.util.Thread;
 import com.bukhmastov.cdoitmo.util.Time;
 import com.bukhmastov.cdoitmo.util.singleton.CollectionUtils;
 import com.bukhmastov.cdoitmo.util.singleton.StringUtils;
-import com.bukhmastov.cdoitmo.util.singleton.TimeUtil;
 
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Collection;
 import java.util.Objects;
 import java.util.TreeSet;
@@ -391,18 +389,7 @@ public class ScheduleLessonsHelperImpl implements ScheduleLessonsHelper {
 
     @Override
     public TreeSet<SLesson> filterAndSortLessons(Collection<SLesson> lessons, int parity, boolean hideReducedLessons) {
-        TreeSet<SLesson> filtered = new TreeSet<>((lesson1, lesson2) -> {
-            try {
-                Calendar calendar1 = TimeUtil.time2calendar(time.getCalendar(), lesson1.getTimeStart());
-                Calendar calendar2 = TimeUtil.time2calendar(time.getCalendar(), lesson2.getTimeStart());
-                if (calendar1 == null || calendar2 == null) {
-                    return 0;
-                }
-                return calendar1.compareTo(calendar2);
-            } catch (Exception e) {
-                return 0;
-            }
-        });
+        TreeSet<SLesson> filtered = new TreeSet<>(SLesson::compareTo);
         if (CollectionUtils.isEmpty(lessons)) {
             return filtered;
         }

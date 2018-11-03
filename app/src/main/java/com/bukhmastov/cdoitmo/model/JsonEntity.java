@@ -151,6 +151,11 @@ public abstract class JsonEntity implements Entity {
     }
 
 
+    public <T extends JsonEntity> T copy() throws JSONException, IllegalAccessException, InstantiationException {
+        return getClass().newInstance().fromJson(toJson());
+    }
+
+
     private <T extends JsonEntity> T castObject(JSONObject json, Class<T> type) throws JSONException, IllegalAccessException, InstantiationException {
         if (json == null) {
             return null;

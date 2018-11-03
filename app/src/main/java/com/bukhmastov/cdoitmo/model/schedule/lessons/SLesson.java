@@ -2,10 +2,12 @@ package com.bukhmastov.cdoitmo.model.schedule.lessons;
 
 import com.bukhmastov.cdoitmo.model.JsonEntity;
 import com.bukhmastov.cdoitmo.model.JsonProperty;
+import com.bukhmastov.cdoitmo.util.singleton.TimeUtil;
 
+import java.util.Calendar;
 import java.util.Objects;
 
-public class SLesson extends JsonEntity {
+public class SLesson extends JsonEntity implements Comparable<SLesson> {
 
     @JsonProperty("subject")
     private String subject;
@@ -165,6 +167,50 @@ public class SLesson extends JsonEntity {
 
     public void setCdoitmoType(String cdoitmoType) {
         this.cdoitmoType = cdoitmoType;
+    }
+
+    @Override
+    public int compareTo(SLesson lesson) {
+        try {
+            if (lesson == null) {
+                return 0;
+            }
+            int c = Objects.compare(
+                    TimeUtil.time2calendar(Calendar.getInstance(), getTimeStart()),
+                    TimeUtil.time2calendar(Calendar.getInstance(), lesson.getTimeStart()),
+                    Calendar::compareTo
+            );
+            if (c == 0) {
+                c = Objects.compare(getSubject(), lesson.getSubject(), String::compareTo);
+            }
+            if (c == 0) {
+                c = Objects.compare(getNote(), lesson.getNote(), String::compareTo);
+            }
+            if (c == 0) {
+                c = Objects.compare(getType(), lesson.getType(), String::compareTo);
+            }
+            if (c == 0) {
+                c = Objects.compare(getParity(), lesson.getParity(), Integer::compareTo);
+            }
+            if (c == 0) {
+                c = Objects.compare(getGroup(), lesson.getGroup(), String::compareTo);
+            }
+            if (c == 0) {
+                c = Objects.compare(getTeacherName(), lesson.getTeacherName(), String::compareTo);
+            }
+            if (c == 0) {
+                c = Objects.compare(getRoom(), lesson.getRoom(), String::compareTo);
+            }
+            if (c == 0) {
+                c = Objects.compare(getBuilding(), lesson.getBuilding(), String::compareTo);
+            }
+            if (c == 0) {
+                c = Objects.compare(getCdoitmoType(), lesson.getCdoitmoType(), String::compareTo);
+            }
+            return c;
+        } catch (Exception e) {
+            return 0;
+        }
     }
 
     @Override

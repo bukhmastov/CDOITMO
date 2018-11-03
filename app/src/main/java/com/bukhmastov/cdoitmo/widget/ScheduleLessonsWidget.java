@@ -174,7 +174,7 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
                                 }
                                 schedule.setTimestamp(time.getTimeInMillis());
                                 scheduleLessonsWidgetStorage.save(appWidgetId, "cache", schedule);
-                                SLessons converted = new ScheduleLessonsAdditionalConverter(schedule).convert();
+                                SLessons converted = new ScheduleLessonsAdditionalConverter(schedule.copy()).convert();
                                 if (converted == null) {
                                     failed(context, appWidgetManager, appWidgetId, settings, context.getString(R.string.failed_to_show_schedule));
                                     return;
