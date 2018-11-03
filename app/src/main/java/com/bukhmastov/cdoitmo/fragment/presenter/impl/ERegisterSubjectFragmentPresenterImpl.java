@@ -226,12 +226,16 @@ public class ERegisterSubjectFragmentPresenterImpl implements ERegisterSubjectFr
         for (ERMark mark : subject.getMarks()) {
             Double value = -1.0;
             for (ERPoint point : subject.getPoints()) {
-                if (point == null) {
+                if (point == null || point.getValue() == null || point.getValue() < value) {
                     continue;
                 }
                 if (Objects.equals(mark.getWorkType(), point.getName())) {
                     value = point.getValue();
-                    break;
+                    continue;
+                }
+                if (point.getMax() != null && point.getMax() == 100.0) {
+                    value = point.getValue();
+                    continue;
                 }
             }
             if (value == null) {

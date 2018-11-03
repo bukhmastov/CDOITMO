@@ -3,6 +3,8 @@ package com.bukhmastov.cdoitmo.adapter;
 import android.content.Context;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import dagger.Lazy;
+
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -31,7 +33,7 @@ public class SuggestionsListView extends ArrayAdapter<Suggestion> {
     private final OnClickCallback onClickCallback;
 
     @Inject
-    Log log;
+    Lazy<Log> log;
 
     public SuggestionsListView(@NonNull Context context, @NonNull List<Suggestion> suggestions) {
         this(context, suggestions, null);
@@ -70,7 +72,7 @@ public class SuggestionsListView extends ArrayAdapter<Suggestion> {
             }
             return convertView;
         } catch (Exception e) {
-            log.exception(e);
+            log.get().exception(e);
             return super.getView(position, convertView, parent);
         }
     }

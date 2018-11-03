@@ -72,6 +72,11 @@ public class ScheduleLessonsTabFragmentPresenterImpl implements ScheduleLessonsT
     private View container = null;
     private boolean invalidate = false;
     private boolean invalidateRefresh = false;
+    /**
+     * 0 - Нечетная
+     * 1 - Четная
+     * 2 - Обе недели
+     */
     private int type = ScheduleLessonsTabHostFragmentPresenter.DEFAULT_INVALID_TYPE;
 
     @Inject
@@ -630,7 +635,7 @@ public class ScheduleLessonsTabFragmentPresenterImpl implements ScheduleLessonsT
         if (CollectionUtils.isEmpty(days)) {
             sb.append(activity.getString(R.string.no_lessons));
         } else {
-            if (shareScheduleIsScheduleHasEvenOddWeekLessons(days)) {
+            if (type == 2 && shareScheduleIsScheduleHasEvenOddWeekLessons(days)) {
                 shareScheduleAppendLessonsForWeek(sb, days, schedule.getType(), 0);
                 shareScheduleAppendLessonsForWeek(sb, days, schedule.getType(), 1);
             } else {

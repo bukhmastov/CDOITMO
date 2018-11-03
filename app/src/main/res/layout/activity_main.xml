@@ -20,6 +20,7 @@
         android:elevation="4dp"/>
 
     <com.google.android.material.tabs.TabLayout
+        style="@style/Widget.MaterialComponents.TabLayout.Colored"
         android:id="@+id/fixed_tabs"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -28,9 +29,11 @@
         android:elevation="4dp"
         app:tabMode="fixed"
         app:tabSelectedTextColor="?attr/colorToolbarContent"
-        app:tabTextColor="?attr/colorToolbarContent" />
+        app:tabTextColor="?attr/colorToolbarContent"
+        app:tabIndicatorColor="?attr/colorAccent"/>
 
     <com.google.android.material.tabs.TabLayout
+        style="@style/Widget.MaterialComponents.TabLayout.Colored"
         android:id="@+id/scrollable_tabs"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -39,7 +42,8 @@
         android:elevation="4dp"
         app:tabMode="scrollable"
         app:tabSelectedTextColor="?attr/colorToolbarContent"
-        app:tabTextColor="?attr/colorToolbarContent" />
+        app:tabTextColor="?attr/colorToolbarContent"
+        app:tabIndicatorColor="?attr/colorAccent"/>
 
     <androidx.drawerlayout.widget.DrawerLayout
         android:id="@+id/drawer_layout"

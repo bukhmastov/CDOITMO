@@ -41,6 +41,7 @@
             app:titleMarginStart="48dp" />
 
         <com.google.android.material.tabs.TabLayout
+            style="@style/Widget.MaterialComponents.TabLayout.Colored"
             android:id="@+id/fixed_tabs"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -49,11 +50,13 @@
             app:tabMode="fixed"
             app:tabSelectedTextColor="?attr/colorToolbarContent"
             app:tabTextColor="?attr/colorToolbarContent"
+            app:tabIndicatorColor="?attr/colorAccent"
             app:tabMaxWidth="0dp"
             app:tabGravity="fill"
-            app:elevation="4dp" />
+            app:elevation="4dp"/>
 
         <com.google.android.material.tabs.TabLayout
+            style="@style/Widget.MaterialComponents.TabLayout.Colored"
             android:id="@+id/scrollable_tabs"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -62,9 +65,10 @@
             app:tabMode="scrollable"
             app:tabSelectedTextColor="?attr/colorToolbarContent"
             app:tabTextColor="?attr/colorToolbarContent"
+            app:tabIndicatorColor="?attr/colorAccent"
             app:tabMaxWidth="0dp"
             app:tabGravity="fill"
-            app:elevation="4dp" />
+            app:elevation="4dp"/>
 
         <RelativeLayout
             android:layout_width="match_parent"

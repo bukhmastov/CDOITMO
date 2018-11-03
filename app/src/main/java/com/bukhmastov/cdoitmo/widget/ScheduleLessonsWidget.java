@@ -294,7 +294,7 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
                 // заголовки
                 layout.setViewVisibility(R.id.widget_title, View.VISIBLE);
                 layout.setViewVisibility(R.id.widget_day_title, View.VISIBLE);
-                layout.setTextViewText(R.id.widget_title, schedule.getTitle() + ("room".equals(schedule.getType()) ? " " + context.getString(R.string.room).toLowerCase() : ""));
+                layout.setTextViewText(R.id.widget_title, schedule.getTitle() == null ? context.getString(R.string.schedule_lessons) : schedule.getTitle() + ("room".equals(schedule.getType()) ? " " + context.getString(R.string.room).toLowerCase() : ""));
                 layout.setTextViewText(R.id.widget_day_title,
                         (
                                 (shift[0] != 0 ? ((shift[0] > 0 ? "+" : "") + String.valueOf(shift[0]) + " ") : "") +

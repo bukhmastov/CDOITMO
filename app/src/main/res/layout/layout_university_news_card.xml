@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:card_view="http://schemas.android.com/apk/res-auto"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:clipToPadding="false"
@@ -14,10 +14,10 @@
     <androidx.cardview.widget.CardView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        card_view:cardBackgroundColor="?attr/colorBackgroundCards"
-        card_view:cardCornerRadius="4dp"
-        card_view:cardElevation="2dp"
-        card_view:cardUseCompatPadding="true">
+        app:cardBackgroundColor="?attr/colorBackgroundCards"
+        app:cardCornerRadius="4dp"
+        app:cardElevation="2dp"
+        app:cardUseCompatPadding="true">
 
         <LinearLayout
             android:id="@+id/news_click"
@@ -38,7 +38,7 @@
                     android:layout_gravity="center_horizontal"
                     android:adjustViewBounds="true"
                     android:scaleType="centerCrop"
-                    card_view:srcCompat="@drawable/background_pattern"
+                    android:src="@drawable/background_pattern"
                     android:tint="?attr/colorImageMultiply"
                     android:tintMode="multiply" />
 
@@ -126,7 +126,7 @@
                             android:layout_marginEnd="@dimen/item_padding_quarter"
                             android:layout_marginStart="@dimen/item_padding_quarter"
                             android:tint="?android:attr/textColorSecondary"
-                            card_view:srcCompat="@drawable/ic_visibility" />
+                            android:src="@drawable/ic_visibility" />
 
                         <TextView
                             android:id="@+id/count_view"

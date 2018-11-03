@@ -13,7 +13,7 @@ public class ClearCacheEvent {
     private final @NonNull @Identity String identity;
 
     public ClearCacheEvent() {
-        this(NOT_VALUABLE);
+        this(ALL);
     }
 
     public ClearCacheEvent(@NonNull @Identity String identity) {

@@ -6,7 +6,7 @@ import com.bukhmastov.cdoitmo.model.JsonProperty;
 import java.util.ArrayList;
 import java.util.Objects;
 
-public class SDay extends JsonEntity {
+public class SDay extends JsonEntity implements Comparable<SDay> {
 
     /**
      * 0 - Понедельник
@@ -64,6 +64,21 @@ public class SDay extends JsonEntity {
 
     public void setLessons(ArrayList<SLesson> lessons) {
         this.lessons = lessons;
+    }
+
+    @Override
+    public int compareTo(SDay day) {
+        if (day == null) {
+            return 0;
+        }
+        int c = Objects.compare(getWeekday(), day.getWeekday(), Integer::compareTo);
+        if (c == 0) {
+            c = Objects.compare(getTitle(), day.getTitle(), String::compareTo);
+        }
+        if (c == 0) {
+            c = Objects.compare(getType(), day.getType(), String::compareTo);
+        }
+        return c;
     }
 
     @Override

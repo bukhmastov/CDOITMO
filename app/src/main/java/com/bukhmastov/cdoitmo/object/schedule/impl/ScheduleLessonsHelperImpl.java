@@ -407,4 +407,22 @@ public class ScheduleLessonsHelperImpl implements ScheduleLessonsHelper {
         }
         return filtered;
     }
+
+    @Override
+    public TreeSet<SDay> filterAndSortDays(Collection<SDay> days) {
+        TreeSet<SDay> filtered = new TreeSet<>(SDay::compareTo);
+        if (CollectionUtils.isEmpty(days)) {
+            return filtered;
+        }
+        for (SDay day : days) {
+            if (day == null) {
+                continue;
+            }
+            if (CollectionUtils.isEmpty(day.getLessons())) {
+                continue;
+            }
+            filtered.add(day);
+        }
+        return filtered;
+    }
 }

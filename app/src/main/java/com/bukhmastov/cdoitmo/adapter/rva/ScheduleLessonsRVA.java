@@ -62,8 +62,8 @@ public class ScheduleLessonsRVA extends RVA<RVALessons> {
     private final String type;
     private final String query;
     private final int parity;
-    private final ArrayList<SDay> days = new ArrayList<>();
-    private final SparseIntArray daysPositions = new SparseIntArray();
+    private final ArrayList<SDay> days;
+    private final SparseIntArray daysPositions;
     private final String reducedLessonMode;
     private int colorScheduleFlagTEXT = -1, colorScheduleFlagCommonBG = -1, colorScheduleFlagPracticeBG = -1, colorScheduleFlagLectureBG = -1, colorScheduleFlagLabBG = -1, colorScheduleFlagIwsBG = -1;
 
@@ -74,6 +74,8 @@ public class ScheduleLessonsRVA extends RVA<RVALessons> {
         this.type = data.getType();
         this.query = data.getQuery();
         this.parity = parity;
+        this.days = new ArrayList<>();
+        this.daysPositions = new SparseIntArray();
         this.reducedLessonMode = reducedLessonMode;
         addItems(entity2dataset(data, weekday));
     }
@@ -334,7 +336,8 @@ public class ScheduleLessonsRVA extends RVA<RVALessons> {
         position++;
         // schedule
         int lessonsCount = 0;
-        for (SDay day : schedule.getSchedule()) {
+        TreeSet<SDay> daysSorted = scheduleLessonsHelper.filterAndSortDays(schedule.getSchedule());
+        for (SDay day : daysSorted) {
             if (day == null || CollectionUtils.isEmpty(day.getLessons())) {
                 continue;
             }

@@ -2,6 +2,7 @@ package com.bukhmastov.cdoitmo.object.schedule;
 
 import com.bukhmastov.cdoitmo.activity.ConnectedActivity;
 import com.bukhmastov.cdoitmo.function.Callable;
+import com.bukhmastov.cdoitmo.model.schedule.lessons.SDay;
 import com.bukhmastov.cdoitmo.model.schedule.lessons.SLesson;
 
 import java.util.Collection;
@@ -28,4 +29,6 @@ public interface ScheduleLessonsHelper {
     String getLessonSignature(SLesson lesson) throws Exception;
 
     TreeSet<SLesson> filterAndSortLessons(Collection<SLesson> lessons, int parity, boolean hideReducedLessons);
+
+    TreeSet<SDay> filterAndSortDays(Collection<SDay> days);
 }
