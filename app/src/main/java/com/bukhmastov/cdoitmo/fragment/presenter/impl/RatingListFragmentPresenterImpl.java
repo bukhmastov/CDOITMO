@@ -152,18 +152,6 @@ public class RatingListFragmentPresenterImpl implements RatingListFragmentPresen
     }
 
     @Override
-    public void onToolbarTeardown(Menu menu) {
-        if (menu == null) {
-            return;
-        }
-        hideShareButton(menu);
-        MenuItem beer = menu.findItem(R.id.action_beer);
-        MenuItem crown = menu.findItem(R.id.action_crown);
-        if (beer != null) beer.setVisible(false);
-        if (crown != null) crown.setVisible(false);
-    }
-
-    @Override
     public void onResume() {
         thread.run(() -> {
             log.v(TAG, "Fragment resumed");

@@ -175,12 +175,26 @@ public class TextUtilsImpl implements TextUtils {
 
     @Override
     public String crypt(String value) {
-        return crypt(value, "SHA-256");
+        return crypt(value, "SHA-256", true);
     }
 
     @Override
-    public String crypt(String value, String algorithm) {
-        String hash = null;
+    public String cryptMD5(String value) {
+        return crypt(value, "MD5", false);
+    }
+
+    @Override
+    public String cryptSHA1(String value) {
+        return crypt(value, "SHA-1", false);
+    }
+
+    @Override
+    public String cryptSHA256(String value) {
+        return crypt(value, "SHA-256", false);
+    }
+
+    private String crypt(String value, String algorithm, boolean fallback) {
+        String hash;
         try {
             MessageDigest md = MessageDigest.getInstance(algorithm);
             byte[] bytes = md.digest(value.getBytes("UTF-8"));
@@ -190,14 +204,20 @@ public class TextUtilsImpl implements TextUtils {
             }
             hash = sb.toString();
         } catch (NoSuchAlgorithmException e) {
+            if (!fallback) {
+                return Transliterate.cyr2lat(value);
+            }
             switch (algorithm) {
                 case "SHA-256":
-                    hash = crypt(value, "SHA-1");
+                    hash = crypt(value, "SHA-1", true);
                     break;
                 case "SHA-1":
-                    hash = crypt(value, "MD5");
+                    hash = crypt(value, "MD5", true);
                     break;
                 case "MD5":
+                    hash = Transliterate.cyr2lat(value);
+                    break;
+                default:
                     hash = Transliterate.cyr2lat(value);
                     break;
             }

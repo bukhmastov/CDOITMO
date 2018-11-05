@@ -175,24 +175,6 @@ public class ProtocolFragmentPresenterImpl implements ProtocolFragmentPresenter,
     }
 
     @Override
-    public void onToolbarTeardown(Menu menu) {
-        try {
-            thread.assertUI();
-            if (menu == null) {
-                return;
-            }
-            MenuItem share = menu.findItem(R.id.action_share);
-            MenuItem simple = menu.findItem(R.id.action_mode_simple);
-            MenuItem advanced = menu.findItem(R.id.action_mode_post_process);
-            if (share != null) share.setVisible(false);
-            if (simple != null) simple.setVisible(false);
-            if (advanced != null) advanced.setVisible(false);
-        } catch (Throwable throwable) {
-            log.exception(throwable);
-        }
-    }
-
-    @Override
     public void onResume() {
         thread.run(() -> {
             log.v(TAG, "Fragment resumed");

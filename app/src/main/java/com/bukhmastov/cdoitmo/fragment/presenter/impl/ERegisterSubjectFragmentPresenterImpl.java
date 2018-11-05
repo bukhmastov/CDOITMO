@@ -177,24 +177,6 @@ public class ERegisterSubjectFragmentPresenterImpl implements ERegisterSubjectFr
     }
 
     @Override
-    public void onToolbarTeardown(Menu menu) {
-        try {
-            thread.assertUI();
-            if (menu == null) {
-                return;
-            }
-            MenuItem share = activity.toolbar.findItem(R.id.action_share);
-            MenuItem simple = activity.toolbar.findItem(R.id.action_mode_simple);
-            MenuItem advanced = activity.toolbar.findItem(R.id.action_mode_post_process);
-            if (share != null) share.setVisible(false);
-            if (simple != null) simple.setVisible(false);
-            if (advanced != null) advanced.setVisible(false);
-        } catch (Throwable throwable) {
-            log.exception(throwable);
-        }
-    }
-
-    @Override
     public void onResume() {
         thread.run(() -> {
             if (subject == null) {

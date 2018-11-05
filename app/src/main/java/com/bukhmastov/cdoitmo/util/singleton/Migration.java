@@ -67,6 +67,9 @@ public class Migration {
                     } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException | ExceptionInInitializerError | SecurityException | NullPointerException e) {
                         // migration failed
                         injectProvider.getLog().e(TAG, "Migration failed for versionCode ", version, " | ", e.getMessage());
+                    } catch (Throwable throwable) {
+                        // migration failed
+                        injectProvider.getLog().e(TAG, "Migration failed for versionCode ", version, " | uncaught throwable | ", throwable.getMessage());
                     }
                 }
             } catch (Exception ignore) {

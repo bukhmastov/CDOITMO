@@ -186,22 +186,6 @@ public class ERegisterFragmentPresenterImpl implements ERegisterFragmentPresente
     }
 
     @Override
-    public void onToolbarTeardown(Menu menu) {
-        try {
-            thread.assertUI();
-            if (menu == null) {
-                return;
-            }
-            MenuItem info = menu.findItem(R.id.action_info);
-            MenuItem share = menu.findItem(R.id.action_share);
-            if (info != null) info.setVisible(false);
-            if (share != null) share.setVisible(false);
-        } catch (Throwable throwable) {
-            log.exception(throwable);
-        }
-    }
-
-    @Override
     public void onResume() {
         thread.run(() -> {
             log.v(TAG, "Fragment resumed");

@@ -29,5 +29,9 @@ public interface TextUtils {
 
     String crypt(String value);
 
-    String crypt(String value, String algorithm);
+    String cryptMD5(String value);
+
+    String cryptSHA1(String value);
+
+    String cryptSHA256(String value);
 }
