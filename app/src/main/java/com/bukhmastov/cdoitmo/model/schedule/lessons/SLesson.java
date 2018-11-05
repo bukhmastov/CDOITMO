@@ -2,6 +2,7 @@ package com.bukhmastov.cdoitmo.model.schedule.lessons;
 
 import com.bukhmastov.cdoitmo.model.JsonEntity;
 import com.bukhmastov.cdoitmo.model.JsonProperty;
+import com.bukhmastov.cdoitmo.util.singleton.StringUtils;
 import com.bukhmastov.cdoitmo.util.singleton.TimeUtil;
 
 import java.util.Calendar;
@@ -9,16 +10,16 @@ import java.util.Objects;
 
 public class SLesson extends JsonEntity implements Comparable<SLesson> {
 
-    @JsonProperty("subject")
+    @JsonProperty(value = "subject", order = 1)
     private String subject;
 
-    @JsonProperty("note")
+    @JsonProperty(value = "note", order = 2)
     private String note;
 
     /**
      * lecture, practice, lab, iws
      */
-    @JsonProperty("type")
+    @JsonProperty(value = "type", order = 3)
     private String type;
 
     /**
@@ -26,31 +27,31 @@ public class SLesson extends JsonEntity implements Comparable<SLesson> {
      * 1 - Четная
      * 2 - Обе недели
      */
-    @JsonProperty("week")
+    @JsonProperty(value = "week", order = 4)
     private int parity;
 
-    @JsonProperty("timeStart")
+    @JsonProperty(value = "timeStart", order = 5)
     private String timeStart;
 
-    @JsonProperty("timeEnd")
+    @JsonProperty(value = "timeEnd", order = 6)
     private String timeEnd;
 
-    @JsonProperty("group")
+    @JsonProperty(value = "group", order = 7)
     private String group;
 
-    @JsonProperty("teacher")
+    @JsonProperty(value = "teacher", order = 8)
     private String teacherName;
 
-    @JsonProperty("teacher_id")
+    @JsonProperty(value = "teacher_id", order = 9)
     private String teacherId;
 
-    @JsonProperty("room")
+    @JsonProperty(value = "room", order = 10)
     private String room;
 
-    @JsonProperty("building")
+    @JsonProperty(value = "building", order = 11)
     private String building;
 
-    @JsonProperty("cdoitmo_type")
+    @JsonProperty(value = "cdoitmo_type", order = 12)
     private String cdoitmoType;
 
     public SLesson() {
@@ -71,6 +72,13 @@ public class SLesson extends JsonEntity implements Comparable<SLesson> {
         setRoom(lesson.getRoom());
         setBuilding(lesson.getBuilding());
         setCdoitmoType(lesson.getCdoitmoType());
+    }
+
+    public String getSubjectWithNote() {
+        if (StringUtils.isNotBlank(note)) {
+            return subject + ": " + note;
+        }
+        return subject;
     }
 
     public String getSubject() {

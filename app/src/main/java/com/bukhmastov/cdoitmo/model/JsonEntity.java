@@ -1,7 +1,5 @@
 package com.bukhmastov.cdoitmo.model;
 
-import androidx.annotation.NonNull;
-
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -9,8 +7,11 @@ import org.json.JSONObject;
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+
+import androidx.annotation.NonNull;
 
 public abstract class JsonEntity implements Entity {
 
@@ -25,20 +26,61 @@ public abstract class JsonEntity implements Entity {
 
     public JSONObject toJson() throws JSONException, IllegalAccessException {
         HashMap<String, EntityMetaData> fields = getFields();
-        JSONObject output = new JSONObject();
+        int maxOccupiedPosition = 0;
+        int numberOfNonOrderedElements = 0;
+        for (EntityMetaData metaData : fields.values()) {
+            if (metaData.order == 0) {
+                numberOfNonOrderedElements++;
+                continue;
+            }
+            if (metaData.order > maxOccupiedPosition) {
+                maxOccupiedPosition = metaData.order;
+            }
+        }
+        List<EntityMetaDataValue> values;
+        if (maxOccupiedPosition == 0) {
+            values = new ArrayList<>();
+        } else {
+            values = new ArrayList<>(maxOccupiedPosition + numberOfNonOrderedElements);
+            for (int i = 0; i < maxOccupiedPosition + numberOfNonOrderedElements; i++) {
+                values.add(null);
+            }
+        }
         for (Field field : this.getClass().getDeclaredFields()) {
             String fieldName = field.getName();
             if (!fields.containsKey(fieldName)) {
                 continue;
             }
             field.setAccessible(true);
-            EntityMetaData meta = fields.get(fieldName);
-            Object fieldValue = field.get(this);
-            if (fieldValue == null) {
+            Object value = field.get(this);
+            if (value == null) {
                 continue;
             }
+            EntityMetaData meta = fields.get(fieldName);
+            EntityMetaDataValue metaDataValue = new EntityMetaDataValue(meta, value);
+            if (maxOccupiedPosition == 0) {
+                values.add(metaDataValue);
+                continue;
+            }
+            if (meta.order == 0) {
+                if (maxOccupiedPosition >= values.size()) {
+                    values.add(metaDataValue);
+                } else {
+                    values.set(maxOccupiedPosition++, metaDataValue);
+                }
+            } else {
+                values.set(meta.order - 1, metaDataValue);
+            }
+        }
+        JSONObject output = new JSONObject();
+        for (EntityMetaDataValue metaDataValue : values) {
+            if (metaDataValue == null) {
+                continue;
+            }
+            EntityMetaData meta = metaDataValue.metaData;
+            Object value = metaDataValue.value;
             if (meta.isArray) {
-                Iterable iterable = (Iterable) fieldValue;
+                Iterable iterable = (Iterable) value;
                 JSONArray array = new JSONArray();
                 if (meta.isDerivedFromEntity) {
                     for (Object curr : iterable) {
@@ -52,9 +94,9 @@ public abstract class JsonEntity implements Entity {
                 output.put(meta.key, array);
             } else {
                 if (meta.isDerivedFromEntity) {
-                    output.put(meta.key, ((JsonEntity) fieldValue).toJson());
+                    output.put(meta.key, ((JsonEntity) value).toJson());
                 } else {
-                    output.put(meta.key, fieldValue);
+                    output.put(meta.key, value);
                 }
             }
         }
@@ -189,21 +231,22 @@ public abstract class JsonEntity implements Entity {
             }
             HashMap<String, EntityMetaData> fields = fieldsMap.get(className);
             for (Field field : entity.getClass().getDeclaredFields()) {
-                final JsonProperty jsonProperty = field.getAnnotation(JsonProperty.class);
+                JsonProperty jsonProperty = field.getAnnotation(JsonProperty.class);
                 if (jsonProperty == null) {
                     continue;
                 }
-                String filedProperty = jsonProperty.value();
+                String key = jsonProperty.value();
+                int order = jsonProperty.order() < 0 ? 0 : jsonProperty.order();
                 Class<?> fieldType = field.getType();
-                //if (!Iterable.class.isAssignableFrom(fieldType)) {
-                if (!List.class.isAssignableFrom(fieldType)) {
-                    fields.put(field.getName(), new EntityMetaData(filedProperty, fieldType));
+                //if (Iterable.class.isAssignableFrom(fieldType)) {
+                if (List.class.isAssignableFrom(fieldType)) {
+                    Type type = field.getGenericType();
+                    ParameterizedType pt = (ParameterizedType) type;
+                    Type collectionType = pt.getActualTypeArguments()[0];
+                    fields.put(field.getName(), new EntityMetaData(key, order, (Class<?>) collectionType, fieldType));
                     continue;
                 }
-                Type type = field.getGenericType();
-                ParameterizedType pt = (ParameterizedType) type;
-                Type innerType = pt.getActualTypeArguments()[0];
-                fields.put(field.getName(), new EntityMetaData(filedProperty, (Class<?>) innerType, fieldType));
+                fields.put(field.getName(), new EntityMetaData(key, order, fieldType));
             }
             fieldsMap.put(className, fields);
         } catch (Throwable throwable) {
@@ -212,24 +255,35 @@ public abstract class JsonEntity implements Entity {
     }
 
     private class EntityMetaData {
-        private EntityMetaData(String key, Class entityType, Class collectionType) {
+        private EntityMetaData(String key, int order, Class entityType, Class<?> collectionType) {
             this.key = key;
+            this.order = order;
             this.entityType = entityType;
             this.collectionType = collectionType;
             this.isArray = true;
             this.isDerivedFromEntity = JsonEntity.class.isAssignableFrom(entityType);
         }
-        private EntityMetaData(String key, Class entityType) {
+        private EntityMetaData(String key, int order, Class entityType) {
             this.key = key;
+            this.order = order;
             this.entityType = entityType;
             this.collectionType = void.class;
             this.isArray = false;
             this.isDerivedFromEntity = JsonEntity.class.isAssignableFrom(entityType);
         }
         private String key;
+        private int order;
         private Class entityType;
         private Class<?> collectionType;
         private boolean isArray;
         private boolean isDerivedFromEntity;
+    }
+    private class EntityMetaDataValue {
+        public EntityMetaDataValue(EntityMetaData metaData, Object value) {
+            this.metaData = metaData;
+            this.value = value;
+        }
+        private EntityMetaData metaData;
+        private Object value;
     }
 }
