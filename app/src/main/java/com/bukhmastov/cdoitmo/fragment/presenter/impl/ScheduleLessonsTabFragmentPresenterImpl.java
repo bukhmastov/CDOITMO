@@ -731,7 +731,7 @@ public class ScheduleLessonsTabFragmentPresenterImpl implements ScheduleLessonsT
                 continue;
             }
             lessonsCount++;
-            String subject = lesson.getSubject();
+            String subject = lesson.getSubjectWithNote();
             String desc = getLessonDesc(lesson, scheduleType);
             String meta = getLessonMeta(lesson, scheduleType);
             String lessonType = lesson.getType();

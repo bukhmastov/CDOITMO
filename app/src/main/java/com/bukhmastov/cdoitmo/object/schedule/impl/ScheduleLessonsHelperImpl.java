@@ -374,7 +374,7 @@ public class ScheduleLessonsHelperImpl implements ScheduleLessonsHelper {
     @Override
     public String getLessonSignature(SLesson lesson) throws Exception {
         SLesson replica = new SLesson();
-        replica.setSubject(lesson.getSubject());
+        replica.setSubject(lesson.getSubjectWithNote());
         replica.setType(lesson.getType());
         replica.setParity(lesson.getParity());
         replica.setTimeStart(lesson.getTimeStart());

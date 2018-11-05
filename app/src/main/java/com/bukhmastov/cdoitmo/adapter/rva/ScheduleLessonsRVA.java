@@ -202,7 +202,7 @@ public class ScheduleLessonsRVA extends RVA<RVALessons> {
             container.findViewById(R.id.lesson_synthetic_icon).setVisibility(isSynthetic ? View.VISIBLE : View.GONE);
             tryRegisterClickListener(container, R.id.lesson_touch_icon, new RVALessons(lesson, weekday));
             // title and time
-            ((TextView) container.findViewById(R.id.lesson_title)).setText(lesson.getSubject());
+            ((TextView) container.findViewById(R.id.lesson_title)).setText(lesson.getSubjectWithNote());
             ((TextView) container.findViewById(R.id.lesson_time_start)).setText(lesson.getTimeStart());
             ((TextView) container.findViewById(R.id.lesson_time_end)).setText(lesson.getTimeEnd());
             // desc

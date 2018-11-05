@@ -556,7 +556,7 @@ public class ScheduleLessonsShareFragmentPresenterImpl implements ScheduleLesson
                     lessonView.findViewById(R.id.lesson_touch_icon).setVisibility(View.GONE);
                     ((TextView) lessonView.findViewById(R.id.lesson_time_start)).setText(change.lesson.getTimeStart());
                     ((TextView) lessonView.findViewById(R.id.lesson_time_end)).setText(change.lesson.getTimeEnd());
-                    ((TextView) lessonView.findViewById(R.id.lesson_title)).setText(change.lesson.getSubject());
+                    ((TextView) lessonView.findViewById(R.id.lesson_title)).setText(change.lesson.getSubjectWithNote());
                     setDesc(change.lesson, lessonView.findViewById(R.id.lesson_desc));
                     setFlags(change.lesson, lessonView.findViewById(R.id.lesson_flags));
                     setMeta(change.lesson, lessonView.findViewById(R.id.lesson_meta));

@@ -357,7 +357,7 @@ public abstract class SearchActivity extends Activity {
     }
 
     protected void recentSchedulesIterator(String type, RecentSchedulesIterator recentSchedulesIterator) throws Exception {
-        String recentString = storage.get(context, Storage.PERMANENT, Storage.USER, "schedule_" + getType() + "#recent", "");
+        String recentString = storage.get(context, Storage.PERMANENT, Storage.USER, "schedule_" + type + "#recent", "");
         if (StringUtils.isBlank(recentString)) {
             return;
         }

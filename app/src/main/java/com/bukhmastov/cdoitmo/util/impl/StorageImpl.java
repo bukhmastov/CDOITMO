@@ -56,9 +56,9 @@ public class StorageImpl implements Storage {
             if (!file.exists() && !file.getParentFile().mkdirs() && !file.createNewFile()) {
                 throw new Exception("Failed to create file: " + file.getPath());
             }
-            FileWriter fileWriter = new FileWriter(file);
-            fileWriter.write(data);
-            fileWriter.close();
+            try (FileWriter fileWriter = new FileWriter(file)) {
+                fileWriter.write(data);
+            }
             storageLocalCache.push(file.getAbsolutePath(), data, 1);
             return true;
         } catch (Exception e) {
@@ -95,13 +95,13 @@ public class StorageImpl implements Storage {
                 log.v(TAG, "get | mode=", mode, " | type=", type, " | path=", path, " | from local cache");
                 return cache;
             }
-            FileReader fileReader = new FileReader(file);
             StringBuilder data = new StringBuilder();
-            int c;
-            while ((c = fileReader.read()) != -1) {
-                data.append((char) c);
+            try (FileReader fileReader = new FileReader(file)) {
+                int c;
+                while ((c = fileReader.read()) != -1) {
+                    data.append((char) c);
+                }
             }
-            fileReader.close();
             storageLocalCache.push(path, data.toString(), 1);
             return data.toString();
         } catch (Exception e) {

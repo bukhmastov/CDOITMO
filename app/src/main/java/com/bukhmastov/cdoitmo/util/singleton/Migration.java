@@ -146,45 +146,26 @@ public class Migration {
                     }
                 });
                 // Convert "schedule_" + getType() + "#recent"
-                readFile(getFile(folder.getPath(), "schedule_lessons", "recent"), (file, data) -> {
-                    JSONArray json = new JSONArray(data);
-                    Suggestions suggestions = new Suggestions();
-                    suggestions.setSuggestions(new ArrayList<>());
-                    for (int i = 0; i < json.length(); i++) {
-                        try {
-                            suggestions.getSuggestions().add(json.getString(i));
-                        } catch (Throwable ignore) {
-                            // ignore
+                StringCallback suggestionCallback = (file, data) -> {
+                    try {
+                        JSONArray json = new JSONArray(data);
+                        Suggestions suggestions = new Suggestions();
+                        suggestions.setSuggestions(new ArrayList<>());
+                        for (int i = 0; i < json.length(); i++) {
+                            try {
+                                suggestions.getSuggestions().add(json.getString(i));
+                            } catch (Throwable ignore) {
+                                // ignore
+                            }
                         }
+                        writeFile(file, suggestions.toJsonString());
+                    } catch (Throwable throwable) {
+                        deleteRecursive(file);
                     }
-                    writeFile(file, suggestions.toJsonString());
-                });
-                readFile(getFile(folder.getPath(), "schedule_exams", "recent"), (file, data) -> {
-                    JSONArray json = new JSONArray(data);
-                    Suggestions suggestions = new Suggestions();
-                    suggestions.setSuggestions(new ArrayList<>());
-                    for (int i = 0; i < json.length(); i++) {
-                        try {
-                            suggestions.getSuggestions().add(json.getString(i));
-                        } catch (Throwable ignore) {
-                            // ignore
-                        }
-                    }
-                    writeFile(file, suggestions.toJsonString());
-                });
-                readFile(getFile(folder.getPath(), "schedule_attestations", "recent"), (file, data) -> {
-                    JSONArray json = new JSONArray(data);
-                    Suggestions suggestions = new Suggestions();
-                    suggestions.setSuggestions(new ArrayList<>());
-                    for (int i = 0; i < json.length(); i++) {
-                        try {
-                            suggestions.getSuggestions().add(json.getString(i));
-                        } catch (Throwable ignore) {
-                            // ignore
-                        }
-                    }
-                    writeFile(file, suggestions.toJsonString());
-                });
+                };
+                readFile(getFile(folder.getPath(), "schedule_lessons", "recent.txt"), suggestionCallback);
+                readFile(getFile(folder.getPath(), "schedule_exams", "recent.txt"), suggestionCallback);
+                readFile(getFile(folder.getPath(), "schedule_attestations", "recent.txt"), suggestionCallback);
             });
         } catch (Throwable ignore) {
             // ignore

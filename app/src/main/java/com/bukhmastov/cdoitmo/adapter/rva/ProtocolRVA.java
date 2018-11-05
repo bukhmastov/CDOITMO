@@ -20,7 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-public class ProtocolRVA extends RVA {
+public class ProtocolRVA extends RVA<RVAProtocolChange> {
 
     private static final int TYPE_HEADER = 0;
     private static final int TYPE_CHANGE = 1;
@@ -188,9 +188,7 @@ public class ProtocolRVA extends RVA {
                     RVAProtocolGroup groupPrevious = groups.get(groups.keyAt(i - 1));
                     RVAProtocolGroup group = groups.get(groups.keyAt(i));
                     if (Objects.equals(group.getSubject(), groupPrevious.getSubject())) {
-                        for (PChange change : group.getChanges()) {
-                            groupPrevious.getChanges().add(change);
-                        }
+                        groupPrevious.getChanges().addAll(group.getChanges());
                         group.setChanges(groupPrevious.getChanges());
                         groups.remove(groups.keyAt(i - 1));
                         i--;
@@ -202,7 +200,7 @@ public class ProtocolRVA extends RVA {
                     int length = group.getChanges().size();
                     dataset.add(new Item<>(TYPE_HEADER, new RVASingleValue(group.getSubject())));
                     for (int j = 0; j < length; j++) {
-                        PChange change = changes.get(j);
+                        PChange change = group.getChanges().get(j);
                         RVAProtocolChange rvaChange = new RVAProtocolChange();
                         rvaChange.setDesc(change.getName() + " [" + change.getMin() + "/" + change.getThreshold() + "/" + change.getMax() + "]");
                         rvaChange.setMeta(("..".equals(change.getTeacher()) ? "" : change.getTeacher() + " | ") + change.getDate());
