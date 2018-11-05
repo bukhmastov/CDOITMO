@@ -508,5 +508,7 @@
     <string name="share_attestations_schedule">Share attestation</string>
     <string name="crown">Display crowns</string>
     <string name="beer">Display beers</string>
+    <string name="share_all_protocol">Share all</string>
+    <string name="share_protocol_subject">Share subject</string>
 
 </resources>

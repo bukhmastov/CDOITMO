@@ -5,11 +5,14 @@ import androidx.annotation.Nullable;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+
+import android.util.SparseArray;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.PopupMenu;
 import android.widget.Spinner;
 import android.widget.TextView;
 
@@ -46,6 +49,9 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import javax.inject.Inject;
 
@@ -164,7 +170,13 @@ public class ProtocolFragmentPresenterImpl implements ProtocolFragmentPresenter,
                 } else {
                     share.setVisible(true);
                     share.setOnMenuItemClickListener(item -> {
-                        share();
+                        View view = activity.findViewById(R.id.action_share);
+                        if (view == null) {
+                            view = activity.findViewById(android.R.id.content);
+                        }
+                        if (view != null) {
+                            share(view);
+                        }
                         return false;
                     });
                 }
@@ -476,24 +488,94 @@ public class ProtocolFragmentPresenterImpl implements ProtocolFragmentPresenter,
         });
     }
 
-    private void share() {
+    private void share(View view) {
         thread.run(() -> {
-            if (getData() == null || CollectionUtils.isEmpty(getData().getChanges())) {
+            Protocol data = getData();
+            if (data == null || data.getChanges() == null) {
+                return;
+            }
+            Map<String, List<PChange>> subjects = new HashMap<>();
+            for (PChange change : data.getChanges()) {
+                if (change == null) {
+                    continue;
+                }
+                String sbj = change.getSubject();
+                if (!subjects.containsKey(sbj)) {
+                    subjects.put(sbj, new ArrayList<>());
+                }
+                subjects.get(sbj).add(change);
+            }
+            thread.runOnUI(() -> {
+                SparseArray<Map<String, List<PChange>>> menuSubjectsMap = new SparseArray<>();
+                PopupMenu popup = new PopupMenu(activity, view);
+                popup.inflate(R.menu.protocol_share);
+                if (subjects.size() == 0) {
+                    popup.getMenu().findItem(R.id.share_protocol_subject).setVisible(false);
+                } else {
+                    Menu subMenu = popup.getMenu().findItem(R.id.share_protocol_subject).getSubMenu();
+                    for (Map.Entry<String, List<PChange>> entry : subjects.entrySet()) {
+                        String subject = entry.getKey();
+                        List<PChange> changes = entry.getValue();
+                        int id = View.generateViewId();
+                        subMenu.add(Menu.NONE, id, Menu.NONE, subject);
+                        Map<String, List<PChange>> currentSubjects = new HashMap<>();
+                        currentSubjects.put(subject, changes);
+                        menuSubjectsMap.put(id, currentSubjects);
+                    }
+                }
+                popup.setOnMenuItemClickListener(menuItem -> {
+                    thread.run(() -> {
+                        switch (menuItem.getItemId()) {
+                            case R.id.share_all_protocol: share(subjects); break;
+                            default:
+                                Map<String, List<PChange>> sbj = menuSubjectsMap.get(menuItem.getItemId());
+                                if (sbj != null) {
+                                    share(sbj);
+                                }
+                                break;
+                        }
+                    }, throwable -> {
+                        log.exception(throwable);
+                        notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                    });
+                    return false;
+                });
+                popup.show();
+            }, throwable -> {
+                log.exception(throwable);
+                notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
+            });
+        }, throwable -> {
+            log.exception(throwable);
+            notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
+        });
+    }
+
+    private void share(Map<String, List<PChange>> subjects) {
+        thread.run(() -> {
+            if (subjects == null) {
                 return;
             }
             StringBuilder sb = new StringBuilder();
-            sb.append("Мой протокол изменений:").append("\n");
-            for (PChange change : getData().getChanges()) {
-                sb.append(change.getSubject());
-                sb.append(" — ");
-                sb.append(change.getName());
-                sb.append(" (");
-                sb.append(change.getDate());
-                sb.append("): ");
-                sb.append(change.getValue());
-                sb.append("/");
-                sb.append(change.getMax());
-                sb.append("\n");
+            sb.append("Мой протокол изменений:");
+            if (subjects.size() == 0) {
+                sb.append(activity.getString(R.string.no_changes_for_period));
+            } else {
+                for (Map.Entry<String, List<PChange>> entry : subjects.entrySet()) {
+                    sb.append("\n");
+                    sb.append(entry.getKey());
+                    for (PChange change : entry.getValue()) {
+                        sb.append("\n");
+                        sb.append(change.getName());
+                        sb.append(" (");
+                        sb.append(change.getDate());
+                        sb.append("): ");
+                        sb.append(change.getValue());
+                        sb.append("/");
+                        sb.append(change.getMax());
+                    }
+                    sb.append("\n");
+                }
             }
             eventBus.fire(new ShareTextEvent(sb.toString().trim(), "txt_protocol"));
         }, throwable -> {

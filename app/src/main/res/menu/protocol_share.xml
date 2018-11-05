@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/share_all_protocol"
+        android:title="@string/share_all_protocol" />
+
+    <item
+        android:id="@+id/share_protocol_subject"
+        android:title="@string/share_protocol_subject" >
+        <menu/>
+    </item>
+</menu>

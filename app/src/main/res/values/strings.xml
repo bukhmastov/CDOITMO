@@ -516,5 +516,7 @@
     <string name="share_attestations_schedule">Поделиться предметом</string>
     <string name="crown">Отображать короны</string>
     <string name="beer">Отображать пиво</string>
+    <string name="share_all_protocol">Поделиться всем</string>
+    <string name="share_protocol_subject">Поделиться предметом</string>
 
 </resources>
