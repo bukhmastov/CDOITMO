@@ -84,11 +84,8 @@ public class FileReceiveActivityPresenterImpl implements FileReceiveActivityPres
             if (toolbar != null) {
                 theme.applyToolbarTheme(activity, toolbar);
                 activity.setActionBar(toolbar);
-            }
-            ActionBar actionBar = activity.getActionBar();
-            if (actionBar != null) {
-                actionBar.setHomeButtonEnabled(true);
-                actionBar.setDisplayHomeAsUpEnabled(true);
+                activity.getActionBar().setDisplayHomeAsUpEnabled(true);
+                activity.getActionBar().setHomeButtonEnabled(true);
             }
             proceed();
         });

@@ -232,10 +232,12 @@ public abstract class ConnectedActivity extends androidx.fragment.app.FragmentAc
             }
             actionBar.setTitle(title);
             if (image == null || !App.tablet) {
+                actionBar.setDisplayHomeAsUpEnabled(true);
                 actionBar.setHomeButtonEnabled(true);
                 actionBar.setLogo(null);
                 return;
             }
+            actionBar.setDisplayHomeAsUpEnabled(false);
             actionBar.setHomeButtonEnabled(false);
             Drawable drawable = getDrawable(image);
             if (drawable != null) {
