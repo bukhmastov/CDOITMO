@@ -413,13 +413,9 @@
 
         <include layout="@layout/separator"/>
 
-        <Button
+        <include layout="@layout/button_colored_full"
             android:id="@+id/add_button"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/add_widget"
-            android:textSize="@dimen/font_size_14"
-            style="@android:style/Widget.Material.Button.Borderless.Colored"/>
+            android:visibility="gone"/>
 
     </LinearLayout>
 

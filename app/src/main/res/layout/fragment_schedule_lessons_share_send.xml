@@ -91,13 +91,11 @@
 
         <include layout="@layout/separator"/>
 
-        <Button
+        <include layout="@layout/button_colored_full"
             android:id="@+id/share_execute"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/share"
-            android:visibility="gone"
-            style="@android:style/Widget.Material.Button.Borderless"/>
+            android:visibility="gone"/>
 
     </LinearLayout>
 

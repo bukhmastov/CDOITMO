@@ -18,4 +18,6 @@ public interface FileReceiveActivityPresenter {
     boolean onToolbarSelected(MenuItem item);
 
     boolean onBackPressed();
+
+    void onReadExternalStorageGranted();
 }

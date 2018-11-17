@@ -414,6 +414,8 @@
     <string name="reduce_lessons">Скрыть занятия</string>
     <string name="changes_applied">Изменения внесены</string>
     <string name="failed_to_handle_file">Не удалось обработать файл</string>
+    <string name="failed_to_handle_file_not_found">Файл не найден или у приложения нет прав доступа к нему</string>
+    <string name="failed_to_handle_required_permission">Для обработки файла необходимо предоставить к нему доступ</string>
     <string name="error_while_handle_file">Ошибка обработки файла</string>
     <string name="file_doesnot_supported">Открытый файл не поддерживается приложением</string>
     <string name="failed_to_display_file">Ошибка отображения файла</string>

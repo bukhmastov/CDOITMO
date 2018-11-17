@@ -1,14 +1,11 @@
 package com.bukhmastov.cdoitmo.activity.presenter.impl;
 
-import android.app.ActionBar;
+import android.Manifest;
 import android.content.Intent;
-import android.database.Cursor;
+import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
-import android.os.ParcelFileDescriptor;
-import android.provider.OpenableColumns;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
@@ -28,20 +25,25 @@ import com.bukhmastov.cdoitmo.model.fileshare.FShare;
 import com.bukhmastov.cdoitmo.model.fileshare.schedule.lessons.FSLessons;
 import com.bukhmastov.cdoitmo.network.provider.NetworkUserAgentProvider;
 import com.bukhmastov.cdoitmo.util.Log;
+import com.bukhmastov.cdoitmo.util.NotificationMessage;
 import com.bukhmastov.cdoitmo.util.Storage;
 import com.bukhmastov.cdoitmo.util.Theme;
 import com.bukhmastov.cdoitmo.util.Thread;
 import com.bukhmastov.cdoitmo.util.singleton.StringUtils;
 
-import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.io.Reader;
 import java.util.HashMap;
 import java.util.concurrent.TimeUnit;
-import java.util.regex.Pattern;
 
 import javax.inject.Inject;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+import dagger.Lazy;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
@@ -51,6 +53,7 @@ public class FileReceiveActivityPresenterImpl implements FileReceiveActivityPres
 
     private static final String TAG = "FileReceiveActivity";
     private FileReceiveActivity activity = null;
+    private Uri storedUri = null;
 
     @Inject
     Log log;
@@ -64,6 +67,8 @@ public class FileReceiveActivityPresenterImpl implements FileReceiveActivityPres
     NetworkUserAgentProvider networkUserAgentProvider;
     @Inject
     FirebaseAnalyticsProvider firebaseAnalyticsProvider;
+    @Inject
+    Lazy<NotificationMessage> notificationMessage;
 
     public FileReceiveActivityPresenterImpl() {
         AppComponentProvider.getComponent().inject(this);
@@ -110,6 +115,13 @@ public class FileReceiveActivityPresenterImpl implements FileReceiveActivityPres
         return activity.back();
     }
 
+    @Override
+    public void onReadExternalStorageGranted() {
+        if (storedUri != null) {
+            proceed(storedUri);
+        }
+    }
+
     private void proceed() {
         thread.run(() -> {
             Intent intent = activity.getIntent();
@@ -117,9 +129,17 @@ public class FileReceiveActivityPresenterImpl implements FileReceiveActivityPres
                 throw new NullPointerException("Intent is null");
             }
             log.v(TAG, "proceed | intent: ", intent.toString());
-            Uri uri = intent.getData();
+            proceed(intent.getData());
+        }, throwable -> {
+            log.w(TAG, "proceed | Throwable: ", throwable.getMessage());
+            failure(activity.getString(R.string.failed_to_handle_file));
+        });
+    }
+
+    private void proceed(Uri uri) {
+        thread.run(() -> {
             if (uri == null) {
-                throw new NullPointerException("Intent's data (uri) is null");
+                throw new NullPointerException("Uri is null");
             }
             String scheme = uri.getScheme();
             if (scheme == null) {
@@ -127,11 +147,9 @@ public class FileReceiveActivityPresenterImpl implements FileReceiveActivityPres
             }
             String file;
             switch (scheme) {
-                case "file":    file = fileFromUri(uri); break;
-                case "http":
-                case "https":   file = fileFromWeb(uri); break;
-                case "content": file = fileFromContent(uri); break;
-                default:        throw new MessageException(activity.getString(R.string.failed_to_handle_file));
+                case "http": case "https":   file = fileFromWeb(uri); break;
+                case "file": case "content": file = fileFromContentResolver(uri); break;
+                default: throw new MessageException(activity.getString(R.string.failed_to_handle_file));
             }
             if (StringUtils.isBlank(file)) {
                 throw new MessageException(activity.getString(R.string.failed_to_handle_file));
@@ -158,41 +176,14 @@ public class FileReceiveActivityPresenterImpl implements FileReceiveActivityPres
             } else if (throwable instanceof MessageException) {
                 log.v(TAG, "proceed | MessageException: ", throwable.getMessage());
                 failure(throwable.getMessage());
+            } else if (throwable instanceof FileNotFoundException) {
+                log.v(TAG, "proceed | FileNotFoundException: ", throwable.getMessage());
+                failure(activity.getString(R.string.failed_to_handle_file_not_found));
             } else {
                 log.w(TAG, "proceed | Throwable: ", throwable.getMessage());
                 failure(activity.getString(R.string.failed_to_handle_file));
             }
         });
-    }
-
-    private String fileFromUri(Uri uri) throws Throwable {
-        log.v(TAG, "fileFromUri | uri=", uri.toString());
-        try (Cursor cursor = activity.getContentResolver().query(uri, null, null, null, null)) {
-            if (cursor == null) {
-                throw new NullPointerException("fileFromUri | cursor is null");
-            }
-            int nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME);
-            cursor.moveToFirst();
-            String filename = cursor.getString(nameIndex);
-            if (!Pattern.compile("^.*\\.cdoitmo$").matcher(filename).find()) {
-                log.v(TAG, "fileFromUri | filename does not match pattern | filename=", filename);
-                throw new MessageException(activity.getString(R.string.error_while_handle_file));
-            }
-        }
-        try (ParcelFileDescriptor parcelFileDescriptor = activity.getContentResolver().openFileDescriptor(uri, "r")) {
-            if (parcelFileDescriptor == null) {
-                throw new NullPointerException("fileFromUri | ParcelFileDescriptor is null");
-            }
-            try (InputStream in = new FileInputStream(parcelFileDescriptor.getFileDescriptor())) {
-                byte[] buffer = new byte[1024];
-                StringBuilder out = new StringBuilder();
-                int length;
-                while ((length = in.read(buffer)) > 0) {
-                    out.append(new String(buffer, 0, length));
-                }
-                return out.toString();
-            }
-        }
     }
 
     private String fileFromWeb(Uri uri) throws Throwable {
@@ -223,11 +214,11 @@ public class FileReceiveActivityPresenterImpl implements FileReceiveActivityPres
         return out.toString();
     }
 
-    private String fileFromContent(Uri uri) throws Throwable {
-        log.v(TAG, "fileFromContent | uri=", uri.toString());
+    private String fileFromContentResolver(Uri uri) throws Throwable {
+        log.v(TAG, "fileFromContentResolver | uri=", uri.toString());
         try (InputStream in = activity.getContentResolver().openInputStream(uri)) {
             if (in == null) {
-                throw new NullPointerException("fileFromContent | InputStream is null");
+                throw new NullPointerException("fileFromContentResolver | InputStream is null");
             }
             byte[] buffer = new byte[1024];
             StringBuilder out = new StringBuilder();
@@ -236,15 +227,25 @@ public class FileReceiveActivityPresenterImpl implements FileReceiveActivityPres
                 out.append(new String(buffer, 0, length));
             }
             return out.toString();
+        } catch (FileNotFoundException fileNotFoundException) {
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+                throw fileNotFoundException;
+            }
+            if (ContextCompat.checkSelfPermission(activity, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
+                throw fileNotFoundException;
+            }
+            if (ActivityCompat.shouldShowRequestPermissionRationale(activity, Manifest.permission.READ_EXTERNAL_STORAGE)) {
+                notificationMessage.get().toast(activity, R.string.failed_to_handle_required_permission);
+            }
+            storedUri = uri;
+            ActivityCompat.requestPermissions(activity, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, FileReceiveActivity.PERMISSION_REQUEST_READ_EXTERNAL_STORAGE);
+            throw fileNotFoundException;
         }
     }
 
     private void handleScheduleOfLessons(String file) throws Throwable {
         thread.assertNotUI();
         log.v(TAG, "handleScheduleOfLessons");
-        if (storage.get(activity, Storage.PERMANENT, Storage.GLOBAL, "users#current_login", "").trim().isEmpty()) {
-            throw new MessageException(activity.getString(R.string.file_requires_auth));
-        }
         FSLessons fsLessons;
         try {
             fsLessons = new FSLessons().fromJsonString(file);
@@ -253,6 +254,9 @@ public class FileReceiveActivityPresenterImpl implements FileReceiveActivityPres
         }
         if (fsLessons == null) {
             throw new CorruptedFileException();
+        }
+        if (storage.get(activity, Storage.PERMANENT, Storage.GLOBAL, "users#current_login", "").trim().isEmpty()) {
+            throw new MessageException(activity.getString(R.string.file_requires_auth));
         }
         thread.runOnUI(() -> {
             Bundle extras = new Bundle();

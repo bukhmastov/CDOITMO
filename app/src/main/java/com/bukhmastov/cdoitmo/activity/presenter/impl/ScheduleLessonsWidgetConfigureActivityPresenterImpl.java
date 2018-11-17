@@ -238,6 +238,8 @@ public class ScheduleLessonsWidgetConfigureActivityPresenterImpl implements Sche
         log.v(TAG, "initFinishButton");
         thread.run(() -> {
             Button addButton = activity.findViewById(R.id.add_button);
+            addButton.setText(R.string.add_widget);
+            addButton.setVisibility(View.VISIBLE);
             addButton.setOnClickListener(view -> activateFinish());
         }, throwable -> {
             log.exception(throwable);

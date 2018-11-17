@@ -129,7 +129,7 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
         thread.run(() -> {
             log.i(TAG, "update | appWidgetId=", appWidgetId);
             WSLSettings settings = scheduleLessonsWidgetStorage.getSettings(appWidgetId);
-            SLessons cache = scheduleLessonsWidgetStorage.getCache(appWidgetId);
+            SLessons cache = scheduleLessonsWidgetStorage.getConvertedCache(appWidgetId);
             if (settings == null) {
                 needPreparations(context, appWidgetManager, appWidgetId);
                 return;
@@ -173,13 +173,12 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
                                     return;
                                 }
                                 schedule.setTimestamp(time.getTimeInMillis());
-                                scheduleLessonsWidgetStorage.save(appWidgetId, "cache", schedule);
                                 SLessons converted = new ScheduleLessonsAdditionalConverter(schedule.copy()).convert();
                                 if (converted == null) {
                                     failed(context, appWidgetManager, appWidgetId, settings, context.getString(R.string.failed_to_show_schedule));
                                     return;
                                 }
-                                scheduleLessonsWidgetStorage.save(appWidgetId, "cache_converted", converted);
+                                scheduleLessonsWidgetStorage.save(appWidgetId, converted);
                                 display(context, appWidgetManager, appWidgetId, false);
                             }, throwable -> {
                                 log.exception(throwable);
@@ -267,7 +266,7 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
         thread.run(() -> {
             log.v(TAG, "display | appWidgetId=", appWidgetId, " | controls=", controls);
             WSLSettings settings = scheduleLessonsWidgetStorage.getSettings(appWidgetId);
-            SLessons schedule = scheduleLessonsWidgetStorage.getCache(appWidgetId);
+            SLessons schedule = scheduleLessonsWidgetStorage.getConvertedCache(appWidgetId);
             thread.run(() -> {
                 if (settings == null) {
                     needPreparations(context, appWidgetManager, appWidgetId);
@@ -603,7 +602,7 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
         // calculate new auto shift from schedule
         try {
             // fetch current schedule
-            SLessons schedule = scheduleLessonsWidgetStorage.getConverted(appWidgetId);
+            SLessons schedule = scheduleLessonsWidgetStorage.getConvertedCache(appWidgetId);
             if (schedule == null) {
                 return new int[] {shift, shiftAutomatic};
             }

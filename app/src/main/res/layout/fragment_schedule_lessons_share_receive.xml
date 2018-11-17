@@ -67,23 +67,19 @@
             android:orientation="horizontal"
             android:weightSum="2">
 
-            <Button
+            <include layout="@layout/button_colored"
                 android:id="@+id/action_deny"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="@string/close"
-                android:visibility="visible"
-                style="@android:style/Widget.Material.Button.Borderless.Colored"/>
+                android:visibility="gone"/>
 
-            <Button
+            <include layout="@layout/button_colored_full"
                 android:id="@+id/action_accept"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="@string/accept"
-                android:visibility="gone"
-                style="@android:style/Widget.Material.Button.Borderless.Colored"/>
+                android:visibility="gone"/>
 
         </LinearLayout>
 

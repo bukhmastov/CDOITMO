@@ -38,16 +38,7 @@ public class ScheduleLessonsWidgetStorageImpl implements ScheduleLessonsWidgetSt
     }
 
     @Override
-    public SLessons getCache(int appWidgetId) throws Exception {
-        String cache = get(appWidgetId, "cache");
-        if (StringUtils.isBlank(cache)) {
-            return null;
-        }
-        return new SLessons().fromJsonString(cache);
-    }
-
-    @Override
-    public SLessons getConverted(int appWidgetId) throws Exception {
+    public SLessons getConvertedCache(int appWidgetId) throws Exception {
         String cache = get(appWidgetId, "cache_converted");
         if (StringUtils.isBlank(cache)) {
             return null;
@@ -56,8 +47,8 @@ public class ScheduleLessonsWidgetStorageImpl implements ScheduleLessonsWidgetSt
     }
 
     @Override
-    public void save(int appWidgetId, String type, SLessons cache) throws Exception {
-        save(appWidgetId, type, cache.toJsonString());
+    public void save(int appWidgetId, SLessons cache) throws Exception {
+        save(appWidgetId, "cache_converted", cache.toJsonString());
     }
 
     @Override

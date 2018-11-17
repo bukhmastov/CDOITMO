@@ -7,11 +7,9 @@ public interface ScheduleLessonsWidgetStorage  {
 
     WSLSettings getSettings(int appWidgetId) throws Exception;
 
-    SLessons getCache(int appWidgetId) throws Exception;
+    SLessons getConvertedCache(int appWidgetId) throws Exception;
 
-    SLessons getConverted(int appWidgetId) throws Exception;
-
-    void save(int appWidgetId, String type, SLessons cache) throws Exception;
+    void save(int appWidgetId, SLessons cache) throws Exception;
 
     void save(int appWidgetId, WSLSettings settings) throws Exception;
 

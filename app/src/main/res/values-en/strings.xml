@@ -406,6 +406,8 @@
     <string name="reduce_lessons">Hide lessons</string>
     <string name="changes_applied">Changes applied</string>
     <string name="failed_to_handle_file">Failed to process file</string>
+    <string name="failed_to_handle_file_not_found">File not found or application does not have permissions to access it</string>
+    <string name="failed_to_handle_required_permission">You must grant access to the file to access it</string>
     <string name="error_while_handle_file">Error processing file</string>
     <string name="file_doesnot_supported">The opened file is not supported by the application</string>
     <string name="failed_to_display_file">Error displaying file</string>

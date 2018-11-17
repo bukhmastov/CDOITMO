@@ -60,7 +60,7 @@ public class ScheduleLessonsWidgetFactory implements RemoteViewsService.RemoteVi
         try {
             this.lessons.clear();
             WSLSettings settings = scheduleLessonsWidgetStorage.getSettings(appWidgetId);
-            SLessons schedule = scheduleLessonsWidgetStorage.getConverted(appWidgetId);
+            SLessons schedule = scheduleLessonsWidgetStorage.getConvertedCache(appWidgetId);
             if (settings == null || schedule == null || StringUtils.isBlank(schedule.getType())) {
                 return;
             }

@@ -120,25 +120,19 @@ public class ScheduleLessonsShareFragmentPresenterImpl implements ScheduleLesson
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
+        try {
+            loaded = false;
+            action = fragment.extras().getString("action");
+        } catch (Exception e) {
+            action = null;
+        }
         thread.run(() -> {
             firebaseAnalyticsProvider.logCurrentScreen(activity, fragment);
-            action = fragment.extras().getString("action");
             log.v(TAG, "Fragment created | action=" + action);
             if (action == null || !(action.equals("share") || action.equals("handle"))) {
                 keepGoing = false;
                 notificationMessage.toast(activity, activity.getString(R.string.corrupted_data));
                 finish();
-            }
-            switch (action) {
-                case "share":
-                default: {
-                    activity.updateToolbar(activity, activity.getString(R.string.share_changes), R.drawable.ic_share);
-                    break;
-                }
-                case "handle": {
-                    activity.updateToolbar(activity, activity.getString(R.string.accept_changes), R.drawable.ic_share);
-                    break;
-                }
             }
         });
     }
@@ -168,6 +162,17 @@ public class ScheduleLessonsShareFragmentPresenterImpl implements ScheduleLesson
             if (extras == null) {
                 throw new NullPointerException("extras cannot be null");
             }
+            switch (action) {
+                case "share":
+                default: {
+                    activity.updateToolbar(activity, activity.getString(R.string.share_changes), R.drawable.ic_share);
+                    break;
+                }
+                case "handle": {
+                    activity.updateToolbar(activity, activity.getString(R.string.accept_changes), R.drawable.ic_share);
+                    break;
+                }
+            }
             load(extras);
         }, throwable -> {
             log.exception(throwable);
@@ -190,7 +195,7 @@ public class ScheduleLessonsShareFragmentPresenterImpl implements ScheduleLesson
         return action;
     }
 
-    private void load(final Bundle extras) {
+    private void load(Bundle extras) {
         thread.run(() -> {
             log.v(TAG, "load | action=", action);
             switch (action) {
@@ -213,7 +218,7 @@ public class ScheduleLessonsShareFragmentPresenterImpl implements ScheduleLesson
         });
     }
     
-    private void loadHandle(final Bundle extras) throws Exception {
+    private void loadHandle(Bundle extras) throws Exception {
         Serializable serializable = extras.getSerializable("data");
         if (!(serializable instanceof FSLessons)) {
             throw new IllegalArgumentException("Extra(data) not instanceof FSLessons");
@@ -268,7 +273,7 @@ public class ScheduleLessonsShareFragmentPresenterImpl implements ScheduleLesson
             @Override
             public void onSuccess(final SLessons schedule, final boolean fromCache) {
                 thread.run(() -> {
-                    log.v(TAG, "loadShare | success | schedule=", schedule);
+                    log.v(TAG, "loadHandle | success | schedule=", schedule);
                     if (schedule == null || Objects.equals("teachers", schedule.getType())) {
                         notificationMessage.toast(activity, activity.getString(R.string.something_went_wrong));
                         finish();
@@ -297,7 +302,7 @@ public class ScheduleLessonsShareFragmentPresenterImpl implements ScheduleLesson
             @Override
             public void onFailure(final int statusCode, final Client.Headers headers, final int state) {
                 thread.runOnUI(() -> {
-                    log.v(TAG, "loadShare | failure ", state);
+                    log.v(TAG, "loadHandle | failure ", state);
                     ViewGroup shareContent = fragment.container().findViewById(R.id.share_content);
                     if (shareContent == null) {
                         return;
@@ -338,7 +343,7 @@ public class ScheduleLessonsShareFragmentPresenterImpl implements ScheduleLesson
             @Override
             public void onProgress(final int state) {
                 thread.runOnUI(() -> {
-                    log.v(TAG, "loadShare | progress ", state);
+                    log.v(TAG, "loadHandle | progress ", state);
                     ViewGroup shareContent = fragment.container().findViewById(R.id.share_content);
                     if (shareContent != null) {
                         shareContent.removeAllViews();
@@ -361,7 +366,7 @@ public class ScheduleLessonsShareFragmentPresenterImpl implements ScheduleLesson
         });
     }
     
-    private void loadShare(final Bundle extras) throws Exception {
+    private void loadShare(Bundle extras) throws Exception {
         query = extras.getString("query");
         title = extras.getString("title");
         type = extras.getString("type");
@@ -573,6 +578,7 @@ public class ScheduleLessonsShareFragmentPresenterImpl implements ScheduleLesson
                 default: {
                     Button shareExecute = fragment.container().findViewById(R.id.share_execute);
                     if (shareExecute != null) {
+                        shareExecute.setText(R.string.share);
                         shareExecute.setVisibility(View.VISIBLE);
                         shareExecute.setOnClickListener(view -> execute());
                     }
@@ -582,9 +588,12 @@ public class ScheduleLessonsShareFragmentPresenterImpl implements ScheduleLesson
                     Button actionDeny = fragment.container().findViewById(R.id.action_deny);
                     Button actionAccept = fragment.container().findViewById(R.id.action_accept);
                     if (actionDeny != null) {
+                        actionDeny.setText(R.string.close);
+                        actionDeny.setVisibility(View.VISIBLE);
                         actionDeny.setOnClickListener(view -> finish());
                     }
                     if (actionAccept != null) {
+                        actionAccept.setText(R.string.accept);
                         actionAccept.setVisibility(View.VISIBLE);
                         actionAccept.setOnClickListener(view -> execute());
                     }
@@ -845,18 +854,18 @@ public class ScheduleLessonsShareFragmentPresenterImpl implements ScheduleLesson
     }
     
     private File makeFile(byte[] data) throws Exception {
-        File file = new File(activity.getCacheDir(), "shared" + File.separator + "lessons_schedule_changes_" + ((int) time.getTimeInMillis() / 1000) + ".cdoitmo");
+        File file = new File(activity.getCacheDir(), "shared" + File.separator + "schedule_changes_" + (time.getTimeInMillis() / 1000L) + ".cdoitmo");
         if (!file.exists()) {
             if (!file.getParentFile().mkdirs() && !file.createNewFile()) {
                 throw new Exception("Failed to create file: " + file.getPath());
             }
         }
-        FileOutputStream fos = new FileOutputStream(file);
-        BufferedOutputStream bos = new BufferedOutputStream(fos);
-        bos.write(data);
-        bos.flush();
-        bos.close();
-        fos.close();
+        try (FileOutputStream fos = new FileOutputStream(file)) {
+            try (BufferedOutputStream bos = new BufferedOutputStream(fos)) {
+                bos.write(data);
+                bos.flush();
+            }
+        }
         file.deleteOnExit();
         return file;
     }

@@ -162,7 +162,6 @@ public class FragmentPresenterModule {
     }
 
     @Provides
-    @Singleton
     public ScheduleLessonsShareFragmentPresenter provideScheduleLessonsShareFragmentPresenter() {
         return new ScheduleLessonsShareFragmentPresenterImpl();
     }

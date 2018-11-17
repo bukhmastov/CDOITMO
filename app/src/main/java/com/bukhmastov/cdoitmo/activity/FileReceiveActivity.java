@@ -1,5 +1,6 @@
 package com.bukhmastov.cdoitmo.activity;
 
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import androidx.annotation.Nullable;
 import android.view.MenuItem;
@@ -12,6 +13,8 @@ import com.bukhmastov.cdoitmo.util.Theme;
 import javax.inject.Inject;
 
 public class FileReceiveActivity extends ConnectedActivity {
+
+    public static final int PERMISSION_REQUEST_READ_EXTERNAL_STORAGE = 1337;
 
     @Inject
     FileReceiveActivityPresenter presenter;
@@ -37,6 +40,21 @@ public class FileReceiveActivity extends ConnectedActivity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         return !presenter.onToolbarSelected(item) || super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
+        switch (requestCode) {
+            case PERMISSION_REQUEST_READ_EXTERNAL_STORAGE: {
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    presenter.onReadExternalStorageGranted();
+                }
+                break;
+            }
+            default: {
+                super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+            }
+        }
     }
 
     @Override
