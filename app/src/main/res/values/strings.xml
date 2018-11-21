@@ -350,13 +350,15 @@
     <string name="intro_title_1">Следите за успеваемостью</string>
     <string name="intro_title_2">Приходите вовремя</string>
     <string name="intro_title_3">Записывайтесь на тестирование</string>
-    <string name="intro_title_4">Ищите информацию об университете</string>
+    <string name="intro_title_4">Просматривайте информацию об университете</string>
     <string name="intro_title_5">Будьте в курсе дел</string>
+    <string name="intro_title_6">Настройте как угодно</string>
     <string name="intro_desc_1">Удобный электронный журнал, протокол изменений и подробный рейтинг студентов</string>
-    <string name="intro_desc_2">Расписание занятий и сессий по группам, преподавателям и аудиториям</string>
+    <string name="intro_desc_2">Расписание занятий, сессий и аттестаций по группам, преподавателям и аудиториям</string>
     <string name="intro_desc_3">Удобное управление заявками в 101 аудиторию</string>
     <string name="intro_desc_4">Персонал, факультеты, подразделения, корпуса и общежития. А также новости и анонсы.</string>
     <string name="intro_desc_5">Уведомления о новых баллах в электронном журнале, различные виджеты и ярлыки</string>
+    <string name="intro_desc_6">4 темы оформления и многочисленные настройки</string>
     <string name="skip">Пропустить</string>
     <string name="rate_app">Оценить приложение</string>
     <string name="goto_google_play">Перейти в Google Play</string>

@@ -342,13 +342,15 @@
     <string name="intro_title_1">Follow the progress</string>
     <string name="intro_title_2">Come on time</string>
     <string name="intro_title_3">Register for testing</string>
-    <string name="intro_title_4">Search for information about the university</string>
+    <string name="intro_title_4">Look up information about the university</string>
     <string name="intro_title_5">Stay informed</string>
+    <string name="intro_title_6">Configure app as you like</string>
     <string name="intro_desc_1">Convenient electronic journal, protocol of changes and detailed rating of students</string>
-    <string name="intro_desc_2">Schedule of lessons and exams for groups, teachers and classrooms</string>
+    <string name="intro_desc_2">Schedule of lessons, exams and attestations for groups, teachers and classrooms</string>
     <string name="intro_desc_3">Convenient management of requests for 101 audiences</string>
     <string name="intro_desc_4">Staff, faculties, units, buildings. As well as news and announcements.</string>
     <string name="intro_desc_5">Notifications about new points in the electronic journal, various widgets and labels</string>
+    <string name="intro_desc_6">4 themes and numerous settings</string>
     <string name="skip">Skip</string>
     <string name="rate_app">Rate app</string>
     <string name="goto_google_play">Go to Google Play</string>

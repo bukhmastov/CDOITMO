@@ -98,6 +98,7 @@ public class IntroducingActivityPresenterImpl implements IntroducingActivityPres
         screens.add(new Screen(R.string.intro_title_3, R.string.intro_desc_3, R.drawable.image_intro_3, "#cddc39", "#673ab7"));
         screens.add(new Screen(R.string.intro_title_4, R.string.intro_desc_4, R.drawable.image_intro_4, "#00bcd4", "#cddc39"));
         screens.add(new Screen(R.string.intro_title_5, R.string.intro_desc_5, R.drawable.image_intro_5, "#1946ba", "#ff5722"));
+        screens.add(new Screen(R.string.intro_title_6, R.string.intro_desc_6, R.drawable.image_intro_6, "#ffee58", "#311b92"));
     }
 
     private void initInterface() {
@@ -118,34 +119,57 @@ public class IntroducingActivityPresenterImpl implements IntroducingActivityPres
             public void onSwipeLeft2Right() {
                 next();
             }
+            @Override
+            public void onSwipeRight2Left() {
+                previous();
+            }
         });
     }
 
     private void next() {
         try {
-            if (++position < screens.size()) {
-                Screen previous_screen = screens.get(position > 0 ? position - 1 : position);
-                Screen screen = screens.get(position);
-                final View container = activity.findViewById(R.id.container);
-                final ViewGroup indicators = activity.findViewById(R.id.indicators);
-                final ImageView image_view = activity.findViewById(R.id.image_view);
-                final TextView title_view = activity.findViewById(R.id.title_view);
-                final TextView desc_view = activity.findViewById(R.id.desc_view);
-                title_view.setText(screen.title);
-                desc_view.setText(screen.desc);
-                image_view.setImageResource(screen.image);
-                animateColor(getColor(previous_screen.colorBackground), getColor(screen.colorBackground), valueAnimator -> container.setBackgroundTintList(ColorStateList.valueOf((int) valueAnimator.getAnimatedValue())));
-                animateColor(getColor(previous_screen.colorAccent), getColor(screen.colorAccent), valueAnimator -> title_view.setTextColor(ColorStateList.valueOf((int) valueAnimator.getAnimatedValue())));
-                for (int i = 0; i < indicators.getChildCount(); i++) {
-                    final TextView indicator = (TextView) indicators.getChildAt(i);
-                    animateColor(indicator.getTextColors().getDefaultColor(), getColor(i == position ? colorIndicatorActive : colorIndicatorInActive), valueAnimator -> indicator.setTextColor(ColorStateList.valueOf((int) valueAnimator.getAnimatedValue())));
-                }
-            } else {
+            if (++position >= screens.size()) {
                 close();
+                return;
             }
+            Screen screenPrevious = screens.get(position > 0 ? position - 1 : position);
+            Screen screenCurrent = screens.get(position);
+            showScreen(screenPrevious, screenCurrent);
         } catch (Exception e) {
             log.exception(e);
             close();
+        }
+    }
+
+    private void previous() {
+        try {
+            if (position < 1) {
+                return;
+            }
+            position--;
+            Screen screenPrevious = screens.get(position < screens.size() - 1 ? position + 1 : position);
+            Screen screenCurrent = screens.get(position);
+            showScreen(screenPrevious, screenCurrent);
+        } catch (Exception e) {
+            log.exception(e);
+            close();
+        }
+    }
+
+    private void showScreen(Screen screenPrevious, Screen screenCurrent) {
+        View container = activity.findViewById(R.id.container);
+        ViewGroup indicators = activity.findViewById(R.id.indicators);
+        ImageView imageView = activity.findViewById(R.id.image_view);
+        TextView titleView = activity.findViewById(R.id.title_view);
+        TextView descView = activity.findViewById(R.id.desc_view);
+        titleView.setText(screenCurrent.title);
+        descView.setText(screenCurrent.desc);
+        imageView.setImageResource(screenCurrent.image);
+        animateColor(getColor(screenPrevious.colorBackground), getColor(screenCurrent.colorBackground), valueAnimator -> container.setBackgroundTintList(ColorStateList.valueOf((int) valueAnimator.getAnimatedValue())));
+        animateColor(getColor(screenPrevious.colorAccent), getColor(screenCurrent.colorAccent), valueAnimator -> titleView.setTextColor(ColorStateList.valueOf((int) valueAnimator.getAnimatedValue())));
+        for (int i = 0; i < indicators.getChildCount(); i++) {
+            final TextView indicator = (TextView) indicators.getChildAt(i);
+            animateColor(indicator.getTextColors().getDefaultColor(), getColor(i == position ? colorIndicatorActive : colorIndicatorInActive), valueAnimator -> indicator.setTextColor(ColorStateList.valueOf((int) valueAnimator.getAnimatedValue())));
         }
     }
 
