@@ -7,6 +7,7 @@ import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebasePerformanceProvider;
 import com.bukhmastov.cdoitmo.network.IfmoClient;
 import com.bukhmastov.cdoitmo.network.IfmoRestClient;
+import com.bukhmastov.cdoitmo.network.IsuRestClient;
 import com.bukhmastov.cdoitmo.provider.StorageProvider;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Storage;
@@ -37,6 +38,8 @@ public abstract class ScheduleBase {
     protected IfmoRestClient ifmoRestClient;
     @Inject
     protected IfmoClient ifmoClient;
+    @Inject
+    protected IsuRestClient isuRestClient;
     @Inject
     protected Time time;
     @Inject

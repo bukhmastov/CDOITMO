@@ -520,5 +520,11 @@
     <string name="beer">Отображать пиво</string>
     <string name="share_all_protocol">Поделиться всем</string>
     <string name="share_protocol_subject">Поделиться предметом</string>
+    <string name="source_picker">Источник данных</string>
+    <string name="source_isu">ИСУ</string>
+    <string name="source_isu_desc">Предпочитать загрузку с серверов ИСУ</string>
+    <string name="source_ifmo">ИТМО</string>
+    <string name="source_ifmo_desc">Предпочитать загрузку с серверов ИТМО</string>
+    <string name="source_picker_schedule_lessons_warning">Обратите внимание, что скрытые занятия могут не совпадать для разных источников данных</string>
 
 </resources>

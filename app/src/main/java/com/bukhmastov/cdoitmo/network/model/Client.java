@@ -245,10 +245,10 @@ public abstract class Client {
         thread.run(thread.BACKGROUND, () -> {
             try {
                 log.v(TAG,
-                        "execute | load | " +
-                        "url=" + url.toString() + " | " +
-                        "headers=" + getLogHeaders(headers) + " | " +
-                        "requestBody=" + getLogRequestBody(requestBody)
+                        "execute | load | ",
+                        "url=", getUrl(url), " | ",
+                        "headers=", getLogHeaders(headers), " | ",
+                        "requestBody=", getLogRequestBody(requestBody)
                 );
                 // build request
                 okhttp3.Request.Builder builder = new okhttp3.Request.Builder();
@@ -267,31 +267,32 @@ public abstract class Client {
                 Call call = networkClientProvider.get().newCall(request);
                 rawHandler.onNewRequest(new Request(call));
                 Response response = call.execute();
-                ResponseBody responseBody = response.body();
                 // fetch response as string
                 String responseString = "";
-                if (responseBody != null) {
-                    final int bufferSize = 1024;
-                    final char[] buffer = new char[bufferSize];
-                    final StringBuilder out = new StringBuilder();
-                    final Reader reader = responseBody.charStream();
-                    int length;
-                    while ((length = reader.read(buffer, 0, buffer.length)) != -1) {
-                        out.append(buffer, 0, length);
+                if (response.body() != null) {
+                    int bufferSize = 1024;
+                    char[] buffer = new char[bufferSize];
+                    StringBuilder out = new StringBuilder();
+                    try (Reader reader = response.body().charStream()) {
+                        int length;
+                        while ((length = reader.read(buffer, 0, buffer.length)) != -1) {
+                            out.append(buffer, 0, length);
+                        }
                     }
                     responseString = out.toString();
                 }
                 call.cancel();
                 // it's all over..
-                final int code = response.code();
-                final okhttp3.Headers responseHeaders = response.headers();
+                int code = response.code();
+                okhttp3.Headers responseHeaders = response.headers();
                 log.v(TAG,
-                        "execute | done | " +
-                        "url=" + url.toString() + " | " +
-                        "code=" + code + " | " +
-                        "headers=" + getLogHeaders(responseHeaders) + " | " +
-                        "response=" + (responseString.isEmpty() ? "<empty>" : "<string>")
+                        "execute | done | ",
+                        "url=", getUrl(url), " | ",
+                        "code=", code, " | ",
+                        "headers=", getLogHeaders(responseHeaders), " | ",
+                        "response=", (responseString.isEmpty() ? "<empty>" : "<string>")
                 );
+                response.close();
                 rawHandler.onDone(code, responseHeaders, responseString);
             } catch (Throwable throwable) {
                 rawHandler.onError(STATUS_CODE_EMPTY, null, throwable);
@@ -382,6 +383,24 @@ public abstract class Client {
         );
     }
 
+    @NonNull
+    private String getUrl(@Nullable final HttpUrl httpUrl) {
+        try {
+            if (httpUrl == null) {
+                return "<null>";
+            }
+            String url = httpUrl.toString();
+            if (url.contains("isu.ifmo.ru")) {
+                Matcher m = Pattern.compile("^(.*/)(.*)(/[^/]*)$", Pattern.CASE_INSENSITIVE).matcher(url);
+                if (m.find()) {
+                    url = m.replaceAll("$1<hidden>$3");
+                }
+            }
+            return url;
+        } catch (Exception e) {
+            return "<error>";
+        }
+    }
     @NonNull
     private String getLogRequestBody(@Nullable final RequestBody requestBody) {
         try {

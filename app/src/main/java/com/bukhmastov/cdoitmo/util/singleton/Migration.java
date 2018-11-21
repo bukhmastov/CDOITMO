@@ -87,6 +87,12 @@ public class Migration {
     // -----------------------------------
 
     @Keep
+    private static void migrate128(Context context, InjectProvider injectProvider) {
+        injectProvider.getStoragePref().put(context, "pref_schedule_lessons_source", "isu");
+        injectProvider.getStoragePref().put(context, "pref_schedule_exams_source", "isu");
+    }
+
+    @Keep
     private static void migrate121(Context context, InjectProvider injectProvider) {
         // Clear all cache storage
         try {

@@ -45,8 +45,7 @@ public class SettingsScheduleLessonsFragment extends SettingsTemplatePreferences
                 }
             }
         }));
-        // TODO implement when isu will be ready
-        // pref_schedule_lessons_source | PreferenceList | [ifmo, isu]
+        preferences.add(new PreferenceList("pref_schedule_lessons_source", "isu", R.string.source_picker, 0, R.string.source_picker_schedule_lessons_warning, R.array.pref_schedule_source_titles, R.array.pref_schedule_source_desc, R.array.pref_schedule_source_values, true));
         preferences.add(new PreferenceList("pref_schedule_lessons_week", "-1", R.string.week_picker, R.array.pref_schedule_lessons_week_titles, R.array.pref_schedule_lessons_week_values, true));
         preferences.add(new PreferenceList("pref_schedule_lessons_view_of_reduced_lesson", "compact", R.string.pref_schedule_lessons_view_of_reduced_lesson, R.array.pref_schedule_lessons_view_of_reduced_lesson_titles, R.array.pref_schedule_lessons_view_of_reduced_lesson_values, true));
         preferences.add(new PreferenceSwitch("pref_schedule_lessons_scroll_to_day", true, R.string.pref_schedule_lessons_scroll_to_day, null, null));

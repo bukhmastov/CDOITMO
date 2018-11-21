@@ -26,11 +26,20 @@ public class PreferenceList extends Preference {
         void onCheckedChanged(CompoundButton buttonView, boolean isChecked, int index);
     }
 
-    private  @ArrayRes int arrayTitles;
+    private @StringRes int description = 0;
+    private @ArrayRes int arrayTitles;
     private @ArrayRes int arrayValues;
     private @ArrayRes int arrayDesc = 0;
     private boolean changeSummary;
 
+    public PreferenceList(String key, Object defaultValue, @StringRes int title, @StringRes int summary, @StringRes int description, @ArrayRes int arrayTitles, @ArrayRes int arrayDesc, @ArrayRes int arrayValues, boolean changeSummary) {
+        super(key, defaultValue, title, summary);
+        this.description = description;
+        this.arrayTitles = arrayTitles;
+        this.arrayValues = arrayValues;
+        this.arrayDesc = arrayDesc;
+        this.changeSummary = changeSummary;
+    }
     public PreferenceList(String key, Object defaultValue, @StringRes int title, @StringRes int summary, @ArrayRes int arrayTitles, @ArrayRes int arrayDesc, @ArrayRes int arrayValues, boolean changeSummary) {
         super(key, defaultValue, title, summary);
         this.arrayTitles = arrayTitles;
@@ -87,6 +96,13 @@ public class PreferenceList extends Preference {
                     .setView(view)
                     .setNegativeButton(R.string.cancel, null)
                     .create();
+            final TextView message = view.findViewById(R.id.message);
+            if (preference.description != 0) {
+                message.setVisibility(View.VISIBLE);
+                message.setText(preference.description);
+            } else {
+                message.setVisibility(View.GONE);
+            }
             final RadioGroup radio_group = view.findViewById(R.id.radio_group);
             final OnCheckedChangeListener onCheckedChangeListener = (buttonView, isChecked, index) -> {
                 if (isChecked) {

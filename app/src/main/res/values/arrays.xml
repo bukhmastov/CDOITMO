@@ -154,6 +154,19 @@
         <item>1</item>
     </string-array>
 
+    <string-array name="pref_schedule_source_titles">
+        <item>@string/source_isu</item>
+        <item>@string/source_ifmo</item>
+    </string-array>
+    <string-array name="pref_schedule_source_desc">
+        <item>@string/source_isu_desc</item>
+        <item>@string/source_ifmo_desc</item>
+    </string-array>
+    <string-array name="pref_schedule_source_values" translatable="false">
+        <item>isu</item>
+        <item>ifmo</item>
+    </string-array>
+
     <string-array name="week_types_titles">
         <item>@string/week_both</item>
         <item>@string/week_even</item>

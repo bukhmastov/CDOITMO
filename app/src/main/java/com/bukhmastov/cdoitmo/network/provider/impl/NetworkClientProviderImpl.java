@@ -19,6 +19,8 @@ import java.security.cert.CertificateFactory;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.inject.Inject;
 import javax.net.ssl.KeyManagerFactory;
@@ -29,6 +31,7 @@ import javax.net.ssl.TrustManagerFactory;
 import javax.net.ssl.X509TrustManager;
 
 import dagger.Lazy;
+import okhttp3.HttpUrl;
 import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
 import okhttp3.Response;
@@ -130,7 +133,7 @@ public class NetworkClientProviderImpl implements NetworkClientProvider {
             log.get().v(TAG,
                     "interceptor | request | " +
                             request.method() + " | " +
-                            request.url()
+                            getUrl(request.url())
             );
             long t1 = System.nanoTime();
             Response response = chain.proceed(request);
@@ -138,12 +141,29 @@ public class NetworkClientProviderImpl implements NetworkClientProvider {
             log.get().v(TAG,
                     "interceptor | response | " +
                             response.request().method() + " | " +
-                            response.request().url() + " | " +
+                            getUrl(response.request().url()) + " | " +
                             ((t2 - t1) / 1e6d) + "ms" + " | " +
                             response.code() + " | " +
                             response.message()
             );
             return response;
+        }
+        private String getUrl(HttpUrl httpUrl) {
+            try {
+                if (httpUrl == null) {
+                    return "<null>";
+                }
+                String url = httpUrl.toString();
+                if (url.contains("isu.ifmo.ru")) {
+                    Matcher m = Pattern.compile("^(.*/)(.*)(/[^/]*)$", Pattern.CASE_INSENSITIVE).matcher(url);
+                    if (m.find()) {
+                        url = m.replaceAll("$1<hidden>$3");
+                    }
+                }
+                return url;
+            } catch (Exception e) {
+                return "<error>";
+            }
         }
     }
 }

@@ -6,8 +6,8 @@ import com.bukhmastov.cdoitmo.firebase.FirebasePerformanceProvider;
 import com.bukhmastov.cdoitmo.model.schedule.lessons.SDay;
 import com.bukhmastov.cdoitmo.model.schedule.lessons.SLesson;
 import com.bukhmastov.cdoitmo.model.schedule.lessons.SLessons;
-import com.bukhmastov.cdoitmo.model.schedule.lessons.itmo.ITMOSLesson;
-import com.bukhmastov.cdoitmo.model.schedule.lessons.itmo.ITMOSLessons;
+import com.bukhmastov.cdoitmo.model.schedule.remote.itmo.ITMOSLesson;
+import com.bukhmastov.cdoitmo.model.schedule.remote.itmo.ITMOSLessons;
 import com.bukhmastov.cdoitmo.util.singleton.CollectionUtils;
 import com.bukhmastov.cdoitmo.util.singleton.StringUtils;
 

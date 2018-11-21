@@ -3,15 +3,18 @@ package com.bukhmastov.cdoitmo.object.schedule.impl;
 import com.bukhmastov.cdoitmo.event.bus.annotation.Event;
 import com.bukhmastov.cdoitmo.event.events.ClearCacheEvent;
 import com.bukhmastov.cdoitmo.firebase.FirebasePerformanceProvider;
+import com.bukhmastov.cdoitmo.model.converter.ScheduleExamsIsuConverter;
 import com.bukhmastov.cdoitmo.model.parser.ScheduleExamsGroupParser;
 import com.bukhmastov.cdoitmo.model.parser.ScheduleExamsTeacherParser;
 import com.bukhmastov.cdoitmo.model.schedule.exams.SExams;
+import com.bukhmastov.cdoitmo.model.schedule.remote.isu.ISUScheduleApiResponse;
 import com.bukhmastov.cdoitmo.model.schedule.teachers.STeachers;
 import com.bukhmastov.cdoitmo.network.handlers.ResponseHandler;
 import com.bukhmastov.cdoitmo.network.handlers.RestResponseHandler;
 import com.bukhmastov.cdoitmo.network.model.Client;
 import com.bukhmastov.cdoitmo.object.schedule.ScheduleExams;
 import com.bukhmastov.cdoitmo.util.singleton.CollectionUtils;
+import com.bukhmastov.cdoitmo.util.singleton.StringUtils;
 
 import org.json.JSONObject;
 
@@ -49,7 +52,7 @@ public class ScheduleExamsImpl extends ScheduleImpl<SExams> implements ScheduleE
                 @Override
                 public void onWebRequest(String query, String source, RestResponseHandler restResponseHandler) {
                     switch (source) {
-                        case SOURCE.ISU: invokePendingAndClose(query, withUserChanges, handler -> handler.onFailure(FAILED_INVALID_QUERY)); break;
+                        case SOURCE.ISU: isuRestClient.get(context, "exams/common/group/%apikey%/" + query, null, restResponseHandler); break;
                         case SOURCE.IFMO: {
                             ifmoClient.get(context, "ru/exam/0/" + group + "/raspisanie_sessii.htm", null, new ResponseHandler() {
                                 @Override
@@ -87,7 +90,7 @@ public class ScheduleExamsImpl extends ScheduleImpl<SExams> implements ScheduleE
                 }
                 @Override
                 public SExams onGetScheduleFromJson(String query, String source, JSONObject json) throws Exception {
-                    return getNewInstance().fromJson(json);
+                    return makeSchedule(query, source, "group", json);
                 }
                 @Override
                 public void onFound(String query, SExams schedule, boolean fromCache) {
@@ -114,7 +117,7 @@ public class ScheduleExamsImpl extends ScheduleImpl<SExams> implements ScheduleE
                 @Override
                 public void onWebRequest(String query, String source, RestResponseHandler restResponseHandler) {
                     switch (source) {
-                        case SOURCE.ISU: invokePendingAndClose(query, withUserChanges, handler -> handler.onFailure(FAILED_INVALID_QUERY)); break;
+                        case SOURCE.ISU: isuRestClient.get(context, "exams/common/teacher/%apikey%/" + query, null, restResponseHandler); break;
                         case SOURCE.IFMO: {
                             ifmoClient.get(context, "ru/exam/3/" + query + "/raspisanie_sessii.htm", null, new ResponseHandler() {
                                 @Override
@@ -152,7 +155,7 @@ public class ScheduleExamsImpl extends ScheduleImpl<SExams> implements ScheduleE
                 }
                 @Override
                 public SExams onGetScheduleFromJson(String query, String source, JSONObject json) throws Exception {
-                    return getNewInstance().fromJson(json);
+                    return makeSchedule(query, source, "teacher", json);
                 }
                 @Override
                 public void onFound(String query, SExams schedule, boolean fromCache) {
@@ -165,13 +168,13 @@ public class ScheduleExamsImpl extends ScheduleImpl<SExams> implements ScheduleE
     @Override
     protected void searchTeachers(String lastname, boolean withUserChanges) {
         thread.run(() -> {
-            @Source String source = getSource();
+            @Source String source = SOURCE.IFMO/*getSource()*/;
             log.v(TAG, "searchTeachers | lastname=", lastname);
             searchByQuery(lastname, source, 0, withUserChanges, new SearchByQuery<SExams>() {
                 @Override
                 public void onWebRequest(String query, String source, RestResponseHandler restResponseHandler) {
                     switch (source) {
-                        case SOURCE.ISU: invokePendingAndClose(query, withUserChanges, handler -> handler.onFailure(FAILED_INVALID_QUERY)); break;
+                        case SOURCE.ISU: // not available, using ifmo source
                         case SOURCE.IFMO: ifmoRestClient.get(context, "schedule_person?lastname=" + lastname, null, restResponseHandler); break;
                     }
                 }
@@ -203,7 +206,7 @@ public class ScheduleExamsImpl extends ScheduleImpl<SExams> implements ScheduleE
 
     @Override
     protected String getDefaultSource() {
-        return SOURCE.IFMO;
+        return SOURCE.ISU;
     }
 
     @Override
@@ -214,6 +217,31 @@ public class ScheduleExamsImpl extends ScheduleImpl<SExams> implements ScheduleE
     @Override
     protected String getTraceName() {
         return FirebasePerformanceProvider.Trace.Schedule.EXAMS;
+    }
+
+    private SExams makeSchedule(String query, String source, String type, JSONObject json) throws Exception {
+        switch (source) {
+            case SOURCE.ISU: {
+                ISUScheduleApiResponse isuScheduleApiResponse = new ISUScheduleApiResponse().fromJson(json);
+                if (isuScheduleApiResponse != null) {
+                    SExams schedule = new ScheduleExamsIsuConverter(isuScheduleApiResponse).setType(type).convert();
+                    if (schedule != null) {
+                        if (StringUtils.isBlank(schedule.getTitle())) {
+                            schedule.setTitle(query);
+                        }
+                        schedule.setQuery(query);
+                        schedule.setType(type);
+                        schedule.setTimestamp(time.getTimeInMillis());
+                    }
+                    return schedule;
+                }
+                return null;
+            }
+            case SOURCE.IFMO: {
+                return getNewInstance().fromJson(json);
+            }
+        }
+        return null;
     }
 
     private void onScheduleFound(String query, SExams schedule, boolean forceToCache, boolean fromCache, boolean withUserChanges) {

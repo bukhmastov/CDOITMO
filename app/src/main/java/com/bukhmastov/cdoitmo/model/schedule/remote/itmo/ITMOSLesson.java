@@ -1,4 +1,4 @@
-package com.bukhmastov.cdoitmo.model.schedule.lessons.itmo;
+package com.bukhmastov.cdoitmo.model.schedule.remote.itmo;
 
 import com.bukhmastov.cdoitmo.model.JsonEntity;
 import com.bukhmastov.cdoitmo.model.JsonProperty;

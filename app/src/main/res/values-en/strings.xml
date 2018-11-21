@@ -512,5 +512,11 @@
     <string name="beer">Display beers</string>
     <string name="share_all_protocol">Share all</string>
     <string name="share_protocol_subject">Share subject</string>
+    <string name="source_picker">Data source</string>
+    <string name="source_isu">ISU</string>
+    <string name="source_isu_desc">Prefer loading from ISU servers</string>
+    <string name="source_ifmo">ITMO</string>
+    <string name="source_ifmo_desc">Prefer loading from ITMO servers</string>
+    <string name="source_picker_schedule_lessons_warning">Please note that hidden lessons may not match for different data sources</string>
 
 </resources>

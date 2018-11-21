@@ -125,6 +125,7 @@ import com.bukhmastov.cdoitmo.network.impl.DeIfmoClientImpl;
 import com.bukhmastov.cdoitmo.network.impl.DeIfmoRestClientImpl;
 import com.bukhmastov.cdoitmo.network.impl.IfmoClientImpl;
 import com.bukhmastov.cdoitmo.network.impl.IfmoRestClientImpl;
+import com.bukhmastov.cdoitmo.network.impl.IsuRestClientImpl;
 import com.bukhmastov.cdoitmo.network.impl.Room101ClientImpl;
 import com.bukhmastov.cdoitmo.network.model.Client;
 import com.bukhmastov.cdoitmo.network.model.DeIfmo;
@@ -313,6 +314,7 @@ public interface AppComponent {
     void inject(DeIfmoRestClientImpl deIfmoRestClient);
     void inject(IfmoClientImpl ifmoClient);
     void inject(IfmoRestClientImpl ifmoRestClient);
+    void inject(IsuRestClientImpl isuRestClient);
     void inject(Room101ClientImpl room101Client);
     void inject(NetworkClientProviderImpl networkClientProvider);
     void inject(NetworkUserAgentProviderImpl networkUserAgentProvider);

@@ -58,7 +58,7 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 public class ScheduleExamsTabFragmentPresenterImpl implements ScheduleExamsTabFragmentPresenter {
 
-    private static final String TAG = "SLTabFragment";
+    private static final String TAG = "SETabFragment";
     private final Schedule.Handler<SExams> scheduleHandler;
     private ConnectedActivity activity = null;
     private SExams schedule = null;
