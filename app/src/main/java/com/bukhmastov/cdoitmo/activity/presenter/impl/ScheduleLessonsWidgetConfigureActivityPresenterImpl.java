@@ -179,8 +179,7 @@ public class ScheduleLessonsWidgetConfigureActivityPresenterImpl implements Sche
                 }
                 String group = storage.get(activity, Storage.PERMANENT, Storage.USER, "user#group");
                 if (StringUtils.isBlank(group)) {
-                    // TODO uncomment, when personal schedule will be ready
-                    activatePartSchedule(/*"mine"*/);
+                    activatePartSchedule("personal");
                 } else {
                     activatePartSchedule(group);
                 }

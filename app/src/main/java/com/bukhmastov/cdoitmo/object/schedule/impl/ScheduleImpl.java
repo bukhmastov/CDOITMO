@@ -77,6 +77,11 @@ public abstract class ScheduleImpl<T extends ScheduleJsonEntity> extends Schedul
             }
             String q = query.trim();
             log.v(TAG, "search | query=", q, " | refreshRate=", refreshRate, " | forceToCache=", forceToCache, " | withUserChanges=", withUserChanges);
+            if ("personal".equals(q) && StringUtils.isBlank(storage.get(context, Storage.PERMANENT, Storage.USER, "user#isu#access_token", ""))) {
+                log.v(TAG, "search | personal | isu auth required");
+                handler.onFailure(FAILED_PERSONAL_NEED_ISU);
+                return;
+            }
             handler.onCancelRequest();
             if (q.contains(" ")) {
                 q = q.split(" ")[0].trim();
@@ -86,8 +91,8 @@ public abstract class ScheduleImpl<T extends ScheduleJsonEntity> extends Schedul
                 return;
             }
             log.v(TAG, "search | query=", q, " | added to the pending stack | starting the search procedure");
-            if (q.equals("mine")) {
-                searchMine(refreshRate, forceToCache, withUserChanges);
+            if (q.equals("personal")) {
+                searchPersonal(refreshRate, forceToCache, withUserChanges);
                 return;
             }
             if (q.matches("^[0-9]{6}$")) {
@@ -132,7 +137,7 @@ public abstract class ScheduleImpl<T extends ScheduleJsonEntity> extends Schedul
      * Currently unavailable
      * @see Source
      */
-    protected abstract void searchMine(int refreshRate, boolean forceToCache, boolean withUserChanges);
+    protected abstract void searchPersonal(int refreshRate, boolean forceToCache, boolean withUserChanges);
 
     /**
      * Searches schedule for defined group
@@ -237,8 +242,12 @@ public abstract class ScheduleImpl<T extends ScheduleJsonEntity> extends Schedul
             }
         }
         switch (scope) {
-            case "auto": return storageProvider.getStorage().get(context, Storage.PERMANENT, Storage.USER, "user#group");
-            case "mine":
+            case "auto":
+                String group = storageProvider.getStorage().get(context, Storage.PERMANENT, Storage.USER, "user#group");
+                if (StringUtils.isNotBlank(group)) {
+                    return group;
+                }
+            case "personal": return "personal";
             default: return scope;
         }
     }
@@ -249,7 +258,7 @@ public abstract class ScheduleImpl<T extends ScheduleJsonEntity> extends Schedul
     @Override
     public String getScheduleHeader(String title, String type) {
         switch (type) {
-            case "mine": title = context.getString(R.string.schedule_personal); break;
+            case "personal": title = context.getString(R.string.schedule_personal); break;
             case "group": title = (context.getString(R.string.schedule_group) + " " + title).trim(); break;
             case "teacher": title = (context.getString(R.string.schedule_teacher) + " " + title).trim(); break;
             case "room": title = (context.getString(R.string.schedule_room) + " " + title).trim(); break;

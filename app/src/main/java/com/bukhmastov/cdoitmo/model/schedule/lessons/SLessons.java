@@ -16,13 +16,13 @@ public class SLessons extends ScheduleJsonEntity {
     private String scheduleType;
 
     /**
-     * Строка, по которой идет поиск: "mine", "K3320", "123456", "336", "Зинчик" (Используется для повторного поиска и кэширования)
+     * Строка, по которой идет поиск: "personal", "K3320", "123456", "336", "Зинчик" (Используется для повторного поиска и кэширования)
      */
     @JsonProperty("query")
     private String query;
 
     /**
-     * Тип расписания: "mine", "group", "room", "teacher", "teachers"
+     * Тип расписания: "personal", "group", "room", "teacher", "teachers"
      */
     @JsonProperty("type")
     private String type;

@@ -21,6 +21,7 @@ import com.bukhmastov.cdoitmo.event.bus.EventBus;
 import com.bukhmastov.cdoitmo.event.events.OpenActivityEvent;
 import com.bukhmastov.cdoitmo.event.events.ShareTextEvent;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
+import com.bukhmastov.cdoitmo.fragment.LinkedAccountsFragment;
 import com.bukhmastov.cdoitmo.fragment.presenter.ScheduleExamsTabFragmentPresenter;
 import com.bukhmastov.cdoitmo.fragment.presenter.ScheduleExamsTabHostFragmentPresenter;
 import com.bukhmastov.cdoitmo.fragment.settings.SettingsScheduleExamsFragment;
@@ -228,11 +229,12 @@ public class ScheduleExamsTabFragmentPresenterImpl implements ScheduleExamsTabFr
                             }
                             break;
                         }
-                        case Schedule.FAILED_MINE_NEED_ISU: {
-                            // TODO replace with isu auth, when isu will be ready
-                            final ViewGroup view = (ViewGroup) inflate(activity, R.layout.state_failed_button);
+                        case Schedule.FAILED_PERSONAL_NEED_ISU: {
+                            final ViewGroup view = (ViewGroup) inflate(activity, R.layout.layout_schedule_isu_required);
                             if (view != null) {
-                                view.findViewById(R.id.try_again_reload).setOnClickListener(v -> load(false));
+                                view.findViewById(R.id.open_isu_auth).setOnClickListener(v -> activity.openActivity(ConnectedActivity.TYPE.STACKABLE, LinkedAccountsFragment.class, null));
+                                view.findViewById(R.id.open_search).setOnClickListener(v -> eventBus.fire(new OpenActivityEvent(ScheduleExamsSearchActivity.class)));
+                                view.findViewById(R.id.open_settings).setOnClickListener(v -> activity.openActivity(ConnectedActivity.TYPE.STACKABLE, SettingsScheduleExamsFragment.class, null));
                                 draw(view);
                             }
                             break;
@@ -457,7 +459,8 @@ public class ScheduleExamsTabFragmentPresenterImpl implements ScheduleExamsTabFr
                     log.exception(throwable);
                     notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
                 });
-                return false;
+                popup.dismiss();
+                return true;
             });
             popup.show();
         }, throwable -> {
@@ -492,7 +495,8 @@ public class ScheduleExamsTabFragmentPresenterImpl implements ScheduleExamsTabFr
                         log.exception(throwable);
                         notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
                     });
-                    return false;
+                    popup.dismiss();
+                    return true;
                 });
                 popup.show();
             }, throwable -> {
@@ -658,7 +662,8 @@ public class ScheduleExamsTabFragmentPresenterImpl implements ScheduleExamsTabFr
             }
             popup.setOnMenuItemClickListener(item -> {
                 subjectMenuSelected(item, schedule, subject);
-                return false;
+                popup.dismiss();
+                return true;
             });
             popup.show();
         }, throwable -> {

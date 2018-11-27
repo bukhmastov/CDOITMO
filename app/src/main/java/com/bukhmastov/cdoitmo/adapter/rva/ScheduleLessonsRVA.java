@@ -394,12 +394,10 @@ public class ScheduleLessonsRVA extends RVA<RVALessons> {
             case 5: return context.getString(R.string.saturday);
             case 6: return context.getString(R.string.sunday);
             default:
-                /*TODO implement when isu will be ready
-                расписание из ису, когда есть расписания на определенный день
+                // расписание из ису, когда есть расписания на определенный день
                 if ("date".equals(day.getType()) && StringUtils.isNotBlank(day.getTitle())) {
                     return day.getTitle();
                 }
-                */
                 return context.getString(R.string.unknown_day);
         }
     }
@@ -408,7 +406,7 @@ public class ScheduleLessonsRVA extends RVA<RVALessons> {
         switch (type) {
             case "group": return lesson.getTeacherName();
             case "teacher": return lesson.getGroup();
-            case "mine":
+            case "personal":
             case "room": {
                 if (StringUtils.isBlank(lesson.getGroup())) {
                     return lesson.getTeacherName();
@@ -425,7 +423,7 @@ public class ScheduleLessonsRVA extends RVA<RVALessons> {
 
     private String getLessonMeta(SLesson lesson, String type) {
         switch (type) {
-            case "mine":
+            case "personal":
             case "group":
             case "teacher": {
                 if (StringUtils.isBlank(lesson.getRoom())) {

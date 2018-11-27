@@ -11,6 +11,7 @@
         android:layout_height="wrap_content">
 
         <LinearLayout
+            android:id="@+id/account_cdo_container"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="?attr/colorBackgroundSection"
@@ -74,9 +75,13 @@
 
         </LinearLayout>
 
-        <include layout="@layout/separator"/>
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/separator"
+            android:background="?attr/colorSeparator"/>
 
         <LinearLayout
+            android:id="@+id/container_linked_accounts"
             android:orientation="vertical"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -96,34 +101,133 @@
                 android:paddingStart="@dimen/item_padding_half"
                 android:paddingEnd="@dimen/item_padding_half"/>
 
-            <LinearLayout
-                android:orientation="vertical"
+            <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:paddingTop="@dimen/item_new_vertical_padding"
-                android:paddingBottom="@dimen/item_new_vertical_padding"
-                android:paddingStart="@dimen/item_new_horizontal_padding"
-                android:paddingEnd="@dimen/item_new_horizontal_padding" >
+                android:background="@drawable/shape_border_round">
 
                 <ImageView
-                    android:layout_width="match_parent"
-                    android:layout_height="@dimen/dp28"
-                    android:src="@drawable/ic_visibility_off" />
+                    android:id="@+id/account_isu_icon"
+                    android:layout_width="@dimen/about_sub_icon_width"
+                    android:layout_height="@dimen/about_icon_width"
+                    android:layout_margin="@dimen/item_padding"
+                    android:contentDescription="@string/isu_ifmo"
+                    android:src="@drawable/isu"
+                    android:tint="?attr/colorImageMultiply"
+                    android:tintMode="multiply"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
 
-                <TextView
-                    tools:ignore="HardcodedText"
-                    android:layout_width="match_parent"
+                <View
+                    android:id="@+id/account_isu_separator"
+                    android:layout_width="@dimen/separator"
+                    android:layout_height="0dp"
+                    android:layout_marginStart="@dimen/item_padding"
+                    android:layout_marginEnd="0dp"
+                    android:layout_marginTop="@dimen/item_padding_half"
+                    android:layout_marginBottom="@dimen/item_padding_half"
+                    android:background="?attr/colorSeparator"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintStart_toEndOf="@+id/account_isu_icon"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:fontFamily="@string/font_bold"
-                    android:gravity="center"
-                    android:paddingBottom="@dimen/item_padding_eight"
-                    android:paddingTop="@dimen/item_padding_eight"
-                    android:text="Раздел в разработке"
-                    android:textAllCaps="true"
-                    android:textColor="?android:attr/textColorPrimary"
-                    android:textSize="@dimen/font_size_14" />
+                    android:orientation="horizontal"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toEndOf="@+id/account_isu_separator"
+                    app:layout_constraintTop_toTopOf="parent">
 
-            </LinearLayout>
+                    <FrameLayout
+                        android:id="@+id/account_isu_loading"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_vertical"
+                        android:visibility="visible">
+
+                        <ProgressBar
+                            style="?android:attr/progressBarStyleSmall"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center" />
+
+                    </FrameLayout>
+
+                    <androidx.constraintlayout.widget.ConstraintLayout
+                        android:id="@+id/account_isu_content"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_vertical"
+                        android:background="?android:attr/selectableItemBackground"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:paddingStart="@dimen/item_padding"
+                        android:paddingTop="@dimen/item_padding_half"
+                        android:paddingEnd="@dimen/item_padding"
+                        android:paddingBottom="@dimen/item_padding_half"
+                        android:visibility="gone">
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            app:layout_constraintBottom_toBottomOf="parent"
+                            app:layout_constraintEnd_toStartOf="@+id/account_isu_menu"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toTopOf="parent">
+
+                            <TextView
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="@string/isu_ifmo"
+                                android:textColor="?android:attr/textColorPrimary"
+                                android:textSize="@dimen/font_size_15" />
+
+                            <TextView
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="https://isu.ifmo.ru/"
+                                android:textColor="?android:attr/textColorSecondary"
+                                android:textSize="@dimen/font_size_14"
+                                tools:ignore="HardcodedText" />
+
+                            <TextView
+                                android:id="@+id/account_isu_info"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="@string/loading"
+                                android:textColor="?android:attr/textColorSecondary"
+                                android:textSize="@dimen/font_size_14" />
+
+                        </LinearLayout>
+
+                        <FrameLayout
+                            android:id="@+id/account_isu_menu"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:paddingTop="@dimen/dp16"
+                            android:paddingBottom="@dimen/dp16"
+                            android:paddingStart="@dimen/dp16"
+                            android:paddingEnd="0dp"
+                            app:layout_constraintBottom_toBottomOf="parent"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintTop_toTopOf="parent">
+
+                            <ImageView
+                                android:layout_width="@dimen/dp20"
+                                android:layout_height="@dimen/dp20"
+                                android:src="@drawable/ic_touch" />
+
+                        </FrameLayout>
+
+                    </androidx.constraintlayout.widget.ConstraintLayout>
+
+                </LinearLayout>
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
 
         </LinearLayout>
 

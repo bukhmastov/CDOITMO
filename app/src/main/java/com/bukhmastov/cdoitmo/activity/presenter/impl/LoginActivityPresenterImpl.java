@@ -300,7 +300,9 @@ public class LoginActivityPresenterImpl implements LoginActivityPresenter {
                                     activity.getString(R.string.auth_help_2) + "\n\n" +
                                     activity.getString(R.string.auth_help_3) + "\n" +
                                     activity.getString(R.string.auth_help_4) + "\n\n" +
-                                    activity.getString(R.string.auth_help_5)
+                                    activity.getString(R.string.auth_help_5) + "\n" +
+                                    activity.getString(R.string.auth_help_6) + "\n\n" +
+                                    activity.getString(R.string.auth_help_7)
                     )
                     .setNegativeButton(R.string.close, null)
                     .create().show();
@@ -420,7 +422,8 @@ public class LoginActivityPresenterImpl implements LoginActivityPresenter {
                                 break;
                             }
                         }
-                        return false;
+                        popup.dismiss();
+                        return true;
                     });
                     popup.show();
                 });
@@ -479,7 +482,8 @@ public class LoginActivityPresenterImpl implements LoginActivityPresenter {
                         break;
                     }
                 }
-                return false;
+                popup.dismiss();
+                return true;
             });
             popup.show();
         });

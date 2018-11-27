@@ -157,7 +157,17 @@ public class NetworkClientProviderImpl implements NetworkClientProvider {
                 if (url.contains("isu.ifmo.ru")) {
                     Matcher m = Pattern.compile("^(.*/)(.*)(/[^/]*)$", Pattern.CASE_INSENSITIVE).matcher(url);
                     if (m.find()) {
-                        url = m.replaceAll("$1<hidden>$3");
+                        if (m.group(3).startsWith("/AT-")) {
+                            url = m.replaceAll("$1<apikey>/<auth-token>");
+                        } else {
+                            url = m.replaceAll("$1<apikey>$3");
+                        }
+                    }
+                }
+                if (url.contains("services.ifmo.ru")) {
+                    Matcher m = Pattern.compile("^(.*oauth2\\.0/)(.*)$", Pattern.CASE_INSENSITIVE).matcher(url);
+                    if (m.find()) {
+                        url = m.replaceAll("$1<hidden>");
                     }
                 }
                 return url;

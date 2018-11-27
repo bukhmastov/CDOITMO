@@ -4,6 +4,7 @@ import com.bukhmastov.cdoitmo.fragment.presenter.AboutFragmentPresenter;
 import com.bukhmastov.cdoitmo.fragment.presenter.ERegisterFragmentPresenter;
 import com.bukhmastov.cdoitmo.fragment.presenter.ERegisterSubjectFragmentPresenter;
 import com.bukhmastov.cdoitmo.fragment.presenter.HomeScreenInteractionFragmentPresenter;
+import com.bukhmastov.cdoitmo.fragment.presenter.LinkAccountFragmentPresenter;
 import com.bukhmastov.cdoitmo.fragment.presenter.LinkedAccountsFragmentPresenter;
 import com.bukhmastov.cdoitmo.fragment.presenter.LogFragmentPresenter;
 import com.bukhmastov.cdoitmo.fragment.presenter.ProtocolFragmentPresenter;
@@ -29,6 +30,7 @@ import com.bukhmastov.cdoitmo.fragment.presenter.UniversityUnitsFragmentPresente
 import com.bukhmastov.cdoitmo.fragment.presenter.impl.AboutFragmentPresenterImpl;
 import com.bukhmastov.cdoitmo.fragment.presenter.impl.ERegisterFragmentPresenterImpl;
 import com.bukhmastov.cdoitmo.fragment.presenter.impl.HomeScreenInteractionFragmentPresenterImpl;
+import com.bukhmastov.cdoitmo.fragment.presenter.impl.LinkAccountFragmentPresenterImpl;
 import com.bukhmastov.cdoitmo.fragment.presenter.impl.LinkedAccountsFragmentPresenterImpl;
 import com.bukhmastov.cdoitmo.fragment.presenter.impl.LogFragmentPresenterImpl;
 import com.bukhmastov.cdoitmo.fragment.presenter.impl.ProtocolFragmentPresenterImpl;
@@ -83,6 +85,12 @@ public class FragmentPresenterModule {
     @Singleton
     public LinkedAccountsFragmentPresenter provideLinkedAccountsFragmentPresenter() {
         return new LinkedAccountsFragmentPresenterImpl();
+    }
+
+    @Provides
+    @Singleton
+    public LinkAccountFragmentPresenter provideLinkAccountFragmentPresenter() {
+        return new LinkAccountFragmentPresenterImpl();
     }
 
     @Provides

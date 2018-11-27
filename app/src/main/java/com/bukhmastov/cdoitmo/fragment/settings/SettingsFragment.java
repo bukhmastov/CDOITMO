@@ -9,6 +9,7 @@ import android.view.MenuItem;
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.fragment.AboutFragment;
+import com.bukhmastov.cdoitmo.fragment.LinkedAccountsFragment;
 import com.bukhmastov.cdoitmo.object.preference.PreferenceHeader;
 import com.bukhmastov.cdoitmo.util.NotificationMessage;
 import com.bukhmastov.cdoitmo.util.Static;
@@ -31,8 +32,7 @@ public class SettingsFragment extends SettingsTemplateHeadersFragment {
     static {
         preferenceHeaders = new ArrayList<>();
         preferenceHeaders.add(new PreferenceHeader(R.string.general_settings, R.drawable.ic_settings_applications, SettingsGeneralFragment.class));
-        // TODO uncomment, when accounts links will be ready
-        //preferenceHeaders.add(new PreferenceHeader(R.string.linked_accounts, R.drawable.ic_account_box, LinkedAccountsFragment.class));
+        preferenceHeaders.add(new PreferenceHeader(R.string.linked_accounts, R.drawable.ic_account_box, LinkedAccountsFragment.class));
         preferenceHeaders.add(new PreferenceHeader(R.string.cache_and_refresh, R.drawable.ic_save, SettingsCacheFragment.class));
         preferenceHeaders.add(new PreferenceHeader(R.string.notifications, R.drawable.ic_notifications, SettingsNotificationsFragment.class));
         preferenceHeaders.add(new PreferenceHeader(R.string.extended_prefs, R.drawable.ic_tune, SettingsExtendedFragment.class));

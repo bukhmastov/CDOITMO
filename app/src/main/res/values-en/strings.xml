@@ -338,7 +338,9 @@
     <string name="auth_help_2">Try to login to the DLC (https://de.ifmo.ru/). If the official website authentication is successful and the application does not, contact the developer (the information icon on the top right of the authorization window)</string>
     <string name="auth_help_3">2. I don\'t have login/password</string>
     <string name="auth_help_4">Contact this question in the distance learning center (101 auditorium of the main building)</string>
-    <string name="auth_help_5">3. Remember that this application is not official, and the developer has nothing to do with the DLC</string>
+    <string name="auth_help_5">3. ISU authorization</string>
+    <string name="auth_help_6">Authorization in the ISU is available in the settings after logging in to the application. ISU is also available after logging in without authorization below.</string>
+    <string name="auth_help_7">4. Remember that this application is not official, and the developer has nothing to do with the DLC</string>
     <string name="intro_title_1">Follow the progress</string>
     <string name="intro_title_2">Come on time</string>
     <string name="intro_title_3">Register for testing</string>
@@ -449,7 +451,7 @@
     <string name="anonymous">Unknown wanderer</string>
     <string name="anonymous_login">Anonymous login</string>
     <string name="anonymous_login_info_1">1. What is it</string>
-    <string name="anonymous_login_info_2">Anonymous login allows you to access the application, but with a reduced functionality (without an e-register, etc.)</string>
+    <string name="anonymous_login_info_2">Anonymous login allows you to access the application, but with a reduced functionality (without an e-register, etc.). Authorization in the ISU will be available.</string>
     <string name="anonymous_login_info_3">2. What is it for</string>
     <string name="anonymous_login_info_4">This mode is useful if you do not want to be authorized in the DLC system through this application, authorization for some reason is currently unavailable or it\'s October 2077 outside, DLC servers is no longer available, and the only thing that bothers you is the schedule of lessons.</string>
     <string name="login_group">Group number (can be blank)</string>
@@ -520,5 +522,20 @@
     <string name="source_ifmo">ITMO</string>
     <string name="source_ifmo_desc">Prefer loading from ITMO servers</string>
     <string name="source_picker_schedule_lessons_warning">Please note that hidden lessons may not match for different data sources</string>
+    <string name="fill_fields">Fill in the fields</string>
+    <string name="isu_ifmo">ISU ITMO</string>
+    <string name="not_authorized">Not authorized</string>
+    <string name="logout_and_clear_cache">Logout and clear cache</string>
+    <string name="logout_and_keep_cache">Logout and keep cache</string>
+    <string name="link_account">Link account</string>
+    <string name="link_account_disclaimer_1">You are going to link the additional account to the CDE account, in the application the CDE account will remain the main one.</string>
+    <string name="link_account_disclaimer_2">This action is optional and just provides additional application functions. Accounts linking only matters in this application and has no relation to the platforms of the ITMO University.</string>
+    <string name="link_account_with">Login with</string>
+    <string name="account_linked">Account linked</string>
+    <string name="logout_failed">Failed to logout</string>
+    <string name="logout_failed_not_logged_in">Failed to logout, not logged in</string>
+    <string name="load_failed_need_isu">You need to login in the ISU</string>
+    <string name="schedule_isu_required_title">You need to login in the ISU to access the personal schedule</string>
+    <string name="schedule_isu_required_message">Login in the ISU or choose another schedule using the search in the upper right corner or settings</string>
 
 </resources>

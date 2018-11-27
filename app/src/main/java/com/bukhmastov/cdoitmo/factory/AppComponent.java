@@ -67,6 +67,7 @@ import com.bukhmastov.cdoitmo.fragment.ConnectedFragment;
 import com.bukhmastov.cdoitmo.fragment.ERegisterFragment;
 import com.bukhmastov.cdoitmo.fragment.ERegisterSubjectFragment;
 import com.bukhmastov.cdoitmo.fragment.HomeScreenInteractionFragment;
+import com.bukhmastov.cdoitmo.fragment.LinkAccountFragment;
 import com.bukhmastov.cdoitmo.fragment.LinkedAccountsFragment;
 import com.bukhmastov.cdoitmo.fragment.LogFragment;
 import com.bukhmastov.cdoitmo.fragment.ProtocolFragment;
@@ -93,6 +94,7 @@ import com.bukhmastov.cdoitmo.fragment.presenter.impl.AboutFragmentPresenterImpl
 import com.bukhmastov.cdoitmo.fragment.presenter.impl.ERegisterFragmentPresenterImpl;
 import com.bukhmastov.cdoitmo.fragment.presenter.impl.ERegisterSubjectFragmentPresenterImpl;
 import com.bukhmastov.cdoitmo.fragment.presenter.impl.HomeScreenInteractionFragmentPresenterImpl;
+import com.bukhmastov.cdoitmo.fragment.presenter.impl.LinkAccountFragmentPresenterImpl;
 import com.bukhmastov.cdoitmo.fragment.presenter.impl.LinkedAccountsFragmentPresenterImpl;
 import com.bukhmastov.cdoitmo.fragment.presenter.impl.LogFragmentPresenterImpl;
 import com.bukhmastov.cdoitmo.fragment.presenter.impl.ProtocolFragmentPresenterImpl;
@@ -125,6 +127,7 @@ import com.bukhmastov.cdoitmo.network.impl.DeIfmoClientImpl;
 import com.bukhmastov.cdoitmo.network.impl.DeIfmoRestClientImpl;
 import com.bukhmastov.cdoitmo.network.impl.IfmoClientImpl;
 import com.bukhmastov.cdoitmo.network.impl.IfmoRestClientImpl;
+import com.bukhmastov.cdoitmo.network.impl.IsuPrivateRestClientImpl;
 import com.bukhmastov.cdoitmo.network.impl.IsuRestClientImpl;
 import com.bukhmastov.cdoitmo.network.impl.Room101ClientImpl;
 import com.bukhmastov.cdoitmo.network.model.Client;
@@ -228,6 +231,7 @@ public interface AppComponent {
     void inject(AboutFragment aboutFragment);
     void inject(HomeScreenInteractionFragment homeScreenInteractionFragment);
     void inject(LinkedAccountsFragment linkedAccountsFragment);
+    void inject(LinkAccountFragment linkAccountFragment);
     void inject(LogFragment logFragment);
     void inject(ProtocolFragment protocolFragment);
     void inject(RatingFragment ratingFragment);
@@ -259,6 +263,7 @@ public interface AppComponent {
     void inject(ERegisterFragmentPresenterImpl eRegisterFragmentPresenter);
     void inject(HomeScreenInteractionFragmentPresenterImpl homeScreenInteractionFragmentPresenter);
     void inject(LinkedAccountsFragmentPresenterImpl linkedAccountsFragmentPresenter);
+    void inject(LinkAccountFragmentPresenterImpl linkAccountFragmentPresenter);
     void inject(LogFragmentPresenterImpl logFragmentPresenter);
     void inject(ProtocolFragmentPresenterImpl protocolFragmentPresenter);
     void inject(RatingFragmentPresenterImpl ratingFragmentPresenter);
@@ -315,6 +320,7 @@ public interface AppComponent {
     void inject(IfmoClientImpl ifmoClient);
     void inject(IfmoRestClientImpl ifmoRestClient);
     void inject(IsuRestClientImpl isuRestClient);
+    void inject(IsuPrivateRestClientImpl isuPrivateRestClient);
     void inject(Room101ClientImpl room101Client);
     void inject(NetworkClientProviderImpl networkClientProvider);
     void inject(NetworkUserAgentProviderImpl networkUserAgentProvider);

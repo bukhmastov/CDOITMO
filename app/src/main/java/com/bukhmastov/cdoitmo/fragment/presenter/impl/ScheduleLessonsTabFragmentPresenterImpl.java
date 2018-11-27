@@ -25,6 +25,7 @@ import com.bukhmastov.cdoitmo.event.events.OpenActivityEvent;
 import com.bukhmastov.cdoitmo.event.events.OpenIntentEvent;
 import com.bukhmastov.cdoitmo.event.events.ShareTextEvent;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
+import com.bukhmastov.cdoitmo.fragment.LinkedAccountsFragment;
 import com.bukhmastov.cdoitmo.fragment.ScheduleLessonsShareFragment;
 import com.bukhmastov.cdoitmo.fragment.presenter.ScheduleLessonsTabFragmentPresenter;
 import com.bukhmastov.cdoitmo.fragment.presenter.ScheduleLessonsTabHostFragmentPresenter;
@@ -246,11 +247,12 @@ public class ScheduleLessonsTabFragmentPresenterImpl implements ScheduleLessonsT
                             }
                             break;
                         }
-                        case Schedule.FAILED_MINE_NEED_ISU: {
-                            // TODO replace with isu auth, when isu will be ready
-                            ViewGroup view = (ViewGroup) inflate(activity, R.layout.state_failed_button);
+                        case Schedule.FAILED_PERSONAL_NEED_ISU: {
+                            final ViewGroup view = (ViewGroup) inflate(activity, R.layout.layout_schedule_isu_required);
                             if (view != null) {
-                                view.findViewById(R.id.try_again_reload).setOnClickListener(v -> load(false));
+                                view.findViewById(R.id.open_isu_auth).setOnClickListener(v -> activity.openActivity(ConnectedActivity.TYPE.STACKABLE, LinkedAccountsFragment.class, null));
+                                view.findViewById(R.id.open_search).setOnClickListener(v -> eventBus.fire(new OpenActivityEvent(ScheduleLessonsSearchActivity.class)));
+                                view.findViewById(R.id.open_settings).setOnClickListener(v -> activity.openActivity(ConnectedActivity.TYPE.STACKABLE, SettingsScheduleLessonsFragment.class, null));
                                 draw(view);
                             }
                             break;
@@ -474,7 +476,8 @@ public class ScheduleLessonsTabFragmentPresenterImpl implements ScheduleLessonsT
                     log.exception(throwable);
                     notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
                 });
-                return false;
+                popup.dismiss();
+                return true;
             });
             popup.show();
         }, throwable -> {
@@ -516,7 +519,8 @@ public class ScheduleLessonsTabFragmentPresenterImpl implements ScheduleLessonsT
                     log.exception(throwable);
                     notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
                 });
-                return false;
+                popup.dismiss();
+                return true;
             });
             popup.show();
         }, throwable -> {
@@ -552,7 +556,8 @@ public class ScheduleLessonsTabFragmentPresenterImpl implements ScheduleLessonsT
                         log.exception(throwable);
                         notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
                     });
-                    return false;
+                    popup.dismiss();
+                    return true;
                 });
                 popup.show();
             }, throwable -> {
@@ -819,7 +824,8 @@ public class ScheduleLessonsTabFragmentPresenterImpl implements ScheduleLessonsT
             bindMenuItem(popup, R.id.edit_lesson, "synthetic".equals(lesson.getCdoitmoType()) ? activity.getString(R.string.edit_lesson) : null);
             popup.setOnMenuItemClickListener(item -> {
                 lessonMenuSelected(item, schedule, lesson, weekday);
-                return false;
+                popup.dismiss();
+                return true;
             });
             popup.show();
         }, throwable -> {
@@ -981,12 +987,10 @@ public class ScheduleLessonsTabFragmentPresenterImpl implements ScheduleLessonsT
             case 5: return activity.getString(R.string.saturday);
             case 6: return activity.getString(R.string.sunday);
             default:
-                /*TODO implement when isu will be ready
-                расписание из ису, когда есть расписания на определенный день
+                // расписание из ису, когда есть расписания на определенный день
                 if ("date".equals(day.getType()) && StringUtils.isNotBlank(day.getTitle())) {
                     return day.getTitle();
                 }
-                */
                 return activity.getString(R.string.unknown_day);
         }
     }
@@ -995,7 +999,7 @@ public class ScheduleLessonsTabFragmentPresenterImpl implements ScheduleLessonsT
         switch (type) {
             case "group": return lesson.getTeacherName();
             case "teacher": return lesson.getGroup();
-            case "mine":
+            case "personal":
             case "room": {
                 if (StringUtils.isBlank(lesson.getGroup())) {
                     return lesson.getTeacherName();
@@ -1012,7 +1016,7 @@ public class ScheduleLessonsTabFragmentPresenterImpl implements ScheduleLessonsT
 
     private String getLessonMeta(SLesson lesson, String type) {
         switch (type) {
-            case "mine":
+            case "personal":
             case "group":
             case "teacher": {
                 if (StringUtils.isBlank(lesson.getRoom())) {

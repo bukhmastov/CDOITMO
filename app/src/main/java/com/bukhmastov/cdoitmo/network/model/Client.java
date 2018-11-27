@@ -46,7 +46,7 @@ import okio.Buffer;
 public abstract class Client {
 
     private static final String TAG = "Client";
-    private static final String[] LOG_SECURED_HEADERS = new String[] {"route", "JSESSIONID", "PHPSESSID"};
+    private static final String[] LOG_SECURED_HEADERS = new String[] {"route", "JSESSIONID", "PHPSESSID", "access_token", "refresh_token"};
     private static final String[] LOG_SECURED_REQUEST_BODY = new String[] {"passwd", "pass", "password"};
 
     public static final int STATUS_CODE_EMPTY = -1;
@@ -257,9 +257,11 @@ public abstract class Client {
                     builder.headers(headers);
                 }
                 if (requestBody != null) {
-                    MediaType contentType = requestBody.contentType();
-                    builder.addHeader("Content-Type", contentType == null ? "application/x-www-form-urlencoded" : contentType.toString());
-                    builder.addHeader("Content-Length", String.valueOf(requestBody.contentLength()));
+                    if (!(requestBody instanceof FormBody) || ((FormBody) requestBody).size() > 0) {
+                        MediaType contentType = requestBody.contentType();
+                        builder.addHeader("Content-Type", contentType == null ? "application/x-www-form-urlencoded" : contentType.toString());
+                        builder.addHeader("Content-Length", String.valueOf(requestBody.contentLength()));
+                    }
                     builder.post(requestBody);
                 }
                 okhttp3.Request request = builder.build();
@@ -393,7 +395,17 @@ public abstract class Client {
             if (url.contains("isu.ifmo.ru")) {
                 Matcher m = Pattern.compile("^(.*/)(.*)(/[^/]*)$", Pattern.CASE_INSENSITIVE).matcher(url);
                 if (m.find()) {
-                    url = m.replaceAll("$1<hidden>$3");
+                    if (m.group(3).startsWith("/AT-")) {
+                        url = m.replaceAll("$1<apikey>/<auth-token>");
+                    } else {
+                        url = m.replaceAll("$1<apikey>$3");
+                    }
+                }
+            }
+            if (url.contains("services.ifmo.ru")) {
+                Matcher m = Pattern.compile("^(.*oauth2\\.0/)(.*)$", Pattern.CASE_INSENSITIVE).matcher(url);
+                if (m.find()) {
+                    url = m.replaceAll("$1<hidden>");
                 }
             }
             return url;
@@ -407,9 +419,11 @@ public abstract class Client {
             if (requestBody == null) {
                 return "<null>";
             }
-            final Buffer buffer = new Buffer();
-            requestBody.writeTo(buffer);
-            String log = buffer.readUtf8().trim();
+            String log = "";
+            try (Buffer buffer = new Buffer()) {
+                requestBody.writeTo(buffer);
+                log = buffer.readUtf8().trim();
+            }
             for (String secured : LOG_SECURED_REQUEST_BODY) {
                 Matcher m = Pattern.compile("(" + secured + "=)([^&]*)", Pattern.CASE_INSENSITIVE).matcher(log);
                 if (m.find()) {

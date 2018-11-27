@@ -44,7 +44,7 @@ public class ScheduleLessonsIsuConverter extends Converter<ISUScheduleApiRespons
             for (ISUDepartment isuDepartment : CollectionUtils.emptyIfNull(isuFaculty.getDepartments())) {
                 for (ISUGroup isuGroup : CollectionUtils.emptyIfNull(isuDepartment.getGroups())) {
                     String group = isuGroup.getGroup();
-                    if (Objects.equals(type, "group")) {
+                    if (Objects.equals(type, "group") && StringUtils.isBlank(title)) {
                         title = group;
                     }
                     for (ISUSchedule isuSchedule : CollectionUtils.emptyIfNull(isuGroup.getSchedule())) {
@@ -92,8 +92,8 @@ public class ScheduleLessonsIsuConverter extends Converter<ISUScheduleApiRespons
         // parity
         int parity = isuLesson.getParity();
         switch (parity) {
-            case 2: parity = 1; break;
-            case 1: parity = 0; break;
+            case 2: parity = 0; break;
+            case 1: parity = 1; break;
             case 0: default: parity = 2; break;
         }
         lesson.setParity(parity);
@@ -105,7 +105,7 @@ public class ScheduleLessonsIsuConverter extends Converter<ISUScheduleApiRespons
         // teacher
         if (CollectionUtils.isNotEmpty(isuLesson.getTeachers())) {
             ISUTeacher isuTeacher = isuLesson.getTeachers().get(0);
-            if (Objects.equals(type, "teacher")) {
+            if (Objects.equals(this.type, "teacher") && StringUtils.isBlank(title)) {
                 title = isuTeacher.getTeacherName();
             }
             lesson.setTeacherName(isuTeacher.getTeacherName());
@@ -131,8 +131,8 @@ public class ScheduleLessonsIsuConverter extends Converter<ISUScheduleApiRespons
         }
         SDay day = new SDay();
         day.setWeekday(weekday);
-        day.setType("unknown");
-        day.setTitle("");
+        day.setType(weekday < 7 ? "unknown" : "date");
+        day.setTitle(weekday < 7 ? "" : ""); // FIXME obtain day title from isu api
         day.setLessons(new ArrayList<>());
         day.getLessons().add(lesson);
         days.add(day);

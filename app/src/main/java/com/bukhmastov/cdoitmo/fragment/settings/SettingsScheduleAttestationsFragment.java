@@ -34,7 +34,7 @@ public class SettingsScheduleAttestationsFragment extends SettingsTemplatePrefer
                 try {
                     SettingsQuery settingsQuery = new SettingsQuery().fromJsonString(value);
                     switch (settingsQuery.getQuery()) {
-                        case "mine": return activity.getString(R.string.personal_schedule);
+                        case "personal": return activity.getString(R.string.personal_schedule);
                         case "auto": return activity.getString(R.string.current_group);
                         default: return settingsQuery.getTitle();
                     }

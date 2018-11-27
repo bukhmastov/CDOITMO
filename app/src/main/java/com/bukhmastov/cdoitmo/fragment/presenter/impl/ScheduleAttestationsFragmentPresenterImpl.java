@@ -22,6 +22,7 @@ import com.bukhmastov.cdoitmo.event.events.ShareTextEvent;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.fragment.ConnectedFragment;
+import com.bukhmastov.cdoitmo.fragment.LinkedAccountsFragment;
 import com.bukhmastov.cdoitmo.fragment.presenter.ScheduleAttestationsFragmentPresenter;
 import com.bukhmastov.cdoitmo.fragment.settings.SettingsScheduleAttestationsFragment;
 import com.bukhmastov.cdoitmo.model.rva.RVAAttestations;
@@ -191,10 +192,11 @@ public class ScheduleAttestationsFragmentPresenterImpl implements ScheduleAttest
                             fragment.draw(view);
                             break;
                         }
-                        case Schedule.FAILED_MINE_NEED_ISU: {
-                            // TODO replace with isu auth, when isu will be ready
-                            final ViewGroup view = (ViewGroup) fragment.inflate(R.layout.state_failed_button);
-                            view.findViewById(R.id.try_again_reload).setOnClickListener(v -> load(false));
+                        case Schedule.FAILED_PERSONAL_NEED_ISU: {
+                            final ViewGroup view = (ViewGroup) fragment.inflate(R.layout.layout_schedule_isu_required);
+                            view.findViewById(R.id.open_isu_auth).setOnClickListener(v -> activity.openActivity(ConnectedActivity.TYPE.STACKABLE, LinkedAccountsFragment.class, null));
+                            view.findViewById(R.id.open_search).setOnClickListener(v -> eventBus.fire(new OpenActivityEvent(ScheduleAttestationsSearchActivity.class)));
+                            view.findViewById(R.id.open_settings).setOnClickListener(v -> activity.openActivity(ConnectedActivity.TYPE.STACKABLE, SettingsScheduleAttestationsFragment.class, null));
                             fragment.draw(view);
                             break;
                         }
@@ -440,7 +442,8 @@ public class ScheduleAttestationsFragmentPresenterImpl implements ScheduleAttest
                     log.exception(throwable);
                     notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
                 });
-                return false;
+                popup.dismiss();
+                return true;
             });
             popup.show();
         }, throwable -> {
@@ -475,7 +478,8 @@ public class ScheduleAttestationsFragmentPresenterImpl implements ScheduleAttest
                         log.exception(throwable);
                         notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
                     });
-                    return false;
+                    popup.dismiss();
+                    return true;
                 });
                 popup.show();
             }, throwable -> {

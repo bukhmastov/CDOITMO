@@ -15,8 +15,7 @@
             android:layout_height="wrap_content"
             android:padding="@dimen/item_padding">
 
-            <!-- TODO uncomment, when personal schedule will be ready -->
-            <!--<RadioButton
+            <RadioButton
                 android:id="@+id/lsp_schedule_personal"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -26,7 +25,7 @@
                 android:paddingStart="@dimen/item_padding_quarter"
                 android:paddingEnd="@dimen/item_padding_quarter"
                 android:paddingTop="@dimen/item_padding_eight"
-                android:paddingBottom="@dimen/item_padding_eight"/>-->
+                android:paddingBottom="@dimen/item_padding_eight"/>
 
             <RadioButton
                 android:id="@+id/lsp_schedule_group"

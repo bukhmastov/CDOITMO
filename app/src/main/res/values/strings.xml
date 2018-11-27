@@ -346,7 +346,9 @@
     <string name="auth_help_2">Попробуйте авторизоваться на сайте ЦДО (https://de.ifmo.ru/). Если на официальном сайте авторизация успешна, а в приложении нет, свяжитесь с разработчиком (иконка информации сверху справа окна авторизации)</string>
     <string name="auth_help_3">2. Отсутствует логин/пароль</string>
     <string name="auth_help_4">Обратитесь с данным вопросом в центр дистанционного обучения (101 аудитория главного корпуса)</string>
-    <string name="auth_help_5">3. Помните, что данное приложение не официальное, а разработчик не имеет никакого отношения к ЦДО</string>
+    <string name="auth_help_5">3. Авторизация в ИСУ</string>
+    <string name="auth_help_6">Авторизация в ИСУ доступна в настройках после входа в приложение. ИСУ так же доступно и после входа без авторизации ниже.</string>
+    <string name="auth_help_7">4. Помните, что данное приложение не официальное, а разработчик не имеет никакого отношения к ЦДО</string>
     <string name="intro_title_1">Следите за успеваемостью</string>
     <string name="intro_title_2">Приходите вовремя</string>
     <string name="intro_title_3">Записывайтесь на тестирование</string>
@@ -457,7 +459,7 @@
     <string name="anonymous">Неизвестный странник</string>
     <string name="anonymous_login">Вход без авторизации</string>
     <string name="anonymous_login_info_1">1. Что это такое</string>
-    <string name="anonymous_login_info_2">Вход без авторизации позволяет получить доступ к приложению, но с урезанным функционалом (без электронного журнала и т.д.)</string>
+    <string name="anonymous_login_info_2">Вход без авторизации позволяет получить доступ к приложению, но с урезанным функционалом (без электронного журнала и т.д.). Авторизация в ИСУ останется доступной.</string>
     <string name="anonymous_login_info_3">2. Зачем это нужно</string>
     <string name="anonymous_login_info_4">Этот режим пригодится, если Вы не хотите авторизовываться в системе ЦДО через данное приложение, авторизация по каким-либо причинам в текущий момент недоступна или на дворе октябрь 2077 года, сервера ЦДО более недоступны, а единственное что Вас беспокоит - расписание занятий.</string>
     <string name="login_group">Номер группы (можно оставить пустым)</string>
@@ -528,5 +530,21 @@
     <string name="source_ifmo">ИТМО</string>
     <string name="source_ifmo_desc">Предпочитать загрузку с серверов ИТМО</string>
     <string name="source_picker_schedule_lessons_warning">Обратите внимание, что скрытые занятия могут не совпадать для разных источников данных</string>
+    <string name="fill_fields">Заполните поля</string>
+    <string name="isu_ifmo">ИСУ ИТМО</string>
+    <string name="not_authorized">Не авторизован</string>
+    <string name="logout_and_clear_cache">Выйти и очистить кэш</string>
+    <string name="logout_and_keep_cache">Выйти и сохранить кэш</string>
+    <string name="link_account">Привязать аккаунт</string>
+    <string name="link_account_disclaimer_1">Вы собираетесь привязать дополнительный аккаунт к аккаунту ЦДО, в приложении аккаунт ЦДО останется основным.</string>
+    <string name="link_account_disclaimer_2">Данное действие необязательно и только открывает дополнительные функции приложения. Связка аккаунтов имеет значение только в данном приложении и не имеет никакого отношения к платформам университета ИТМО.</string>
+    <string name="link_account_with">Авторизация в</string>
+    <string name="account_linked">Аккаунт был связан</string>
+    <string name="logout_failed">Не удалось выйти из аккаунта</string>
+    <string name="logout_failed_not_logged_in">Не удалось выйти из аккаунта, так как вход не был произведен</string>
+    <string name="load_failed_need_isu">Необходима авторизация в ИСУ</string>
+    <string name="schedule_isu_required_title">Для просмотра персонального расписания необходима авторизация в ИСУ</string>
+    <string name="schedule_isu_required_message">Авторизуйтесь в ИСУ или выберите другое расписание, используя поиск в правом верхнем углу или настройки</string>
+
 
 </resources>

@@ -118,7 +118,7 @@ public class ScheduleLessonsWidgetFactory implements RemoteViewsService.RemoteVi
             switch (this.type) {
                 case "group": desc = lesson.getTeacherName(); break;
                 case "teacher": desc = lesson.getGroup(); break;
-                case "mine":
+                case "personal":
                 case "room": {
                     String group = lesson.getGroup();
                     String teacher = lesson.getTeacherName();
@@ -141,7 +141,7 @@ public class ScheduleLessonsWidgetFactory implements RemoteViewsService.RemoteVi
             }
             String meta = "";
             switch (this.type) {
-                case "mine":
+                case "personal":
                 case "group":
                 case "teacher": {
                     String room = lesson.getRoom();

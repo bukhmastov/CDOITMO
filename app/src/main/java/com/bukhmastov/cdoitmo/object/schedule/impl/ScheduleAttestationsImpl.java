@@ -57,10 +57,10 @@ public class ScheduleAttestationsImpl extends ScheduleImpl<SAttestations> implem
     }
 
     @Override
-    protected void searchMine(int refreshRate, boolean forceToCache, boolean withUserChanges) {
+    protected void searchPersonal(int refreshRate, boolean forceToCache, boolean withUserChanges) {
         thread.run(() -> {
-            log.v(TAG, "searchMine | personal schedule is unavailable");
-            invokePendingAndClose("mine", withUserChanges, handler -> handler.onFailure(FAILED_INVALID_QUERY));
+            log.v(TAG, "searchPersonal | personal schedule is unavailable");
+            invokePendingAndClose("personal", withUserChanges, handler -> handler.onFailure(FAILED_INVALID_QUERY));
         });
     }
 

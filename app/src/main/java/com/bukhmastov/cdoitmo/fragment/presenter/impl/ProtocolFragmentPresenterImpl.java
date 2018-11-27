@@ -538,7 +538,8 @@ public class ProtocolFragmentPresenterImpl implements ProtocolFragmentPresenter,
                         log.exception(throwable);
                         notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
                     });
-                    return false;
+                    popup.dismiss();
+                    return true;
                 });
                 popup.show();
             }, throwable -> {

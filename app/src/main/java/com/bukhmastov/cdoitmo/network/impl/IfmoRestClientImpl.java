@@ -23,7 +23,7 @@ public class IfmoRestClientImpl extends IfmoRestClient {
 
     private static final String TAG = "IfmoRestClient";
     private static final String BASE_URL = "mountain.ifmo.ru/api.ifmo.ru/public/v1";
-    private static final String DEFAULT_PROTOCOL = HTTP;
+    private static final String DEFAULT_PROTOCOL = HTTPS;
 
     @Inject
     Log log;

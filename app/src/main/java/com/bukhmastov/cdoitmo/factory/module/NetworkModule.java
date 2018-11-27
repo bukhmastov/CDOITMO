@@ -4,12 +4,14 @@ import com.bukhmastov.cdoitmo.network.DeIfmoClient;
 import com.bukhmastov.cdoitmo.network.DeIfmoRestClient;
 import com.bukhmastov.cdoitmo.network.IfmoClient;
 import com.bukhmastov.cdoitmo.network.IfmoRestClient;
+import com.bukhmastov.cdoitmo.network.IsuPrivateRestClient;
 import com.bukhmastov.cdoitmo.network.IsuRestClient;
 import com.bukhmastov.cdoitmo.network.Room101Client;
 import com.bukhmastov.cdoitmo.network.impl.DeIfmoClientImpl;
 import com.bukhmastov.cdoitmo.network.impl.DeIfmoRestClientImpl;
 import com.bukhmastov.cdoitmo.network.impl.IfmoClientImpl;
 import com.bukhmastov.cdoitmo.network.impl.IfmoRestClientImpl;
+import com.bukhmastov.cdoitmo.network.impl.IsuPrivateRestClientImpl;
 import com.bukhmastov.cdoitmo.network.impl.IsuRestClientImpl;
 import com.bukhmastov.cdoitmo.network.impl.Room101ClientImpl;
 import com.bukhmastov.cdoitmo.network.provider.NetworkClientProvider;
@@ -53,6 +55,12 @@ public class NetworkModule {
     @Singleton
     public IsuRestClient provideIsuRestClient() {
         return new IsuRestClientImpl();
+    }
+
+    @Provides
+    @Singleton
+    public IsuPrivateRestClient provideIsuPrivateRestClient() {
+        return new IsuPrivateRestClientImpl();
     }
 
     @Provides

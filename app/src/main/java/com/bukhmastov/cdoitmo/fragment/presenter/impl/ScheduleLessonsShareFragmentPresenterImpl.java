@@ -329,7 +329,7 @@ public class ScheduleLessonsShareFragmentPresenterImpl implements ScheduleLesson
                         case ScheduleLessons.FAILED_EMPTY_QUERY:
                         case ScheduleLessons.FAILED_NOT_FOUND:
                         case ScheduleLessons.FAILED_INVALID_QUERY:
-                        case ScheduleLessons.FAILED_MINE_NEED_ISU:
+                        case ScheduleLessons.FAILED_PERSONAL_NEED_ISU:
                         default:
                             shareContent.addView(fragment.inflate(R.layout.state_failed_text_compact));
                             break;
@@ -484,7 +484,7 @@ public class ScheduleLessonsShareFragmentPresenterImpl implements ScheduleLesson
                         case ScheduleLessons.FAILED_EMPTY_QUERY:
                         case ScheduleLessons.FAILED_NOT_FOUND:
                         case ScheduleLessons.FAILED_INVALID_QUERY:
-                        case ScheduleLessons.FAILED_MINE_NEED_ISU:
+                        case ScheduleLessons.FAILED_PERSONAL_NEED_ISU:
                         default:
                             shareContent.addView(fragment.inflate(R.layout.state_failed_text_compact));
                             break;

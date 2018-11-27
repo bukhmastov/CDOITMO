@@ -120,13 +120,12 @@ public abstract class SettingsSchedule<T extends ScheduleJsonEntity> extends Set
             });
             radioGroup.setOnCheckedChangeListener((group, checkedId) -> thread.runOnUI(() -> {
                 switch (group.getCheckedRadioButtonId()) {
-                    // TODO uncomment, when personal schedule will be ready
-                    /*case R.id.lsp_schedule_personal: {
-                        query = "mine";
+                    case R.id.lsp_schedule_personal: {
+                        query = "personal";
                         title = "";
-                        lsp_schedule_chooser.setVisibility(View.GONE);
+                        scheduleChooser.setVisibility(View.GONE);
                         break;
-                    }*/
+                    }
                     case R.id.lsp_schedule_group: {
                         query = "auto";
                         title = "";
@@ -134,7 +133,7 @@ public abstract class SettingsSchedule<T extends ScheduleJsonEntity> extends Set
                         break;
                     }
                     case R.id.lsp_schedule_defined: {
-                        if ("mine".equals(query) || "auto".equals(query)) {
+                        if ("personal".equals(query) || "auto".equals(query)) {
                             query = "";
                             title = "";
                         }
@@ -151,8 +150,7 @@ public abstract class SettingsSchedule<T extends ScheduleJsonEntity> extends Set
                 SettingsQuery objValue = new SettingsQuery().fromJsonString(value);
                 if (objValue != null && StringUtils.isNotBlank(objValue.getQuery())) {
                     switch (objValue.getQuery()) {
-                        // TODO uncomment, when personal schedule will be ready
-                        //case "mine": lsp_radio_group.check(R.id.lsp_schedule_personal); break;
+                        case "personal": radioGroup.check(R.id.lsp_schedule_personal); break;
                         case "auto": radioGroup.check(R.id.lsp_schedule_group); break;
                         default: {
                             query = objValue.getQuery();

@@ -10,7 +10,7 @@ public interface Schedule<T extends ScheduleJsonEntity> {
     int FAILED_LOAD = 100;
     int FAILED_OFFLINE = 101;
     int FAILED_EMPTY_QUERY = 102;
-    int FAILED_MINE_NEED_ISU = 103;
+    int FAILED_PERSONAL_NEED_ISU = 103;
     int FAILED_INVALID_QUERY = 104;
     int FAILED_NOT_FOUND = 105;
 

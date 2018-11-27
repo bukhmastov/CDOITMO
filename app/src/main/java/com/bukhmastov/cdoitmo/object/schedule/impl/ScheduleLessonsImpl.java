@@ -1,5 +1,6 @@
 package com.bukhmastov.cdoitmo.object.schedule.impl;
 
+import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.event.bus.annotation.Event;
 import com.bukhmastov.cdoitmo.event.events.ClearCacheEvent;
 import com.bukhmastov.cdoitmo.firebase.FirebasePerformanceProvider;
@@ -36,10 +37,27 @@ public class ScheduleLessonsImpl extends ScheduleImpl<SLessons> implements Sched
     }
 
     @Override
-    protected void searchMine(int refreshRate, boolean forceToCache, boolean withUserChanges) {
+    protected void searchPersonal(int refreshRate, boolean forceToCache, boolean withUserChanges) {
         thread.run(() -> {
-            log.v(TAG, "searchMine | personal schedule is unavailable");
-            invokePendingAndClose("mine", withUserChanges, handler -> handler.onFailure(FAILED_INVALID_QUERY));
+            @Source String source = SOURCE.ISU/*getSource()*/;
+            log.v(TAG, "searchPersonal | refreshRate=", refreshRate, " | forceToCache=", forceToCache, " | withUserChanges=", withUserChanges, " | source=", source);
+            searchByQuery("personal", source, refreshRate, withUserChanges, new SearchByQuery<SLessons>() {
+                @Override
+                public void onWebRequest(String query, String source, RestResponseHandler restResponseHandler) {
+                    switch (source) {
+                        case SOURCE.IFMO: // not available, using isu source
+                        case SOURCE.ISU: isuRestClient.get(context, "schedule/personal/student/%apikey%/%isutoken%", null, restResponseHandler); break;
+                    }
+                }
+                @Override
+                public SLessons onGetScheduleFromJson(String query, String source, JSONObject json) throws Exception {
+                    return makeSchedule(query, source, "personal", json);
+                }
+                @Override
+                public void onFound(String query, SLessons schedule, boolean fromCache) {
+                    onScheduleFound(query, schedule, forceToCache, fromCache, withUserChanges);
+                }
+            });
         });
     }
 
@@ -195,6 +213,9 @@ public class ScheduleLessonsImpl extends ScheduleImpl<SLessons> implements Sched
         }
         if (schedule == null) {
             return null;
+        }
+        if ("personal".equals(type)) {
+            schedule.setTitle(context.getString(R.string.personal_schedule));
         }
         schedule.setQuery(query);
         schedule.setType(type);

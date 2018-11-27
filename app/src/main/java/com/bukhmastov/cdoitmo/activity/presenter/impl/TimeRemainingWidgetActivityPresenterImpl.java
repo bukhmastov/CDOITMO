@@ -198,9 +198,8 @@ public class TimeRemainingWidgetActivityPresenterImpl implements TimeRemainingWi
                 case ScheduleLessons.FAILED_INVALID_QUERY:
                     message(activity.getString(R.string.incorrect_query));
                     break;
-                case ScheduleLessons.FAILED_MINE_NEED_ISU:
-                    // TODO replace with isu auth, when isu will be ready
-                    message(activity.getString(R.string.load_failed));
+                case ScheduleLessons.FAILED_PERSONAL_NEED_ISU:
+                    message(activity.getString(R.string.load_failed_need_isu));
                     break;
             }
         });
