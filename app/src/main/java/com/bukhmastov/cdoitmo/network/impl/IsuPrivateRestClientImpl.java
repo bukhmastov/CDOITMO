@@ -72,7 +72,7 @@ public class IsuPrivateRestClientImpl extends IsuPrivateRestClient {
                 }
                 return;
             }
-            if (StringUtils.isNotBlank(refreshToken)) {
+            if (StringUtils.isBlank(refreshToken)) {
                 log.v(TAG, "check | refresh token is empty");
                 responseHandler.onFailure(STATUS_CODE_EMPTY, new Headers(null), FAILED_AUTH_CREDENTIALS_REQUIRED);
                 return;

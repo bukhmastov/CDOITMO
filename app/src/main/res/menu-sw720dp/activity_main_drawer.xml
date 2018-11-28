@@ -31,6 +31,10 @@
             android:icon="@drawable/ic_room101"
             android:title="@string/room101"/>
         <item
+            android:id="@+id/nav_group"
+            android:icon="@drawable/ic_group"
+            android:title="@string/study_groups"/>
+        <item
             android:id="@+id/nav_university"
             android:icon="@drawable/ic_university"
             android:title="@string/university"/>

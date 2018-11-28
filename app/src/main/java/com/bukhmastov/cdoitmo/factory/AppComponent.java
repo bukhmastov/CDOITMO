@@ -67,6 +67,7 @@ import com.bukhmastov.cdoitmo.fragment.ConnectedFragment;
 import com.bukhmastov.cdoitmo.fragment.ERegisterFragment;
 import com.bukhmastov.cdoitmo.fragment.ERegisterSubjectFragment;
 import com.bukhmastov.cdoitmo.fragment.HomeScreenInteractionFragment;
+import com.bukhmastov.cdoitmo.fragment.IsuGroupInfoFragment;
 import com.bukhmastov.cdoitmo.fragment.LinkAccountFragment;
 import com.bukhmastov.cdoitmo.fragment.LinkedAccountsFragment;
 import com.bukhmastov.cdoitmo.fragment.LogFragment;
@@ -94,6 +95,7 @@ import com.bukhmastov.cdoitmo.fragment.presenter.impl.AboutFragmentPresenterImpl
 import com.bukhmastov.cdoitmo.fragment.presenter.impl.ERegisterFragmentPresenterImpl;
 import com.bukhmastov.cdoitmo.fragment.presenter.impl.ERegisterSubjectFragmentPresenterImpl;
 import com.bukhmastov.cdoitmo.fragment.presenter.impl.HomeScreenInteractionFragmentPresenterImpl;
+import com.bukhmastov.cdoitmo.fragment.presenter.impl.IsuGroupInfoFragmentPresenterImpl;
 import com.bukhmastov.cdoitmo.fragment.presenter.impl.LinkAccountFragmentPresenterImpl;
 import com.bukhmastov.cdoitmo.fragment.presenter.impl.LinkedAccountsFragmentPresenterImpl;
 import com.bukhmastov.cdoitmo.fragment.presenter.impl.LogFragmentPresenterImpl;
@@ -258,6 +260,7 @@ public interface AppComponent {
     void inject(SettingsTemplatePreferencesFragment settingsTemplatePreferencesFragment);
     void inject(SettingsFragment settingsFragment);
     void inject(SettingsNotificationsFragment settingsNotificationsFragment);
+    void inject(IsuGroupInfoFragment isuGroupInfoFragment);
     // Fragment presenters
     void inject(AboutFragmentPresenterImpl aboutFragmentPresenter);
     void inject(ERegisterFragmentPresenterImpl eRegisterFragmentPresenter);
@@ -286,6 +289,7 @@ public interface AppComponent {
     void inject(UniversityNewsFragmentPresenterImpl universityNewsFragmentPresenter);
     void inject(UniversityPersonsFragmentPresenterImpl universityPersonsFragmentPresenter);
     void inject(UniversityUnitsFragmentPresenterImpl universityUnitsFragmentPresenter);
+    void inject(IsuGroupInfoFragmentPresenterImpl isuGroupInfoFragmentPresenter);
 
     // Adapters
     void inject(TeacherPickerAdapter teacherPickerAdapter);

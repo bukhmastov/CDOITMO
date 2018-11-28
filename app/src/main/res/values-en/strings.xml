@@ -537,5 +537,12 @@
     <string name="load_failed_need_isu">You need to login in the ISU</string>
     <string name="schedule_isu_required_title">You need to login in the ISU to access the personal schedule</string>
     <string name="schedule_isu_required_message">Login in the ISU or choose another schedule using the search in the upper right corner or settings</string>
+    <string name="isu_required_message">You need to login in the ISU to proceed the request</string>
+    <string name="student1">Student</string>
+    <string name="student2">Students</string>
+    <string name="student3">Students</string>
+    <string name="no_groups">No groups found</string>
+    <string name="no_group_persons">No students found</string>
+    <string name="study_groups">Study groups</string>
 
 </resources>

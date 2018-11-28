@@ -545,6 +545,13 @@
     <string name="load_failed_need_isu">Необходима авторизация в ИСУ</string>
     <string name="schedule_isu_required_title">Для просмотра персонального расписания необходима авторизация в ИСУ</string>
     <string name="schedule_isu_required_message">Авторизуйтесь в ИСУ или выберите другое расписание, используя поиск в правом верхнем углу или настройки</string>
+    <string name="isu_required_message">Для просмотра необходима авторизация в ИСУ</string>
+    <string name="student1">Студент</string>
+    <string name="student2">Студента</string>
+    <string name="student3">Студентов</string>
+    <string name="no_groups">Групп не найдено</string>
+    <string name="no_group_persons">Студентов не найдено</string>
+    <string name="study_groups">Учебные группы</string>
 
 
 </resources>
