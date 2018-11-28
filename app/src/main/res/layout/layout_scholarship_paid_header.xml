@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="?attr/colorBackgroundSection">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/scholarship_assigned_container"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingStart="@dimen/item_horizontal_padding"
+        android:paddingEnd="@dimen/item_padding_quarter"
+        android:paddingTop="@dimen/item_vertical_padding"
+        android:paddingBottom="@dimen/item_vertical_padding"
+        android:background="?android:attr/selectableItemBackground">
+
+        <TextView
+            android:id="@+id/title"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:paddingStart="0dp"
+            android:paddingEnd="@dimen/item_padding_half"
+            android:paddingTop="@dimen/item_vertical_padding_half"
+            android:paddingBottom="@dimen/item_vertical_padding_half"
+            android:text="@string/scholarship_paid"
+            android:textColor="?android:attr/textColorPrimary"
+            android:textSize="@dimen/font_size_14"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintWidth_max="wrap"
+            app:layout_constraintWidth_percent="0.5" />
+
+        <View
+            android:id="@+id/separator"
+            android:layout_width="@dimen/separator"
+            android:layout_height="0dp"
+            android:background="?attr/colorSeparator"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"/>
+
+        <TextView
+            android:id="@+id/textView2"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:paddingStart="@dimen/item_padding_half"
+            android:paddingEnd="0dp"
+            android:paddingTop="@dimen/item_vertical_padding_half"
+            android:paddingBottom="@dimen/item_vertical_padding_half"
+            android:text="@string/scholarship_assigned_short"
+            android:textColor="?android:attr/textColorSecondary"
+            android:textSize="@dimen/font_size_14"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/icon"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintWidth_max="wrap"
+            app:layout_constraintWidth_percent="0.4" />
+
+        <ImageView
+            android:id="@+id/icon"
+            android:layout_width="@dimen/dp28"
+            android:layout_height="0dp"
+            android:src="@drawable/ic_chevron_right"
+            android:tint="?android:attr/textColorPrimary"
+            app:layout_constraintBottom_toBottomOf="@+id/textView2"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="@+id/textView2" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <include layout="@layout/separator"/>
+
+</LinearLayout>

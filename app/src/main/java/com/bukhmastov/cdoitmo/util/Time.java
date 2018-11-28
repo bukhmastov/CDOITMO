@@ -18,6 +18,8 @@ public interface Time {
 
     int getWeekDay(Calendar calendar);
 
+    String getMonth(Context context, int month);
+
     String getGenitiveMonth(Context context, String month);
 
     String getGenitiveMonth(Context context, int month);

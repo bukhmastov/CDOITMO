@@ -213,6 +213,18 @@
     <string name="cache_false">Расписание удалено из кэша</string>
     <string name="offline_mode_on">Приложение запущено в оффлайн режиме</string>
     <string name="list_of_requests">Список заявок</string>
+    <string name="january">Январь</string>
+    <string name="february">Февраль</string>
+    <string name="march">Март</string>
+    <string name="april">Апрель</string>
+    <string name="may">Май</string>
+    <string name="june">Июнь</string>
+    <string name="july">Июль</string>
+    <string name="august">Август</string>
+    <string name="september">Сентябрь</string>
+    <string name="october">Октябрь</string>
+    <string name="november">Ноябрь</string>
+    <string name="december">Декабрь</string>
     <string name="january_genitive">января</string>
     <string name="february_genitive">февраля</string>
     <string name="march_genitive">марта</string>
@@ -552,6 +564,17 @@
     <string name="no_groups">Групп не найдено</string>
     <string name="no_group_persons">Студентов не найдено</string>
     <string name="study_groups">Учебные группы</string>
+    <string name="scholarship_paid_amount">Начислено %amount%</string>
+    <string name="ruble1">Рубль</string>
+    <string name="ruble2">Рубля</string>
+    <string name="ruble3">Рублей</string>
+    <string name="scholarship_assigned">Назначенная стипендия</string>
+    <string name="scholarship_assigned_short">Назначенная</string>
+    <string name="scholarship_paid">Выплаченная стипендия</string>
+    <string name="no_paid_scholarship">Нет выплат</string>
+    <string name="scholarship">Стипендия</string>
+    <string name="no_assigned_scholarship">Нет назначенных стипендий</string>
+    <string name="no_scholarship_details">Нет подробностей</string>
 
 
 </resources>

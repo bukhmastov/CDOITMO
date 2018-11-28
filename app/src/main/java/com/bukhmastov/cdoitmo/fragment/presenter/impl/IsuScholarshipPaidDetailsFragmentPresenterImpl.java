@@ -1,7 +1,5 @@
 package com.bukhmastov.cdoitmo.fragment.presenter.impl;
 
-import android.content.Intent;
-import android.net.Uri;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.TextView;
@@ -9,15 +7,13 @@ import android.widget.TextView;
 import com.bukhmastov.cdoitmo.App;
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activity.ConnectedActivity;
-import com.bukhmastov.cdoitmo.adapter.rva.GroupRVA;
-import com.bukhmastov.cdoitmo.event.bus.EventBus;
-import com.bukhmastov.cdoitmo.event.events.OpenIntentEvent;
+import com.bukhmastov.cdoitmo.adapter.rva.ScholarshipPaidDetailsRVA;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.fragment.ConnectedFragment;
 import com.bukhmastov.cdoitmo.fragment.LinkedAccountsFragment;
-import com.bukhmastov.cdoitmo.fragment.presenter.IsuGroupInfoFragmentPresenter;
-import com.bukhmastov.cdoitmo.model.group.GList;
+import com.bukhmastov.cdoitmo.fragment.presenter.IsuScholarshipPaidDetailsFragmentPresenter;
+import com.bukhmastov.cdoitmo.model.scholarship.detailed.SSDetailedList;
 import com.bukhmastov.cdoitmo.network.IsuPrivateRestClient;
 import com.bukhmastov.cdoitmo.network.handlers.RestResponseHandler;
 import com.bukhmastov.cdoitmo.network.model.Client;
@@ -40,21 +36,21 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
-public class IsuGroupInfoFragmentPresenterImpl implements IsuGroupInfoFragmentPresenter, SwipeRefreshLayout.OnRefreshListener {
+public class IsuScholarshipPaidDetailsFragmentPresenterImpl implements IsuScholarshipPaidDetailsFragmentPresenter, SwipeRefreshLayout.OnRefreshListener {
 
-    private static final String TAG = "IsuGroupInfoFragment";
+    private static final String TAG = "IsuScholarshipPaidDetailsFragment";
     private ConnectedFragment fragment = null;
     private ConnectedActivity activity = null;
-    private GList data = null;
+    private SSDetailedList data = null;
     private boolean loaded = false;
     private Client.Request requestHandle = null;
+    private int year = 0;
+    private int month = 0;
 
     @Inject
     Log log;
     @Inject
     Thread thread;
-    @Inject
-    EventBus eventBus;
     @Inject
     Storage storage;
     @Inject
@@ -68,7 +64,7 @@ public class IsuGroupInfoFragmentPresenterImpl implements IsuGroupInfoFragmentPr
     @Inject
     FirebaseAnalyticsProvider firebaseAnalyticsProvider;
 
-    public IsuGroupInfoFragmentPresenterImpl() {
+    public IsuScholarshipPaidDetailsFragmentPresenterImpl() {
         AppComponentProvider.getComponent().inject(this);
     }
 
@@ -99,7 +95,20 @@ public class IsuGroupInfoFragmentPresenterImpl implements IsuGroupInfoFragmentPr
             firebaseAnalyticsProvider.setCurrentScreen(activity, fragment);
             if (!loaded) {
                 loaded = true;
-                if (getData() == null) {
+                if (data == null) {
+                    Bundle bundle = fragment.getArguments();
+                    if (bundle == null) {
+                        log.v(TAG, "Fragment resumed | bundle is null");
+                        loadFailed();
+                        return;
+                    }
+                    year = bundle.getInt("year");
+                    month = bundle.getInt("month");
+                    if (year == 0 || month == 0) {
+                        log.v(TAG, "Fragment resumed | year or month is zero | year=", year, " | month=", month);
+                        loadFailed();
+                        return;
+                    }
                     load();
                 } else {
                     display();
@@ -127,7 +136,7 @@ public class IsuGroupInfoFragmentPresenterImpl implements IsuGroupInfoFragmentPr
     }
 
     private void load() {
-        thread.run(() -> load(storagePref.get(activity, "pref_use_cache", true) ? Integer.parseInt(storagePref.get(activity, "pref_static_refresh", "168")) : 0));
+        thread.run(() -> load(storagePref.get(activity, "pref_use_cache", true) ? Integer.parseInt(storagePref.get(activity, "pref_dynamic_refresh", "0")) : 0));
     }
 
     private void load(int refresh_rate) {
@@ -137,33 +146,21 @@ public class IsuGroupInfoFragmentPresenterImpl implements IsuGroupInfoFragmentPr
                 load(false);
                 return;
             }
-            GList cache = getFromCache();
-            if (cache == null) {
-                load(true, null);
-                return;
-            }
-            setData(cache);
-            if (cache.getTimestamp() + refresh_rate * 3600000L < time.getTimeInMillis()) {
-                load(true, cache);
+            if (data == null || data.getTimestamp() + refresh_rate * 3600000L < time.getTimeInMillis()) {
+                load(true);
             } else {
-                load(false, cache);
+                load(false);
             }
         });
     }
 
     private void load(boolean force) {
-        thread.run(() -> load(force, null));
-    }
-
-    private void load(boolean force, GList cached) {
         thread.run(() -> {
             log.v(TAG, "load | force=", force);
-            if ((!force || !Client.isOnline(activity)) && storagePref.get(activity, "pref_use_cache", true)) {
+            if ((!force || !Client.isOnline(activity))) {
                 try {
-                    GList cache = cached == null ? getFromCache() : cached;
-                    if (cache != null) {
+                    if (data != null) {
                         log.v(TAG, "load | from cache");
-                        setData(cache);
                         display();
                         return;
                     }
@@ -172,7 +169,7 @@ public class IsuGroupInfoFragmentPresenterImpl implements IsuGroupInfoFragmentPr
                 }
             }
             if (App.OFFLINE_MODE) {
-                if (getData() != null) {
+                if (data != null) {
                     display();
                     return;
                 }
@@ -195,22 +192,23 @@ public class IsuGroupInfoFragmentPresenterImpl implements IsuGroupInfoFragmentPr
                 });
                 return;
             }
-            isuPrivateRestClient.get(activity, "groups/user/%apikey%/%isutoken%", null, new RestResponseHandler() {
+            if (year == 0 || month == 0) {
+                thread.runOnUI(() -> fragment.draw(R.layout.state_failed_text));
+                return;
+            }
+            isuPrivateRestClient.get(activity, "scholarship/details/%apikey%/%isutoken%/" + year + "/" + month, null, new RestResponseHandler() {
                 @Override
                 public void onSuccess(int statusCode, Client.Headers headers, JSONObject obj, JSONArray arr) {
                     thread.run(() -> {
                         log.v(TAG, "load | success | statusCode=", statusCode, " | obj=", obj);
                         if (statusCode == 200 && obj != null) {
-                            GList data = new GList().fromJson(obj);
+                            SSDetailedList data = new SSDetailedList().fromJson(obj);
                             data.setTimestamp(time.getTimeInMillis());
-                            if (storagePref.get(activity, "pref_use_cache", true)) {
-                                storage.put(activity, Storage.CACHE, Storage.USER, "group#core", data.toJsonString());
-                            }
-                            setData(data);
+                            IsuScholarshipPaidDetailsFragmentPresenterImpl.this.data = data;
                             display();
                             return;
                         }
-                        if (getData() != null) {
+                        if (data != null) {
                             display();
                             return;
                         }
@@ -225,7 +223,7 @@ public class IsuGroupInfoFragmentPresenterImpl implements IsuGroupInfoFragmentPr
                         log.v(TAG, "load | failure ", state);
                         switch (state) {
                             case IsuPrivateRestClient.FAILED_OFFLINE:
-                                if (getData() != null) {
+                                if (data != null) {
                                     display();
                                     return;
                                 }
@@ -329,23 +327,11 @@ public class IsuGroupInfoFragmentPresenterImpl implements IsuGroupInfoFragmentPr
     private void display() {
         thread.run(() -> {
             log.v(TAG, "display");
-            GList data = getData();
             if (data == null) {
                 loadFailed();
                 return;
             }
-            GroupRVA adapter = new GroupRVA(activity, data);
-            adapter.setClickListener(R.id.person, (v, person) -> {
-                thread.run(() -> {
-                    if (person == null || StringUtils.isBlank(person.getUrl())) {
-                        return;
-                    }
-                    Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(person.getUrl()));
-                    eventBus.fire(new OpenIntentEvent(intent));
-                }, throwable -> {
-                    notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
-                });
-            });
+            ScholarshipPaidDetailsRVA adapter = new ScholarshipPaidDetailsRVA(activity, data);
             thread.runOnUI(() -> {
                 onToolbarSetup(activity.toolbar);
                 fragment.draw(R.layout.layout_rva);
@@ -372,46 +358,5 @@ public class IsuGroupInfoFragmentPresenterImpl implements IsuGroupInfoFragmentPr
             log.exception(throwable);
             loadFailed();
         });
-    }
-
-    private GList getFromCache() {
-        thread.assertNotUI();
-        String cache = storage.get(activity, Storage.CACHE, Storage.USER, "group#core").trim();
-        if (StringUtils.isBlank(cache)) {
-            return null;
-        }
-        try {
-            return new GList().fromJsonString(cache);
-        } catch (Exception e) {
-            storage.delete(activity, Storage.CACHE, Storage.USER, "group#core");
-            return null;
-        }
-    }
-
-    private void setData(GList data) {
-        thread.assertNotUI();
-        try {
-            this.data = data;
-            fragment.storeData(fragment, data.toJsonString());
-        } catch (Exception e) {
-            log.exception(e);
-        }
-    }
-
-    private GList getData() {
-        thread.assertNotUI();
-        if (data != null) {
-            return data;
-        }
-        try {
-            String stored = fragment.restoreData(fragment);
-            if (stored != null && !stored.isEmpty()) {
-                data = new GList().fromJsonString(stored);
-                return data;
-            }
-        } catch (Exception e) {
-            log.exception(e);
-        }
-        return null;
     }
 }

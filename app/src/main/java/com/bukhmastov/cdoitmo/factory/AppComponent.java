@@ -39,6 +39,7 @@ import com.bukhmastov.cdoitmo.adapter.rva.RatingRVA;
 import com.bukhmastov.cdoitmo.adapter.rva.ScheduleAttestationsRVA;
 import com.bukhmastov.cdoitmo.adapter.rva.ScheduleExamsRVA;
 import com.bukhmastov.cdoitmo.adapter.rva.ScheduleLessonsRVA;
+import com.bukhmastov.cdoitmo.adapter.rva.ScholarshipPaidRVA;
 import com.bukhmastov.cdoitmo.adapter.rva.university.UniversityRVA;
 import com.bukhmastov.cdoitmo.builder.Room101ReviewBuilder;
 import com.bukhmastov.cdoitmo.dialog.BottomSheetDialog;
@@ -68,6 +69,9 @@ import com.bukhmastov.cdoitmo.fragment.ERegisterFragment;
 import com.bukhmastov.cdoitmo.fragment.ERegisterSubjectFragment;
 import com.bukhmastov.cdoitmo.fragment.HomeScreenInteractionFragment;
 import com.bukhmastov.cdoitmo.fragment.IsuGroupInfoFragment;
+import com.bukhmastov.cdoitmo.fragment.IsuScholarshipAssignedFragment;
+import com.bukhmastov.cdoitmo.fragment.IsuScholarshipPaidDetailsFragment;
+import com.bukhmastov.cdoitmo.fragment.IsuScholarshipPaidFragment;
 import com.bukhmastov.cdoitmo.fragment.LinkAccountFragment;
 import com.bukhmastov.cdoitmo.fragment.LinkedAccountsFragment;
 import com.bukhmastov.cdoitmo.fragment.LogFragment;
@@ -96,6 +100,9 @@ import com.bukhmastov.cdoitmo.fragment.presenter.impl.ERegisterFragmentPresenter
 import com.bukhmastov.cdoitmo.fragment.presenter.impl.ERegisterSubjectFragmentPresenterImpl;
 import com.bukhmastov.cdoitmo.fragment.presenter.impl.HomeScreenInteractionFragmentPresenterImpl;
 import com.bukhmastov.cdoitmo.fragment.presenter.impl.IsuGroupInfoFragmentPresenterImpl;
+import com.bukhmastov.cdoitmo.fragment.presenter.impl.IsuScholarshipAssignedFragmentPresenterImpl;
+import com.bukhmastov.cdoitmo.fragment.presenter.impl.IsuScholarshipPaidDetailsFragmentPresenterImpl;
+import com.bukhmastov.cdoitmo.fragment.presenter.impl.IsuScholarshipPaidFragmentPresenterImpl;
 import com.bukhmastov.cdoitmo.fragment.presenter.impl.LinkAccountFragmentPresenterImpl;
 import com.bukhmastov.cdoitmo.fragment.presenter.impl.LinkedAccountsFragmentPresenterImpl;
 import com.bukhmastov.cdoitmo.fragment.presenter.impl.LogFragmentPresenterImpl;
@@ -261,6 +268,9 @@ public interface AppComponent {
     void inject(SettingsFragment settingsFragment);
     void inject(SettingsNotificationsFragment settingsNotificationsFragment);
     void inject(IsuGroupInfoFragment isuGroupInfoFragment);
+    void inject(IsuScholarshipPaidFragment isuScholarshipPaidFragment);
+    void inject(IsuScholarshipPaidDetailsFragment isuScholarshipPaidDetailsFragment);
+    void inject(IsuScholarshipAssignedFragment isuScholarshipAssignedFragment);
     // Fragment presenters
     void inject(AboutFragmentPresenterImpl aboutFragmentPresenter);
     void inject(ERegisterFragmentPresenterImpl eRegisterFragmentPresenter);
@@ -290,6 +300,9 @@ public interface AppComponent {
     void inject(UniversityPersonsFragmentPresenterImpl universityPersonsFragmentPresenter);
     void inject(UniversityUnitsFragmentPresenterImpl universityUnitsFragmentPresenter);
     void inject(IsuGroupInfoFragmentPresenterImpl isuGroupInfoFragmentPresenter);
+    void inject(IsuScholarshipPaidFragmentPresenterImpl isuScholarshipPaidFragmentPresenter);
+    void inject(IsuScholarshipPaidDetailsFragmentPresenterImpl isuScholarshipPaidDetailsFragmentPresenter);
+    void inject(IsuScholarshipAssignedFragmentPresenterImpl isuScholarshipAssignedFragmentPresenter);
 
     // Adapters
     void inject(TeacherPickerAdapter teacherPickerAdapter);
@@ -302,6 +315,7 @@ public interface AppComponent {
     void inject(ScheduleExamsRVA scheduleExamsRVA);
     void inject(ScheduleLessonsRVA scheduleLessonsRVA);
     void inject(UniversityRVA universityRVA);
+    void inject(ScholarshipPaidRVA scholarshipPaidRVA);
 
     // Dialogs
     void inject(Dialog dialog);

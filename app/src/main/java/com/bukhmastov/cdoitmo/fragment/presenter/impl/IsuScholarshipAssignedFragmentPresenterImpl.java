@@ -1,7 +1,5 @@
 package com.bukhmastov.cdoitmo.fragment.presenter.impl;
 
-import android.content.Intent;
-import android.net.Uri;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.TextView;
@@ -9,15 +7,13 @@ import android.widget.TextView;
 import com.bukhmastov.cdoitmo.App;
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activity.ConnectedActivity;
-import com.bukhmastov.cdoitmo.adapter.rva.GroupRVA;
-import com.bukhmastov.cdoitmo.event.bus.EventBus;
-import com.bukhmastov.cdoitmo.event.events.OpenIntentEvent;
+import com.bukhmastov.cdoitmo.adapter.rva.ScholarshipAssignedRVA;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.fragment.ConnectedFragment;
 import com.bukhmastov.cdoitmo.fragment.LinkedAccountsFragment;
-import com.bukhmastov.cdoitmo.fragment.presenter.IsuGroupInfoFragmentPresenter;
-import com.bukhmastov.cdoitmo.model.group.GList;
+import com.bukhmastov.cdoitmo.fragment.presenter.IsuScholarshipAssignedFragmentPresenter;
+import com.bukhmastov.cdoitmo.model.scholarship.assigned.SSAssignedList;
 import com.bukhmastov.cdoitmo.network.IsuPrivateRestClient;
 import com.bukhmastov.cdoitmo.network.handlers.RestResponseHandler;
 import com.bukhmastov.cdoitmo.network.model.Client;
@@ -40,12 +36,12 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
-public class IsuGroupInfoFragmentPresenterImpl implements IsuGroupInfoFragmentPresenter, SwipeRefreshLayout.OnRefreshListener {
+public class IsuScholarshipAssignedFragmentPresenterImpl implements IsuScholarshipAssignedFragmentPresenter, SwipeRefreshLayout.OnRefreshListener {
 
-    private static final String TAG = "IsuGroupInfoFragment";
+    private static final String TAG = "IsuScholarshipAssignedFragment";
     private ConnectedFragment fragment = null;
     private ConnectedActivity activity = null;
-    private GList data = null;
+    private SSAssignedList data = null;
     private boolean loaded = false;
     private Client.Request requestHandle = null;
 
@@ -53,8 +49,6 @@ public class IsuGroupInfoFragmentPresenterImpl implements IsuGroupInfoFragmentPr
     Log log;
     @Inject
     Thread thread;
-    @Inject
-    EventBus eventBus;
     @Inject
     Storage storage;
     @Inject
@@ -68,7 +62,7 @@ public class IsuGroupInfoFragmentPresenterImpl implements IsuGroupInfoFragmentPr
     @Inject
     FirebaseAnalyticsProvider firebaseAnalyticsProvider;
 
-    public IsuGroupInfoFragmentPresenterImpl() {
+    public IsuScholarshipAssignedFragmentPresenterImpl() {
         AppComponentProvider.getComponent().inject(this);
     }
 
@@ -127,7 +121,7 @@ public class IsuGroupInfoFragmentPresenterImpl implements IsuGroupInfoFragmentPr
     }
 
     private void load() {
-        thread.run(() -> load(storagePref.get(activity, "pref_use_cache", true) ? Integer.parseInt(storagePref.get(activity, "pref_static_refresh", "168")) : 0));
+        thread.run(() -> load(storagePref.get(activity, "pref_use_cache", true) ? Integer.parseInt(storagePref.get(activity, "pref_dynamic_refresh", "0")) : 0));
     }
 
     private void load(int refresh_rate) {
@@ -137,7 +131,7 @@ public class IsuGroupInfoFragmentPresenterImpl implements IsuGroupInfoFragmentPr
                 load(false);
                 return;
             }
-            GList cache = getFromCache();
+            SSAssignedList cache = getFromCache();
             if (cache == null) {
                 load(true, null);
                 return;
@@ -155,12 +149,12 @@ public class IsuGroupInfoFragmentPresenterImpl implements IsuGroupInfoFragmentPr
         thread.run(() -> load(force, null));
     }
 
-    private void load(boolean force, GList cached) {
+    private void load(boolean force, SSAssignedList cached) {
         thread.run(() -> {
             log.v(TAG, "load | force=", force);
             if ((!force || !Client.isOnline(activity)) && storagePref.get(activity, "pref_use_cache", true)) {
                 try {
-                    GList cache = cached == null ? getFromCache() : cached;
+                    SSAssignedList cache = cached == null ? getFromCache() : cached;
                     if (cache != null) {
                         log.v(TAG, "load | from cache");
                         setData(cache);
@@ -195,16 +189,16 @@ public class IsuGroupInfoFragmentPresenterImpl implements IsuGroupInfoFragmentPr
                 });
                 return;
             }
-            isuPrivateRestClient.get(activity, "groups/user/%apikey%/%isutoken%", null, new RestResponseHandler() {
+            isuPrivateRestClient.get(activity, "scholarship/active/%apikey%/%isutoken%", null, new RestResponseHandler() {
                 @Override
                 public void onSuccess(int statusCode, Client.Headers headers, JSONObject obj, JSONArray arr) {
                     thread.run(() -> {
                         log.v(TAG, "load | success | statusCode=", statusCode, " | obj=", obj);
                         if (statusCode == 200 && obj != null) {
-                            GList data = new GList().fromJson(obj);
+                            SSAssignedList data = new SSAssignedList().fromJson(obj);
                             data.setTimestamp(time.getTimeInMillis());
                             if (storagePref.get(activity, "pref_use_cache", true)) {
-                                storage.put(activity, Storage.CACHE, Storage.USER, "group#core", data.toJsonString());
+                                storage.put(activity, Storage.CACHE, Storage.USER, "scholarship#assigned", data.toJsonString());
                             }
                             setData(data);
                             display();
@@ -329,23 +323,12 @@ public class IsuGroupInfoFragmentPresenterImpl implements IsuGroupInfoFragmentPr
     private void display() {
         thread.run(() -> {
             log.v(TAG, "display");
-            GList data = getData();
+            SSAssignedList data = getData();
             if (data == null) {
                 loadFailed();
                 return;
             }
-            GroupRVA adapter = new GroupRVA(activity, data);
-            adapter.setClickListener(R.id.person, (v, person) -> {
-                thread.run(() -> {
-                    if (person == null || StringUtils.isBlank(person.getUrl())) {
-                        return;
-                    }
-                    Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(person.getUrl()));
-                    eventBus.fire(new OpenIntentEvent(intent));
-                }, throwable -> {
-                    notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
-                });
-            });
+            ScholarshipAssignedRVA adapter = new ScholarshipAssignedRVA(activity, data);
             thread.runOnUI(() -> {
                 onToolbarSetup(activity.toolbar);
                 fragment.draw(R.layout.layout_rva);
@@ -374,21 +357,21 @@ public class IsuGroupInfoFragmentPresenterImpl implements IsuGroupInfoFragmentPr
         });
     }
 
-    private GList getFromCache() {
+    private SSAssignedList getFromCache() {
         thread.assertNotUI();
-        String cache = storage.get(activity, Storage.CACHE, Storage.USER, "group#core").trim();
+        String cache = storage.get(activity, Storage.CACHE, Storage.USER, "scholarship#assigned").trim();
         if (StringUtils.isBlank(cache)) {
             return null;
         }
         try {
-            return new GList().fromJsonString(cache);
+            return new SSAssignedList().fromJsonString(cache);
         } catch (Exception e) {
-            storage.delete(activity, Storage.CACHE, Storage.USER, "group#core");
+            storage.delete(activity, Storage.CACHE, Storage.USER, "scholarship#assigned");
             return null;
         }
     }
 
-    private void setData(GList data) {
+    private void setData(SSAssignedList data) {
         thread.assertNotUI();
         try {
             this.data = data;
@@ -398,7 +381,7 @@ public class IsuGroupInfoFragmentPresenterImpl implements IsuGroupInfoFragmentPr
         }
     }
 
-    private GList getData() {
+    private SSAssignedList getData() {
         thread.assertNotUI();
         if (data != null) {
             return data;
@@ -406,7 +389,7 @@ public class IsuGroupInfoFragmentPresenterImpl implements IsuGroupInfoFragmentPr
         try {
             String stored = fragment.restoreData(fragment);
             if (stored != null && !stored.isEmpty()) {
-                data = new GList().fromJsonString(stored);
+                data = new SSAssignedList().fromJsonString(stored);
                 return data;
             }
         } catch (Exception e) {

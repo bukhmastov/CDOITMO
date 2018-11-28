@@ -108,6 +108,30 @@ public class TimeImpl implements Time {
     }
 
     @Override
+    public String getMonth(Context context, int month) {
+        String m = "";
+        if (context == null) {
+            log.get().w(TAG, "getMonth | context is null");
+            return m;
+        }
+        switch (month) {
+            case 1: m = context.getString(R.string.january); break;
+            case 2: m = context.getString(R.string.february); break;
+            case 3: m = context.getString(R.string.march); break;
+            case 4: m = context.getString(R.string.april); break;
+            case 5: m = context.getString(R.string.may); break;
+            case 6: m = context.getString(R.string.june); break;
+            case 7: m = context.getString(R.string.july); break;
+            case 8: m = context.getString(R.string.august); break;
+            case 9: m = context.getString(R.string.september); break;
+            case 10: m = context.getString(R.string.october); break;
+            case 11: m = context.getString(R.string.november); break;
+            case 12: m = context.getString(R.string.december); break;
+        }
+        return m;
+    }
+
+    @Override
     public String getGenitiveMonth(Context context, String month) {
         if (context == null) {
             log.get().w(TAG, "getGenitiveMonth | context is null");

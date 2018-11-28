@@ -24,6 +24,7 @@ import com.bukhmastov.cdoitmo.firebase.FirebasePerformanceProvider;
 import com.bukhmastov.cdoitmo.fragment.ERegisterFragment;
 import com.bukhmastov.cdoitmo.fragment.HomeScreenInteractionFragment;
 import com.bukhmastov.cdoitmo.fragment.IsuGroupInfoFragment;
+import com.bukhmastov.cdoitmo.fragment.IsuScholarshipPaidFragment;
 import com.bukhmastov.cdoitmo.fragment.ProtocolFragment;
 import com.bukhmastov.cdoitmo.fragment.RatingFragment;
 import com.bukhmastov.cdoitmo.fragment.Room101Fragment;
@@ -258,6 +259,7 @@ public class MainActivityPresenterImpl implements MainActivityPresenter, Navigat
                 case R.id.nav_schedule_attestations:
                 case R.id.nav_room101:
                 case R.id.nav_group:
+                case R.id.nav_scholarship:
                 case R.id.nav_university: {
                     final Class connectedFragmentClass;
                     switch (section) {
@@ -270,6 +272,7 @@ public class MainActivityPresenterImpl implements MainActivityPresenter, Navigat
                         case R.id.nav_schedule_attestations: connectedFragmentClass = ScheduleAttestationsFragment.class; break;
                         case R.id.nav_room101: connectedFragmentClass = Room101Fragment.class; break;
                         case R.id.nav_group: connectedFragmentClass = IsuGroupInfoFragment.class; break;
+                        case R.id.nav_scholarship: connectedFragmentClass = IsuScholarshipPaidFragment.class; break;
                         case R.id.nav_university: connectedFragmentClass = UniversityFragment.class; break;
                     }
                     thread.runOnUI(() -> {

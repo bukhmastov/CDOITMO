@@ -5,6 +5,9 @@ import com.bukhmastov.cdoitmo.fragment.presenter.ERegisterFragmentPresenter;
 import com.bukhmastov.cdoitmo.fragment.presenter.ERegisterSubjectFragmentPresenter;
 import com.bukhmastov.cdoitmo.fragment.presenter.HomeScreenInteractionFragmentPresenter;
 import com.bukhmastov.cdoitmo.fragment.presenter.IsuGroupInfoFragmentPresenter;
+import com.bukhmastov.cdoitmo.fragment.presenter.IsuScholarshipAssignedFragmentPresenter;
+import com.bukhmastov.cdoitmo.fragment.presenter.IsuScholarshipPaidDetailsFragmentPresenter;
+import com.bukhmastov.cdoitmo.fragment.presenter.IsuScholarshipPaidFragmentPresenter;
 import com.bukhmastov.cdoitmo.fragment.presenter.LinkAccountFragmentPresenter;
 import com.bukhmastov.cdoitmo.fragment.presenter.LinkedAccountsFragmentPresenter;
 import com.bukhmastov.cdoitmo.fragment.presenter.LogFragmentPresenter;
@@ -32,6 +35,9 @@ import com.bukhmastov.cdoitmo.fragment.presenter.impl.AboutFragmentPresenterImpl
 import com.bukhmastov.cdoitmo.fragment.presenter.impl.ERegisterFragmentPresenterImpl;
 import com.bukhmastov.cdoitmo.fragment.presenter.impl.HomeScreenInteractionFragmentPresenterImpl;
 import com.bukhmastov.cdoitmo.fragment.presenter.impl.IsuGroupInfoFragmentPresenterImpl;
+import com.bukhmastov.cdoitmo.fragment.presenter.impl.IsuScholarshipAssignedFragmentPresenterImpl;
+import com.bukhmastov.cdoitmo.fragment.presenter.impl.IsuScholarshipPaidDetailsFragmentPresenterImpl;
+import com.bukhmastov.cdoitmo.fragment.presenter.impl.IsuScholarshipPaidFragmentPresenterImpl;
 import com.bukhmastov.cdoitmo.fragment.presenter.impl.LinkAccountFragmentPresenterImpl;
 import com.bukhmastov.cdoitmo.fragment.presenter.impl.LinkedAccountsFragmentPresenterImpl;
 import com.bukhmastov.cdoitmo.fragment.presenter.impl.LogFragmentPresenterImpl;
@@ -228,5 +234,22 @@ public class FragmentPresenterModule {
     @Singleton
     public IsuGroupInfoFragmentPresenter provideIsuGroupInfoFragmentPresenter() {
         return new IsuGroupInfoFragmentPresenterImpl();
+    }
+
+    @Provides
+    @Singleton
+    public IsuScholarshipPaidFragmentPresenter provideIsuScholarshipPaidFragmentPresenter() {
+        return new IsuScholarshipPaidFragmentPresenterImpl();
+    }
+
+    @Provides
+    @Singleton
+    public IsuScholarshipAssignedFragmentPresenter provideIsuScholarshipAssignedFragmentPresenter() {
+        return new IsuScholarshipAssignedFragmentPresenterImpl();
+    }
+
+    @Provides
+    public IsuScholarshipPaidDetailsFragmentPresenter provideIsuScholarshipPaidDetailsFragmentPresenter() {
+        return new IsuScholarshipPaidDetailsFragmentPresenterImpl();
     }
 }

@@ -155,12 +155,14 @@ public class NetworkClientProviderImpl implements NetworkClientProvider {
                 }
                 String url = httpUrl.toString();
                 if (url.contains("isu.ifmo.ru")) {
-                    Matcher m = Pattern.compile("^(.*/)(.*)(/[^/]*)$", Pattern.CASE_INSENSITIVE).matcher(url);
+                    Matcher m = Pattern.compile("^(.*isu\\.ifmo\\.ru.*/core/[^/]*/[^/]*/)([^/]*)(/)?([^/]*)(.*)$", Pattern.CASE_INSENSITIVE).matcher(url);
                     if (m.find()) {
-                        if (m.group(3).startsWith("/AT-")) {
-                            url = m.replaceAll("$1<apikey>/<auth-token>");
-                        } else {
-                            url = m.replaceAll("$1<apikey>$3");
+                        if (m.groupCount() == 2) {
+                            url = m.replaceAll("$1<apikey>");
+                        } else if (m.groupCount() == 4) {
+                            url = m.replaceAll("$1<apikey>$3<auth-token>");
+                        } else if (m.groupCount() > 4) {
+                            url = m.replaceAll("$1<apikey>$3<auth-token>$5");
                         }
                     }
                 }

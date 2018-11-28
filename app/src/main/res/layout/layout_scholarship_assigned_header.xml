@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="?attr/colorBackgroundSection">
+
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingStart="@dimen/item_padding_half"
+        android:paddingEnd="@dimen/item_horizontal_padding"
+        android:paddingTop="@dimen/item_vertical_padding"
+        android:paddingBottom="@dimen/item_vertical_padding">
+
+        <ImageView
+            android:id="@+id/icon"
+            android:layout_width="@dimen/dp28"
+            android:layout_height="@dimen/dp28"
+            android:src="@drawable/ic_money_circle"
+            android:tint="?attr/colorGold" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:text="@string/scholarship_assigned"
+            android:textColor="?android:attr/textColorPrimary"
+            android:textSize="@dimen/font_size_15"
+            android:paddingStart="@dimen/item_padding_quarter"
+            android:paddingEnd="0dp"/>
+
+    </LinearLayout>
+
+    <include layout="@layout/separator"/>
+
+</LinearLayout>

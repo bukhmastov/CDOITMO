@@ -209,6 +209,18 @@
     <string name="cache_false">Schedule removed from cache</string>
     <string name="offline_mode_on">Application is running in offline mode</string>
     <string name="list_of_requests">List of requests</string>
+    <string name="january">January</string>
+    <string name="february">February</string>
+    <string name="march">March</string>
+    <string name="april">April</string>
+    <string name="may">May</string>
+    <string name="june">June</string>
+    <string name="july">July</string>
+    <string name="august">August</string>
+    <string name="september">September</string>
+    <string name="october">October</string>
+    <string name="november">November</string>
+    <string name="december">December</string>
     <string name="january_genitive">january</string>
     <string name="february_genitive">february</string>
     <string name="march_genitive">march</string>
@@ -544,5 +556,16 @@
     <string name="no_groups">No groups found</string>
     <string name="no_group_persons">No students found</string>
     <string name="study_groups">Study groups</string>
+    <string name="scholarship_paid_amount">Accrued %amount%</string>
+    <string name="ruble1">Ruble</string>
+    <string name="ruble2">Rubles</string>
+    <string name="ruble3">Rubles</string>
+    <string name="scholarship_assigned">Assigned scholarship</string>
+    <string name="scholarship_assigned_short">Assigned</string>
+    <string name="scholarship_paid">Paid scholarship</string>
+    <string name="no_paid_scholarship">No payout</string>
+    <string name="scholarship">Scholarship</string>
+    <string name="no_assigned_scholarship">Np assigned scholarships</string>
+    <string name="no_scholarship_details">No details</string>
 
 </resources>
