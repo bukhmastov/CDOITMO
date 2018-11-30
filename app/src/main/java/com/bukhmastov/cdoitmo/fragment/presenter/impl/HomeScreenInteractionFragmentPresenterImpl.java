@@ -160,6 +160,8 @@ public class HomeScreenInteractionFragmentPresenterImpl implements HomeScreenInt
             shortcuts.add(new Shortcut("schedule_exams", null, activity.getString(R.string.schedule_exams), activity.getString(R.string.need_to_choose_schedule), R.mipmap.ic_shortcut_schedule_exams));
             shortcuts.add(new Shortcut("schedule_attestations", null, activity.getString(R.string.schedule_attestations), activity.getString(R.string.need_to_choose_schedule), R.mipmap.ic_shortcut_schedule_attestations));
             shortcuts.add(new Shortcut("university", null, activity.getString(R.string.university), activity.getString(R.string.need_to_choose_type), R.mipmap.ic_shortcut_university));
+            shortcuts.add(new Shortcut("tab", "groups", activity.getString(R.string.study_groups), null, R.mipmap.ic_shortcut_groups));
+            shortcuts.add(new Shortcut("tab", "scholarship", activity.getString(R.string.scholarship), null, R.mipmap.ic_shortcut_scholarship));
         });
     }
 

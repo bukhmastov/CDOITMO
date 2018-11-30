@@ -449,6 +449,12 @@ public class MainActivityPresenterImpl implements MainActivityPresenter, Navigat
                     case "university":
                         selectedSection = R.id.nav_university;
                         break;
+                    case "groups":
+                        selectedSection = R.id.nav_group;
+                        break;
+                    case "scholarship":
+                        selectedSection = R.id.nav_scholarship;
+                        break;
                     default:
                         log.wtf(TAG, "unsupported act: '", act, "'. Going to select 'e_journal' instead");
                         selectedSection = R.id.nav_e_register;

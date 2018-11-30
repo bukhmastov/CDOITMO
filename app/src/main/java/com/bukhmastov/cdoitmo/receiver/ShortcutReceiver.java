@@ -186,6 +186,12 @@ public class ShortcutReceiver extends BroadcastReceiver {
                         case "room101":
                             installShortcut(context, type, data, mode, context.getString(R.string.room101), R.mipmap.ic_shortcut_room101);
                             break;
+                        case "groups":
+                            installShortcut(context, type, data, mode, context.getString(R.string.study_groups), R.mipmap.ic_shortcut_groups);
+                            break;
+                        case "scholarship":
+                            installShortcut(context, type, data, mode, context.getString(R.string.scholarship), R.mipmap.ic_shortcut_scholarship);
+                            break;
                     }
                     break;
                 }
