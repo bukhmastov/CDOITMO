@@ -6,11 +6,12 @@ import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
-import com.bukhmastov.cdoitmo.model.rva.RVADualValue;
 import com.bukhmastov.cdoitmo.model.scholarship.paid.SSPaid;
 import com.bukhmastov.cdoitmo.model.scholarship.paid.SSPaidList;
 import com.bukhmastov.cdoitmo.util.Time;
 import com.bukhmastov.cdoitmo.util.singleton.CollectionUtils;
+import com.bukhmastov.cdoitmo.util.singleton.NumberUtils;
+import com.bukhmastov.cdoitmo.util.singleton.StringUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -72,17 +73,12 @@ public class ScholarshipPaidRVA extends RVA<SSPaid> {
             String title = time.getMonth(context, item.data.getMonth()) + " " + item.data.getYear();
             String info = context.getString(R.string.scholarship_paid_amount).replace("%amount%", item.data.getValue());
             try {
-                int amount = (int) Double.parseDouble(item.data.getValue());
                 String appendix;
-                switch (amount % 100) {
-                    case 10: case 11: case 12: case 13: case 14: appendix = context.getString(R.string.ruble3); break;
-                    default:
-                        switch (amount % 10) {
-                            case 1: appendix = context.getString(R.string.ruble1); break;
-                            case 2: case 3: case 4: appendix = context.getString(R.string.ruble2); break;
-                            default: appendix = context.getString(R.string.ruble3); break;
-                        }
-                        break;
+                switch (StringUtils.getWordDeclinationByNumber(NumberUtils.toDoubleInteger(item.data.getValue()))) {
+                    case 1: appendix = context.getString(R.string.ruble1); break;
+                    case 2: appendix = context.getString(R.string.ruble2); break;
+                    case 3: appendix = context.getString(R.string.ruble3); break;
+                    default: appendix = ""; break;
                 }
                 info += " " + appendix.toLowerCase();
             } catch (Exception ignore) {

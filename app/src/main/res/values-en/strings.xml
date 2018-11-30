@@ -567,5 +567,7 @@
     <string name="scholarship">Scholarship</string>
     <string name="no_assigned_scholarship">Np assigned scholarships</string>
     <string name="no_scholarship_details">No details</string>
+    <string name="share_all_groups">Share all groups</string>
+    <string name="share_group">Share group</string>
 
 </resources>

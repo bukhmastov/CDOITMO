@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/share_all_groups"
+        android:title="@string/share_all_groups" />
+
+    <item
+        android:id="@+id/share_group"
+        android:title="@string/share_group" >
+        <menu/>
+    </item>
+</menu>

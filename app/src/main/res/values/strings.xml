@@ -575,6 +575,8 @@
     <string name="scholarship">Стипендия</string>
     <string name="no_assigned_scholarship">Нет назначенных стипендий</string>
     <string name="no_scholarship_details">Нет подробностей</string>
+    <string name="share_all_groups">Поделиться всем</string>
+    <string name="share_group">Поделиться группой</string>
 
 
 </resources>

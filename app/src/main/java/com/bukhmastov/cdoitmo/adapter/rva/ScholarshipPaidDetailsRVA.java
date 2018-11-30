@@ -62,7 +62,9 @@ public class ScholarshipPaidDetailsRVA extends RVA<SSDetailed> {
 
     private void bindDetailsItem(View container, Item<SSDetailed> item) {
         try {
-            setHtmlToTextView(container.findViewById(R.id.info), StringUtils.isNotBlank(item.data.getContribution()) ? item.data.getContribution() : Static.GLITCH);
+            setHtmlToTextView(container.findViewById(R.id.info), StringUtils.isNotBlank(item.data.getContribution()) ?
+                    item.data.getContribution().replace("_", " ") :
+                    Static.GLITCH);
             if (StringUtils.isNotBlank(item.data.getStart()) && StringUtils.isNotBlank(item.data.getEnd())) {
                 ((TextView) container.findViewById(R.id.dates)).setText(item.data.getStart() + " — " + item.data.getEnd());
             } else {

@@ -1,6 +1,8 @@
 package com.bukhmastov.cdoitmo.fragment.presenter.impl;
 
 import android.os.Bundle;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
 
@@ -8,11 +10,14 @@ import com.bukhmastov.cdoitmo.App;
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activity.ConnectedActivity;
 import com.bukhmastov.cdoitmo.adapter.rva.ScholarshipAssignedRVA;
+import com.bukhmastov.cdoitmo.event.bus.EventBus;
+import com.bukhmastov.cdoitmo.event.events.ShareTextEvent;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.fragment.ConnectedFragment;
 import com.bukhmastov.cdoitmo.fragment.LinkedAccountsFragment;
 import com.bukhmastov.cdoitmo.fragment.presenter.IsuScholarshipAssignedFragmentPresenter;
+import com.bukhmastov.cdoitmo.model.scholarship.assigned.SSAssigned;
 import com.bukhmastov.cdoitmo.model.scholarship.assigned.SSAssignedList;
 import com.bukhmastov.cdoitmo.network.IsuPrivateRestClient;
 import com.bukhmastov.cdoitmo.network.handlers.RestResponseHandler;
@@ -23,7 +28,9 @@ import com.bukhmastov.cdoitmo.util.Storage;
 import com.bukhmastov.cdoitmo.util.StoragePref;
 import com.bukhmastov.cdoitmo.util.Thread;
 import com.bukhmastov.cdoitmo.util.Time;
+import com.bukhmastov.cdoitmo.util.singleton.CollectionUtils;
 import com.bukhmastov.cdoitmo.util.singleton.Color;
+import com.bukhmastov.cdoitmo.util.singleton.NumberUtils;
 import com.bukhmastov.cdoitmo.util.singleton.StringUtils;
 
 import org.json.JSONArray;
@@ -53,6 +60,8 @@ public class IsuScholarshipAssignedFragmentPresenterImpl implements IsuScholarsh
     Storage storage;
     @Inject
     StoragePref storagePref;
+    @Inject
+    EventBus eventBus;
     @Inject
     IsuPrivateRestClient isuPrivateRestClient;
     @Inject
@@ -84,6 +93,30 @@ public class IsuScholarshipAssignedFragmentPresenterImpl implements IsuScholarsh
     public void onDestroy() {
         log.v(TAG, "Fragment destroyed");
         loaded = false;
+    }
+
+    @Override
+    public void onToolbarSetup(Menu menu) {
+        try {
+            thread.assertUI();
+            if (menu == null) {
+                return;
+            }
+            MenuItem share = menu.findItem(R.id.action_share);
+            if (share != null) {
+                if (data == null || CollectionUtils.isEmpty(data.getList())) {
+                    share.setVisible(false);
+                } else {
+                    share.setVisible(true);
+                    share.setOnMenuItemClickListener(item -> {
+                        share(data);
+                        return false;
+                    });
+                }
+            }
+        } catch (Throwable throwable) {
+            log.exception(throwable);
+        }
     }
 
     @Override
@@ -354,6 +387,54 @@ public class IsuScholarshipAssignedFragmentPresenterImpl implements IsuScholarsh
         }, throwable -> {
             log.exception(throwable);
             loadFailed();
+        });
+    }
+
+    private void share(SSAssignedList data) {
+        thread.run(() -> {
+            if (data == null || CollectionUtils.isEmpty(data.getList())) {
+                return;
+            }
+            StringBuilder sb = new StringBuilder();
+            sb.append("Моя назначенная стипендия:");
+            for (SSAssigned ssAssigned : data.getList()) {
+                if (StringUtils.isBlank(ssAssigned.getContribution())) {
+                    continue;
+                }
+                String ruble;
+                switch (StringUtils.getWordDeclinationByNumber(NumberUtils.toDoubleInteger(ssAssigned.getSum()))) {
+                    case 1: ruble = activity.getString(R.string.ruble1); break;
+                    case 2: ruble = activity.getString(R.string.ruble2); break;
+                    case 3: ruble = activity.getString(R.string.ruble3); break;
+                    default: ruble = ""; break;
+                }
+                sb.append("\n");
+                sb.append(ssAssigned.getContribution());
+                if (StringUtils.isNotBlank(ssAssigned.getType())) {
+                    sb.append(" — ");
+                    sb.append(ssAssigned.getType());
+                }
+                if (StringUtils.isNotBlank(ssAssigned.getSource())) {
+                    sb.append(" (");
+                    sb.append(ssAssigned.getSource());
+                    sb.append(")");
+                }
+                if (StringUtils.isNotBlank(ssAssigned.getStart()) && StringUtils.isNotBlank(ssAssigned.getEnd())) {
+                    sb.append(" (");
+                    sb.append(ssAssigned.getStart());
+                    sb.append(" — ");
+                    sb.append(ssAssigned.getEnd());
+                    sb.append(")");
+                }
+                sb.append(": ");
+                sb.append(ssAssigned.getSum());
+                sb.append(" ");
+                sb.append(ruble.toLowerCase());
+            }
+            eventBus.fire(new ShareTextEvent(sb.toString().trim(), "txt_scholarship_assigned"));
+        }, throwable -> {
+            log.exception(throwable);
+            notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
         });
     }
 

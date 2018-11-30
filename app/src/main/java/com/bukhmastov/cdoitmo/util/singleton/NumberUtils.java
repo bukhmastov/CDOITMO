@@ -1,21 +1,38 @@
 package com.bukhmastov.cdoitmo.util.singleton;
 
+import androidx.annotation.Nullable;
+
 public class NumberUtils {
 
-    public static Double toDouble(String value) {
+    public static Double toDouble(@Nullable String value) {
         try {
             if (value == null) {
                 return null;
             }
-            return Double.valueOf(value.replace(",", ".").trim());
+            return Double.valueOf(value.replace(",", ".").replace(" ", "").trim());
         } catch (NumberFormatException e) {
             return null;
         }
     }
 
-    public static Integer toInteger(String value) {
+    public static Integer toInteger(@Nullable String value) {
         try {
-            return Integer.valueOf(value);
+            if (value == null) {
+                return null;
+            }
+            return Integer.valueOf(value.replace(" ", ""));
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+
+    public static Integer toDoubleInteger(String value) {
+        try {
+            Double aDouble = toDouble(value);
+            if (aDouble == null) {
+                return null;
+            }
+            return aDouble.intValue();
         } catch (NumberFormatException e) {
             return null;
         }

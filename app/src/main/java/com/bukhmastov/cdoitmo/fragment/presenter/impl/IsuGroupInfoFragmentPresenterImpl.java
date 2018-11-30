@@ -3,7 +3,11 @@ package com.bukhmastov.cdoitmo.fragment.presenter.impl;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.util.SparseArray;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
+import android.widget.PopupMenu;
 import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.App;
@@ -12,12 +16,15 @@ import com.bukhmastov.cdoitmo.activity.ConnectedActivity;
 import com.bukhmastov.cdoitmo.adapter.rva.GroupRVA;
 import com.bukhmastov.cdoitmo.event.bus.EventBus;
 import com.bukhmastov.cdoitmo.event.events.OpenIntentEvent;
+import com.bukhmastov.cdoitmo.event.events.ShareTextEvent;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.fragment.ConnectedFragment;
 import com.bukhmastov.cdoitmo.fragment.LinkedAccountsFragment;
 import com.bukhmastov.cdoitmo.fragment.presenter.IsuGroupInfoFragmentPresenter;
+import com.bukhmastov.cdoitmo.model.group.GGroup;
 import com.bukhmastov.cdoitmo.model.group.GList;
+import com.bukhmastov.cdoitmo.model.group.GPerson;
 import com.bukhmastov.cdoitmo.network.IsuPrivateRestClient;
 import com.bukhmastov.cdoitmo.network.handlers.RestResponseHandler;
 import com.bukhmastov.cdoitmo.network.model.Client;
@@ -27,11 +34,17 @@ import com.bukhmastov.cdoitmo.util.Storage;
 import com.bukhmastov.cdoitmo.util.StoragePref;
 import com.bukhmastov.cdoitmo.util.Thread;
 import com.bukhmastov.cdoitmo.util.Time;
+import com.bukhmastov.cdoitmo.util.singleton.CollectionUtils;
 import com.bukhmastov.cdoitmo.util.singleton.Color;
 import com.bukhmastov.cdoitmo.util.singleton.StringUtils;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import javax.inject.Inject;
 
@@ -90,6 +103,36 @@ public class IsuGroupInfoFragmentPresenterImpl implements IsuGroupInfoFragmentPr
     public void onDestroy() {
         log.v(TAG, "Fragment destroyed");
         loaded = false;
+    }
+
+    @Override
+    public void onToolbarSetup(Menu menu) {
+        try {
+            thread.assertUI();
+            if (menu == null) {
+                return;
+            }
+            MenuItem share = menu.findItem(R.id.action_share);
+            if (share != null) {
+                if (data == null || CollectionUtils.isEmpty(data.getList())) {
+                    share.setVisible(false);
+                } else {
+                    share.setVisible(true);
+                    share.setOnMenuItemClickListener(item -> {
+                        View view = activity.findViewById(R.id.action_share);
+                        if (view == null) {
+                            view = activity.findViewById(android.R.id.content);
+                        }
+                        if (view != null) {
+                            share(view);
+                        }
+                        return false;
+                    });
+                }
+            }
+        } catch (Throwable throwable) {
+            log.exception(throwable);
+        }
     }
 
     @Override
@@ -371,6 +414,102 @@ public class IsuGroupInfoFragmentPresenterImpl implements IsuGroupInfoFragmentPr
         }, throwable -> {
             log.exception(throwable);
             loadFailed();
+        });
+    }
+
+    private void share(View view) {
+        thread.run(() -> {
+            GList data = getData();
+            if (data == null || data.getList() == null) {
+                return;
+            }
+            Map<String, List<GGroup>> groups = new HashMap<>();
+            for (GGroup gGroup : data.getList()) {
+                if (gGroup == null) {
+                    continue;
+                }
+                String group = gGroup.getGroup();
+                if (!groups.containsKey(group)) {
+                    groups.put(group, new ArrayList<>());
+                }
+                groups.get(group).add(gGroup);
+            }
+            thread.runOnUI(() -> {
+                SparseArray<Map<String, List<GGroup>>> menuGroupsMap = new SparseArray<>();
+                PopupMenu popup = new PopupMenu(activity, view);
+                popup.inflate(R.menu.group_share);
+                if (groups.size() == 0) {
+                    popup.getMenu().findItem(R.id.share_group).setVisible(false);
+                } else {
+                    Menu subMenu = popup.getMenu().findItem(R.id.share_group).getSubMenu();
+                    for (Map.Entry<String, List<GGroup>> entry : groups.entrySet()) {
+                        String group = entry.getKey();
+                        List<GGroup> items = entry.getValue();
+                        int id = View.generateViewId();
+                        subMenu.add(Menu.NONE, id, Menu.NONE, group);
+                        Map<String, List<GGroup>> currentGroups = new HashMap<>();
+                        currentGroups.put(group, items);
+                        menuGroupsMap.put(id, currentGroups);
+                    }
+                }
+                popup.setOnMenuItemClickListener(menuItem -> {
+                    thread.run(() -> {
+                        switch (menuItem.getItemId()) {
+                            case R.id.share_all_groups: share(groups); break;
+                            default:
+                                Map<String, List<GGroup>> grp = menuGroupsMap.get(menuItem.getItemId());
+                                if (grp != null) {
+                                    share(grp);
+                                }
+                                break;
+                        }
+                    }, throwable -> {
+                        log.exception(throwable);
+                        notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                    });
+                    popup.dismiss();
+                    return true;
+                });
+                popup.show();
+            }, throwable -> {
+                log.exception(throwable);
+                notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
+            });
+        }, throwable -> {
+            log.exception(throwable);
+            notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
+        });
+    }
+
+    private void share(Map<String, List<GGroup>> groups) {
+        thread.run(() -> {
+            if (groups == null) {
+                return;
+            }
+            StringBuilder sb = new StringBuilder();
+            sb.append("Мои учебные группы:");
+            if (groups.size() == 0) {
+                sb.append("\n");
+                sb.append("Нет групп");
+            } else {
+                for (Map.Entry<String, List<GGroup>> entry : groups.entrySet()) {
+                    for (GGroup group : entry.getValue()) {
+                        sb.append("\n");
+                        sb.append(group.getGroup());
+                        for (GPerson person : CollectionUtils.emptyIfNull(group.getPersons())) {
+                            sb.append("\n");
+                            sb.append(person.getNumber()).append(". ");
+                            sb.append(person.getFio());
+                            sb.append(" (").append(person.getPersonId()).append(")");
+                        }
+                        sb.append("\n");
+                    }
+                }
+            }
+            eventBus.fire(new ShareTextEvent(sb.toString().trim(), "txt_groups"));
+        }, throwable -> {
+            log.exception(throwable);
+            notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
         });
     }
 
