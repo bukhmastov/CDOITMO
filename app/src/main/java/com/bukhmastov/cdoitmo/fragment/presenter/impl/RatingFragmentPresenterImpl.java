@@ -90,7 +90,7 @@ public class RatingFragmentPresenterImpl implements RatingFragmentPresenter, Swi
         if (event.isNot(ClearCacheEvent.RATING)) {
             return;
         }
-        fragment.clearData(fragment);
+        fragment.clearData();
     }
 
     @Override
@@ -150,8 +150,8 @@ public class RatingFragmentPresenterImpl implements RatingFragmentPresenter, Swi
                 return;
             }
             loaded = true;
-            String storedData = fragment.restoreData(fragment);
-            String storedExtra = fragment.restoreDataExtra(fragment);
+            String storedData = fragment.restoreData();
+            String storedExtra = fragment.restoreDataExtra();
             RatingPickerAll storedAll = StringUtils.isNotBlank(storedData) ? new RatingPickerAll().fromJsonString(storedData) : null;
             RatingPickerOwn storedOwn = StringUtils.isNotBlank(storedExtra) ? new RatingPickerOwn().fromJsonString(storedExtra) : null;
             if (storedAll != null) {
@@ -409,7 +409,7 @@ public class RatingFragmentPresenterImpl implements RatingFragmentPresenter, Swi
     private void display() {
         thread.run(() -> {
             log.v(TAG, "display");
-            fragment.storeData(fragment,
+            fragment.storeData(
                     data.containsKey(COMMON) ? (data.get(COMMON).data != null ? data.get(COMMON).data.toJsonString() : null) : null,
                     data.containsKey(OWN) ? (data.get(OWN).data != null ? data.get(OWN).data.toJsonString() : null) : null
             );
@@ -442,7 +442,7 @@ public class RatingFragmentPresenterImpl implements RatingFragmentPresenter, Swi
                 });
             });
             thread.runOnUI(() -> {
-                onToolbarSetup(activity.toolbar);
+                onToolbarSetup(fragment.toolbar());
                 fragment.draw(R.layout.layout_rating_list);
                 // set adapter to recycler view
                 final LinearLayoutManager layoutManager = new LinearLayoutManager(activity, RecyclerView.VERTICAL, false);

@@ -12,14 +12,12 @@ import android.widget.FrameLayout;
 import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
-import com.bukhmastov.cdoitmo.activity.ConnectedActivity;
 import com.bukhmastov.cdoitmo.event.bus.EventBus;
 import com.bukhmastov.cdoitmo.event.events.OpenIntentEvent;
 import com.bukhmastov.cdoitmo.exception.CorruptedFileException;
 import com.bukhmastov.cdoitmo.exception.MessageException;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
-import com.bukhmastov.cdoitmo.fragment.ConnectedFragment;
 import com.bukhmastov.cdoitmo.fragment.presenter.ScheduleLessonsShareFragmentPresenter;
 import com.bukhmastov.cdoitmo.model.fileshare.schedule.lessons.FSLAddedDay;
 import com.bukhmastov.cdoitmo.model.fileshare.schedule.lessons.FSLReduced;
@@ -58,13 +56,12 @@ import javax.inject.Inject;
 import androidx.annotation.Nullable;
 import androidx.core.content.FileProvider;
 
-public class ScheduleLessonsShareFragmentPresenterImpl implements ScheduleLessonsShareFragmentPresenter {
+public class ScheduleLessonsShareFragmentPresenterImpl extends ConnectedFragmentPresenterImpl
+        implements ScheduleLessonsShareFragmentPresenter {
 
     private static final String TAG = "SLShareFragment";
     private static final String TYPE = "share_schedule_of_lessons";
     private static final int VERSION = 3;
-    private ConnectedFragment fragment = null;
-    private ConnectedActivity activity = null;
     
     private static class Change {
         private final @TYPE String type;
@@ -85,8 +82,6 @@ public class ScheduleLessonsShareFragmentPresenterImpl implements ScheduleLesson
     private String type = "";
     private String title = "";
     private final ArrayList<Change> changes = new ArrayList<>();
-    private boolean loaded = false;
-    private Client.Request requestHandle = null;
     private int colorScheduleFlagTEXT = -1, colorScheduleFlagCommonBG = -1, colorScheduleFlagPracticeBG = -1, colorScheduleFlagLectureBG = -1, colorScheduleFlagLabBG = -1, colorScheduleFlagIwsBG = -1;
 
     @Inject
@@ -109,13 +104,8 @@ public class ScheduleLessonsShareFragmentPresenterImpl implements ScheduleLesson
     FirebaseAnalyticsProvider firebaseAnalyticsProvider;
     
     public ScheduleLessonsShareFragmentPresenterImpl() {
+        super();
         AppComponentProvider.getComponent().inject(this);
-    }
-
-    @Override
-    public void setFragment(ConnectedFragment fragment) {
-        this.fragment = fragment;
-        this.activity = fragment.activity();
     }
 
     @Override
@@ -177,16 +167,6 @@ public class ScheduleLessonsShareFragmentPresenterImpl implements ScheduleLesson
         }, throwable -> {
             log.exception(throwable);
             finish();
-        });
-    }
-
-    @Override
-    public void onPause() {
-        thread.run(() -> {
-            log.v(TAG, "Fragment paused");
-            if (requestHandle != null && requestHandle.cancel()) {
-                loaded = false;
-            }
         });
     }
 
@@ -901,5 +881,10 @@ public class ScheduleLessonsShareFragmentPresenterImpl implements ScheduleLesson
                 activity.back();
             }
         });
+    }
+
+    @Override
+    protected String getLogTag() {
+        return TAG;
     }
 }

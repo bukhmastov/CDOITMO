@@ -2,34 +2,32 @@ package com.bukhmastov.cdoitmo.fragment.presenter.impl;
 
 import android.content.Intent;
 import android.os.Bundle;
-import androidx.annotation.Nullable;
-import com.google.android.material.tabs.TabLayout;
-import androidx.fragment.app.FragmentManager;
-import androidx.viewpager.widget.ViewPager;
 import android.view.View;
 
 import com.bukhmastov.cdoitmo.R;
-import com.bukhmastov.cdoitmo.activity.ConnectedActivity;
 import com.bukhmastov.cdoitmo.adapter.PagerUniversityAdapter;
 import com.bukhmastov.cdoitmo.event.bus.EventBus;
 import com.bukhmastov.cdoitmo.event.bus.annotation.Event;
 import com.bukhmastov.cdoitmo.event.events.ClearCacheEvent;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
-import com.bukhmastov.cdoitmo.fragment.ConnectedFragment;
 import com.bukhmastov.cdoitmo.fragment.presenter.UniversityFragmentPresenter;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.NotificationMessage;
 import com.bukhmastov.cdoitmo.util.StoragePref;
 import com.bukhmastov.cdoitmo.util.Thread;
+import com.google.android.material.tabs.TabLayout;
 
 import javax.inject.Inject;
 
-public class UniversityFragmentPresenterImpl implements UniversityFragmentPresenter, ViewPager.OnPageChangeListener {
+import androidx.annotation.Nullable;
+import androidx.fragment.app.FragmentManager;
+import androidx.viewpager.widget.ViewPager;
+
+public class UniversityFragmentPresenterImpl extends ConnectedFragmentPresenterImpl
+        implements UniversityFragmentPresenter, ViewPager.OnPageChangeListener {
 
     private static final String TAG = "UniversityFragment";
-    private ConnectedFragment fragment = null;
-    private ConnectedActivity activity = null;
     private int tabSelected = -1;
     private String actionExtra = null;
 
@@ -47,6 +45,7 @@ public class UniversityFragmentPresenterImpl implements UniversityFragmentPresen
     NotificationMessage notificationMessage;
 
     public UniversityFragmentPresenterImpl() {
+        super();
         AppComponentProvider.getComponent().inject(this);
         eventBus.register(this);
     }
@@ -57,12 +56,6 @@ public class UniversityFragmentPresenterImpl implements UniversityFragmentPresen
             return;
         }
         tabSelected = -1;
-    }
-
-    @Override
-    public void setFragment(ConnectedFragment fragment) {
-        this.fragment = fragment;
-        this.activity = fragment.activity();
     }
 
     @Override
@@ -101,11 +94,6 @@ public class UniversityFragmentPresenterImpl implements UniversityFragmentPresen
                 scrollable_tabs.setVisibility(View.VISIBLE);
             }
         });
-    }
-
-    @Override
-    public void onPause() {
-        log.v(TAG, "Fragment paused");
     }
 
     @Override
@@ -168,4 +156,9 @@ public class UniversityFragmentPresenterImpl implements UniversityFragmentPresen
 
     @Override
     public void onPageScrollStateChanged(int state) {}
+
+    @Override
+    protected String getLogTag() {
+        return TAG;
+    }
 }

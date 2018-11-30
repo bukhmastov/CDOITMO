@@ -152,11 +152,11 @@ public class SettingsNotificationsFragment extends SettingsTemplatePreferencesFr
         if (resultCode == Activity.RESULT_OK) {
             switch (requestCode) {
                 case TONE_PICKER: {
-                    if (RingtoneHelper.preference_key != null) {
+                    if (RingtoneHelper.preference_key != null && activity() != null) {
                         Uri ringtone = data.getParcelableExtra(RingtoneManager.EXTRA_RINGTONE_PICKED_URI);
                         String value = ringtone == null ? "" : ringtone.toString();
-                        storagePref.get().put(activity, RingtoneHelper.preference_key, value);
-                        RingtoneHelper.callback.onSetSummary(activity, value);
+                        storagePref.get().put(activity(), RingtoneHelper.preference_key, value);
+                        RingtoneHelper.callback.onSetSummary(activity(), value);
                         RingtoneHelper.preference_key = null;
                         RingtoneHelper.callback = null;
                     }

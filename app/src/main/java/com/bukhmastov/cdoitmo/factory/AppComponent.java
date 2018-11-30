@@ -65,6 +65,7 @@ import com.bukhmastov.cdoitmo.firebase.impl.FirebaseCrashlyticsProviderImpl;
 import com.bukhmastov.cdoitmo.firebase.impl.FirebasePerformanceProviderImpl;
 import com.bukhmastov.cdoitmo.fragment.AboutFragment;
 import com.bukhmastov.cdoitmo.fragment.ConnectedFragment;
+import com.bukhmastov.cdoitmo.fragment.ConnectedFragmentBase;
 import com.bukhmastov.cdoitmo.fragment.ERegisterFragment;
 import com.bukhmastov.cdoitmo.fragment.ERegisterSubjectFragment;
 import com.bukhmastov.cdoitmo.fragment.HomeScreenInteractionFragment;
@@ -96,6 +97,7 @@ import com.bukhmastov.cdoitmo.fragment.UniversityNewsFragment;
 import com.bukhmastov.cdoitmo.fragment.UniversityPersonsFragment;
 import com.bukhmastov.cdoitmo.fragment.UniversityUnitsFragment;
 import com.bukhmastov.cdoitmo.fragment.presenter.impl.AboutFragmentPresenterImpl;
+import com.bukhmastov.cdoitmo.fragment.presenter.impl.ConnectedFragmentBasePresenterImpl;
 import com.bukhmastov.cdoitmo.fragment.presenter.impl.ERegisterFragmentPresenterImpl;
 import com.bukhmastov.cdoitmo.fragment.presenter.impl.ERegisterSubjectFragmentPresenterImpl;
 import com.bukhmastov.cdoitmo.fragment.presenter.impl.HomeScreenInteractionFragmentPresenterImpl;
@@ -235,7 +237,7 @@ public interface AppComponent {
     void inject(TimeRemainingWidgetActivityPresenterImpl timeRemainingWidgetActivityPresenter);
 
     // Fragments
-    void inject(ConnectedFragment connectedFragment);
+    void inject(ConnectedFragmentBase connectedFragmentBase);
     void inject(ERegisterFragment eRegisterFragment);
     void inject(AboutFragment aboutFragment);
     void inject(HomeScreenInteractionFragment homeScreenInteractionFragment);
@@ -272,6 +274,7 @@ public interface AppComponent {
     void inject(IsuScholarshipPaidDetailsFragment isuScholarshipPaidDetailsFragment);
     void inject(IsuScholarshipAssignedFragment isuScholarshipAssignedFragment);
     // Fragment presenters
+    void inject(ConnectedFragmentBasePresenterImpl connectedFragmentBasePresenter);
     void inject(AboutFragmentPresenterImpl aboutFragmentPresenter);
     void inject(ERegisterFragmentPresenterImpl eRegisterFragmentPresenter);
     void inject(HomeScreenInteractionFragmentPresenterImpl homeScreenInteractionFragmentPresenter);

@@ -19,7 +19,6 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
-import com.bukhmastov.cdoitmo.activity.ConnectedActivity;
 import com.bukhmastov.cdoitmo.adapter.TeacherPickerAdapter;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
@@ -58,13 +57,11 @@ import androidx.annotation.DrawableRes;
 import androidx.annotation.Nullable;
 import androidx.annotation.StringDef;
 
-public class HomeScreenInteractionFragmentPresenterImpl implements HomeScreenInteractionFragmentPresenter {
+public class HomeScreenInteractionFragmentPresenterImpl extends ConnectedFragmentPresenterImpl
+        implements HomeScreenInteractionFragmentPresenter {
 
     private static final String TAG = "ShortcutCreateFragment";
-    private ConnectedFragment fragment = null;
-    private ConnectedActivity activity = null;
     private ShortcutReceiver receiver = new ShortcutReceiver();
-    private Client.Request requestHandle = null;
     private AutoCompleteTextView searchTextView = null;
     private TeacherPickerAdapter teacherPickerAdapter = null;
     private AlertDialog alertDialog = null;
@@ -128,13 +125,8 @@ public class HomeScreenInteractionFragmentPresenterImpl implements HomeScreenInt
     private final ArrayList<Shortcut> shortcuts = new ArrayList<>();
     
     public HomeScreenInteractionFragmentPresenterImpl() {
+        super();
         AppComponentProvider.getComponent().inject(this);
-    }
-
-    @Override
-    public void setFragment(ConnectedFragment fragment) {
-        this.fragment = fragment;
-        this.activity = fragment.activity();
     }
 
     @Override
@@ -163,11 +155,6 @@ public class HomeScreenInteractionFragmentPresenterImpl implements HomeScreenInt
             shortcuts.add(new Shortcut("tab", "groups", activity.getString(R.string.study_groups), null, R.mipmap.ic_shortcut_groups));
             shortcuts.add(new Shortcut("tab", "scholarship", activity.getString(R.string.scholarship), null, R.mipmap.ic_shortcut_scholarship));
         });
-    }
-
-    @Override
-    public void onDestroy() {
-        log.v(TAG, "Fragment destroyed");
     }
 
     @Override
@@ -845,5 +832,10 @@ public class HomeScreenInteractionFragmentPresenterImpl implements HomeScreenInt
         intent.putExtra(ShortcutReceiver.EXTRA_MODE, mode);
         intent.putExtra(ShortcutReceiver.EXTRA_DATA, data);
         activity.sendBroadcast(intent);
+    }
+
+    @Override
+    protected String getLogTag() {
+        return TAG;
     }
 }

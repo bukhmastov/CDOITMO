@@ -7,13 +7,11 @@ import android.view.MenuItem;
 import android.widget.ArrayAdapter;
 
 import com.bukhmastov.cdoitmo.R;
-import com.bukhmastov.cdoitmo.activity.ConnectedActivity;
 import com.bukhmastov.cdoitmo.adapter.rva.ERegisterSubjectViewRVA;
 import com.bukhmastov.cdoitmo.event.bus.EventBus;
 import com.bukhmastov.cdoitmo.event.events.ShareTextEvent;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
-import com.bukhmastov.cdoitmo.fragment.ConnectedFragment;
 import com.bukhmastov.cdoitmo.fragment.presenter.ERegisterSubjectFragmentPresenter;
 import com.bukhmastov.cdoitmo.model.eregister.ERMark;
 import com.bukhmastov.cdoitmo.model.eregister.ERPoint;
@@ -35,12 +33,10 @@ import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-public class ERegisterSubjectFragmentPresenterImpl implements ERegisterSubjectFragmentPresenter {
+public class ERegisterSubjectFragmentPresenterImpl extends ConnectedFragmentWithDataPresenterImpl<ERSubject>
+        implements ERegisterSubjectFragmentPresenter {
 
     private static final String TAG = "ERegisterSubjectFragment";
-    private ConnectedFragment fragment = null;
-    private ConnectedActivity activity = null;
-    private ERSubject subject = null;
     private List<ShareEntity> shareEntities = null;
     private class ShareEntity {
         public String attestation = "";
@@ -63,13 +59,8 @@ public class ERegisterSubjectFragmentPresenterImpl implements ERegisterSubjectFr
     FirebaseAnalyticsProvider firebaseAnalyticsProvider;
 
     public ERegisterSubjectFragmentPresenterImpl() {
+        super(ERSubject.class);
         AppComponentProvider.getComponent().inject(this);
-    }
-
-    @Override
-    public void setFragment(ConnectedFragment fragment) {
-        this.fragment = fragment;
-        this.activity = fragment.activity();
     }
 
     @Override
@@ -83,19 +74,14 @@ public class ERegisterSubjectFragmentPresenterImpl implements ERegisterSubjectFr
                 back();
                 return;
             }
-            subject = (ERSubject) extras.getSerializable("subject");
-            if (subject == null) {
+            data = (ERSubject) extras.getSerializable("subject");
+            if (data == null) {
                 back();
             }
         }, throwable -> {
             log.exception(throwable);
             back();
         });
-    }
-
-    @Override
-    public void onDestroy() {
-        log.v(TAG, "Fragment destroyed");
     }
 
     @Override
@@ -156,7 +142,7 @@ public class ERegisterSubjectFragmentPresenterImpl implements ERegisterSubjectFr
                         }
                         ArrayList<String> labels = new ArrayList<>();
                         for (ShareEntity shareEntity : shareEntities) {
-                            labels.add(StringUtils.isNotBlank(shareEntity.attestation) ? shareEntity.attestation : subject.getName());
+                            labels.add(StringUtils.isNotBlank(shareEntity.attestation) ? shareEntity.attestation : data.getName());
                         }
                         ArrayAdapter<String> arrayAdapter = new ArrayAdapter<>(activity, R.layout.spinner_center);
                         arrayAdapter.addAll(labels);
@@ -176,38 +162,14 @@ public class ERegisterSubjectFragmentPresenterImpl implements ERegisterSubjectFr
         }
     }
 
-    @Override
-    public void onResume() {
-        thread.run(() -> {
-            if (subject == null) {
-                return;
-            }
-            log.v(TAG, "Fragment resumed");
-            firebaseAnalyticsProvider.setCurrentScreen(activity, fragment);
-        });
-    }
-
-    @Override
-    public void onPause() {
-        log.v(TAG, "Fragment paused");
-    }
-
-    @Override
-    public void onViewCreated() {
-        if (subject == null) {
-            return;
-        }
-        display();
-    }
-
     private List<ShareEntity> makeShareEntities() {
         List<ShareEntity> shareEntities = new ArrayList<>();
-        if (subject == null || StringUtils.isBlank(subject.getName()) || CollectionUtils.isEmpty(subject.getMarks()) || CollectionUtils.isEmpty(subject.getPoints())) {
+        if (data == null || StringUtils.isBlank(data.getName()) || CollectionUtils.isEmpty(data.getMarks()) || CollectionUtils.isEmpty(data.getPoints())) {
             return shareEntities;
         }
-        for (ERMark mark : subject.getMarks()) {
+        for (ERMark mark : data.getMarks()) {
             Double value = -1.0;
-            for (ERPoint point : subject.getPoints()) {
+            for (ERPoint point : data.getPoints()) {
                 if (point == null || point.getValue() == null || point.getValue() < value) {
                     continue;
                 }
@@ -230,12 +192,12 @@ public class ERegisterSubjectFragmentPresenterImpl implements ERegisterSubjectFr
             shareEntity.attestation = mark.getWorkType();
             shareEntity.mark = mark.getMark();
             shareEntity.value = value;
-            shareEntity.text = getShareText(subject.getName(), shareEntity);
+            shareEntity.text = getShareText(data.getName(), shareEntity);
             shareEntities.add(shareEntity);
         }
         if (shareEntities.size() == 0) {
             Double value = -1.0;
-            for (ERPoint point : subject.getPoints()) {
+            for (ERPoint point : data.getPoints()) {
                 if (point == null) {
                     continue;
                 }
@@ -249,24 +211,28 @@ public class ERegisterSubjectFragmentPresenterImpl implements ERegisterSubjectFr
                 shareEntity.attestation = null;
                 shareEntity.mark = null;
                 shareEntity.value = value;
-                shareEntity.text = getShareText(subject.getName(), shareEntity);
+                shareEntity.text = getShareText(data.getName(), shareEntity);
                 shareEntities.add(shareEntity);
             }
         }
         return shareEntities;
     }
 
-    private void display() {
-        if (subject == null) {
+    protected void load() {
+        display();
+    }
+
+    protected void display() {
+        if (data == null) {
             return;
         }
         thread.run(() -> {
             log.v(TAG, "display");
             shareEntities = makeShareEntities();
-            ERegisterSubjectViewRVA adapter = new ERegisterSubjectViewRVA(activity, subject, "advanced".equals(storagePref.get(activity, "pref_eregister_mode", "advanced")));
+            ERegisterSubjectViewRVA adapter = new ERegisterSubjectViewRVA(activity, data, "advanced".equals(storagePref.get(activity, "pref_eregister_mode", "advanced")));
             thread.runOnUI(() -> {
                 // отображаем заголовок
-                activity.updateToolbar(activity, subject.getName(), R.drawable.ic_e_journal);
+                activity.updateToolbar(activity, data.getName(), R.drawable.ic_e_journal);
                 // отображаем список
                 final LinearLayoutManager layoutManager = new LinearLayoutManager(activity, RecyclerView.VERTICAL, false);
                 final RecyclerView recyclerView = fragment.container().findViewById(R.id.points_list);
@@ -288,7 +254,7 @@ public class ERegisterSubjectFragmentPresenterImpl implements ERegisterSubjectFr
     }
 
     private void back() {
-        subject = null;
+        data = null;
         activity.back();
     }
     
@@ -345,5 +311,20 @@ public class ERegisterSubjectFragmentPresenterImpl implements ERegisterSubjectFr
             log.w(TAG, "Failed to build text to share (mine subject progress) | subject=" + subjectName + " | points=" + shareEntity.value.toString() + " | mark=" + shareEntity.mark);
             return "";
         }
+    }
+
+    @Override
+    protected String getLogTag() {
+        return TAG;
+    }
+
+    @Override
+    protected String getCacheType() {
+        return null;
+    }
+
+    @Override
+    protected String getCachePath() {
+        return null;
     }
 }

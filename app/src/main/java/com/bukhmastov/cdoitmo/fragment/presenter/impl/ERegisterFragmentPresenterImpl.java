@@ -12,7 +12,6 @@ import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.App;
 import com.bukhmastov.cdoitmo.R;
-import com.bukhmastov.cdoitmo.activity.ConnectedActivity;
 import com.bukhmastov.cdoitmo.adapter.rva.ERegisterSubjectsRVA;
 import com.bukhmastov.cdoitmo.event.bus.EventBus;
 import com.bukhmastov.cdoitmo.event.bus.annotation.Event;
@@ -20,7 +19,6 @@ import com.bukhmastov.cdoitmo.event.events.ClearCacheEvent;
 import com.bukhmastov.cdoitmo.event.events.ShareTextEvent;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
-import com.bukhmastov.cdoitmo.fragment.ConnectedFragment;
 import com.bukhmastov.cdoitmo.fragment.ERegisterSubjectFragment;
 import com.bukhmastov.cdoitmo.fragment.presenter.ERegisterFragmentPresenter;
 import com.bukhmastov.cdoitmo.function.BiFunction;
@@ -35,7 +33,6 @@ import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.NotificationMessage;
 import com.bukhmastov.cdoitmo.util.Storage;
 import com.bukhmastov.cdoitmo.util.StoragePref;
-import com.bukhmastov.cdoitmo.util.TextUtils;
 import com.bukhmastov.cdoitmo.util.Thread;
 import com.bukhmastov.cdoitmo.util.Time;
 import com.bukhmastov.cdoitmo.util.singleton.CollectionUtils;
@@ -62,19 +59,15 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
-public class ERegisterFragmentPresenterImpl implements ERegisterFragmentPresenter, SwipeRefreshLayout.OnRefreshListener {
+public class ERegisterFragmentPresenterImpl extends ConnectedFragmentWithDataPresenterImpl<ERegister>
+        implements ERegisterFragmentPresenter, SwipeRefreshLayout.OnRefreshListener {
 
     private static final String TAG = "ERegisterFragment";
-    private ConnectedFragment fragment = null;
-    private ConnectedActivity activity = null;
     private static final Pattern PATTERN_ATTESTATION = Pattern.compile("^.*зач[её]т$|^экзамен$|^тестирование$|^общий\\sрейтинг$", Pattern.CASE_INSENSITIVE);
-    private ERegister data = null;
     private List<String> dataShare = null;
     private String group;
     private int term;
     private boolean spinnerGroupBlocker = true, spinnerPeriodBlocker = true;
-    private boolean loaded = false;
-    private Client.Request requestHandle = null;
     private boolean forbidden = false;
 
     @Inject
@@ -94,11 +87,10 @@ public class ERegisterFragmentPresenterImpl implements ERegisterFragmentPresente
     @Inject
     Time time;
     @Inject
-    TextUtils textUtils;
-    @Inject
     FirebaseAnalyticsProvider firebaseAnalyticsProvider;
 
     public ERegisterFragmentPresenterImpl() {
+        super(ERegister.class);
         AppComponentProvider.getComponent().inject(this);
         eventBus.register(this);
     }
@@ -110,13 +102,7 @@ public class ERegisterFragmentPresenterImpl implements ERegisterFragmentPresente
         }
         data = null;
         dataShare = null;
-        fragment.clearData(fragment);
-    }
-
-    @Override
-    public void setFragment(ConnectedFragment fragment) {
-        this.fragment = fragment;
-        this.activity = fragment.activity();
+        fragment.clearData();
     }
 
     @Override
@@ -132,14 +118,6 @@ public class ERegisterFragmentPresenterImpl implements ERegisterFragmentPresente
             firebaseAnalyticsProvider.logCurrentScreen(activity, fragment);
             group = storage.get(activity, Storage.CACHE, Storage.USER, "eregister#params#selected_group", "");
             term = -2;
-        });
-    }
-
-    @Override
-    public void onDestroy() {
-        thread.runOnUI(() -> {
-            log.v(TAG, "Fragment destroyed");
-            loaded = false;
         });
     }
 
@@ -205,16 +183,6 @@ public class ERegisterFragmentPresenterImpl implements ERegisterFragmentPresente
     }
 
     @Override
-    public void onPause() {
-        thread.runOnUI(() -> {
-            log.v(TAG, "Fragment paused");
-            if (requestHandle != null && requestHandle.cancel()) {
-                loaded = false;
-            }
-        });
-    }
-
-    @Override
     public void onRefresh() {
         thread.runOnUI(() -> {
             log.v(TAG, "refreshing");
@@ -222,7 +190,7 @@ public class ERegisterFragmentPresenterImpl implements ERegisterFragmentPresente
         });
     }
 
-    private void load() {
+    protected void load() {
         thread.run(() -> load(storagePref.get(activity, "pref_use_cache", true) ? Integer.parseInt(storagePref.get(activity, "pref_dynamic_refresh", "0")) : 0));
     }
 
@@ -289,9 +257,7 @@ public class ERegisterFragmentPresenterImpl implements ERegisterFragmentPresente
                         if (statusCode == 200 && obj != null) {
                             ERegister data = new ERegister().fromJson(obj);
                             data.setTimestamp(time.getTimeInMillis());
-                            if (storagePref.get(activity, "pref_use_cache", true)) {
-                                storage.put(activity, Storage.CACHE, Storage.USER, "eregister#core", data.toJsonString());
-                            }
+                            putToCache(data);
                             setData(data);
                             display();
                             return;
@@ -396,7 +362,7 @@ public class ERegisterFragmentPresenterImpl implements ERegisterFragmentPresente
         }, throwable -> {});
     }
 
-    private void display() {
+    protected void display() {
         thread.run(() -> {
             log.v(TAG, "display");
             ERegister data = getData();
@@ -424,7 +390,7 @@ public class ERegisterFragmentPresenterImpl implements ERegisterFragmentPresente
                 });
             });
             thread.runOnUI(() -> {
-                onToolbarSetup(activity.toolbar);
+                onToolbarSetup(fragment.toolbar());
                 fragment.draw(R.layout.layout_eregister);
                 // set adapter to recycler view
                 LinearLayoutManager layoutManager = new LinearLayoutManager(activity, RecyclerView.VERTICAL, false);
@@ -717,44 +683,18 @@ public class ERegisterFragmentPresenterImpl implements ERegisterFragmentPresente
         return term;
     }
 
-    private ERegister getFromCache() {
-        thread.assertNotUI();
-        String cache = storage.get(activity, Storage.CACHE, Storage.USER, "eregister#core").trim();
-        if (StringUtils.isBlank(cache)) {
-            return null;
-        }
-        try {
-            return new ERegister().fromJsonString(cache);
-        } catch (Exception e) {
-            storage.delete(activity, Storage.CACHE, Storage.USER, "eregister#core");
-            return null;
-        }
+    @Override
+    protected String getLogTag() {
+        return TAG;
     }
 
-    private void setData(ERegister data) {
-        thread.assertNotUI();
-        try {
-            this.data = data;
-            fragment.storeData(fragment, data.toJsonString());
-        } catch (Exception e) {
-            log.exception(e);
-        }
+    @Override
+    protected String getCacheType() {
+        return Storage.USER;
     }
 
-    private ERegister getData() {
-        thread.assertNotUI();
-        if (data != null) {
-            return data;
-        }
-        try {
-            String stored = fragment.restoreData(fragment);
-            if (stored != null && !stored.isEmpty()) {
-                data = new ERegister().fromJsonString(stored);
-                return data;
-            }
-        } catch (Exception e) {
-            log.exception(e);
-        }
-        return null;
+    @Override
+    protected String getCachePath() {
+        return "eregister#core";
     }
 }

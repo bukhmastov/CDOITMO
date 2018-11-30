@@ -2,7 +2,6 @@ package com.bukhmastov.cdoitmo.fragment.presenter.impl;
 
 import android.content.Intent;
 import android.net.Uri;
-import android.os.Bundle;
 import android.util.SparseArray;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -15,11 +14,11 @@ import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activity.ConnectedActivity;
 import com.bukhmastov.cdoitmo.adapter.rva.GroupRVA;
 import com.bukhmastov.cdoitmo.event.bus.EventBus;
+import com.bukhmastov.cdoitmo.event.bus.annotation.Event;
+import com.bukhmastov.cdoitmo.event.events.ClearCacheEvent;
 import com.bukhmastov.cdoitmo.event.events.OpenIntentEvent;
 import com.bukhmastov.cdoitmo.event.events.ShareTextEvent;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
-import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
-import com.bukhmastov.cdoitmo.fragment.ConnectedFragment;
 import com.bukhmastov.cdoitmo.fragment.LinkedAccountsFragment;
 import com.bukhmastov.cdoitmo.fragment.presenter.IsuGroupInfoFragmentPresenter;
 import com.bukhmastov.cdoitmo.model.group.GGroup;
@@ -48,19 +47,14 @@ import java.util.Map;
 
 import javax.inject.Inject;
 
-import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
-public class IsuGroupInfoFragmentPresenterImpl implements IsuGroupInfoFragmentPresenter, SwipeRefreshLayout.OnRefreshListener {
+public class IsuGroupInfoFragmentPresenterImpl extends ConnectedFragmentWithDataPresenterImpl<GList>
+        implements IsuGroupInfoFragmentPresenter, SwipeRefreshLayout.OnRefreshListener {
 
     private static final String TAG = "IsuGroupInfoFragment";
-    private ConnectedFragment fragment = null;
-    private ConnectedActivity activity = null;
-    private GList data = null;
-    private boolean loaded = false;
-    private Client.Request requestHandle = null;
 
     @Inject
     Log log;
@@ -78,31 +72,20 @@ public class IsuGroupInfoFragmentPresenterImpl implements IsuGroupInfoFragmentPr
     Time time;
     @Inject
     NotificationMessage notificationMessage;
-    @Inject
-    FirebaseAnalyticsProvider firebaseAnalyticsProvider;
 
     public IsuGroupInfoFragmentPresenterImpl() {
+        super(GList.class);
         AppComponentProvider.getComponent().inject(this);
+        eventBus.register(this);
     }
 
-    @Override
-    public void setFragment(ConnectedFragment fragment) {
-        this.fragment = fragment;
-        this.activity = fragment.activity();
-    }
-
-    @Override
-    public void onCreate(@Nullable Bundle savedInstanceState) {
-        thread.run(() -> {
-            log.v(TAG, "Fragment created");
-            firebaseAnalyticsProvider.logCurrentScreen(activity, fragment);
-        });
-    }
-
-    @Override
-    public void onDestroy() {
-        log.v(TAG, "Fragment destroyed");
-        loaded = false;
+    @Event
+    public void onClearCacheEvent(ClearCacheEvent event) {
+        if (event.isNot(ClearCacheEvent.GROUPS)) {
+            return;
+        }
+        data = null;
+        fragment.clearData();
     }
 
     @Override
@@ -136,32 +119,6 @@ public class IsuGroupInfoFragmentPresenterImpl implements IsuGroupInfoFragmentPr
     }
 
     @Override
-    public void onResume() {
-        thread.run(() -> {
-            log.v(TAG, "Fragment resumed");
-            firebaseAnalyticsProvider.setCurrentScreen(activity, fragment);
-            if (!loaded) {
-                loaded = true;
-                if (getData() == null) {
-                    load();
-                } else {
-                    display();
-                }
-            }
-        });
-    }
-
-    @Override
-    public void onPause() {
-        thread.run(() -> {
-            log.v(TAG, "Fragment paused");
-            if (requestHandle != null && requestHandle.cancel()) {
-                loaded = false;
-            }
-        });
-    }
-
-    @Override
     public void onRefresh() {
         thread.run(() -> {
             log.v(TAG, "refreshing");
@@ -169,7 +126,7 @@ public class IsuGroupInfoFragmentPresenterImpl implements IsuGroupInfoFragmentPr
         });
     }
 
-    private void load() {
+    protected void load() {
         thread.run(() -> load(storagePref.get(activity, "pref_use_cache", true) ? Integer.parseInt(storagePref.get(activity, "pref_static_refresh", "168")) : 0));
     }
 
@@ -369,7 +326,7 @@ public class IsuGroupInfoFragmentPresenterImpl implements IsuGroupInfoFragmentPr
         }, throwable -> {});
     }
 
-    private void display() {
+    protected void display() {
         thread.run(() -> {
             log.v(TAG, "display");
             GList data = getData();
@@ -390,7 +347,7 @@ public class IsuGroupInfoFragmentPresenterImpl implements IsuGroupInfoFragmentPr
                 });
             });
             thread.runOnUI(() -> {
-                onToolbarSetup(activity.toolbar);
+                onToolbarSetup(fragment.toolbar());
                 fragment.draw(R.layout.layout_rva);
                 // set adapter to recycler view
                 LinearLayoutManager layoutManager = new LinearLayoutManager(activity, RecyclerView.VERTICAL, false);
@@ -513,44 +470,18 @@ public class IsuGroupInfoFragmentPresenterImpl implements IsuGroupInfoFragmentPr
         });
     }
 
-    private GList getFromCache() {
-        thread.assertNotUI();
-        String cache = storage.get(activity, Storage.CACHE, Storage.USER, "group#core").trim();
-        if (StringUtils.isBlank(cache)) {
-            return null;
-        }
-        try {
-            return new GList().fromJsonString(cache);
-        } catch (Exception e) {
-            storage.delete(activity, Storage.CACHE, Storage.USER, "group#core");
-            return null;
-        }
+    @Override
+    protected String getLogTag() {
+        return TAG;
     }
 
-    private void setData(GList data) {
-        thread.assertNotUI();
-        try {
-            this.data = data;
-            fragment.storeData(fragment, data.toJsonString());
-        } catch (Exception e) {
-            log.exception(e);
-        }
+    @Override
+    protected String getCacheType() {
+        return Storage.USER;
     }
 
-    private GList getData() {
-        thread.assertNotUI();
-        if (data != null) {
-            return data;
-        }
-        try {
-            String stored = fragment.restoreData(fragment);
-            if (stored != null && !stored.isEmpty()) {
-                data = new GList().fromJsonString(stored);
-                return data;
-            }
-        } catch (Exception e) {
-            log.exception(e);
-        }
-        return null;
+    @Override
+    protected String getCachePath() {
+        return "group#core";
     }
 }

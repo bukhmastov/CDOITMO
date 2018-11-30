@@ -76,15 +76,15 @@ public class SettingsFragment extends SettingsTemplateHeadersFragment {
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         super.onCreateOptionsMenu(menu, inflater);
         try {
-            if (activity.toolbar != null) {
-                MenuItem action = activity.toolbar.findItem(R.id.action_restore);
+            if (toolbar() != null) {
+                MenuItem action = toolbar().findItem(R.id.action_restore);
                 if (action != null) {
                     action.setVisible(true);
                     action.setOnMenuItemClickListener(item -> {
-                        if (activity.isFinishing() || activity.isDestroyed()) {
+                        if (activity().isFinishing() || activity().isDestroyed()) {
                             return false;
                         }
-                        new AlertDialog.Builder(activity)
+                        new AlertDialog.Builder(activity())
                                 .setIcon(R.drawable.ic_settings_restore_black)
                                 .setTitle(R.string.reset_preferences)
                                 .setMessage(R.string.reset_preference_message)
@@ -104,8 +104,8 @@ public class SettingsFragment extends SettingsTemplateHeadersFragment {
     public void onDestroy() {
         super.onDestroy();
         try {
-            if (activity.toolbar != null) {
-                MenuItem action = activity.toolbar.findItem(R.id.action_restore);
+            if (toolbar() != null) {
+                MenuItem action = toolbar().findItem(R.id.action_restore);
                 if (action != null) {
                     action.setVisible(false);
                 }
@@ -117,15 +117,18 @@ public class SettingsFragment extends SettingsTemplateHeadersFragment {
 
     private void resetPreferences() {
         thread.get().run(() -> {
-            storagePref.get().reset(activity);
-            storagePref.get().applyDebug(activity);
-            theme.get().updateAppTheme(activity);
+            if (activity() == null) {
+                return;
+            }
+            storagePref.get().reset(activity());
+            storagePref.get().applyDebug(activity());
+            theme.get().updateAppTheme(activity());
             notificationMessage.get().snackBar(
-                    activity,
-                    activity.getString(R.string.restart_required),
-                    activity.getString(R.string.restart),
+                    activity(),
+                    getString(R.string.restart_required),
+                    getString(R.string.restart),
                     NotificationMessage.LENGTH_LONG,
-                    view -> staticUtil.get().reLaunch(activity)
+                    view -> staticUtil.get().reLaunch(activity())
             );
         });
     }

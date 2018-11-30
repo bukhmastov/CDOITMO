@@ -22,7 +22,7 @@ public class MainActivity extends ConnectedActivity {
     protected void onCreate(final Bundle savedInstanceState) {
         AppComponentProvider.getComponent().inject(this);
         presenter.setActivity(this);
-        theme.applyActivityTheme(activity);
+        theme.applyActivityTheme(this);
         super.onCreate(savedInstanceState);
         if (presenter.isInitialized()) {
             setContentView(R.layout.activity_main);

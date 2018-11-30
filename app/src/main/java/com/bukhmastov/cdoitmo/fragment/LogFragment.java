@@ -1,8 +1,6 @@
 package com.bukhmastov.cdoitmo.fragment;
 
-import android.os.Bundle;
-import androidx.annotation.Nullable;
-import android.view.Menu;
+import android.content.Context;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
@@ -10,58 +8,26 @@ import com.bukhmastov.cdoitmo.fragment.presenter.LogFragmentPresenter;
 
 import javax.inject.Inject;
 
-public class LogFragment extends ConnectedFragment {
+public class LogFragment extends ConnectedFragment<LogFragmentPresenter> {
 
     @Inject
     LogFragmentPresenter presenter;
 
     @Override
-    public void onCreate(@Nullable Bundle savedInstanceState) {
+    public void onAttach(Context context) {
         AppComponentProvider.getComponent().inject(this);
-        presenter.setFragment(this);
-        super.onCreate(savedInstanceState);
-        presenter.onCreate(savedInstanceState);
+        super.onAttach(context);
     }
 
     @Override
-    public void onStart() {
-        super.onStart();
-        presenter.onToolbarSetup(activity.toolbar);
+    public void onDetach() {
+        presenter = null;
+        super.onDetach();
     }
 
     @Override
-    public void onResume() {
-        super.onResume();
-        presenter.onResume();
-    }
-
-    @Override
-    public void onPause() {
-        super.onPause();
-        presenter.onPause();
-    }
-
-    @Override
-    public void onStop() {
-        super.onStop();
-        presenter.onToolbarTeardown(activity.toolbar);
-    }
-
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-        presenter.onDestroy();
-    }
-
-    @Override
-    public void onPrepareOptionsMenu(Menu menu) {
-        presenter.onToolbarSetup(menu);
-        super.onPrepareOptionsMenu(menu);
-    }
-
-    @Override
-    public void onViewCreated() {
-        presenter.onViewCreated();
+    protected LogFragmentPresenter getPresenter() {
+        return presenter;
     }
 
     @Override

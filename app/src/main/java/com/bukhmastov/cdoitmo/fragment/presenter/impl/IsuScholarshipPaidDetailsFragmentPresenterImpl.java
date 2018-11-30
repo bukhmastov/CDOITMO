@@ -11,10 +11,11 @@ import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activity.ConnectedActivity;
 import com.bukhmastov.cdoitmo.adapter.rva.ScholarshipPaidDetailsRVA;
 import com.bukhmastov.cdoitmo.event.bus.EventBus;
+import com.bukhmastov.cdoitmo.event.bus.annotation.Event;
+import com.bukhmastov.cdoitmo.event.events.ClearCacheEvent;
 import com.bukhmastov.cdoitmo.event.events.ShareTextEvent;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
-import com.bukhmastov.cdoitmo.fragment.ConnectedFragment;
 import com.bukhmastov.cdoitmo.fragment.LinkedAccountsFragment;
 import com.bukhmastov.cdoitmo.fragment.presenter.IsuScholarshipPaidDetailsFragmentPresenter;
 import com.bukhmastov.cdoitmo.model.scholarship.detailed.SSDetailed;
@@ -38,19 +39,14 @@ import org.json.JSONObject;
 
 import javax.inject.Inject;
 
-import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
-public class IsuScholarshipPaidDetailsFragmentPresenterImpl implements IsuScholarshipPaidDetailsFragmentPresenter, SwipeRefreshLayout.OnRefreshListener {
+public class IsuScholarshipPaidDetailsFragmentPresenterImpl extends ConnectedFragmentWithDataPresenterImpl<SSDetailedList>
+        implements IsuScholarshipPaidDetailsFragmentPresenter, SwipeRefreshLayout.OnRefreshListener {
 
     private static final String TAG = "IsuScholarshipPaidDetailsFragment";
-    private ConnectedFragment fragment = null;
-    private ConnectedActivity activity = null;
-    private SSDetailedList data = null;
-    private boolean loaded = false;
-    private Client.Request requestHandle = null;
     private int year = 0;
     private int month = 0;
 
@@ -74,27 +70,18 @@ public class IsuScholarshipPaidDetailsFragmentPresenterImpl implements IsuSchola
     FirebaseAnalyticsProvider firebaseAnalyticsProvider;
 
     public IsuScholarshipPaidDetailsFragmentPresenterImpl() {
+        super(SSDetailedList.class);
         AppComponentProvider.getComponent().inject(this);
+        eventBus.register(this);
     }
 
-    @Override
-    public void setFragment(ConnectedFragment fragment) {
-        this.fragment = fragment;
-        this.activity = fragment.activity();
-    }
-
-    @Override
-    public void onCreate(@Nullable Bundle savedInstanceState) {
-        thread.run(() -> {
-            log.v(TAG, "Fragment created");
-            firebaseAnalyticsProvider.logCurrentScreen(activity, fragment);
-        });
-    }
-
-    @Override
-    public void onDestroy() {
-        log.v(TAG, "Fragment destroyed");
-        loaded = false;
+    @Event
+    public void onClearCacheEvent(ClearCacheEvent event) {
+        if (event.isNot(ClearCacheEvent.SCHOLARSHIP)) {
+            return;
+        }
+        data = null;
+        fragment.clearData();
     }
 
     @Override
@@ -151,16 +138,6 @@ public class IsuScholarshipPaidDetailsFragmentPresenterImpl implements IsuSchola
     }
 
     @Override
-    public void onPause() {
-        thread.run(() -> {
-            log.v(TAG, "Fragment paused");
-            if (requestHandle != null && requestHandle.cancel()) {
-                loaded = false;
-            }
-        });
-    }
-
-    @Override
     public void onRefresh() {
         thread.run(() -> {
             log.v(TAG, "refreshing");
@@ -168,7 +145,7 @@ public class IsuScholarshipPaidDetailsFragmentPresenterImpl implements IsuSchola
         });
     }
 
-    private void load() {
+    protected void load() {
         thread.run(() -> load(storagePref.get(activity, "pref_use_cache", true) ? Integer.parseInt(storagePref.get(activity, "pref_dynamic_refresh", "0")) : 0));
     }
 
@@ -357,7 +334,7 @@ public class IsuScholarshipPaidDetailsFragmentPresenterImpl implements IsuSchola
         }, throwable -> {});
     }
 
-    private void display() {
+    protected void display() {
         thread.run(() -> {
             log.v(TAG, "display");
             if (data == null) {
@@ -366,7 +343,7 @@ public class IsuScholarshipPaidDetailsFragmentPresenterImpl implements IsuSchola
             }
             ScholarshipPaidDetailsRVA adapter = new ScholarshipPaidDetailsRVA(activity, data);
             thread.runOnUI(() -> {
-                onToolbarSetup(activity.toolbar);
+                onToolbarSetup(fragment.toolbar());
                 fragment.draw(R.layout.layout_rva);
                 // set adapter to recycler view
                 LinearLayoutManager layoutManager = new LinearLayoutManager(activity, RecyclerView.VERTICAL, false);
@@ -442,5 +419,20 @@ public class IsuScholarshipPaidDetailsFragmentPresenterImpl implements IsuSchola
             log.exception(throwable);
             notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
         });
+    }
+
+    @Override
+    protected String getLogTag() {
+        return TAG;
+    }
+
+    @Override
+    protected String getCacheType() {
+        return null;
+    }
+
+    @Override
+    protected String getCachePath() {
+        return null;
     }
 }

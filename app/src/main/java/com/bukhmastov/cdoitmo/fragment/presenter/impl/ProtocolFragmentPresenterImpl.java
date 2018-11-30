@@ -1,11 +1,6 @@
 package com.bukhmastov.cdoitmo.fragment.presenter.impl;
 
 import android.os.Bundle;
-import androidx.annotation.Nullable;
-import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
-
 import android.util.SparseArray;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -18,7 +13,6 @@ import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.App;
 import com.bukhmastov.cdoitmo.R;
-import com.bukhmastov.cdoitmo.activity.ConnectedActivity;
 import com.bukhmastov.cdoitmo.adapter.rva.ProtocolRVA;
 import com.bukhmastov.cdoitmo.event.bus.EventBus;
 import com.bukhmastov.cdoitmo.event.bus.annotation.Event;
@@ -26,7 +20,6 @@ import com.bukhmastov.cdoitmo.event.events.ClearCacheEvent;
 import com.bukhmastov.cdoitmo.event.events.ShareTextEvent;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
-import com.bukhmastov.cdoitmo.fragment.ConnectedFragment;
 import com.bukhmastov.cdoitmo.fragment.presenter.ProtocolFragmentPresenter;
 import com.bukhmastov.cdoitmo.model.converter.ProtocolConverter;
 import com.bukhmastov.cdoitmo.model.protocol.PChange;
@@ -43,7 +36,6 @@ import com.bukhmastov.cdoitmo.util.Thread;
 import com.bukhmastov.cdoitmo.util.Time;
 import com.bukhmastov.cdoitmo.util.singleton.CollectionUtils;
 import com.bukhmastov.cdoitmo.util.singleton.Color;
-import com.bukhmastov.cdoitmo.util.singleton.StringUtils;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -55,17 +47,18 @@ import java.util.Map;
 
 import javax.inject.Inject;
 
-public class ProtocolFragmentPresenterImpl implements ProtocolFragmentPresenter, SwipeRefreshLayout.OnRefreshListener {
+import androidx.annotation.Nullable;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
+
+public class ProtocolFragmentPresenterImpl extends ConnectedFragmentWithDataPresenterImpl<Protocol>
+        implements ProtocolFragmentPresenter, SwipeRefreshLayout.OnRefreshListener {
 
     private static final String TAG = "ProtocolFragment";
     private static final int maxAttempts = 3;
-    private ConnectedFragment fragment = null;
-    private ConnectedActivity activity = null;
-    private Protocol data = null;
     private int numberOfWeeks = 1;
     private boolean spinnerWeeksBlocker = true;
-    private boolean loaded = false;
-    private Client.Request requestHandle = null;
     private boolean forbidden = false;
 
     @Inject
@@ -90,6 +83,7 @@ public class ProtocolFragmentPresenterImpl implements ProtocolFragmentPresenter,
     FirebaseAnalyticsProvider firebaseAnalyticsProvider;
 
     public ProtocolFragmentPresenterImpl() {
+        super(Protocol.class);
         AppComponentProvider.getComponent().inject(this);
         eventBus.register(this);
     }
@@ -100,13 +94,7 @@ public class ProtocolFragmentPresenterImpl implements ProtocolFragmentPresenter,
             return;
         }
         data = null;
-        fragment.clearData(fragment);
-    }
-
-    @Override
-    public void setFragment(ConnectedFragment fragment) {
-        this.fragment = fragment;
-        this.activity = fragment.activity();
+        fragment.clearData();
     }
 
     @Override
@@ -122,12 +110,6 @@ public class ProtocolFragmentPresenterImpl implements ProtocolFragmentPresenter,
             firebaseAnalyticsProvider.logCurrentScreen(activity, fragment);
             numberOfWeeks = Integer.parseInt(storagePref.get(activity, "pref_protocol_changes_weeks", "1"));
         });
-    }
-
-    @Override
-    public void onDestroy() {
-        log.v(TAG, "Fragment destroyed");
-        loaded = false;
     }
 
     @Override
@@ -206,16 +188,6 @@ public class ProtocolFragmentPresenterImpl implements ProtocolFragmentPresenter,
     }
 
     @Override
-    public void onPause() {
-        thread.run(() -> {
-            log.v(TAG, "Fragment paused");
-            if (requestHandle != null && requestHandle.cancel()) {
-                loaded = false;
-            }
-        });
-    }
-
-    @Override
     public void onRefresh() {
         thread.run(() -> {
             log.v(TAG, "refreshing");
@@ -223,7 +195,17 @@ public class ProtocolFragmentPresenterImpl implements ProtocolFragmentPresenter,
         });
     }
 
-    private void load() {
+    @Override
+    protected String getCacheType() {
+        return null;
+    }
+
+    @Override
+    protected String getCachePath() {
+        return null;
+    }
+
+    protected void load() {
         thread.run(() -> load(storagePref.get(activity, "pref_use_cache", true) ? Integer.parseInt(storagePref.get(activity, "pref_dynamic_refresh", "0")) : 0));
     }
 
@@ -415,7 +397,7 @@ public class ProtocolFragmentPresenterImpl implements ProtocolFragmentPresenter,
         }, throwable -> {});
     }
 
-    private void display() {
+    protected void display() {
         thread.run(() -> {
             log.v(TAG, "display");
             Protocol data = getData();
@@ -425,7 +407,7 @@ public class ProtocolFragmentPresenterImpl implements ProtocolFragmentPresenter,
             }
             ProtocolRVA adapter = new ProtocolRVA(activity, data, "advanced".equals(storagePref.get(activity, "pref_protocol_changes_mode", "advanced")));
             thread.runOnUI(() -> {
-                onToolbarSetup(activity.toolbar);
+                onToolbarSetup(fragment.toolbar());
                 fragment.draw(R.layout.layout_protocol);
                 // set adapter to recycler view
                 LinearLayoutManager layoutManager = new LinearLayoutManager(activity, RecyclerView.VERTICAL, false);
@@ -585,44 +567,8 @@ public class ProtocolFragmentPresenterImpl implements ProtocolFragmentPresenter,
         });
     }
 
-    private Protocol getFromCache() {
-        thread.assertNotUI();
-        String cache = storage.get(activity, Storage.CACHE, Storage.USER, "protocol#core").trim();
-        if (StringUtils.isBlank(cache)) {
-            return null;
-        }
-        try {
-            return new Protocol().fromJsonString(cache);
-        } catch (Exception e) {
-            storage.delete(activity, Storage.CACHE, Storage.USER, "protocol#core");
-            return null;
-        }
-    }
-
-    private void setData(Protocol data) {
-        thread.assertNotUI();
-        try {
-            this.data = data;
-            fragment.storeData(fragment, data.toJsonString());
-        } catch (Exception e) {
-            log.exception(e);
-        }
-    }
-
-    private Protocol getData() {
-        thread.assertNotUI();
-        if (data != null) {
-            return data;
-        }
-        try {
-            String stored = fragment.restoreData(fragment);
-            if (stored != null && !stored.isEmpty()) {
-                data = new Protocol().fromJsonString(stored);
-                return data;
-            }
-        } catch (Exception e) {
-            log.exception(e);
-        }
-        return null;
+    @Override
+    protected String getLogTag() {
+        return TAG;
     }
 }

@@ -12,14 +12,12 @@ import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.App;
 import com.bukhmastov.cdoitmo.R;
-import com.bukhmastov.cdoitmo.activity.ConnectedActivity;
 import com.bukhmastov.cdoitmo.builder.Room101ReviewBuilder;
 import com.bukhmastov.cdoitmo.event.bus.EventBus;
 import com.bukhmastov.cdoitmo.event.bus.annotation.Event;
 import com.bukhmastov.cdoitmo.event.events.ClearCacheEvent;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
-import com.bukhmastov.cdoitmo.fragment.ConnectedFragment;
 import com.bukhmastov.cdoitmo.fragment.presenter.Room101FragmentPresenter;
 import com.bukhmastov.cdoitmo.function.ThrowingConsumer;
 import com.bukhmastov.cdoitmo.function.ThrowingRunnable;
@@ -36,7 +34,6 @@ import com.bukhmastov.cdoitmo.util.NotificationMessage;
 import com.bukhmastov.cdoitmo.util.Static;
 import com.bukhmastov.cdoitmo.util.Storage;
 import com.bukhmastov.cdoitmo.util.StoragePref;
-import com.bukhmastov.cdoitmo.util.TextUtils;
 import com.bukhmastov.cdoitmo.util.Thread;
 import com.bukhmastov.cdoitmo.util.Time;
 import com.bukhmastov.cdoitmo.util.singleton.Color;
@@ -50,14 +47,10 @@ import javax.inject.Inject;
 import androidx.annotation.Nullable;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
-public class Room101FragmentPresenterImpl implements Room101FragmentPresenter, SwipeRefreshLayout.OnRefreshListener, Room101ReviewBuilder.Request {
+public class Room101FragmentPresenterImpl extends ConnectedFragmentWithDataPresenterImpl<Room101Requests>
+        implements Room101FragmentPresenter, SwipeRefreshLayout.OnRefreshListener, Room101ReviewBuilder.Request {
 
     private static final String TAG = "Room101Fragment";
-    private ConnectedFragment fragment = null;
-    private ConnectedActivity activity = null;
-    private Room101Requests data = null;
-    private boolean loaded = false;
-    public static Client.Request requestHandle = null;
     private String actionExtra = null;
     protected boolean forbidden = false;
 
@@ -84,11 +77,10 @@ public class Room101FragmentPresenterImpl implements Room101FragmentPresenter, S
     @Inject
     Time time;
     @Inject
-    TextUtils textUtils;
-    @Inject
     FirebaseAnalyticsProvider firebaseAnalyticsProvider;
 
     public Room101FragmentPresenterImpl() {
+        super(Room101Requests.class);
         AppComponentProvider.getComponent().inject(this);
         eventBus.register(this);
     }
@@ -99,13 +91,7 @@ public class Room101FragmentPresenterImpl implements Room101FragmentPresenter, S
             return;
         }
         data = null;
-        fragment.clearData(fragment);
-    }
-
-    @Override
-    public void setFragment(ConnectedFragment fragment) {
-        this.fragment = fragment;
-        this.activity = fragment.activity();
+        fragment.clearData();
     }
 
     @Override
@@ -126,14 +112,6 @@ public class Room101FragmentPresenterImpl implements Room101FragmentPresenter, S
                     intent.removeExtra("action_extra");
                 }
             }
-        });
-    }
-
-    @Override
-    public void onDestroy() {
-        thread.run(() -> {
-            log.v(TAG, "Fragment destroyed");
-            loaded = false;
         });
     }
 
@@ -163,16 +141,6 @@ public class Room101FragmentPresenterImpl implements Room101FragmentPresenter, S
                 load();
             } else {
                 display();
-            }
-        });
-    }
-
-    @Override
-    public void onPause() {
-        thread.run(() -> {
-            log.v(TAG, "paused");
-            if (requestHandle != null && requestHandle.cancel()) {
-                loaded = false;
             }
         });
     }
@@ -474,7 +442,7 @@ public class Room101FragmentPresenterImpl implements Room101FragmentPresenter, S
         });
     }
 
-    private void load() {
+    protected void load() {
         thread.run(() -> load(storagePref.get(activity, "pref_use_cache", true) ? Integer.parseInt(storagePref.get(activity, "pref_dynamic_refresh", "0")) : 0));
     }
 
@@ -551,9 +519,7 @@ public class Room101FragmentPresenterImpl implements Room101FragmentPresenter, S
                                 return;
                             }
                             room101Requests.setTimestamp(time.getTimeInMillis());
-                            if (storagePref.get(activity, "pref_use_cache", true)) {
-                                storage.put(activity, Storage.CACHE, Storage.USER, "room101#core", room101Requests.toJsonString());
-                            }
+                            putToCache(room101Requests);
                             setData(room101Requests);
                             display();
                             return;
@@ -669,7 +635,7 @@ public class Room101FragmentPresenterImpl implements Room101FragmentPresenter, S
         });
     }
 
-    private void display() {
+    protected void display() {
         thread.run(() -> {
             log.v(TAG, "display");
             Room101Requests data = getData();
@@ -736,44 +702,18 @@ public class Room101FragmentPresenterImpl implements Room101FragmentPresenter, S
         });
     }
 
-    private Room101Requests getFromCache() {
-        thread.assertNotUI();
-        String cache = storage.get(activity, Storage.CACHE, Storage.USER, "room101#core").trim();
-        if (StringUtils.isBlank(cache)) {
-            return null;
-        }
-        try {
-            return new Room101Requests().fromJsonString(cache);
-        } catch (Exception e) {
-            storage.delete(activity, Storage.CACHE, Storage.USER, "room101#core");
-            return null;
-        }
+    @Override
+    protected String getLogTag() {
+        return TAG;
     }
 
-    private void setData(Room101Requests data) {
-        thread.assertNotUI();
-        try {
-            this.data = data;
-            fragment.storeData(fragment, data.toJsonString());
-        } catch (Exception e) {
-            log.exception(e);
-        }
+    @Override
+    protected String getCacheType() {
+        return Storage.USER;
     }
 
-    private Room101Requests getData() {
-        thread.assertNotUI();
-        if (data != null) {
-            return data;
-        }
-        try {
-            String stored = fragment.restoreData(fragment);
-            if (stored != null && !stored.isEmpty()) {
-                data = new Room101Requests().fromJsonString(stored);
-                return data;
-            }
-        } catch (Exception e) {
-            log.exception(e);
-        }
-        return null;
+    @Override
+    protected String getCachePath() {
+        return "room101#core";
     }
 }

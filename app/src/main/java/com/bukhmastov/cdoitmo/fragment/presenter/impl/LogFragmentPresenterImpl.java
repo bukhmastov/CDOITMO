@@ -2,21 +2,15 @@ package com.bukhmastov.cdoitmo.fragment.presenter.impl;
 
 import android.content.Intent;
 import android.net.Uri;
-import android.os.Bundle;
-import androidx.annotation.Nullable;
-import androidx.core.content.FileProvider;
 import android.view.ViewGroup;
 import android.widget.Switch;
 import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
-import com.bukhmastov.cdoitmo.activity.ConnectedActivity;
 import com.bukhmastov.cdoitmo.event.bus.EventBus;
 import com.bukhmastov.cdoitmo.event.events.OpenIntentEvent;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
-import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseCrashlyticsProvider;
-import com.bukhmastov.cdoitmo.fragment.ConnectedFragment;
 import com.bukhmastov.cdoitmo.fragment.presenter.LogFragmentPresenter;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.NotificationMessage;
@@ -29,11 +23,13 @@ import java.io.FileWriter;
 
 import javax.inject.Inject;
 
-public class LogFragmentPresenterImpl implements LogFragmentPresenter {
+import androidx.annotation.Nullable;
+import androidx.core.content.FileProvider;
+
+public class LogFragmentPresenterImpl extends ConnectedFragmentPresenterImpl
+        implements LogFragmentPresenter {
 
     private static final String TAG = "LogFragment";
-    private ConnectedFragment fragment = null;
-    private ConnectedActivity activity = null;
 
     @Inject
     Log log;
@@ -46,40 +42,11 @@ public class LogFragmentPresenterImpl implements LogFragmentPresenter {
     @Inject
     NotificationMessage notificationMessage;
     @Inject
-    FirebaseAnalyticsProvider firebaseAnalyticsProvider;
-    @Inject
     FirebaseCrashlyticsProvider firebaseCrashlyticsProvider;
 
     public LogFragmentPresenterImpl() {
+        super();
         AppComponentProvider.getComponent().inject(this);
-    }
-
-    @Override
-    public void setFragment(ConnectedFragment fragment) {
-        this.fragment = fragment;
-        this.activity = fragment.activity();
-    }
-
-    @Override
-    public void onCreate(@Nullable Bundle savedInstanceState) {
-        log.v(TAG, "Fragment created");
-        firebaseAnalyticsProvider.logCurrentScreen(activity, fragment);
-    }
-
-    @Override
-    public void onDestroy() {
-        log.v(TAG, "Fragment destroyed");
-    }
-
-    @Override
-    public void onResume() {
-        log.v(TAG, "Fragment resumed");
-        firebaseAnalyticsProvider.setCurrentScreen(activity, fragment);
-    }
-
-    @Override
-    public void onPause() {
-        log.v(TAG, "Fragment paused");
     }
 
     @Override
@@ -225,5 +192,10 @@ public class LogFragmentPresenterImpl implements LogFragmentPresenter {
             notificationMessage.toast(activity, activity.getString(R.string.something_went_wrong));
             return null;
         }
+    }
+
+    @Override
+    protected String getLogTag() {
+        return TAG;
     }
 }

@@ -3,37 +3,34 @@ package com.bukhmastov.cdoitmo.fragment.presenter.impl;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
-import androidx.annotation.Nullable;
-import com.google.android.material.tabs.TabLayout;
-import androidx.fragment.app.FragmentManager;
-import androidx.viewpager.widget.ViewPager;
 import android.view.MenuItem;
 import android.view.View;
 
 import com.bukhmastov.cdoitmo.R;
-import com.bukhmastov.cdoitmo.activity.ConnectedActivity;
 import com.bukhmastov.cdoitmo.activity.search.ScheduleExamsSearchActivity;
 import com.bukhmastov.cdoitmo.adapter.PagerExamsAdapter;
 import com.bukhmastov.cdoitmo.event.bus.EventBus;
 import com.bukhmastov.cdoitmo.event.events.OpenActivityEvent;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
-import com.bukhmastov.cdoitmo.fragment.ConnectedFragment;
 import com.bukhmastov.cdoitmo.fragment.presenter.ScheduleExamsFragmentPresenter;
 import com.bukhmastov.cdoitmo.fragment.presenter.ScheduleExamsTabHostFragmentPresenter;
 import com.bukhmastov.cdoitmo.object.schedule.ScheduleExams;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.StoragePref;
 import com.bukhmastov.cdoitmo.util.Thread;
+import com.google.android.material.tabs.TabLayout;
 
 import javax.inject.Inject;
 
-public class ScheduleExamsFragmentPresenterImpl implements ScheduleExamsFragmentPresenter, ViewPager.OnPageChangeListener {
+import androidx.annotation.Nullable;
+import androidx.fragment.app.FragmentManager;
+import androidx.viewpager.widget.ViewPager;
+
+public class ScheduleExamsFragmentPresenterImpl extends ConnectedFragmentPresenterImpl
+        implements ScheduleExamsFragmentPresenter, ViewPager.OnPageChangeListener {
 
     private static final String TAG = "SEFragment";
-    private ConnectedFragment fragment = null;
-    private ConnectedActivity activity = null;
-    private boolean loaded = false;
     private int activeTab = -1;
 
     @Inject
@@ -52,13 +49,8 @@ public class ScheduleExamsFragmentPresenterImpl implements ScheduleExamsFragment
     FirebaseAnalyticsProvider firebaseAnalyticsProvider;
 
     public ScheduleExamsFragmentPresenterImpl() {
+        super();
         AppComponentProvider.getComponent().inject(this);
-    }
-
-    @Override
-    public void setFragment(ConnectedFragment fragment) {
-        this.fragment = fragment;
-        this.activity = fragment.activity();
     }
 
     @Override
@@ -92,8 +84,8 @@ public class ScheduleExamsFragmentPresenterImpl implements ScheduleExamsFragment
             if (fixed_tabs != null) {
                 fixed_tabs.setVisibility(View.GONE);
             }
-            if (activity != null && activity.toolbar != null) {
-                MenuItem action_search = activity.toolbar.findItem(R.id.action_search);
+            if (fragment != null && fragment.toolbar() != null) {
+                MenuItem action_search = fragment.toolbar().findItem(R.id.action_search);
                 if (action_search != null && action_search.isVisible()) {
                     log.v(TAG, "Hiding action_search");
                     action_search.setVisible(false);
@@ -109,8 +101,8 @@ public class ScheduleExamsFragmentPresenterImpl implements ScheduleExamsFragment
             log.v(TAG, "Fragment resumed");
             firebaseAnalyticsProvider.setCurrentScreen(activity, fragment);
             thread.runOnUI(() -> {
-                if (activity != null && activity.toolbar != null) {
-                    MenuItem action_search = activity.toolbar.findItem(R.id.action_search);
+                if (fragment != null && fragment.toolbar() != null) {
+                    MenuItem action_search = fragment.toolbar().findItem(R.id.action_search);
                     if (action_search != null && !action_search.isVisible()) {
                         log.v(TAG, "Revealing action_search");
                         action_search.setVisible(true);
@@ -129,11 +121,6 @@ public class ScheduleExamsFragmentPresenterImpl implements ScheduleExamsFragment
                 load();
             }
         });
-    }
-
-    @Override
-    public void onPause() {
-        log.v(TAG, "Fragment paused");
     }
 
     @Override
@@ -220,5 +207,10 @@ public class ScheduleExamsFragmentPresenterImpl implements ScheduleExamsFragment
         } catch (Exception e) {
             log.exception(e);
         }
+    }
+
+    @Override
+    protected String getLogTag() {
+        return TAG;
     }
 }

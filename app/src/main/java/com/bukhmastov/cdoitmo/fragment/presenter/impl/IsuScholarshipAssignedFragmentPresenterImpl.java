@@ -1,6 +1,5 @@
 package com.bukhmastov.cdoitmo.fragment.presenter.impl;
 
-import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -11,10 +10,10 @@ import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activity.ConnectedActivity;
 import com.bukhmastov.cdoitmo.adapter.rva.ScholarshipAssignedRVA;
 import com.bukhmastov.cdoitmo.event.bus.EventBus;
+import com.bukhmastov.cdoitmo.event.bus.annotation.Event;
+import com.bukhmastov.cdoitmo.event.events.ClearCacheEvent;
 import com.bukhmastov.cdoitmo.event.events.ShareTextEvent;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
-import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
-import com.bukhmastov.cdoitmo.fragment.ConnectedFragment;
 import com.bukhmastov.cdoitmo.fragment.LinkedAccountsFragment;
 import com.bukhmastov.cdoitmo.fragment.presenter.IsuScholarshipAssignedFragmentPresenter;
 import com.bukhmastov.cdoitmo.model.scholarship.assigned.SSAssigned;
@@ -38,19 +37,14 @@ import org.json.JSONObject;
 
 import javax.inject.Inject;
 
-import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
-public class IsuScholarshipAssignedFragmentPresenterImpl implements IsuScholarshipAssignedFragmentPresenter, SwipeRefreshLayout.OnRefreshListener {
+public class IsuScholarshipAssignedFragmentPresenterImpl extends ConnectedFragmentWithDataPresenterImpl<SSAssignedList>
+        implements IsuScholarshipAssignedFragmentPresenter, SwipeRefreshLayout.OnRefreshListener {
 
     private static final String TAG = "IsuScholarshipAssignedFragment";
-    private ConnectedFragment fragment = null;
-    private ConnectedActivity activity = null;
-    private SSAssignedList data = null;
-    private boolean loaded = false;
-    private Client.Request requestHandle = null;
 
     @Inject
     Log log;
@@ -68,31 +62,19 @@ public class IsuScholarshipAssignedFragmentPresenterImpl implements IsuScholarsh
     Time time;
     @Inject
     NotificationMessage notificationMessage;
-    @Inject
-    FirebaseAnalyticsProvider firebaseAnalyticsProvider;
 
     public IsuScholarshipAssignedFragmentPresenterImpl() {
+        super(SSAssignedList.class);
         AppComponentProvider.getComponent().inject(this);
+        eventBus.register(this);
     }
 
-    @Override
-    public void setFragment(ConnectedFragment fragment) {
-        this.fragment = fragment;
-        this.activity = fragment.activity();
-    }
-
-    @Override
-    public void onCreate(@Nullable Bundle savedInstanceState) {
-        thread.run(() -> {
-            log.v(TAG, "Fragment created");
-            firebaseAnalyticsProvider.logCurrentScreen(activity, fragment);
-        });
-    }
-
-    @Override
-    public void onDestroy() {
-        log.v(TAG, "Fragment destroyed");
-        loaded = false;
+    @Event
+    public void onClearCacheEvent(ClearCacheEvent event) {
+        if (event.isNot(ClearCacheEvent.SCHOLARSHIP)) {
+            return;
+        }
+        data = null;
     }
 
     @Override
@@ -120,32 +102,6 @@ public class IsuScholarshipAssignedFragmentPresenterImpl implements IsuScholarsh
     }
 
     @Override
-    public void onResume() {
-        thread.run(() -> {
-            log.v(TAG, "Fragment resumed");
-            firebaseAnalyticsProvider.setCurrentScreen(activity, fragment);
-            if (!loaded) {
-                loaded = true;
-                if (getData() == null) {
-                    load();
-                } else {
-                    display();
-                }
-            }
-        });
-    }
-
-    @Override
-    public void onPause() {
-        thread.run(() -> {
-            log.v(TAG, "Fragment paused");
-            if (requestHandle != null && requestHandle.cancel()) {
-                loaded = false;
-            }
-        });
-    }
-
-    @Override
     public void onRefresh() {
         thread.run(() -> {
             log.v(TAG, "refreshing");
@@ -153,7 +109,7 @@ public class IsuScholarshipAssignedFragmentPresenterImpl implements IsuScholarsh
         });
     }
 
-    private void load() {
+    protected void load() {
         thread.run(() -> load(storagePref.get(activity, "pref_use_cache", true) ? Integer.parseInt(storagePref.get(activity, "pref_dynamic_refresh", "0")) : 0));
     }
 
@@ -230,9 +186,7 @@ public class IsuScholarshipAssignedFragmentPresenterImpl implements IsuScholarsh
                         if (statusCode == 200 && obj != null) {
                             SSAssignedList data = new SSAssignedList().fromJson(obj);
                             data.setTimestamp(time.getTimeInMillis());
-                            if (storagePref.get(activity, "pref_use_cache", true)) {
-                                storage.put(activity, Storage.CACHE, Storage.USER, "scholarship#assigned", data.toJsonString());
-                            }
+                            putToCache(data);
                             setData(data);
                             display();
                             return;
@@ -353,7 +307,7 @@ public class IsuScholarshipAssignedFragmentPresenterImpl implements IsuScholarsh
         }, throwable -> {});
     }
 
-    private void display() {
+    protected void display() {
         thread.run(() -> {
             log.v(TAG, "display");
             SSAssignedList data = getData();
@@ -363,7 +317,7 @@ public class IsuScholarshipAssignedFragmentPresenterImpl implements IsuScholarsh
             }
             ScholarshipAssignedRVA adapter = new ScholarshipAssignedRVA(activity, data);
             thread.runOnUI(() -> {
-                onToolbarSetup(activity.toolbar);
+                onToolbarSetup(fragment.toolbar());
                 fragment.draw(R.layout.layout_rva);
                 // set adapter to recycler view
                 LinearLayoutManager layoutManager = new LinearLayoutManager(activity, RecyclerView.VERTICAL, false);
@@ -438,44 +392,18 @@ public class IsuScholarshipAssignedFragmentPresenterImpl implements IsuScholarsh
         });
     }
 
-    private SSAssignedList getFromCache() {
-        thread.assertNotUI();
-        String cache = storage.get(activity, Storage.CACHE, Storage.USER, "scholarship#assigned").trim();
-        if (StringUtils.isBlank(cache)) {
-            return null;
-        }
-        try {
-            return new SSAssignedList().fromJsonString(cache);
-        } catch (Exception e) {
-            storage.delete(activity, Storage.CACHE, Storage.USER, "scholarship#assigned");
-            return null;
-        }
+    @Override
+    protected String getLogTag() {
+        return TAG;
     }
 
-    private void setData(SSAssignedList data) {
-        thread.assertNotUI();
-        try {
-            this.data = data;
-            fragment.storeData(fragment, data.toJsonString());
-        } catch (Exception e) {
-            log.exception(e);
-        }
+    @Override
+    protected String getCacheType() {
+        return Storage.USER;
     }
 
-    private SSAssignedList getData() {
-        thread.assertNotUI();
-        if (data != null) {
-            return data;
-        }
-        try {
-            String stored = fragment.restoreData(fragment);
-            if (stored != null && !stored.isEmpty()) {
-                data = new SSAssignedList().fromJsonString(stored);
-                return data;
-            }
-        } catch (Exception e) {
-            log.exception(e);
-        }
-        return null;
+    @Override
+    protected String getCachePath() {
+        return "scholarship#assigned";
     }
 }

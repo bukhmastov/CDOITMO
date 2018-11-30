@@ -7,10 +7,7 @@ import android.widget.EditText;
 import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
-import com.bukhmastov.cdoitmo.activity.ConnectedActivity;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
-import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
-import com.bukhmastov.cdoitmo.fragment.ConnectedFragment;
 import com.bukhmastov.cdoitmo.fragment.presenter.LinkAccountFragmentPresenter;
 import com.bukhmastov.cdoitmo.network.IsuPrivateRestClient;
 import com.bukhmastov.cdoitmo.network.handlers.ResponseHandler;
@@ -24,15 +21,11 @@ import com.bukhmastov.cdoitmo.util.singleton.StringUtils;
 
 import javax.inject.Inject;
 
-import androidx.annotation.Nullable;
-
-public class LinkAccountFragmentPresenterImpl implements LinkAccountFragmentPresenter {
+public class LinkAccountFragmentPresenterImpl extends ConnectedFragmentPresenterImpl
+        implements LinkAccountFragmentPresenter {
 
     private static final String TAG = "LinkAccountFragment";
-    private ConnectedFragment fragment = null;
-    private ConnectedActivity activity = null;
     private @Type String type = null;
-    private Client.Request requestHandle = null;
     private View linkAccountForm = null;
     private View linkAccountProgress = null;
 
@@ -46,39 +39,10 @@ public class LinkAccountFragmentPresenterImpl implements LinkAccountFragmentPres
     IsuPrivateRestClient isuPrivateRestClient;
     @Inject
     NotificationMessage notificationMessage;
-    @Inject
-    FirebaseAnalyticsProvider firebaseAnalyticsProvider;
 
     public LinkAccountFragmentPresenterImpl() {
+        super();
         AppComponentProvider.getComponent().inject(this);
-    }
-
-    @Override
-    public void setFragment(ConnectedFragment fragment) {
-        this.fragment = fragment;
-        this.activity = fragment.activity();
-    }
-
-    @Override
-    public void onCreate(@Nullable Bundle savedInstanceState) {
-        log.v(TAG, "Fragment created");
-        firebaseAnalyticsProvider.logCurrentScreen(activity, fragment);
-    }
-
-    @Override
-    public void onDestroy() {
-        log.v(TAG, "Fragment destroyed");
-    }
-
-    @Override
-    public void onResume() {
-        log.v(TAG, "Fragment resumed");
-        firebaseAnalyticsProvider.setCurrentScreen(activity, fragment);
-    }
-
-    @Override
-    public void onPause() {
-        log.v(TAG, "Fragment paused");
     }
 
     @Override
@@ -231,5 +195,10 @@ public class LinkAccountFragmentPresenterImpl implements LinkAccountFragmentPres
                 }
             });
         });
+    }
+
+    @Override
+    protected String getLogTag() {
+        return TAG;
     }
 }

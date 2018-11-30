@@ -43,7 +43,7 @@ public class ClearCacheEvent {
             ALL, NOT_VALUABLE,
             EREGISTER, PROTOCOL, RATING, ROOM101,
             SCHEDULE_LESSONS, SCHEDULE_EXAMS, SCHEDULE_ATTESTATIONS,
-            UNIVERSITY
+            UNIVERSITY, GROUPS, SCHOLARSHIP
     })
     public @interface Identity {}
     public static final String ALL = "_all_";
@@ -56,6 +56,8 @@ public class ClearCacheEvent {
     public static final String SCHEDULE_EXAMS = "schedule_exams";
     public static final String SCHEDULE_ATTESTATIONS = "schedule_attestations";
     public static final String UNIVERSITY = "university";
+    public static final String GROUPS = "groups";
+    public static final String SCHOLARSHIP = "scholarship";
 
     private static final Collection<String> VALUABLE_IDENTITIES = Arrays.asList(EREGISTER, SCHEDULE_LESSONS, SCHEDULE_EXAMS);
 }

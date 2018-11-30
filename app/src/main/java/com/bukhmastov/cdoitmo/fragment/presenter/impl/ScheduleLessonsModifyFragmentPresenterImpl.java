@@ -1,9 +1,6 @@
 package com.bukhmastov.cdoitmo.fragment.presenter.impl;
 
 import android.os.Bundle;
-import androidx.annotation.IdRes;
-import androidx.annotation.Nullable;
-import com.google.android.material.textfield.TextInputEditText;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.View;
@@ -16,11 +13,8 @@ import android.widget.Spinner;
 import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
-import com.bukhmastov.cdoitmo.activity.ConnectedActivity;
 import com.bukhmastov.cdoitmo.adapter.TeacherPickerAdapter;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
-import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
-import com.bukhmastov.cdoitmo.fragment.ConnectedFragment;
 import com.bukhmastov.cdoitmo.fragment.presenter.ScheduleLessonsModifyFragmentPresenter;
 import com.bukhmastov.cdoitmo.fragment.presenter.ScheduleLessonsTabHostFragmentPresenter;
 import com.bukhmastov.cdoitmo.function.Consumer;
@@ -33,11 +27,11 @@ import com.bukhmastov.cdoitmo.object.schedule.ScheduleLessons;
 import com.bukhmastov.cdoitmo.object.schedule.ScheduleLessonsHelper;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.NotificationMessage;
-import com.bukhmastov.cdoitmo.util.Storage;
 import com.bukhmastov.cdoitmo.util.TextUtils;
 import com.bukhmastov.cdoitmo.util.Thread;
 import com.bukhmastov.cdoitmo.util.Time;
 import com.bukhmastov.cdoitmo.util.singleton.StringUtils;
+import com.google.android.material.textfield.TextInputEditText;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -48,11 +42,12 @@ import java.util.regex.Pattern;
 
 import javax.inject.Inject;
 
-public class ScheduleLessonsModifyFragmentPresenterImpl implements ScheduleLessonsModifyFragmentPresenter {
+import androidx.annotation.IdRes;
+
+public class ScheduleLessonsModifyFragmentPresenterImpl extends ConnectedFragmentPresenterImpl
+        implements ScheduleLessonsModifyFragmentPresenter {
 
     private static final String TAG = "SLModifyFragment";
-    private ConnectedFragment fragment = null;
-    private ConnectedActivity activity = null;
     private @TYPE String type;
     private Integer weekday;
     private boolean blockTimeStart = false;
@@ -72,46 +67,15 @@ public class ScheduleLessonsModifyFragmentPresenterImpl implements ScheduleLesso
     @Inject
     ScheduleLessonsTabHostFragmentPresenter tabHostPresenter;
     @Inject
-    Storage storage;
-    @Inject
     NotificationMessage notificationMessage;
     @Inject
     Time time;
     @Inject
     TextUtils textUtils;
-    @Inject
-    FirebaseAnalyticsProvider firebaseAnalyticsProvider;
 
     public ScheduleLessonsModifyFragmentPresenterImpl() {
+        super();
         AppComponentProvider.getComponent().inject(this);
-    }
-
-    @Override
-    public void setFragment(ConnectedFragment fragment) {
-        this.fragment = fragment;
-        this.activity = fragment.activity();
-    }
-
-    @Override
-    public void onCreate(@Nullable Bundle savedInstanceState) {
-        log.v(TAG, "Fragment created");
-        firebaseAnalyticsProvider.logCurrentScreen(activity, fragment);
-    }
-
-    @Override
-    public void onDestroy() {
-        log.v(TAG, "Fragment destroyed");
-    }
-
-    @Override
-    public void onResume() {
-        log.v(TAG, "Fragment resumed");
-        firebaseAnalyticsProvider.setCurrentScreen(activity, fragment);
-    }
-
-    @Override
-    public void onPause() {
-        log.v(TAG, "Fragment paused");
     }
 
     @Override
@@ -581,5 +545,10 @@ public class ScheduleLessonsModifyFragmentPresenterImpl implements ScheduleLesso
                 return 0;
             }
         }
+    }
+
+    @Override
+    protected String getLogTag() {
+        return TAG;
     }
 }

@@ -20,7 +20,7 @@ public class UniversityPersonCardActivity extends ConnectedActivity {
     protected void onCreate(Bundle savedInstanceState) {
         AppComponentProvider.getComponent().inject(this);
         presenter.setActivity(this);
-        switch (theme.getAppTheme(activity)) {
+        switch (theme.getAppTheme(this)) {
             case "light":
             default: setTheme(R.style.AppTheme_TransparentStatusBar); break;
             case "dark": setTheme(R.style.AppTheme_Dark_TransparentStatusBar); break;

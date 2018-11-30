@@ -1,5 +1,6 @@
 package com.bukhmastov.cdoitmo.fragment;
 
+import android.content.Context;
 import android.os.Bundle;
 import androidx.annotation.Nullable;
 
@@ -9,40 +10,26 @@ import com.bukhmastov.cdoitmo.fragment.presenter.UniversityFragmentPresenter;
 
 import javax.inject.Inject;
 
-public class UniversityFragment extends ConnectedFragment {
+public class UniversityFragment extends ConnectedFragment<UniversityFragmentPresenter> {
 
     @Inject
     UniversityFragmentPresenter presenter;
 
     @Override
-    public void onCreate(@Nullable Bundle savedInstanceState) {
+    public void onAttach(Context context) {
         AppComponentProvider.getComponent().inject(this);
-        presenter.setFragment(this);
-        super.onCreate(savedInstanceState);
-        presenter.onCreate(savedInstanceState);
+        super.onAttach(context);
     }
 
     @Override
-    public void onDestroy() {
-        super.onDestroy();
-        presenter.onDestroy();
+    public void onDetach() {
+        presenter = null;
+        super.onDetach();
     }
 
     @Override
-    public void onViewCreated() {
-        presenter.onViewCreated();
-    }
-
-    @Override
-    public void onResume() {
-        super.onResume();
-        presenter.onResume();
-    }
-
-    @Override
-    public void onPause() {
-        super.onPause();
-        presenter.onPause();
+    protected UniversityFragmentPresenter getPresenter() {
+        return presenter;
     }
 
     @Override

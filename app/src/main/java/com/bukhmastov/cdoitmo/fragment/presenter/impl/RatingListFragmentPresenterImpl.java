@@ -1,11 +1,6 @@
 package com.bukhmastov.cdoitmo.fragment.presenter.impl;
 
 import android.os.Bundle;
-import androidx.annotation.Nullable;
-import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
-
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -13,7 +8,6 @@ import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.App;
 import com.bukhmastov.cdoitmo.R;
-import com.bukhmastov.cdoitmo.activity.ConnectedActivity;
 import com.bukhmastov.cdoitmo.adapter.rva.RatingListRVA;
 import com.bukhmastov.cdoitmo.event.bus.EventBus;
 import com.bukhmastov.cdoitmo.event.bus.annotation.Event;
@@ -46,16 +40,18 @@ import java.util.regex.Pattern;
 
 import javax.inject.Inject;
 
-public class RatingListFragmentPresenterImpl implements RatingListFragmentPresenter, SwipeRefreshLayout.OnRefreshListener {
+import androidx.annotation.Nullable;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
+
+public class RatingListFragmentPresenterImpl extends ConnectedFragmentWithDataPresenterImpl<RatingTopList>
+        implements RatingListFragmentPresenter, SwipeRefreshLayout.OnRefreshListener {
 
     private static final String TAG = "RatingListFragment";
-    private ConnectedFragment fragment = null;
-    private ConnectedActivity activity = null;
     private String faculty = null;
     private String course = null;
     private String years = null;
-    private boolean loaded = false;
-    private Client.Request requestHandle = null;
     private int minePosition = -1;
     private String mineFaculty = "";
 
@@ -81,6 +77,7 @@ public class RatingListFragmentPresenterImpl implements RatingListFragmentPresen
     FirebaseAnalyticsProvider firebaseAnalyticsProvider;
 
     public RatingListFragmentPresenterImpl() {
+        super(RatingTopList.class);
         AppComponentProvider.getComponent().inject(this);
         eventBus.register(this);
     }
@@ -90,7 +87,7 @@ public class RatingListFragmentPresenterImpl implements RatingListFragmentPresen
         if (event.isNot(ClearCacheEvent.RATING)) {
             return;
         }
-        fragment.clearData(fragment);
+        fragment.clearData();
     }
 
     @Override
@@ -113,7 +110,7 @@ public class RatingListFragmentPresenterImpl implements RatingListFragmentPresen
         thread.run(() -> {
             log.v(TAG, "Fragment destroyed");
             loaded = false;
-            fragment.clearData(fragment);
+            fragment.clearData();
         });
     }
 
@@ -160,7 +157,7 @@ public class RatingListFragmentPresenterImpl implements RatingListFragmentPresen
                 return;
             }
             loaded = true;
-            String stored = fragment.restoreData(fragment);
+            String stored = fragment.restoreData();
             if (StringUtils.isNotBlank(stored)) {
                 display(new RatingTopList().fromJsonString(stored));
             } else {
@@ -214,13 +211,13 @@ public class RatingListFragmentPresenterImpl implements RatingListFragmentPresen
         load();
     }
 
-    private void load() {
+    protected void load() {
         thread.run(() -> {
             log.v(TAG, "load");
             activity.updateToolbar(activity, activity.getString(R.string.top_rating), R.drawable.ic_rating);
             minePosition = -1;
             mineFaculty = "";
-            thread.runOnUI(() -> hideShareButton(activity.toolbar));
+            thread.runOnUI(() -> hideShareButton(fragment.toolbar()));
             if (App.OFFLINE_MODE) {
                 thread.runOnUI(() -> {
                     notificationMessage.snackBar(activity, activity.getString(R.string.offline_mode_on));
@@ -246,9 +243,7 @@ public class RatingListFragmentPresenterImpl implements RatingListFragmentPresen
                         log.v(TAG, "load | success | statusCode=", statusCode);
                         if (statusCode == 200) {
                             RatingTopList ratingTopList = new RatingTopListParser(response, storage.get(activity, Storage.PERMANENT, Storage.USER, "user#name")).parse();
-                            if (ratingTopList != null) {
-                                fragment.storeData(fragment, ratingTopList.toJsonString());
-                            }
+                            setData(ratingTopList);
                             display(ratingTopList);
                             return;
                         }
@@ -318,7 +313,7 @@ public class RatingListFragmentPresenterImpl implements RatingListFragmentPresen
             loadFailed();
         });
     }
-    
+
     private void loadFailed() {
         thread.runOnUI(() -> {
             log.v(TAG, "loadFailed");
@@ -331,7 +326,12 @@ public class RatingListFragmentPresenterImpl implements RatingListFragmentPresen
             log.exception(throwable);
         });
     }
-    
+
+    @Override
+    protected void display() {
+        display(getData());
+    }
+
     private void display(RatingTopList data) {
         thread.run(() -> {
             log.v(TAG, "display");
@@ -343,7 +343,7 @@ public class RatingListFragmentPresenterImpl implements RatingListFragmentPresen
             activity.updateToolbar(activity, title, R.drawable.ic_rating);
             minePosition = -1;
             mineFaculty = "";
-            thread.runOnUI(() -> hideShareButton(activity.toolbar));
+            thread.runOnUI(() -> hideShareButton(fragment.toolbar()));
             // получаем список для отображения рейтинга
             if (CollectionUtils.isNotEmpty(data.getStudents())) {
                 for (RStudent student : data.getStudents()) {
@@ -363,7 +363,7 @@ public class RatingListFragmentPresenterImpl implements RatingListFragmentPresen
                 }
             }
             if (minePosition != -1) {
-                thread.runOnUI(() -> showShareButton(activity.toolbar));
+                thread.runOnUI(() -> showShareButton(fragment.toolbar()));
             }
             RatingListRVA adapter = new RatingListRVA(activity, data, "beer".equals(storagePref.get(activity, "pref_rating_list_icon", "crown")));
             thread.runOnUI(() -> {
@@ -428,5 +428,20 @@ public class RatingListFragmentPresenterImpl implements RatingListFragmentPresen
         if (share != null) {
             share.setVisible(false);
         }
+    }
+
+    @Override
+    protected String getLogTag() {
+        return TAG;
+    }
+
+    @Override
+    protected String getCacheType() {
+        return null;
+    }
+
+    @Override
+    protected String getCachePath() {
+        return null;
     }
 }

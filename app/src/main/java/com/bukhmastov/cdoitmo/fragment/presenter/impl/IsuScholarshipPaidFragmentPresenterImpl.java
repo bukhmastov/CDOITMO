@@ -11,10 +11,10 @@ import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activity.ConnectedActivity;
 import com.bukhmastov.cdoitmo.adapter.rva.ScholarshipPaidRVA;
 import com.bukhmastov.cdoitmo.event.bus.EventBus;
+import com.bukhmastov.cdoitmo.event.bus.annotation.Event;
+import com.bukhmastov.cdoitmo.event.events.ClearCacheEvent;
 import com.bukhmastov.cdoitmo.event.events.ShareTextEvent;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
-import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
-import com.bukhmastov.cdoitmo.fragment.ConnectedFragment;
 import com.bukhmastov.cdoitmo.fragment.IsuScholarshipAssignedFragment;
 import com.bukhmastov.cdoitmo.fragment.IsuScholarshipPaidDetailsFragment;
 import com.bukhmastov.cdoitmo.fragment.LinkedAccountsFragment;
@@ -45,20 +45,15 @@ import java.util.Locale;
 
 import javax.inject.Inject;
 
-import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
-public class IsuScholarshipPaidFragmentPresenterImpl implements IsuScholarshipPaidFragmentPresenter, SwipeRefreshLayout.OnRefreshListener {
+public class IsuScholarshipPaidFragmentPresenterImpl extends ConnectedFragmentWithDataPresenterImpl<SSPaidList>
+        implements IsuScholarshipPaidFragmentPresenter, SwipeRefreshLayout.OnRefreshListener {
 
     private static final String TAG = "IsuScholarshipPaidFragment";
     private static final DateFormat REQUEST_DATE_FORMAT = new SimpleDateFormat("dd.MM.yyyy", Locale.ENGLISH);
-    private ConnectedFragment fragment = null;
-    private ConnectedActivity activity = null;
-    private SSPaidList data = null;
-    private boolean loaded = false;
-    private Client.Request requestHandle = null;
 
     @Inject
     Log log;
@@ -76,31 +71,20 @@ public class IsuScholarshipPaidFragmentPresenterImpl implements IsuScholarshipPa
     Time time;
     @Inject
     NotificationMessage notificationMessage;
-    @Inject
-    FirebaseAnalyticsProvider firebaseAnalyticsProvider;
 
     public IsuScholarshipPaidFragmentPresenterImpl() {
+        super(SSPaidList.class);
         AppComponentProvider.getComponent().inject(this);
+        eventBus.register(this);
     }
 
-    @Override
-    public void setFragment(ConnectedFragment fragment) {
-        this.fragment = fragment;
-        this.activity = fragment.activity();
-    }
-
-    @Override
-    public void onCreate(@Nullable Bundle savedInstanceState) {
-        thread.run(() -> {
-            log.v(TAG, "Fragment created");
-            firebaseAnalyticsProvider.logCurrentScreen(activity, fragment);
-        });
-    }
-
-    @Override
-    public void onDestroy() {
-        log.v(TAG, "Fragment destroyed");
-        loaded = false;
+    @Event
+    public void onClearCacheEvent(ClearCacheEvent event) {
+        if (event.isNot(ClearCacheEvent.SCHOLARSHIP)) {
+            return;
+        }
+        data = null;
+        fragment.clearData();
     }
 
     @Override
@@ -128,32 +112,6 @@ public class IsuScholarshipPaidFragmentPresenterImpl implements IsuScholarshipPa
     }
 
     @Override
-    public void onResume() {
-        thread.run(() -> {
-            log.v(TAG, "Fragment resumed");
-            firebaseAnalyticsProvider.setCurrentScreen(activity, fragment);
-            if (!loaded) {
-                loaded = true;
-                if (getData() == null) {
-                    load();
-                } else {
-                    display();
-                }
-            }
-        });
-    }
-
-    @Override
-    public void onPause() {
-        thread.run(() -> {
-            log.v(TAG, "Fragment paused");
-            if (requestHandle != null && requestHandle.cancel()) {
-                loaded = false;
-            }
-        });
-    }
-
-    @Override
     public void onRefresh() {
         thread.run(() -> {
             log.v(TAG, "refreshing");
@@ -161,7 +119,7 @@ public class IsuScholarshipPaidFragmentPresenterImpl implements IsuScholarshipPa
         });
     }
 
-    private void load() {
+    protected void load() {
         thread.run(() -> load(storagePref.get(activity, "pref_use_cache", true) ? Integer.parseInt(storagePref.get(activity, "pref_dynamic_refresh", "0")) : 0));
     }
 
@@ -242,9 +200,7 @@ public class IsuScholarshipPaidFragmentPresenterImpl implements IsuScholarshipPa
                         if (statusCode == 200 && obj != null) {
                             SSPaidList data = new SSPaidList().fromJson(obj);
                             data.setTimestamp(time.getTimeInMillis());
-                            if (storagePref.get(activity, "pref_use_cache", true)) {
-                                storage.put(activity, Storage.CACHE, Storage.USER, "scholarship#paid", data.toJsonString());
-                            }
+                            putToCache(data);
                             setData(data);
                             display();
                             return;
@@ -365,7 +321,7 @@ public class IsuScholarshipPaidFragmentPresenterImpl implements IsuScholarshipPa
         }, throwable -> {});
     }
 
-    private void display() {
+    protected void display() {
         thread.run(() -> {
             log.v(TAG, "display");
             SSPaidList data = getData();
@@ -395,7 +351,7 @@ public class IsuScholarshipPaidFragmentPresenterImpl implements IsuScholarshipPa
                 });
             });
             thread.runOnUI(() -> {
-                onToolbarSetup(activity.toolbar);
+                onToolbarSetup(fragment.toolbar());
                 fragment.draw(R.layout.layout_rva);
                 // set adapter to recycler view
                 LinearLayoutManager layoutManager = new LinearLayoutManager(activity, RecyclerView.VERTICAL, false);
@@ -453,44 +409,18 @@ public class IsuScholarshipPaidFragmentPresenterImpl implements IsuScholarshipPa
         });
     }
 
-    private SSPaidList getFromCache() {
-        thread.assertNotUI();
-        String cache = storage.get(activity, Storage.CACHE, Storage.USER, "scholarship#paid").trim();
-        if (StringUtils.isBlank(cache)) {
-            return null;
-        }
-        try {
-            return new SSPaidList().fromJsonString(cache);
-        } catch (Exception e) {
-            storage.delete(activity, Storage.CACHE, Storage.USER, "scholarship#paid");
-            return null;
-        }
+    @Override
+    protected String getLogTag() {
+        return TAG;
     }
 
-    private void setData(SSPaidList data) {
-        thread.assertNotUI();
-        try {
-            this.data = data;
-            fragment.storeData(fragment, data.toJsonString());
-        } catch (Exception e) {
-            log.exception(e);
-        }
+    @Override
+    protected String getCacheType() {
+        return Storage.USER;
     }
 
-    private SSPaidList getData() {
-        thread.assertNotUI();
-        if (data != null) {
-            return data;
-        }
-        try {
-            String stored = fragment.restoreData(fragment);
-            if (stored != null && !stored.isEmpty()) {
-                data = new SSPaidList().fromJsonString(stored);
-                return data;
-            }
-        } catch (Exception e) {
-            log.exception(e);
-        }
-        return null;
+    @Override
+    protected String getCachePath() {
+        return "scholarship#paid";
     }
 }

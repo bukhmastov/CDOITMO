@@ -2,8 +2,6 @@ package com.bukhmastov.cdoitmo.fragment.presenter.impl;
 
 import android.content.Intent;
 import android.net.Uri;
-import android.os.Bundle;
-import androidx.annotation.Nullable;
 import android.text.method.LinkMovementMethod;
 import android.view.View;
 import android.widget.TextView;
@@ -18,23 +16,20 @@ import com.bukhmastov.cdoitmo.event.events.OpenActivityEvent;
 import com.bukhmastov.cdoitmo.event.events.OpenIntentEvent;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
-import com.bukhmastov.cdoitmo.fragment.ConnectedFragment;
 import com.bukhmastov.cdoitmo.fragment.LogFragment;
 import com.bukhmastov.cdoitmo.fragment.presenter.AboutFragmentPresenter;
 import com.bukhmastov.cdoitmo.util.Log;
-import com.bukhmastov.cdoitmo.util.NotificationMessage;
 import com.bukhmastov.cdoitmo.util.Thread;
 
 import java.util.Random;
 
 import javax.inject.Inject;
 
-public class AboutFragmentPresenterImpl implements AboutFragmentPresenter {
+public class AboutFragmentPresenterImpl extends ConnectedFragmentPresenterImpl
+        implements AboutFragmentPresenter {
 
     private static final String TAG = "AboutFragment";
     private static final String MARKET_IDENTITY = "cdoitmo-market-identity";
-    private ConnectedFragment fragment = null;
-    private ConnectedActivity activity = null;
     private final Random random = new Random();
     private int counterToPika = 0;
     private final int tapsToPika = 5;
@@ -46,11 +41,10 @@ public class AboutFragmentPresenterImpl implements AboutFragmentPresenter {
     @Inject
     EventBus eventBus;
     @Inject
-    NotificationMessage notificationMessage;
-    @Inject
     FirebaseAnalyticsProvider firebaseAnalyticsProvider;
 
     public AboutFragmentPresenterImpl() {
+        super();
         AppComponentProvider.getComponent().inject(this);
         eventBus.register(this);
     }
@@ -61,34 +55,6 @@ public class AboutFragmentPresenterImpl implements AboutFragmentPresenter {
             return;
         }
         eventBus.fire(new OpenIntentEvent(new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=com.bukhmastov.cdoitmo"))));
-    }
-
-    @Override
-    public void setFragment(ConnectedFragment fragment) {
-        this.fragment = fragment;
-        this.activity = fragment.activity();
-    }
-
-    @Override
-    public void onCreate(@Nullable Bundle savedInstanceState) {
-        log.v(TAG, "Fragment created");
-        firebaseAnalyticsProvider.logCurrentScreen(fragment.activity(), fragment);
-    }
-
-    @Override
-    public void onDestroy() {
-        log.v(TAG, "Fragment destroyed");
-    }
-
-    @Override
-    public void onResume() {
-        log.v(TAG, "Fragment resumed");
-        firebaseAnalyticsProvider.setCurrentScreen(fragment.activity(), fragment);
-    }
-
-    @Override
-    public void onPause() {
-        log.v(TAG, "Fragment paused");
     }
 
     @Override
@@ -173,5 +139,10 @@ public class AboutFragmentPresenterImpl implements AboutFragmentPresenter {
                 text_disclaimer.setMovementMethod(LinkMovementMethod.getInstance());
             }
         });
+    }
+
+    @Override
+    protected String getLogTag() {
+        return TAG;
     }
 }

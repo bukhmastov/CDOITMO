@@ -21,7 +21,6 @@ import com.bukhmastov.cdoitmo.event.events.OpenActivityEvent;
 import com.bukhmastov.cdoitmo.event.events.ShareTextEvent;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
-import com.bukhmastov.cdoitmo.fragment.ConnectedFragment;
 import com.bukhmastov.cdoitmo.fragment.LinkedAccountsFragment;
 import com.bukhmastov.cdoitmo.fragment.presenter.ScheduleAttestationsFragmentPresenter;
 import com.bukhmastov.cdoitmo.fragment.settings.SettingsScheduleAttestationsFragment;
@@ -50,7 +49,8 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
-public class ScheduleAttestationsFragmentPresenterImpl implements ScheduleAttestationsFragmentPresenter {
+public class ScheduleAttestationsFragmentPresenterImpl extends ConnectedFragmentPresenterImpl
+        implements ScheduleAttestationsFragmentPresenter {
 
     private static final String TAG = "SAFragment";
 
@@ -63,11 +63,7 @@ public class ScheduleAttestationsFragmentPresenterImpl implements ScheduleAttest
     }
 
     private final Schedule.Handler<SAttestations> scheduleHandler;
-    private ConnectedFragment fragment = null;
-    private ConnectedActivity activity = null;
     private SAttestations schedule = null;
-    private boolean loaded = false;
-    private Client.Request requestHandle = null;
     private String lastQuery = null;
     private String query = null;
     private Scroll scroll = null;
@@ -93,6 +89,7 @@ public class ScheduleAttestationsFragmentPresenterImpl implements ScheduleAttest
     FirebaseAnalyticsProvider firebaseAnalyticsProvider;
 
     public ScheduleAttestationsFragmentPresenterImpl() {
+        super();
         AppComponentProvider.getComponent().inject(this);
         scheduleHandler = new Schedule.Handler<SAttestations>() {
             @Override
@@ -230,18 +227,12 @@ public class ScheduleAttestationsFragmentPresenterImpl implements ScheduleAttest
     }
 
     @Override
-    public void setFragment(ConnectedFragment fragment) {
-        this.fragment = fragment;
-        this.activity = fragment.activity();
-    }
-
-    @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         thread.run(() -> {
             log.v(TAG, "Fragment created");
             firebaseAnalyticsProvider.logCurrentScreen(activity, fragment);
             // define query
-            String scope = fragment.restoreData(fragment);
+            String scope = fragment.restoreData();
             if (scope == null) {
                 scope = scheduleAttestations.getDefaultScope();
             }
@@ -254,7 +245,7 @@ public class ScheduleAttestationsFragmentPresenterImpl implements ScheduleAttest
                 }
             }
             setQuery(scope);
-            fragment.storeData(fragment, scope);
+            fragment.storeData(scope);
         });
     }
 
@@ -265,8 +256,8 @@ public class ScheduleAttestationsFragmentPresenterImpl implements ScheduleAttest
             loaded = false;
             tab = null;
             scroll = null;
-            if (activity != null && activity.toolbar != null) {
-                MenuItem action_search = activity.toolbar.findItem(R.id.action_search);
+            if (fragment != null && fragment.toolbar() != null) {
+                MenuItem action_search = fragment.toolbar().findItem(R.id.action_search);
                 if (action_search != null && action_search.isVisible()) {
                     log.v(TAG, "Hiding action_search");
                     action_search.setVisible(false);
@@ -282,8 +273,8 @@ public class ScheduleAttestationsFragmentPresenterImpl implements ScheduleAttest
             log.v(TAG, "resumed");
             firebaseAnalyticsProvider.setCurrentScreen(activity, fragment);
             thread.runOnUI(() -> {
-                if (activity != null && activity.toolbar != null) {
-                    MenuItem action_search = activity.toolbar.findItem(R.id.action_search);
+                if (fragment != null && fragment.toolbar() != null) {
+                    MenuItem action_search = fragment.toolbar().findItem(R.id.action_search);
                     if (action_search != null && !action_search.isVisible()) {
                         log.v(TAG, "Revealing action_search");
                         action_search.setVisible(true);
@@ -300,7 +291,7 @@ public class ScheduleAttestationsFragmentPresenterImpl implements ScheduleAttest
             if (tab == null) {
                 tab = refresh -> thread.run(() -> {
                     log.v(TAG, "onInvalidate | refresh=", refresh);
-                    fragment.storeData(fragment, getQuery());
+                    fragment.storeData(getQuery());
                     if (fragment.isResumed()) {
                         invalidate = false;
                         invalidate_refresh = false;
@@ -319,16 +310,6 @@ public class ScheduleAttestationsFragmentPresenterImpl implements ScheduleAttest
             } else if (!loaded) {
                 loaded = true;
                 load(false);
-            }
-        });
-    }
-
-    @Override
-    public void onPause() {
-        thread.run(() -> {
-            log.v(TAG, "paused");
-            if (requestHandle != null && requestHandle.cancel()) {
-                loaded = false;
             }
         });
     }
@@ -579,4 +560,9 @@ public class ScheduleAttestationsFragmentPresenterImpl implements ScheduleAttest
     }
 
     // -<-- Attestations global menu --<-
+
+    @Override
+    protected String getLogTag() {
+        return TAG;
+    }
 }

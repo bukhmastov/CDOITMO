@@ -37,17 +37,17 @@ import javax.inject.Inject;
 public abstract class ConnectedActivity extends androidx.fragment.app.FragmentActivity {
 
     private static final String TAG = "ConnectedActivity";
-    private final ArrayList<StackElement> stack = new ArrayList<>();
     private static final String STATE_STORED_FRAGMENT_NAME = "storedFragmentName";
     private static final String STATE_STORED_FRAGMENT_DATA = "storedFragmentData";
     private static final String STATE_STORED_FRAGMENT_EXTRA = "storedFragmentExtra";
-    public final static String ACTIVITY_WITH_MENU = "connected_activity_with_align";
-    public boolean layoutWithMenu = true;
-    public Menu toolbar = null;
+    public static final String ACTIVITY_WITH_MENU = "connected_activity_with_align";
+
+    private final ArrayList<StackElement> stack = new ArrayList<>();
     public static String storedFragmentName = null;
     public static String storedFragmentData = null;
     public static String storedFragmentExtra = null;
-    protected final ConnectedActivity activity = this;
+    public boolean layoutWithMenu = true;
+    public Menu toolbar = null;
 
     @Inject
     Log log;
@@ -252,11 +252,7 @@ public abstract class ConnectedActivity extends androidx.fragment.app.FragmentAc
     }
 
     public View inflate(@LayoutRes int layout) throws InflateException {
-        if (activity == null) {
-            log.e(TAG, "Failed to inflate layout, activity is null");
-            return null;
-        }
-        LayoutInflater inflater = (LayoutInflater) activity.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        LayoutInflater inflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         if (inflater == null) {
             log.e(TAG, "Failed to inflate layout, inflater is null");
             return null;

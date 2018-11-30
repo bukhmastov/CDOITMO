@@ -2,20 +2,15 @@ package com.bukhmastov.cdoitmo.fragment;
 
 import android.content.Context;
 import android.os.Bundle;
-import androidx.annotation.IdRes;
-import androidx.annotation.LayoutRes;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentManager;
 import android.view.InflateException;
 import android.view.LayoutInflater;
+import android.view.Menu;
 import android.view.View;
 import android.view.ViewGroup;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activity.ConnectedActivity;
-import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
+import com.bukhmastov.cdoitmo.fragment.presenter.ConnectedFragmentPresenter;
 import com.bukhmastov.cdoitmo.fragment.settings.SettingsCacheFragment;
 import com.bukhmastov.cdoitmo.fragment.settings.SettingsERegisterFragment;
 import com.bukhmastov.cdoitmo.fragment.settings.SettingsExtendedFragment;
@@ -27,29 +22,26 @@ import com.bukhmastov.cdoitmo.fragment.settings.SettingsScheduleAttestationsFrag
 import com.bukhmastov.cdoitmo.fragment.settings.SettingsScheduleExamsFragment;
 import com.bukhmastov.cdoitmo.fragment.settings.SettingsScheduleLessonsFragment;
 import com.bukhmastov.cdoitmo.fragment.settings.SettingsSystemsFragment;
-import com.bukhmastov.cdoitmo.util.Log;
-import com.bukhmastov.cdoitmo.util.Thread;
 
-import javax.inject.Inject;
+import androidx.annotation.IdRes;
+import androidx.annotation.LayoutRes;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.FragmentManager;
 
-public abstract class ConnectedFragment extends Fragment {
+public abstract class ConnectedFragment<P extends ConnectedFragmentPresenter> extends ConnectedFragmentBase {
 
     private static final String TAG = "ConnectedFragment";
     protected ConnectedActivity activity = null;
     protected View container = null;
     protected Bundle extras = null;
 
+    protected abstract P getPresenter();
     protected abstract @LayoutRes int getLayoutId();
     protected abstract @IdRes int getRootId();
 
-    @Inject
-    Log log;
-    @Inject
-    Thread thread;
-
     @Override
     public void onAttach(Context context) {
-        AppComponentProvider.getComponent().inject(this);
         super.onAttach(context);
         try {
             activity = (ConnectedActivity) context;
@@ -60,8 +52,14 @@ public abstract class ConnectedFragment extends Fragment {
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
         extras = getArguments();
+        if (getPresenter() != null) {
+            getPresenter().setFragment(this);
+        }
+        super.onCreate(savedInstanceState);
+        if (getPresenter() != null) {
+            getPresenter().onCreate(savedInstanceState);
+        }
     }
 
     @Override
@@ -70,12 +68,70 @@ public abstract class ConnectedFragment extends Fragment {
     }
 
     @Override
+    public void onStart() {
+        super.onStart();
+        if (getPresenter() != null && toolbar() != null) {
+            getPresenter().onToolbarSetup(toolbar());
+        }
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (getPresenter() != null) {
+            getPresenter().onResume();
+        }
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        if (getPresenter() != null) {
+            getPresenter().onPause();
+        }
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        if (getPresenter() != null && toolbar() != null) {
+            getPresenter().onToolbarTeardown(toolbar());
+        }
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        if (getPresenter() != null) {
+            getPresenter().onDestroy();
+        }
+    }
+
+    @Override
+    public void onDetach() {
+        activity = null;
+        super.onDetach();
+    }
+
+    @Override
+    public void onPrepareOptionsMenu(Menu menu) {
+        if (getPresenter() != null) {
+            getPresenter().onToolbarSetup(menu);
+        }
+        super.onPrepareOptionsMenu(menu);
+    }
+
+    @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         container = view;
         onViewCreated();
     }
 
-    public void onViewCreated() {}
+    public void onViewCreated() {
+        if (getPresenter() != null) {
+            getPresenter().onViewCreated();
+        }
+    }
 
     public boolean isNotAddedToActivity() {
         try {
@@ -96,8 +152,15 @@ public abstract class ConnectedFragment extends Fragment {
         }
     }
 
-    public ConnectedActivity activity() {
+    public @Nullable ConnectedActivity activity() {
         return activity;
+    }
+
+    public @Nullable Menu toolbar() {
+        if (activity() == null) {
+            return null;
+        }
+        return activity().toolbar;
     }
 
     public View container() {
@@ -108,43 +171,38 @@ public abstract class ConnectedFragment extends Fragment {
         return extras;
     }
 
-    public void storeData(ConnectedFragment fragment, String data) {
-        storeData(fragment, data, null);
+    public void storeData(String data) {
+        storeData(data, null);
     }
 
-    public void storeData(ConnectedFragment fragment, String data, String extra) {
-        log.v(TAG, "storeData | activity=", activity, " | fragment=", fragment, " | data=", (data == null ? "<null>" : "<notnull>"), " | extra=", (extra == null ? "<null>" : "<notnull>"));
-        if (fragment != null) {
-            ConnectedActivity.storedFragmentName = fragment.getClass().getCanonicalName();
-            ConnectedActivity.storedFragmentData = data;
-            ConnectedActivity.storedFragmentExtra = extra;
-        }
+    public void storeData(String data, String extra) {
+        log.v(TAG, "storeData | activity=", activity(), " | data=", (data == null ? "<null>" : "<notnull>"), " | extra=", (extra == null ? "<null>" : "<notnull>"));
+        ConnectedActivity.storedFragmentName = this.getClass().getCanonicalName();
+        ConnectedActivity.storedFragmentData = data;
+        ConnectedActivity.storedFragmentExtra = extra;
     }
 
-    public String restoreData(ConnectedFragment fragment) {
-        log.v(TAG, "restoreData | activity=", activity, " | fragment=", fragment);
-        if (fragment != null && ConnectedActivity.storedFragmentName != null && fragment.getClass().getCanonicalName().equals(ConnectedActivity.storedFragmentName)) {
+    public String restoreData() {
+        log.v(TAG, "restoreData | activity=", activity());
+        if (ConnectedActivity.storedFragmentName != null && this.getClass().getCanonicalName().equals(ConnectedActivity.storedFragmentName)) {
             return ConnectedActivity.storedFragmentData;
         } else {
             return null;
         }
     }
 
-    public String restoreDataExtra(ConnectedFragment fragment) {
-        log.v(TAG, "restoreDataExtra | activity=", activity, " | fragment=", fragment);
-        if (fragment != null && ConnectedActivity.storedFragmentName != null && fragment.getClass().getCanonicalName().equals(ConnectedActivity.storedFragmentName)) {
+    public String restoreDataExtra() {
+        log.v(TAG, "restoreDataExtra | activity=", activity());
+        if (ConnectedActivity.storedFragmentName != null && this.getClass().getCanonicalName().equals(ConnectedActivity.storedFragmentName)) {
             return ConnectedActivity.storedFragmentExtra;
         } else {
             return null;
         }
     }
 
-    public boolean clearData(ConnectedFragment fragment) {
-        log.v(TAG, "clearData | activity=", activity, " | fragment=", fragment);
-        if (fragment == null) {
-            return false;
-        }
-        if (fragment.getClass().getCanonicalName().equals(ConnectedActivity.storedFragmentName)) {
+    public boolean clearData() {
+        log.v(TAG, "clearData | activity=", activity());
+        if (this.getClass().getCanonicalName().equals(ConnectedActivity.storedFragmentName)) {
             ConnectedActivity.storedFragmentName = null;
             ConnectedActivity.storedFragmentData = null;
             ConnectedActivity.storedFragmentExtra = null;
@@ -154,8 +212,8 @@ public abstract class ConnectedFragment extends Fragment {
     }
 
     public void close() {
-        if (activity != null && activity.back()) {
-            activity.finish();
+        if (activity() != null && activity().back()) {
+            activity().finish();
         }
     }
 
@@ -174,11 +232,11 @@ public abstract class ConnectedFragment extends Fragment {
 
     public void draw(View view) {
         try {
-            if (activity == null) {
+            if (activity() == null) {
                 log.e(TAG, "Failed to draw layout, activity is null");
                 return;
             }
-            ViewGroup vg = activity.findViewById(getRootId());
+            ViewGroup vg = activity().findViewById(getRootId());
             if (vg != null) {
                 vg.removeAllViews();
                 vg.addView(view, 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
@@ -189,11 +247,11 @@ public abstract class ConnectedFragment extends Fragment {
     }
 
     public View inflate(@LayoutRes int layout) throws InflateException {
-        if (activity == null) {
+        if (activity() == null) {
             log.e(TAG, "Failed to inflate layout, activity is null");
             return null;
         }
-        LayoutInflater inflater = (LayoutInflater) activity.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        LayoutInflater inflater = (LayoutInflater) activity().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         if (inflater == null) {
             log.e(TAG, "Failed to inflate layout, inflater is null");
             return null;

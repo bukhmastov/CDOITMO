@@ -10,6 +10,7 @@ import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.fragment.ConnectedFragment;
+import com.bukhmastov.cdoitmo.fragment.presenter.ConnectedFragmentPresenter;
 import com.bukhmastov.cdoitmo.object.preference.PreferenceHeader;
 import com.bukhmastov.cdoitmo.util.Log;
 
@@ -27,11 +28,16 @@ public abstract class SettingsTemplateHeadersFragment extends ConnectedFragment 
     FirebaseAnalyticsProvider firebaseAnalyticsProvider;
 
     @Override
+    protected ConnectedFragmentPresenter getPresenter() {
+        return null;
+    }
+
+    @Override
     public void onCreate(Bundle savedInstanceState) {
         AppComponentProvider.getComponent().inject(this);
         super.onCreate(savedInstanceState);
         log.v(getTAG(), "Fragment created");
-        firebaseAnalyticsProvider.logCurrentScreen(activity, getSelf());
+        firebaseAnalyticsProvider.logCurrentScreen(activity(), getSelf());
     }
 
     @Override
@@ -45,7 +51,7 @@ public abstract class SettingsTemplateHeadersFragment extends ConnectedFragment 
     public void onResume() {
         super.onResume();
         log.v(getTAG(), "resumed");
-        firebaseAnalyticsProvider.setCurrentScreen(activity, getSelf());
+        firebaseAnalyticsProvider.setCurrentScreen(activity(), getSelf());
         if (!loaded) {
             load();
         }
@@ -69,11 +75,14 @@ public abstract class SettingsTemplateHeadersFragment extends ConnectedFragment 
 
     private void load() {
         try {
-            ViewGroup settings_container = activity.findViewById(getRootId());
+            if (activity() == null) {
+                return;
+            }
+            ViewGroup settings_container = activity().findViewById(getRootId());
             if (settings_container != null) {
                 settings_container.removeAllViews();
                 for (PreferenceHeader preferenceHeader : getPreferenceHeaders()) {
-                    settings_container.addView(PreferenceHeader.getView(activity, preferenceHeader));
+                    settings_container.addView(PreferenceHeader.getView(activity(), preferenceHeader));
                 }
                 loaded = true;
             }
@@ -88,7 +97,7 @@ public abstract class SettingsTemplateHeadersFragment extends ConnectedFragment 
             ((TextView) view.findViewById(R.id.try_again_message)).setText(R.string.error_occurred);
             view.findViewById(R.id.try_again_reload).setOnClickListener(v -> {
                 try {
-                    ViewGroup content = activity.findViewById(android.R.id.content);
+                    ViewGroup content = activity().findViewById(android.R.id.content);
                     if (content != null) {
                         content.addView(inflate(getLayoutId()));
                         loaded = false;
