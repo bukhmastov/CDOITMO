@@ -13,6 +13,7 @@ public interface FirebaseAnalyticsProvider {
         public static final String LOGIN_REQUIRED = "cdo_login_required";                       // нужна авторизация
         public static final String LOGIN = "cdo_login";                                         // авторизован
         public static final String LOGOUT = "cdo_logout";                                       // разлогинен
+        public static final String LOGIN_FAILED = "cdo_login_failed";                           // не авторизован
         public static final String APP_VIEW = "cdo_app_view";                                   // переход на новый экран
         public static final String SHORTCUT_INSTALL = "cdo_shortcut_install";                   // установка ярлыка
         public static final String SHORTCUT_USE = "cdo_shortcut_use";                           // использование ярлыка
@@ -25,6 +26,9 @@ public interface FirebaseAnalyticsProvider {
         public static final String SHARE = "cdo_share";                                         // поделился контентом
         public static final String RECEIVE = "cdo_receive";                                     // принял контент
         public static final String EVENT = "cdo_event";                                         // обычное событие, не подходящее под остальные типы событий
+        public static final String LOGIN_ISU = "cdo_isu_login";                                 // авторизован в ису
+        public static final String LOGOUT_ISU = "cdo_isu_logout";                               // разлогинен из ису
+        public static final String LOGIN_ISU_FAILED = "cdo_isu_login_failed";                   // не авторизован в ису
     }
     class Param {
         // 25 unique Params with each Event type | 40 characters long | values 100 characters long

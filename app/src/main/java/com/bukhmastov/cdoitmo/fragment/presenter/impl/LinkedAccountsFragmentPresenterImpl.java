@@ -97,7 +97,7 @@ public class LinkedAccountsFragmentPresenterImpl extends ConnectedFragmentPresen
                     if (!authorized) {
                         Bundle extras = new Bundle();
                         extras.putString("type", LinkAccountFragmentPresenter.ISU);
-                        if (!activity.openActivityOrFragment(ConnectedActivity.TYPE.STACKABLE, LinkAccountFragment.class, extras)) {
+                        if (!activity.openFragment(ConnectedActivity.TYPE.STACKABLE, LinkAccountFragment.class, extras)) {
                             notificationMessage.snackBar(activity, activity.getString(R.string.failed_to_open_fragment));
                         }
                         return;
@@ -177,6 +177,7 @@ public class LinkedAccountsFragmentPresenterImpl extends ConnectedFragmentPresen
             storage.delete(activity, Storage.PERMANENT, Storage.USER, "user#isu#access_token");
             storage.delete(activity, Storage.PERMANENT, Storage.USER, "user#isu#refresh_token");
             storage.delete(activity, Storage.PERMANENT, Storage.USER, "user#isu#expires_at");
+            firebaseAnalyticsProvider.logEvent(activity, FirebaseAnalyticsProvider.Event.LOGOUT_ISU);
             initIsu();
         });
     }

@@ -131,6 +131,13 @@ public class AccountImpl implements Account {
                 @Override
                 public void onFailure(final int statusCode, final Client.Headers headers, final int state) {
                     thread.run(() -> {
+                        if (isNewUser) {
+                            firebaseAnalyticsProvider.logEvent(
+                                    context,
+                                    FirebaseAnalyticsProvider.Event.LOGIN_FAILED,
+                                    firebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.TYPE, "State " + state)
+                            );
+                        }
                         final Consumer<String> callback = (text) -> thread.runOnUI(() -> {
                             if ("offline".equals(text)) {
                                 loginHandler.onOffline();

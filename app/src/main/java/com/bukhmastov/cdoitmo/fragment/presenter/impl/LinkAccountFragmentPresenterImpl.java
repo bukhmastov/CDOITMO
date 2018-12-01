@@ -8,6 +8,7 @@ import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
+import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.fragment.presenter.LinkAccountFragmentPresenter;
 import com.bukhmastov.cdoitmo.network.IsuPrivateRestClient;
 import com.bukhmastov.cdoitmo.network.handlers.ResponseHandler;
@@ -39,6 +40,8 @@ public class LinkAccountFragmentPresenterImpl extends ConnectedFragmentPresenter
     IsuPrivateRestClient isuPrivateRestClient;
     @Inject
     NotificationMessage notificationMessage;
+    @Inject
+    FirebaseAnalyticsProvider firebaseAnalyticsProvider;
 
     public LinkAccountFragmentPresenterImpl() {
         super();
@@ -134,9 +137,15 @@ public class LinkAccountFragmentPresenterImpl extends ConnectedFragmentPresenter
                 public void onSuccess(int statusCode, Client.Headers headers, String response) {
                     thread.runOnUI(() -> {
                         if ("authorized".equals(response)) {
+                            firebaseAnalyticsProvider.logEvent(activity, FirebaseAnalyticsProvider.Event.LOGIN_ISU);
                             notificationMessage.toast(activity, activity.getString(R.string.account_linked));
                             fragment.close();
                         } else {
+                            firebaseAnalyticsProvider.logEvent(
+                                    activity,
+                                    FirebaseAnalyticsProvider.Event.LOGIN_ISU_FAILED,
+                                    firebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.TYPE, "Failed " + response)
+                            );
                             linkAccountForm.setVisibility(View.VISIBLE);
                             linkAccountProgress.setVisibility(View.GONE);
                             notificationMessage.snackBar(activity, activity.getString(R.string.auth_failed));
@@ -147,6 +156,11 @@ public class LinkAccountFragmentPresenterImpl extends ConnectedFragmentPresenter
                 public void onFailure(int statusCode, Client.Headers headers, int state) {
                     thread.runOnUI(() -> {
                         log.v(TAG, "auth | failure | state=", state, " | statusCode=", statusCode);
+                        firebaseAnalyticsProvider.logEvent(
+                                activity,
+                                FirebaseAnalyticsProvider.Event.LOGIN_ISU_FAILED,
+                                firebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.TYPE, "State " + state)
+                        );
                         linkAccountForm.setVisibility(View.VISIBLE);
                         linkAccountProgress.setVisibility(View.GONE);
                         switch (state) {
