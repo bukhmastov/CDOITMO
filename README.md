@@ -1,7 +1,7 @@
 # Android application "ЦДО ИТМО"
 
-Note that "ЦДО ИТМО" is unofficial app.
-You can download application from Google Play:
+Note that "ЦДО ИТМО" is unofficial app.\
+You can download application from Google Play:\
 <a target="_blank" href="https://play.google.com/store/apps/details?id=com.bukhmastov.cdoitmo"><img src="https://play.google.com/intl/en_us/badges/images/generic/en_badge_web_generic.png" height="60"></a>
 
 ## Source link map
