@@ -84,6 +84,9 @@ public class FragmentActivityPresenterImpl implements FragmentActivityPresenter,
                 activity.layoutWithMenu = fragmentExtras.getBoolean(ConnectedActivity.ACTIVITY_WITH_MENU);
                 fragmentExtras.remove(ConnectedActivity.ACTIVITY_WITH_MENU);
             }
+            if (activity.isFinishing() || activity.isDestroyed()) {
+                return;
+            }
             activity.setContentView(activity.layoutWithMenu ? R.layout.activity_fragment : R.layout.activity_fragment_without_menu);
             Toolbar toolbar = activity.findViewById(R.id.toolbar_fragment);
             if (toolbar != null) {

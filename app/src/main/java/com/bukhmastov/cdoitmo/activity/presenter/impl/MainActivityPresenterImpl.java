@@ -14,6 +14,7 @@ import com.bukhmastov.cdoitmo.activity.MainActivity;
 import com.bukhmastov.cdoitmo.activity.presenter.MainActivityPresenter;
 import com.bukhmastov.cdoitmo.event.bus.EventBus;
 import com.bukhmastov.cdoitmo.event.bus.annotation.Event;
+import com.bukhmastov.cdoitmo.event.events.ClearCacheEvent;
 import com.bukhmastov.cdoitmo.event.events.MainActivityEvent;
 import com.bukhmastov.cdoitmo.event.events.OpenActivityEvent;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
@@ -314,6 +315,7 @@ public class MainActivityPresenterImpl implements MainActivityPresenter, Navigat
                         case R.id.nav_change_account:
                         case R.id.nav_logout:
                             ConnectedActivity.clearStore();
+                            eventBus.fire(new ClearCacheEvent(ClearCacheEvent.ALL));
                             break;
                     }
                     switch (section) {

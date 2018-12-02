@@ -159,12 +159,12 @@ public class ERegisterSubjectFragmentPresenterImpl extends ConnectedFragmentWith
     }
 
     protected void display() {
-        ERSubject data = getData();
-        if (data == null) {
-            return;
-        }
         thread.run(() -> {
             log.v(TAG, "display");
+            ERSubject data = getData();
+            if (data == null) {
+                return;
+            }
             ERegisterSubjectViewRVA adapter = new ERegisterSubjectViewRVA(activity, data, "advanced".equals(storagePref.get(activity, "pref_eregister_mode", "advanced")));
             thread.runOnUI(() -> {
                 // отображаем заголовок

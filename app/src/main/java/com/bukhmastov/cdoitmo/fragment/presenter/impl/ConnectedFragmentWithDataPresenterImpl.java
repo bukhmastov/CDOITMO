@@ -81,7 +81,6 @@ public abstract class ConnectedFragmentWithDataPresenterImpl<T extends JsonEntit
 
     protected void setData(@Nullable T data) {
         try {
-            thread.assertNotUI();
             this.data = data;
             if (fragment == null) {
                 return;
