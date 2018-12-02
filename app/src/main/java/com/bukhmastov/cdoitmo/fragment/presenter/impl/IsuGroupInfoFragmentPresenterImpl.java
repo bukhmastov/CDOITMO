@@ -84,8 +84,7 @@ public class IsuGroupInfoFragmentPresenterImpl extends ConnectedFragmentWithData
         if (event.isNot(ClearCacheEvent.GROUPS)) {
             return;
         }
-        data = null;
-        fragment.clearData();
+        clearData();
     }
 
     @Override
@@ -96,12 +95,18 @@ public class IsuGroupInfoFragmentPresenterImpl extends ConnectedFragmentWithData
                 return;
             }
             MenuItem share = menu.findItem(R.id.action_share);
-            if (share != null) {
+            thread.run(() -> {
+                if (share == null) {
+                    return;
+                }
+                GList data = getData();
                 if (data == null || CollectionUtils.isEmpty(data.getList())) {
-                    share.setVisible(false);
-                } else {
+                    thread.runOnUI(() -> share.setVisible(false));
+                    return;
+                }
+                thread.runOnUI(() -> {
                     share.setVisible(true);
-                    share.setOnMenuItemClickListener(item -> {
+                    share.setOnMenuItemClickListener(menuItem -> {
                         View view = activity.findViewById(R.id.action_share);
                         if (view == null) {
                             view = activity.findViewById(android.R.id.content);
@@ -109,10 +114,10 @@ public class IsuGroupInfoFragmentPresenterImpl extends ConnectedFragmentWithData
                         if (view != null) {
                             share(view);
                         }
-                        return false;
+                        return true;
                     });
-                }
-            }
+                });
+            });
         } catch (Throwable throwable) {
             log.exception(throwable);
         }
@@ -377,7 +382,7 @@ public class IsuGroupInfoFragmentPresenterImpl extends ConnectedFragmentWithData
     private void share(View view) {
         thread.run(() -> {
             GList data = getData();
-            if (data == null || data.getList() == null) {
+            if (data == null || CollectionUtils.isEmpty(data.getList())) {
                 return;
             }
             Map<String, List<GGroup>> groups = new HashMap<>();

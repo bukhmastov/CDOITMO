@@ -9,6 +9,8 @@ import android.widget.ArrayAdapter;
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.adapter.rva.ERegisterSubjectViewRVA;
 import com.bukhmastov.cdoitmo.event.bus.EventBus;
+import com.bukhmastov.cdoitmo.event.bus.annotation.Event;
+import com.bukhmastov.cdoitmo.event.events.ClearCacheEvent;
 import com.bukhmastov.cdoitmo.event.events.ShareTextEvent;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
@@ -37,7 +39,6 @@ public class ERegisterSubjectFragmentPresenterImpl extends ConnectedFragmentWith
         implements ERegisterSubjectFragmentPresenter {
 
     private static final String TAG = "ERegisterSubjectFragment";
-    private List<ShareEntity> shareEntities = null;
     private class ShareEntity {
         public String attestation = "";
         public String mark = "";
@@ -61,6 +62,15 @@ public class ERegisterSubjectFragmentPresenterImpl extends ConnectedFragmentWith
     public ERegisterSubjectFragmentPresenterImpl() {
         super(ERSubject.class);
         AppComponentProvider.getComponent().inject(this);
+        eventBus.register(this);
+    }
+
+    @Event
+    public void onClearCacheEvent(ClearCacheEvent event) {
+        if (event.isNot(ClearCacheEvent.EREGISTER)) {
+            return;
+        }
+        clearData();
     }
 
     @Override
@@ -71,16 +81,16 @@ public class ERegisterSubjectFragmentPresenterImpl extends ConnectedFragmentWith
             fragment.setHasOptionsMenu(true);
             Bundle extras = fragment.getArguments();
             if (extras == null) {
-                back();
+                activity.back();
                 return;
             }
-            data = (ERSubject) extras.getSerializable("subject");
-            if (data == null) {
-                back();
+            setData((ERSubject) extras.getSerializable("subject"));
+            if (getData() == null) {
+                activity.back();
             }
         }, throwable -> {
             log.exception(throwable);
-            back();
+            activity.back();
         });
     }
 
@@ -122,47 +132,102 @@ public class ERegisterSubjectFragmentPresenterImpl extends ConnectedFragmentWith
                     return false;
                 });
             }
-            if (share != null) {
-                if (shareEntities == null) {
-                    shareEntities = makeShareEntities();
-                }
-                if (shareEntities.size() == 0) {
-                    share.setVisible(false);
+            thread.run(() -> {
+                if (share == null) {
                     return;
                 }
-                share.setVisible(true);
-                share.setOnMenuItemClickListener(menuItem -> {
-                    thread.runOnUI(() -> {
-                        if (shareEntities.size() == 1) {
-                            eventBus.fire(new ShareTextEvent(shareEntities.get(0).text, "txt_eregister_subject"));
-                            return;
-                        }
-                        if (activity.isFinishing() || activity.isDestroyed()) {
-                            return;
-                        }
-                        ArrayList<String> labels = new ArrayList<>();
-                        for (ShareEntity shareEntity : shareEntities) {
-                            labels.add(StringUtils.isNotBlank(shareEntity.attestation) ? shareEntity.attestation : data.getName());
-                        }
-                        ArrayAdapter<String> arrayAdapter = new ArrayAdapter<>(activity, R.layout.spinner_center);
-                        arrayAdapter.addAll(labels);
-                        new AlertDialog.Builder(activity)
-                                .setAdapter(arrayAdapter, (dialogInterface, position) -> eventBus.fire(new ShareTextEvent(shareEntities.get(position).text, "txt_eregister_subject")))
-                                .setNegativeButton(R.string.do_cancel, null)
-                                .create().show();
-                    }, throwable -> {
-                        log.exception(throwable);
-                        notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                ERSubject data = getData();
+                if (data == null || StringUtils.isBlank(data.getName()) || CollectionUtils.isEmpty(data.getMarks()) || CollectionUtils.isEmpty(data.getPoints())) {
+                    thread.runOnUI(() -> share.setVisible(false));
+                    return;
+                }
+                thread.runOnUI(() -> {
+                    share.setVisible(true);
+                    share.setOnMenuItemClickListener(menuItem -> {
+                        share();
+                        return true;
                     });
-                    return false;
                 });
-            }
+            });
         } catch (Throwable throwable) {
             log.exception(throwable);
         }
     }
 
-    private List<ShareEntity> makeShareEntities() {
+    protected void load() {
+        display();
+    }
+
+    protected void display() {
+        ERSubject data = getData();
+        if (data == null) {
+            return;
+        }
+        thread.run(() -> {
+            log.v(TAG, "display");
+            ERegisterSubjectViewRVA adapter = new ERegisterSubjectViewRVA(activity, data, "advanced".equals(storagePref.get(activity, "pref_eregister_mode", "advanced")));
+            thread.runOnUI(() -> {
+                // отображаем заголовок
+                activity.updateToolbar(activity, data.getName(), R.drawable.ic_e_journal);
+                // отображаем список
+                final LinearLayoutManager layoutManager = new LinearLayoutManager(activity, RecyclerView.VERTICAL, false);
+                final RecyclerView recyclerView = fragment.container().findViewById(R.id.points_list);
+                if (recyclerView == null) {
+                    activity.back();
+                    return;
+                }
+                recyclerView.setLayoutManager(layoutManager);
+                recyclerView.setAdapter(adapter);
+                recyclerView.setHasFixedSize(true);
+            }, throwable -> {
+                log.exception(throwable);
+                activity.back();
+            });
+        }, throwable -> {
+            log.exception(throwable);
+            activity.back();
+        });
+    }
+
+    private void share() {
+        thread.run(() -> {
+            ERSubject data = getData();
+            if (data == null || StringUtils.isBlank(data.getName()) || CollectionUtils.isEmpty(data.getMarks()) || CollectionUtils.isEmpty(data.getPoints())) {
+                return;
+            }
+            List<ShareEntity> shareEntities = makeShareEntities(data);
+            if (CollectionUtils.isEmpty(shareEntities)) {
+                return;
+            }
+            thread.runOnUI(() -> {
+                if (shareEntities.size() == 1) {
+                    eventBus.fire(new ShareTextEvent(shareEntities.get(0).text, "txt_eregister_subject"));
+                    return;
+                }
+                if (activity.isFinishing() || activity.isDestroyed()) {
+                    return;
+                }
+                ArrayList<String> labels = new ArrayList<>();
+                for (ShareEntity shareEntity : shareEntities) {
+                    labels.add(StringUtils.isNotBlank(shareEntity.attestation) ? shareEntity.attestation : data.getName());
+                }
+                ArrayAdapter<String> arrayAdapter = new ArrayAdapter<>(activity, R.layout.spinner_center);
+                arrayAdapter.addAll(labels);
+                new AlertDialog.Builder(activity)
+                        .setAdapter(arrayAdapter, (dialogInterface, position) -> eventBus.fire(new ShareTextEvent(shareEntities.get(position).text, "txt_eregister_subject")))
+                        .setNegativeButton(R.string.do_cancel, null)
+                        .create().show();
+            }, throwable -> {
+                log.exception(throwable);
+                notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
+            });
+        }, throwable -> {
+            log.exception(throwable);
+            notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
+        });
+    }
+
+    private List<ShareEntity> makeShareEntities(ERSubject data) {
         List<ShareEntity> shareEntities = new ArrayList<>();
         if (data == null || StringUtils.isBlank(data.getName()) || CollectionUtils.isEmpty(data.getMarks()) || CollectionUtils.isEmpty(data.getPoints())) {
             return shareEntities;
@@ -218,46 +283,6 @@ public class ERegisterSubjectFragmentPresenterImpl extends ConnectedFragmentWith
         return shareEntities;
     }
 
-    protected void load() {
-        display();
-    }
-
-    protected void display() {
-        if (data == null) {
-            return;
-        }
-        thread.run(() -> {
-            log.v(TAG, "display");
-            shareEntities = makeShareEntities();
-            ERegisterSubjectViewRVA adapter = new ERegisterSubjectViewRVA(activity, data, "advanced".equals(storagePref.get(activity, "pref_eregister_mode", "advanced")));
-            thread.runOnUI(() -> {
-                // отображаем заголовок
-                activity.updateToolbar(activity, data.getName(), R.drawable.ic_e_journal);
-                // отображаем список
-                final LinearLayoutManager layoutManager = new LinearLayoutManager(activity, RecyclerView.VERTICAL, false);
-                final RecyclerView recyclerView = fragment.container().findViewById(R.id.points_list);
-                if (recyclerView == null) {
-                    activity.back();
-                    return;
-                }
-                recyclerView.setLayoutManager(layoutManager);
-                recyclerView.setAdapter(adapter);
-                recyclerView.setHasFixedSize(true);
-            }, throwable -> {
-                log.exception(throwable);
-                activity.back();
-            });
-        }, throwable -> {
-            log.exception(throwable);
-            activity.back();
-        });
-    }
-
-    private void back() {
-        data = null;
-        activity.back();
-    }
-    
     private String getShareText(String subjectName, ShareEntity shareEntity) {
         // prettify points value
         String points = "";

@@ -7,10 +7,12 @@ import com.bukhmastov.cdoitmo.util.singleton.StringUtils;
 
 import org.json.JSONException;
 
+import androidx.annotation.Nullable;
+
 public abstract class ConnectedFragmentWithDataPresenterImpl<T extends JsonEntity>
         extends ConnectedFragmentPresenterImpl implements ConnectedFragmentPresenter {
 
-    protected T data = null;
+    private T data = null;
     private final Class<T> entityClass;
 
     public ConnectedFragmentWithDataPresenterImpl(Class<T> entityClass) {
@@ -40,9 +42,12 @@ public abstract class ConnectedFragmentWithDataPresenterImpl<T extends JsonEntit
         });
     }
 
-    protected void putToCache(T entity) throws JSONException, IllegalAccessException {
+    protected void putToCache(@Nullable T entity) throws JSONException, IllegalAccessException {
         thread.assertNotUI();
         if (getCachePath() == null || getCacheType() == null) {
+            return;
+        }
+        if (entity == null) {
             return;
         }
         if (storagePref.get(activity, "pref_use_cache", true)) {
@@ -50,9 +55,12 @@ public abstract class ConnectedFragmentWithDataPresenterImpl<T extends JsonEntit
         }
     }
 
-    protected T getFromCache() {
+    protected @Nullable T getFromCache() {
         thread.assertNotUI();
         if (getCachePath() == null || getCacheType() == null) {
+            return null;
+        }
+        if (entityClass == null) {
             return null;
         }
         String cache = storage.get(activity, Storage.CACHE, getCacheType(), getCachePath()).trim();
@@ -67,10 +75,17 @@ public abstract class ConnectedFragmentWithDataPresenterImpl<T extends JsonEntit
         }
     }
 
-    protected void setData(T data) {
+    protected void clearData() {
+        setData(null);
+    }
+
+    protected void setData(@Nullable T data) {
         try {
             thread.assertNotUI();
             this.data = data;
+            if (fragment == null) {
+                return;
+            }
             if (data == null) {
                 fragment.clearData();
             } else {
@@ -82,13 +97,21 @@ public abstract class ConnectedFragmentWithDataPresenterImpl<T extends JsonEntit
         }
     }
 
-    protected T getData() {
+    protected @Nullable T getData() {
         try {
             thread.assertNotUI();
-            String stored = fragment.restoreData();
-            if (StringUtils.isNotBlank(stored)) {
-                return entityClass.newInstance().fromJsonString(stored);
+            if (data != null) {
+                return data;
             }
+            if (fragment != null && entityClass != null) {
+                String stored = fragment.restoreData();
+                if (StringUtils.isNotBlank(stored)) {
+                    data = entityClass.newInstance().fromJsonString(stored);
+                    return data;
+                }
+            }
+            data = getFromCache();
+            return data;
         } catch (Exception exception) {
             log.w(getLogTag(), "Failed to get data | exception=", exception);
             log.exception(exception);

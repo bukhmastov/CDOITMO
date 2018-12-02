@@ -87,7 +87,7 @@ public class RatingListFragmentPresenterImpl extends ConnectedFragmentWithDataPr
         if (event.isNot(ClearCacheEvent.RATING)) {
             return;
         }
-        fragment.clearData();
+        clearData();
     }
 
     @Override

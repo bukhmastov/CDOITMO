@@ -74,7 +74,7 @@ public class IsuScholarshipAssignedFragmentPresenterImpl extends ConnectedFragme
         if (event.isNot(ClearCacheEvent.SCHOLARSHIP)) {
             return;
         }
-        data = null;
+        clearData();
     }
 
     @Override
@@ -85,17 +85,23 @@ public class IsuScholarshipAssignedFragmentPresenterImpl extends ConnectedFragme
                 return;
             }
             MenuItem share = menu.findItem(R.id.action_share);
-            if (share != null) {
-                if (data == null || CollectionUtils.isEmpty(data.getList())) {
-                    share.setVisible(false);
-                } else {
-                    share.setVisible(true);
-                    share.setOnMenuItemClickListener(item -> {
-                        share(data);
-                        return false;
-                    });
+            thread.run(() -> {
+                if (share == null) {
+                    return;
                 }
-            }
+                SSAssignedList data = getData();
+                if (data == null || CollectionUtils.isEmpty(data.getList())) {
+                    thread.runOnUI(() -> share.setVisible(false));
+                    return;
+                }
+                thread.runOnUI(() -> {
+                    share.setVisible(true);
+                    share.setOnMenuItemClickListener(menuItem -> {
+                        share();
+                        return true;
+                    });
+                });
+            });
         } catch (Throwable throwable) {
             log.exception(throwable);
         }
@@ -344,8 +350,9 @@ public class IsuScholarshipAssignedFragmentPresenterImpl extends ConnectedFragme
         });
     }
 
-    private void share(SSAssignedList data) {
+    private void share() {
         thread.run(() -> {
+            SSAssignedList data = getData();
             if (data == null || CollectionUtils.isEmpty(data.getList())) {
                 return;
             }

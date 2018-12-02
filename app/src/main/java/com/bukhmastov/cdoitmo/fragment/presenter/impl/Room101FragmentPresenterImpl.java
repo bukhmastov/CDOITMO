@@ -90,8 +90,7 @@ public class Room101FragmentPresenterImpl extends ConnectedFragmentWithDataPrese
         if (event.isNot(ClearCacheEvent.ROOM101)) {
             return;
         }
-        data = null;
-        fragment.clearData();
+        clearData();
     }
 
     @Override

@@ -93,8 +93,7 @@ public class ProtocolFragmentPresenterImpl extends ConnectedFragmentWithDataPres
         if (event.isNot(ClearCacheEvent.PROTOCOL)) {
             return;
         }
-        data = null;
-        fragment.clearData();
+        clearData();
     }
 
     @Override
@@ -146,12 +145,18 @@ public class ProtocolFragmentPresenterImpl extends ConnectedFragmentWithDataPres
                     return false;
                 });
             }
-            if (share != null) {
+            thread.run(() -> {
+                if (share == null) {
+                    return;
+                }
+                Protocol data = getData();
                 if (data == null || CollectionUtils.isEmpty(data.getChanges())) {
-                    share.setVisible(false);
-                } else {
+                    thread.runOnUI(() -> share.setVisible(false));
+                    return;
+                }
+                thread.runOnUI(() -> {
                     share.setVisible(true);
-                    share.setOnMenuItemClickListener(item -> {
+                    share.setOnMenuItemClickListener(menuItem -> {
                         View view = activity.findViewById(R.id.action_share);
                         if (view == null) {
                             view = activity.findViewById(android.R.id.content);
@@ -159,10 +164,10 @@ public class ProtocolFragmentPresenterImpl extends ConnectedFragmentWithDataPres
                         if (view != null) {
                             share(view);
                         }
-                        return false;
+                        return true;
                     });
-                }
-            }
+                });
+            });
         } catch (Throwable throwable) {
             log.exception(throwable);
         }
@@ -195,21 +200,11 @@ public class ProtocolFragmentPresenterImpl extends ConnectedFragmentWithDataPres
         });
     }
 
-    @Override
-    protected String getCacheType() {
-        return null;
-    }
-
-    @Override
-    protected String getCachePath() {
-        return null;
-    }
-
     protected void load() {
         thread.run(() -> load(storagePref.get(activity, "pref_use_cache", true) ? Integer.parseInt(storagePref.get(activity, "pref_dynamic_refresh", "0")) : 0));
     }
 
-    private void load(final int refresh_rate) {
+    private void load(int refresh_rate) {
         thread.run(() -> {
             log.v(TAG, "load | refresh_rate=" + refresh_rate);
             if (!storagePref.get(activity, "pref_use_cache", true)) {
@@ -230,15 +225,15 @@ public class ProtocolFragmentPresenterImpl extends ConnectedFragmentWithDataPres
         });
     }
 
-    private void load(final boolean force) {
+    private void load(boolean force) {
         thread.run(() -> load(force, null, 0));
     }
 
-    private void load(final boolean force, final Protocol cached) {
+    private void load(boolean force, Protocol cached) {
         thread.run(() -> load(force, cached, 0));
     }
 
-    private void load(final boolean force, final Protocol cached, final int attempt) {
+    private void load(boolean force, Protocol cached, int attempt) {
         thread.run(() -> {
             log.v(TAG, "load | force=" + (force ? "true" : "false") + " | attempt=" + attempt);
             if ((!force || !Client.isOnline(activity)) && storagePref.get(activity, "pref_use_cache", true)) {
@@ -570,5 +565,15 @@ public class ProtocolFragmentPresenterImpl extends ConnectedFragmentWithDataPres
     @Override
     protected String getLogTag() {
         return TAG;
+    }
+
+    @Override
+    protected String getCacheType() {
+        return Storage.USER;
+    }
+
+    @Override
+    protected String getCachePath() {
+        return "protocol#core";
     }
 }

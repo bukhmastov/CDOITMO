@@ -64,7 +64,6 @@ public class ERegisterFragmentPresenterImpl extends ConnectedFragmentWithDataPre
 
     private static final String TAG = "ERegisterFragment";
     private static final Pattern PATTERN_ATTESTATION = Pattern.compile("^.*зач[её]т$|^экзамен$|^тестирование$|^общий\\sрейтинг$", Pattern.CASE_INSENSITIVE);
-    private List<String> dataShare = null;
     private String group;
     private int term;
     private boolean spinnerGroupBlocker = true, spinnerPeriodBlocker = true;
@@ -100,9 +99,7 @@ public class ERegisterFragmentPresenterImpl extends ConnectedFragmentWithDataPre
         if (event.isNot(ClearCacheEvent.EREGISTER)) {
             return;
         }
-        data = null;
-        dataShare = null;
-        fragment.clearData();
+        clearData();
     }
 
     @Override
@@ -147,17 +144,23 @@ public class ERegisterFragmentPresenterImpl extends ConnectedFragmentWithDataPre
                     return false;
                 });
             }
-            if (share != null) {
-                if (CollectionUtils.isEmpty(dataShare)) {
-                    share.setVisible(false);
-                } else {
-                    share.setVisible(true);
-                    share.setOnMenuItemClickListener(item -> {
-                        share();
-                        return false;
-                    });
+            thread.run(() -> {
+                if (share == null) {
+                    return;
                 }
-            }
+                TreeSet<ERSubject> subjects = makeSubjectsSet(getData());
+                if (CollectionUtils.isEmpty(subjects)) {
+                    thread.runOnUI(() -> share.setVisible(false));
+                    return;
+                }
+                thread.runOnUI(() -> {
+                    share.setVisible(true);
+                    share.setOnMenuItemClickListener(menuItem -> {
+                        share();
+                        return true;
+                    });
+                });
+            });
         } catch (Throwable throwable) {
             log.exception(throwable);
         }
@@ -371,15 +374,7 @@ public class ERegisterFragmentPresenterImpl extends ConnectedFragmentWithDataPre
                 return;
             }
             applySelectedTermAndGroup(data);
-            TreeSet<ERSubject> subjects = new TreeSet<>(ERSubject::compareTo);
-            for (ERYear erYear : data.getYears()) {
-                if (Objects.equals(group, erYear.getGroup())) {
-                    subjects.addAll(getSubjectsForTerm(erYear, term));
-                    break;
-                }
-            }
-            dataShare = makeShareData(subjects);
-            ERegisterSubjectsRVA adapter = new ERegisterSubjectsRVA(activity, subjects);
+            ERegisterSubjectsRVA adapter = new ERegisterSubjectsRVA(activity, makeSubjectsSet(data));
             adapter.setClickListener(R.id.subject, (v, subject) -> {
                 thread.run(() -> {
                     Bundle extras = new Bundle();
@@ -497,6 +492,28 @@ public class ERegisterFragmentPresenterImpl extends ConnectedFragmentWithDataPre
         });
     }
 
+    private void share() {
+        thread.run(() -> {
+            TreeSet<ERSubject> subjects = makeSubjectsSet(getData());
+            if (CollectionUtils.isEmpty(subjects)) {
+                return;
+            }
+            List<String> dataShare = makeShareData(subjects);
+            if (CollectionUtils.isEmpty(dataShare)) {
+                return;
+            }
+            StringBuilder sb = new StringBuilder();
+            sb.append("Мой электронный журнал:").append("\n");
+            for (String item : dataShare) {
+                sb.append(item).append("\n");
+            }
+            eventBus.fire(new ShareTextEvent(sb.toString().trim(), "txt_eregister"));
+        }, throwable -> {
+            log.exception(throwable);
+            notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
+        });
+    }
+
     private List<String> makeShareData(AbstractSet<ERSubject> subjects) {
         List<String> shareData = new ArrayList<>();
         if (CollectionUtils.isEmpty(subjects)) {
@@ -534,21 +551,18 @@ public class ERegisterFragmentPresenterImpl extends ConnectedFragmentWithDataPre
         return shareData;
     }
 
-    private void share() {
-        thread.run(() -> {
-            if (CollectionUtils.isEmpty(dataShare)) {
-                return;
+    private TreeSet<ERSubject> makeSubjectsSet(ERegister data) {
+        TreeSet<ERSubject> subjects = new TreeSet<>(ERSubject::compareTo);
+        if (data == null) {
+            return subjects;
+        }
+        for (ERYear erYear : data.getYears()) {
+            if (Objects.equals(group, erYear.getGroup())) {
+                subjects.addAll(getSubjectsForTerm(erYear, term));
+                break;
             }
-            StringBuilder sb = new StringBuilder();
-            sb.append("Мой электронный журнал:").append("\n");
-            for (String item : dataShare) {
-                sb.append(item).append("\n");
-            }
-            eventBus.fire(new ShareTextEvent(sb.toString().trim(), "txt_eregister"));
-        }, throwable -> {
-            log.exception(throwable);
-            notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
-        });
+        }
+        return subjects;
     }
 
     private void applySelectedTermAndGroup(ERegister data) {

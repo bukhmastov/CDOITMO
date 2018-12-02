@@ -80,8 +80,7 @@ public class IsuScholarshipPaidDetailsFragmentPresenterImpl extends ConnectedFra
         if (event.isNot(ClearCacheEvent.SCHOLARSHIP)) {
             return;
         }
-        data = null;
-        fragment.clearData();
+        clearData();
     }
 
     @Override
@@ -92,17 +91,23 @@ public class IsuScholarshipPaidDetailsFragmentPresenterImpl extends ConnectedFra
                 return;
             }
             MenuItem share = menu.findItem(R.id.action_share);
-            if (share != null) {
-                if (data == null || CollectionUtils.isEmpty(data.getList())) {
-                    share.setVisible(false);
-                } else {
-                    share.setVisible(true);
-                    share.setOnMenuItemClickListener(item -> {
-                        share(data);
-                        return false;
-                    });
+            thread.run(() -> {
+                if (share == null) {
+                    return;
                 }
-            }
+                SSDetailedList data = getData();
+                if (data == null || CollectionUtils.isEmpty(data.getList())) {
+                    thread.runOnUI(() -> share.setVisible(false));
+                    return;
+                }
+                thread.runOnUI(() -> {
+                    share.setVisible(true);
+                    share.setOnMenuItemClickListener(menuItem -> {
+                        share();
+                        return true;
+                    });
+                });
+            });
         } catch (Throwable throwable) {
             log.exception(throwable);
         }
@@ -115,24 +120,24 @@ public class IsuScholarshipPaidDetailsFragmentPresenterImpl extends ConnectedFra
             firebaseAnalyticsProvider.setCurrentScreen(activity, fragment);
             if (!loaded) {
                 loaded = true;
-                if (data == null) {
-                    Bundle bundle = fragment.getArguments();
-                    if (bundle == null) {
-                        log.v(TAG, "Fragment resumed | bundle is null");
-                        loadFailed();
-                        return;
-                    }
-                    year = bundle.getInt("year");
-                    month = bundle.getInt("month");
-                    if (year == 0 || month == 0) {
-                        log.v(TAG, "Fragment resumed | year or month is zero | year=", year, " | month=", month);
-                        loadFailed();
-                        return;
-                    }
-                    load();
-                } else {
+                if (getData() != null) {
                     display();
+                    return;
                 }
+                Bundle bundle = fragment.getArguments();
+                if (bundle == null) {
+                    log.v(TAG, "Fragment resumed | bundle is null");
+                    loadFailed();
+                    return;
+                }
+                year = bundle.getInt("year");
+                month = bundle.getInt("month");
+                if (year == 0 || month == 0) {
+                    log.v(TAG, "Fragment resumed | year or month is zero | year=", year, " | month=", month);
+                    loadFailed();
+                    return;
+                }
+                load();
             }
         });
     }
@@ -156,6 +161,7 @@ public class IsuScholarshipPaidDetailsFragmentPresenterImpl extends ConnectedFra
                 load(false);
                 return;
             }
+            SSDetailedList data = getData();
             if (data == null || data.getTimestamp() + refresh_rate * 3600000L < time.getTimeInMillis()) {
                 load(true);
             } else {
@@ -169,7 +175,7 @@ public class IsuScholarshipPaidDetailsFragmentPresenterImpl extends ConnectedFra
             log.v(TAG, "load | force=", force);
             if ((!force || !Client.isOnline(activity))) {
                 try {
-                    if (data != null) {
+                    if (getData() != null) {
                         log.v(TAG, "load | from cache");
                         display();
                         return;
@@ -179,7 +185,7 @@ public class IsuScholarshipPaidDetailsFragmentPresenterImpl extends ConnectedFra
                 }
             }
             if (App.OFFLINE_MODE) {
-                if (data != null) {
+                if (getData() != null) {
                     display();
                     return;
                 }
@@ -214,11 +220,11 @@ public class IsuScholarshipPaidDetailsFragmentPresenterImpl extends ConnectedFra
                         if (statusCode == 200 && obj != null) {
                             SSDetailedList data = new SSDetailedList().fromJson(obj);
                             data.setTimestamp(time.getTimeInMillis());
-                            IsuScholarshipPaidDetailsFragmentPresenterImpl.this.data = data;
+                            setData(data);
                             display();
                             return;
                         }
-                        if (data != null) {
+                        if (getData() != null) {
                             display();
                             return;
                         }
@@ -233,7 +239,7 @@ public class IsuScholarshipPaidDetailsFragmentPresenterImpl extends ConnectedFra
                         log.v(TAG, "load | failure ", state);
                         switch (state) {
                             case IsuPrivateRestClient.FAILED_OFFLINE:
-                                if (data != null) {
+                                if (getData() != null) {
                                     display();
                                     return;
                                 }
@@ -337,6 +343,7 @@ public class IsuScholarshipPaidDetailsFragmentPresenterImpl extends ConnectedFra
     protected void display() {
         thread.run(() -> {
             log.v(TAG, "display");
+            SSDetailedList data = getData();
             if (data == null) {
                 loadFailed();
                 return;
@@ -370,8 +377,9 @@ public class IsuScholarshipPaidDetailsFragmentPresenterImpl extends ConnectedFra
         });
     }
 
-    private void share(SSDetailedList data) {
+    private void share() {
         thread.run(() -> {
+            SSDetailedList data = getData();
             if (data == null || CollectionUtils.isEmpty(data.getList())) {
                 return;
             }
