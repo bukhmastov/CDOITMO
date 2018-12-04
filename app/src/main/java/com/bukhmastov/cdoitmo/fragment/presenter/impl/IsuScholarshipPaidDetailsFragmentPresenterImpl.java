@@ -120,24 +120,23 @@ public class IsuScholarshipPaidDetailsFragmentPresenterImpl extends ConnectedFra
             firebaseAnalyticsProvider.setCurrentScreen(activity, fragment);
             if (!loaded) {
                 loaded = true;
-                if (getData() != null) {
+                if (getRestoredData() == null) {
+                    if (setYearMonthFromArguments()) {
+                        load();
+                    } else {
+                        loadFailed();
+                    }
+                } else {
                     display();
-                    return;
                 }
-                Bundle bundle = fragment.getArguments();
-                if (bundle == null) {
-                    log.v(TAG, "Fragment resumed | bundle is null");
+            } else if (getData() == null) {
+                if (setYearMonthFromArguments()) {
+                    load();
+                } else {
                     loadFailed();
-                    return;
                 }
-                year = bundle.getInt("year");
-                month = bundle.getInt("month");
-                if (year == 0 || month == 0) {
-                    log.v(TAG, "Fragment resumed | year or month is zero | year=", year, " | month=", month);
-                    loadFailed();
-                    return;
-                }
-                load();
+            } else {
+                display();
             }
         });
     }
@@ -427,6 +426,21 @@ public class IsuScholarshipPaidDetailsFragmentPresenterImpl extends ConnectedFra
             log.exception(throwable);
             notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
         });
+    }
+
+    private boolean setYearMonthFromArguments() {
+        Bundle bundle = fragment.getArguments();
+        if (bundle == null) {
+            log.v(TAG, "Fragment resumed | bundle is null");
+            return false;
+        }
+        year = bundle.getInt("year");
+        month = bundle.getInt("month");
+        if (year == 0 || month == 0) {
+            log.v(TAG, "Fragment resumed | year or month is zero | year=", year, " | month=", month);
+            return false;
+        }
+        return true;
     }
 
     @Override

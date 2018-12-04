@@ -59,7 +59,6 @@ public class ProtocolFragmentPresenterImpl extends ConnectedFragmentWithDataPres
     private static final int maxAttempts = 3;
     private int numberOfWeeks = 1;
     private boolean spinnerWeeksBlocker = true;
-    private boolean forbidden = false;
 
     @Inject
     Log log;
@@ -171,25 +170,6 @@ public class ProtocolFragmentPresenterImpl extends ConnectedFragmentWithDataPres
         } catch (Throwable throwable) {
             log.exception(throwable);
         }
-    }
-
-    @Override
-    public void onResume() {
-        thread.run(() -> {
-            log.v(TAG, "Fragment resumed");
-            if (forbidden) {
-                return;
-            }
-            firebaseAnalyticsProvider.setCurrentScreen(activity, fragment);
-            if (!loaded) {
-                loaded = true;
-                if (getData() == null) {
-                    load();
-                } else {
-                    display();
-                }
-            }
-        });
     }
 
     @Override

@@ -52,7 +52,6 @@ public class Room101FragmentPresenterImpl extends ConnectedFragmentWithDataPrese
 
     private static final String TAG = "Room101Fragment";
     private String actionExtra = null;
-    protected boolean forbidden = false;
 
     @Inject
     Log log;
@@ -132,11 +131,14 @@ public class Room101FragmentPresenterImpl extends ConnectedFragmentWithDataPrese
                         }
                 }
             }
-            if (loaded) {
-                return;
-            }
-            loaded = true;
-            if (getData() == null) {
+            if (!loaded) {
+                loaded = true;
+                if (getRestoredData() == null) {
+                    load();
+                } else {
+                    display();
+                }
+            } else if (getData() == null) {
                 load();
             } else {
                 display();

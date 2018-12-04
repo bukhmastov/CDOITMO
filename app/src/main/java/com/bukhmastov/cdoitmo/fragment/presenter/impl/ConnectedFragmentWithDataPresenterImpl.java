@@ -30,15 +30,26 @@ public abstract class ConnectedFragmentWithDataPresenterImpl<T extends JsonEntit
     public void onResume() {
         thread.run(() -> {
             log.v(getLogTag(), "Fragment resumed");
+            if (forbidden) {
+                log.v(getLogTag(), "Fragment resumed - interrupted");
+                return;
+            }
             firebaseAnalyticsProvider.setCurrentScreen(activity, fragment);
             if (!loaded) {
                 loaded = true;
-                if (getData() == null) {
+                if (getRestoredData() == null) {
                     load();
                 } else {
                     display();
                 }
+            } else if (getData() == null) {
+                load();
+            } else {
+                display();
             }
+        }, throwable -> {
+            log.exception(throwable);
+            load();
         });
     }
 
@@ -86,7 +97,7 @@ public abstract class ConnectedFragmentWithDataPresenterImpl<T extends JsonEntit
                 return;
             }
             if (data == null) {
-                fragment.clearData();
+                // fragment.clearData();
             } else {
                 fragment.storeData(data.toJsonString());
             }
@@ -111,6 +122,24 @@ public abstract class ConnectedFragmentWithDataPresenterImpl<T extends JsonEntit
             }
             data = getFromCache();
             return data;
+        } catch (Exception exception) {
+            log.w(getLogTag(), "Failed to get data | exception=", exception);
+            log.exception(exception);
+        }
+        return null;
+    }
+
+    protected @Nullable T getRestoredData() {
+        try {
+            thread.assertNotUI();
+            if (fragment != null && entityClass != null) {
+                String stored = fragment.restoreData();
+                if (StringUtils.isNotBlank(stored)) {
+                    data = entityClass.newInstance().fromJsonString(stored);
+                    return data;
+                }
+            }
+            return null;
         } catch (Exception exception) {
             log.w(getLogTag(), "Failed to get data | exception=", exception);
             log.exception(exception);

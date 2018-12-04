@@ -67,7 +67,6 @@ public class ERegisterFragmentPresenterImpl extends ConnectedFragmentWithDataPre
     private String group;
     private int term;
     private boolean spinnerGroupBlocker = true, spinnerPeriodBlocker = true;
-    private boolean forbidden = false;
 
     @Inject
     Log log;
@@ -164,25 +163,6 @@ public class ERegisterFragmentPresenterImpl extends ConnectedFragmentWithDataPre
         } catch (Throwable throwable) {
             log.exception(throwable);
         }
-    }
-
-    @Override
-    public void onResume() {
-        thread.run(() -> {
-            log.v(TAG, "Fragment resumed");
-            if (forbidden) {
-                return;
-            }
-            firebaseAnalyticsProvider.setCurrentScreen(activity, fragment);
-            if (!loaded) {
-                loaded = true;
-                if (getData() == null) {
-                    load();
-                } else {
-                    display();
-                }
-            }
-        });
     }
 
     @Override

@@ -22,6 +22,8 @@
         <item>@string/schedule_exams</item>
         <item>@string/schedule_attestations</item>
         <item>@string/room101</item>
+        <item>@string/study_groups</item>
+        <item>@string/scholarship</item>
         <item>@string/university</item>
     </string-array>
     <string-array name="pref_general_default_fragment_values" translatable="false">
@@ -32,6 +34,8 @@
         <item>schedule_exams</item>
         <item>schedule_attestations</item>
         <item>room101</item>
+        <item>groups</item>
+        <item>scholarship</item>
         <item>university</item>
     </string-array>
 

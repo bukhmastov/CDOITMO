@@ -16,6 +16,7 @@ public abstract class ConnectedFragmentPresenterImpl extends ConnectedFragmentBa
     protected ConnectedActivity activity = null;
     protected Client.Request requestHandle = null;
     protected boolean loaded = false;
+    protected boolean forbidden = false;
 
     public ConnectedFragmentPresenterImpl() {
         super();

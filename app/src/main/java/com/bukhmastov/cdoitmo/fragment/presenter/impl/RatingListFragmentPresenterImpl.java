@@ -149,27 +149,6 @@ public class RatingListFragmentPresenterImpl extends ConnectedFragmentWithDataPr
     }
 
     @Override
-    public void onResume() {
-        thread.run(() -> {
-            log.v(TAG, "Fragment resumed");
-            firebaseAnalyticsProvider.setCurrentScreen(activity, fragment);
-            if (loaded) {
-                return;
-            }
-            loaded = true;
-            String stored = fragment.restoreData();
-            if (StringUtils.isNotBlank(stored)) {
-                display(new RatingTopList().fromJsonString(stored));
-            } else {
-                load();
-            }
-        }, throwable -> {
-            log.exception(throwable);
-            load();
-        });
-    }
-
-    @Override
     public void onPause() {
         thread.run(() -> {
             log.v(TAG, "Fragment paused");
