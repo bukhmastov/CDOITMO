@@ -120,17 +120,9 @@ public class IsuScholarshipPaidDetailsFragmentPresenterImpl extends ConnectedFra
             firebaseAnalyticsProvider.setCurrentScreen(activity, fragment);
             if (!loaded) {
                 loaded = true;
-                if (getRestoredData() == null) {
-                    if (setYearMonthFromArguments()) {
-                        load();
-                    } else {
-                        loadFailed();
-                    }
-                } else {
-                    display();
-                }
-            } else if (getData() == null) {
                 if (setYearMonthFromArguments()) {
+                    fragment.clearData();
+                    clearData();
                     load();
                 } else {
                     loadFailed();

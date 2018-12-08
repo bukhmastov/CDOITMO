@@ -249,6 +249,7 @@ public class FragmentPresenterModule {
     }
 
     @Provides
+    @Singleton
     public IsuScholarshipPaidDetailsFragmentPresenter provideIsuScholarshipPaidDetailsFragmentPresenter() {
         return new IsuScholarshipPaidDetailsFragmentPresenterImpl();
     }

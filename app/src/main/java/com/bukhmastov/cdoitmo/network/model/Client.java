@@ -40,7 +40,6 @@ import okhttp3.HttpUrl;
 import okhttp3.MediaType;
 import okhttp3.RequestBody;
 import okhttp3.Response;
-import okhttp3.ResponseBody;
 import okio.Buffer;
 
 public abstract class Client {
@@ -392,17 +391,9 @@ public abstract class Client {
                 return "<null>";
             }
             String url = httpUrl.toString();
-            if (url.contains("isu.ifmo.ru")) {
-                Matcher m = Pattern.compile("^(.*isu\\.ifmo\\.ru.*/core/[^/]*/[^/]*/)([^/]*)(/)?([^/]*)(.*)$", Pattern.CASE_INSENSITIVE).matcher(url);
-                if (m.find()) {
-                    if (m.groupCount() == 2) {
-                        url = m.replaceAll("$1<apikey>");
-                    } else if (m.groupCount() == 4) {
-                        url = m.replaceAll("$1<apikey>$3<auth-token>");
-                    } else if (m.groupCount() > 4) {
-                        url = m.replaceAll("$1<apikey>$3<auth-token>$5");
-                    }
-                }
+            if (url.contains("isu.ifmo.ru") && url.contains("api/core")) {
+                url = url.replaceAll("[^/]{64}", "<apikey>");
+                url = url.replaceAll("AT-[^/]*", "<auth-token>");
             }
             if (url.contains("services.ifmo.ru")) {
                 Matcher m = Pattern.compile("^(.*oauth2\\.0/)(.*)$", Pattern.CASE_INSENSITIVE).matcher(url);

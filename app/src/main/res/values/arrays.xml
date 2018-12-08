@@ -159,12 +159,12 @@
     </string-array>
 
     <string-array name="pref_schedule_source_titles">
-        <item>@string/source_isu</item>
-        <item>@string/source_ifmo</item>
+        <item>@string/source_isu_ifmo</item>
+        <item>@string/source_ifmo_isu</item>
     </string-array>
     <string-array name="pref_schedule_source_desc">
-        <item>@string/source_isu_desc</item>
-        <item>@string/source_ifmo_desc</item>
+        <item>@string/source_isu_ifmo_desc</item>
+        <item>@string/source_ifmo_isu_desc</item>
     </string-array>
     <string-array name="pref_schedule_source_values" translatable="false">
         <item>isu</item>
