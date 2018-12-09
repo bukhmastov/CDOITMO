@@ -22,6 +22,7 @@ import com.bukhmastov.cdoitmo.fragment.settings.SettingsScheduleLessonsFragment;
 import com.bukhmastov.cdoitmo.fragment.settings.SettingsSystemsFragment;
 import com.bukhmastov.cdoitmo.fragment.settings.SettingsUncategorized;
 import com.bukhmastov.cdoitmo.object.preference.Preference;
+import com.bukhmastov.cdoitmo.object.preference.PreferenceImitation;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.StoragePref;
 
@@ -193,6 +194,16 @@ public class StoragePrefImpl implements StoragePref {
     @Override
     public void reset(ConnectedActivity activity) {
         reset(activity, true);
+    }
+
+    @Override
+    public void hardResetUncategorized(@NonNull ConnectedActivity activity) {
+        for (Preference preference : preferences) {
+            if (!(preference instanceof PreferenceImitation)) {
+                continue;
+            }
+            ((PreferenceImitation) preference).hardApplyDefaultValue(activity);
+        }
     }
 
     private void reset(ConnectedActivity activity, boolean fire) {

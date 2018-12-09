@@ -17,6 +17,7 @@ import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseCrashlyticsProvider;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.NotificationMessage;
+import com.bukhmastov.cdoitmo.util.Notifications;
 import com.bukhmastov.cdoitmo.util.StoragePref;
 import com.bukhmastov.cdoitmo.util.TextUtils;
 import com.bukhmastov.cdoitmo.util.Thread;
@@ -26,6 +27,8 @@ import java.util.Locale;
 import java.util.UUID;
 
 import javax.inject.Inject;
+
+import dagger.Lazy;
 
 public class App extends Application {
 
@@ -58,6 +61,8 @@ public class App extends Application {
     FirebaseAnalyticsProvider firebaseAnalyticsProvider;
     @Inject
     FirebaseCrashlyticsProvider firebaseCrashlyticsProvider;
+    @Inject
+    Lazy<Notifications> notifications;
 
     @Override
     public void onCreate() {
@@ -73,6 +78,12 @@ public class App extends Application {
             storagePref.applyDebug(this);
             eventBus.register(this);
             log.setEnabled(storagePref.get(this, "pref_allow_collect_logs", false));
+            if (storagePref.get(this, "pref_first_launch", true)) {
+                checkInstallerSource();
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                    notifications.get().init(this);
+                }
+            }
             locale = textUtils.getLocale(this, storagePref);
             log.i(TAG, "Language | locale=" + locale.toString());
             init();
@@ -212,5 +223,30 @@ public class App extends Application {
     private void setFirebase() {
         firebaseCrashlyticsProvider.setEnabled(this);
         firebaseAnalyticsProvider.setEnabled(this);
+    }
+
+    private void checkInstallerSource() {
+        try {
+            String installer = getPackageManager().getInstallerPackageName("com.bukhmastov.cdoitmo");
+            if (StringUtils.isNotBlank(installer)) {
+                // App is not side-loaded
+                return;
+            }
+        } catch (Throwable ignore) {}
+        // Notify about side-loading
+        notifications.get()
+                .init(this)
+                .notify(
+                        this,
+                        -1,
+                        notifications.get().getSystemHigh(
+                                this,
+                                "Разработчик предупреждает!", /* Hardcoded text on purpose */
+                                "Приложение было установлено не из магазина Google Play. В работе приложения могут появиться сбои и критические ошибки.",
+                                0,
+                                true,
+                                null
+                        )
+                );
     }
 }

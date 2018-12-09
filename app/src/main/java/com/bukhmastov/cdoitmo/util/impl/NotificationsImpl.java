@@ -28,6 +28,7 @@ public class NotificationsImpl implements Notifications {
 
     private final static String CHANNEL_PROTOCOL = "protocol_changes";
     private final static String CHANNEL_SYSTEM = "system";
+    private final static String CHANNEL_SYSTEM_HIGH = "system_high";
 
     private NotificationManager manager;
     private NotificationManager getManager(@NonNull Context context) {
@@ -51,6 +52,7 @@ public class NotificationsImpl implements Notifications {
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
             createChannel(context, CHANNEL_PROTOCOL, context.getString(R.string.notifications_protocol_changes));
             createChannel(context, CHANNEL_SYSTEM, context.getString(R.string.notifications_system));
+            createChannel(context, CHANNEL_SYSTEM_HIGH, context.getString(R.string.notifications_system_high));
         }
         return this;
     }
@@ -69,11 +71,11 @@ public class NotificationsImpl implements Notifications {
         builder.setStyle(new Notification.BigTextStyle().bigText(body));
         builder.setSmallIcon(R.drawable.cdo);
         builder.setLargeIcon(BitmapFactory.decodeResource(context.getResources(), R.mipmap.ic_launcher));
-        builder.setGroup("protocol_" + timestamp + "_" + group);
+        builder.setGroup(channel + "_" + timestamp + "_" + group);
         builder.setGroupSummary(isSummary);
         builder.setCategory(Notification.CATEGORY_EVENT);
         builder.setWhen(timestamp);
-        builder.setShowWhen(true);
+        builder.setShowWhen(timestamp > 0);
         builder.setAutoCancel(true);
         builder.setOnlyAlertOnce(true);
         if (pIntent != null) {
@@ -112,6 +114,16 @@ public class NotificationsImpl implements Notifications {
     }
 
     @Override
+    public Notification.Builder getSystemHigh(@NonNull Context context, @NonNull String title, @NonNull String body, long timestamp, boolean isSummary, @Nullable PendingIntent pIntent) {
+        return getSystemHigh(context, title, body, timestamp, 0, isSummary, pIntent);
+    }
+
+    @Override
+    public Notification.Builder getSystemHigh(@NonNull Context context, @NonNull String title, @NonNull String body, long timestamp, int group, boolean isSummary, @Nullable PendingIntent pIntent) {
+        return get(CHANNEL_SYSTEM_HIGH, context, title, body, timestamp, group, isSummary, pIntent);
+    }
+
+    @Override
     @RequiresApi(api = Build.VERSION_CODES.O)
     public String getProtocolSound(@NonNull Context context) {
         NotificationChannel channel = getManager(context).getNotificationChannel(CHANNEL_PROTOCOL);
@@ -138,6 +150,9 @@ public class NotificationsImpl implements Notifications {
             NotificationChannel channel = getManager(context).getNotificationChannel(name);
             if (channel == null || channel.getImportance() == NotificationManager.IMPORTANCE_NONE) {
                 channel = new NotificationChannel(name, title, NotificationManager.IMPORTANCE_DEFAULT);
+                if (CHANNEL_SYSTEM_HIGH.equals(name)) {
+                    channel.setImportance(NotificationManager.IMPORTANCE_HIGH);
+                }
                 channel.setLockscreenVisibility(Notification.VISIBILITY_PUBLIC);
                 channel.setShowBadge(true);
                 if (storagePref.get(context, "pref_notify_vibrate", true)) {

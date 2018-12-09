@@ -41,7 +41,6 @@ import java.util.regex.Pattern;
 public class Migration {
 
     private static final String TAG = "Migration";
-    private static boolean first_launch = false;
 
     // ----------------------------------------
     // Call migrate to initiate migration check
@@ -51,8 +50,13 @@ public class Migration {
         try {
             int versionCode = context.getPackageManager().getPackageInfo(context.getPackageName(), 0).versionCode;
             int lastVersionCode = injectProvider.getStoragePref().get(context, "last_version", 0);
-            first_launch = lastVersionCode == 0;
-            if (first_launch || lastVersionCode >= versionCode) {
+            if (lastVersionCode == 0) {
+                // first launch
+                injectProvider.getStoragePref().put(context, "last_version", versionCode);
+                return;
+            }
+            if (lastVersionCode >= versionCode) {
+                // migration no needed
                 return;
             }
             try {
@@ -436,9 +440,7 @@ public class Migration {
 
     @Keep
     private static void migrate97(Context context, InjectProvider injectProvider) {
-        if (!first_launch) {
-            injectProvider.getStoragePref().put(context, "pref_default_values_applied", true);
-        }
+        injectProvider.getStoragePref().put(context, "pref_default_values_applied", true);
         // Backwards compatibility
         // convert cache
         try {

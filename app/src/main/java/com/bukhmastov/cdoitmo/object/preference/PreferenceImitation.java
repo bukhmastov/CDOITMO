@@ -18,4 +18,8 @@ public class PreferenceImitation extends Preference {
         }
         super.applyDefaultValue(context);
     }
+
+    public void hardApplyDefaultValue(Context context) {
+        super.applyDefaultValue(context);
+    }
 }

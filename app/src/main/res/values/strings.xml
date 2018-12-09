@@ -387,6 +387,7 @@
     <string name="choose_color">Выберите цвет</string>
     <string name="notifications_protocol_changes">Уведомления о новых баллах</string>
     <string name="notifications_system">Системные уведомления</string>
+    <string name="notifications_system_high">Важные системные уведомления</string>
     <string name="pref_open_system_settings">Открыть системные настройки</string>
     <string name="pref_open_system_notifications_settings">Открыть настройки уведомлений</string>
     <string name="open_source_software">Открытое программное обеспечение</string>
@@ -577,6 +578,8 @@
     <string name="no_scholarship_details">Нет подробностей</string>
     <string name="share_all_groups">Поделиться всем</string>
     <string name="share_group">Поделиться группой</string>
+    <string name="hidden_preference_hard_reset">Сбросить системные настройки</string>
+    <string name="hidden_preference_hard_reset_message">Вы собираетесь стереть системные настройки приложения. НЕ СТОИТ этого делать, если вы не знаете для чего и что за этим последует. Закройте это предупреждение, если вы передумали.</string>
 
 
 </resources>

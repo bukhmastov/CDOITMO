@@ -1,7 +1,10 @@
 package com.bukhmastov.cdoitmo.fragment.presenter.impl;
 
+import android.app.AlertDialog;
 import android.content.Intent;
 import android.net.Uri;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.ViewGroup;
 import android.widget.Switch;
 import android.widget.TextView;
@@ -14,6 +17,7 @@ import com.bukhmastov.cdoitmo.firebase.FirebaseCrashlyticsProvider;
 import com.bukhmastov.cdoitmo.fragment.presenter.LogFragmentPresenter;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.NotificationMessage;
+import com.bukhmastov.cdoitmo.util.Static;
 import com.bukhmastov.cdoitmo.util.StoragePref;
 import com.bukhmastov.cdoitmo.util.Thread;
 import com.bukhmastov.cdoitmo.util.singleton.LogMetrics;
@@ -25,6 +29,7 @@ import javax.inject.Inject;
 
 import androidx.annotation.Nullable;
 import androidx.core.content.FileProvider;
+import dagger.Lazy;
 
 public class LogFragmentPresenterImpl extends ConnectedFragmentPresenterImpl
         implements LogFragmentPresenter {
@@ -43,10 +48,42 @@ public class LogFragmentPresenterImpl extends ConnectedFragmentPresenterImpl
     NotificationMessage notificationMessage;
     @Inject
     FirebaseCrashlyticsProvider firebaseCrashlyticsProvider;
+    @Inject
+    Lazy<Static> staticUtil;
 
     public LogFragmentPresenterImpl() {
         super();
         AppComponentProvider.getComponent().inject(this);
+    }
+
+    @Override
+    public void onToolbarSetup(Menu menu) {
+        try {
+            thread.assertUI();
+            if (menu == null) {
+                return;
+            }
+            MenuItem info = menu.findItem(R.id.action_preference_hard_reset);
+            if (info != null) {
+                info.setVisible(true);
+                info.setOnMenuItemClickListener(item -> {
+                    if (activity == null || activity.isFinishing() || activity.isDestroyed()) {
+                        return false;
+                    }
+                    new AlertDialog.Builder(activity)
+                            .setIcon(R.drawable.ic_settings_restore_black)
+                            .setTitle(R.string.hidden_preference_hard_reset)
+                            .setMessage(R.string.hidden_preference_hard_reset_message)
+                            .setNegativeButton(R.string.do_cancel, null)
+                            .setPositiveButton(R.string.proceed, (dialog, which) -> hardResetPreferences())
+                            .create().show();
+                    return true;
+                });
+            }
+
+        } catch (Throwable throwable) {
+            log.exception(throwable);
+        }
     }
 
     @Override
@@ -172,6 +209,23 @@ public class LogFragmentPresenterImpl extends ConnectedFragmentPresenterImpl
                     }
                 });
             }
+        });
+    }
+
+    private void hardResetPreferences() {
+        thread.run(() -> {
+            if (activity == null) {
+                return;
+            }
+            storagePref.hardResetUncategorized(activity);
+            storagePref.applyDebug(activity);
+            notificationMessage.snackBar(
+                    activity,
+                    activity.getString(R.string.restart_required),
+                    activity.getString(R.string.restart),
+                    NotificationMessage.LENGTH_LONG,
+                    view -> staticUtil.get().reLaunch(activity)
+            );
         });
     }
 

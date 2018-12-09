@@ -379,6 +379,7 @@
     <string name="choose_color">Choose color</string>
     <string name="notifications_protocol_changes">Notification of new points</string>
     <string name="notifications_system">System notifications</string>
+    <string name="notifications_system_high">Important system notifications</string>
     <string name="pref_open_system_settings">Open system settings</string>
     <string name="pref_open_system_notifications_settings">Open notification settings</string>
     <string name="open_source_software">Open source software</string>
@@ -569,5 +570,7 @@
     <string name="no_scholarship_details">No details</string>
     <string name="share_all_groups">Share all groups</string>
     <string name="share_group">Share group</string>
+    <string name="hidden_preference_hard_reset">Reset system preferences</string>
+    <string name="hidden_preference_hard_reset_message">You are going to erase application\'s system preferences. DO NOT do this if you don\'t know why and what will be with app after that. Close this message if you changed your mind.</string>
 
 </resources>

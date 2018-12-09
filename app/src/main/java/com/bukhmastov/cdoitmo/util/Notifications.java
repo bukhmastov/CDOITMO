@@ -22,6 +22,10 @@ public interface Notifications {
 
     Notification.Builder getSystem(@NonNull Context context, @NonNull String title, @NonNull String body, long timestamp, int group, boolean isSummary, @Nullable PendingIntent pIntent);
 
+    Notification.Builder getSystemHigh(@NonNull Context context, @NonNull String title, @NonNull String body, long timestamp, boolean isSummary, @Nullable PendingIntent pIntent);
+
+    Notification.Builder getSystemHigh(@NonNull Context context, @NonNull String title, @NonNull String body, long timestamp, int group, boolean isSummary, @Nullable PendingIntent pIntent);
+
     @RequiresApi(api = Build.VERSION_CODES.O)
     String getProtocolSound(@NonNull Context context);
 

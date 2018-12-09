@@ -75,4 +75,11 @@
         android:showAsAction="never"
         android:visible="false" />
 
+    <item
+        android:id="@+id/action_preference_hard_reset"
+        android:title="@string/hidden_preference_hard_reset"
+        android:icon="@drawable/ic_toolbar_settings_restore"
+        android:showAsAction="never"
+        android:visible="false" />
+
 </menu>

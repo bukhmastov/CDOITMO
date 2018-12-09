@@ -39,4 +39,7 @@ public interface StoragePref {
     void resetIfNeeded(@NonNull ConnectedActivity activity);
 
     void reset(@NonNull ConnectedActivity activity);
+
+    /** Do not call at regular runtime */
+    void hardResetUncategorized(@NonNull ConnectedActivity activity);
 }
