@@ -94,7 +94,7 @@ public class ScheduleLessonsWidgetFactory implements RemoteViewsService.RemoteVi
             layout.setTextViewText(R.id.slw_item_time_end, lesson.getTimeEnd());
             layout.setImageViewBitmap(R.id.slw_item_time_icon, ScheduleLessonsWidget.getBitmap(context, R.drawable.ic_widget_time, colors.text));
             String title = lesson.getSubjectWithNote();
-            String type = lesson.getType().trim();
+            String type = lesson.getType() == null ? "" : lesson.getType().trim();
             switch (type) {
                 case "practice": title += " (" + context.getString(R.string.practice) + ")"; break;
                 case "lecture": title += " (" + context.getString(R.string.lecture) + ")"; break;

@@ -164,7 +164,9 @@ public class RatingListFragmentPresenterImpl extends ConnectedFragmentWithDataPr
             activity.updateToolbar(activity, activity.getString(R.string.top_rating), R.drawable.ic_rating);
             Bundle extras = fragment.getArguments();
             if (extras == null) {
-                throw new NullPointerException("extras are null");
+                log.e(TAG, "extras are null");
+                activity.back();
+                return;
             }
             faculty = extras.getString("faculty");
             course = extras.getString("course");
@@ -177,7 +179,9 @@ public class RatingListFragmentPresenterImpl extends ConnectedFragmentWithDataPr
             }
             log.v(TAG, "faculty=", faculty, " | course=", course, " | years=", years);
             if (StringUtils.isBlank(faculty) || StringUtils.isBlank(course)) {
-                throw new Exception("wrong extras provided | faculty=" + (faculty == null ? "<null>" : faculty) + " | course=" + (course == null ? "<null>" : course));
+                log.e(TAG, "wrong extras provided | faculty=", faculty, " | course=", course);
+                activity.back();
+                return;
             }
         }, throwable -> {
             log.exception(throwable);

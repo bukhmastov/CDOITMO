@@ -91,6 +91,99 @@ public class Migration {
     // -----------------------------------
 
     @Keep
+    private static void migrate135(Context context, InjectProvider injectProvider) {
+        // Modify permanent storage
+        try {
+            String rootPath = context.getFilesDir() + File.separator + "app_data";
+            getUsersFolder(rootPath, (folder, login) -> {
+                if (Storage.GLOBAL.equals(login)) {
+                    return;
+                }
+                // Convert "schedule_lessons#added#" + token
+                listDir(getFile(folder.getPath(), "schedule_lessons", "added"), file -> {
+                    try {
+                        if (file == null || !file.isFile()) {
+                            return;
+                        }
+                        JSONArray json = getJsonArr(file);
+                        if (json == null) {
+                            return;
+                        }
+                        SLessonsAdded added = new SLessonsAdded();
+                        added.setTimestamp(injectProvider.getTime().getTimeInMillis());
+                        added.setSchedule(new ArrayList<>());
+                        for (int i = 0; i < json.length(); i++) {
+                            try {
+                                SDay sDay = new SDay().fromJson(json.getJSONObject(i));
+                                added.getSchedule().add(sDay);
+                            } catch (Throwable ignore) {
+                                // ignore
+                            }
+                        }
+                        writeFile(file, added.toJsonString());
+                    } catch (Throwable throwable) {
+                        deleteRecursive(file);
+                    }
+                });
+                // Convert "schedule_lessons#reduced#" + token
+                listDir(getFile(folder.getPath(), "schedule_lessons", "reduced"), file -> {
+                    try {
+                        if (file == null || !file.isFile()) {
+                            return;
+                        }
+                        JSONArray json = getJsonArr(file);
+                        if (json == null) {
+                            return;
+                        }
+                        SLessonsReduced reduced = new SLessonsReduced();
+                        reduced.setTimestamp(injectProvider.getTime().getTimeInMillis());
+                        reduced.setSchedule(new ArrayList<>());
+                        for (int i = 0; i < json.length(); i++) {
+                            try {
+                                SDayReduced sDayReduced = new SDayReduced().fromJson(json.getJSONObject(i));
+                                reduced.getSchedule().add(sDayReduced);
+                            } catch (Throwable ignore) {
+                                // ignore
+                            }
+                        }
+                        writeFile(file, reduced.toJsonString());
+                    } catch (Throwable throwable) {
+                        deleteRecursive(file);
+                    }
+                });
+                // Convert "schedule_" + getType() + "#recent"
+                StringCallback suggestionCallback = (file, data) -> {
+                    try {
+                        JSONArray json = getJsonArr(file);
+                        if (json == null) {
+                            return;
+                        }
+                        Suggestions suggestions = new Suggestions();
+                        suggestions.setSuggestions(new ArrayList<>());
+                        for (int i = 0; i < json.length(); i++) {
+                            try {
+                                suggestions.getSuggestions().add(json.getString(i));
+                            } catch (Throwable ignore) {
+                                // ignore
+                            }
+                        }
+                        writeFile(file, suggestions.toJsonString());
+                    } catch (Throwable throwable) {
+                        deleteRecursive(file);
+                    }
+                };
+                readFile(getFile(folder.getPath(), "schedule_lessons", "recent.txt"), suggestionCallback);
+                readFile(getFile(folder.getPath(), "schedule_exams", "recent.txt"), suggestionCallback);
+                readFile(getFile(folder.getPath(), "schedule_attestations", "recent.txt"), suggestionCallback);
+            });
+        } catch (Throwable ignore) {
+            // ignore
+        }
+        // Reset protocol tracker
+        injectProvider.getThread().run(Thread.BACKGROUND, () -> injectProvider.getProtocolTracker().reset(context));
+    }
+
+    @Keep
     private static void migrate128(Context context, InjectProvider injectProvider) {
         injectProvider.getStoragePref().put(context, "pref_schedule_lessons_source", "isu");
         injectProvider.getStoragePref().put(context, "pref_schedule_exams_source", "isu");
@@ -1060,6 +1153,21 @@ public class Migration {
             }
         } else {
             fileOrDirectory.delete();
+        }
+    }
+    @Keep
+    private static JSONArray getJsonArr(File file) throws Exception {
+        JSONArray json;
+        String content = readFile(file);
+        try {
+            return new JSONArray(content);
+        } catch (Exception e) {
+            try {
+                new JSONObject(content);
+                return null;
+            } catch (Exception e1) {
+                throw e;
+            }
         }
     }
 }
