@@ -134,11 +134,10 @@ public class FragmentActivityPresenterImpl implements FragmentActivityPresenter,
         switch (item.getItemId()) {
             case R.id.offline_mode:
                 eventBus.fire(new MainActivityEvent.SwitchToOfflineModeEvent());
-            case android.R.id.home:
                 activity.finish();
-                return false;
-            default:
                 return true;
+            default:
+                return false;
         }
     }
 
@@ -158,26 +157,20 @@ public class FragmentActivityPresenterImpl implements FragmentActivityPresenter,
 
     @Override
     public boolean onBackPressed() {
-        try {
-            if (!activity.layoutWithMenu) {
-                throw new Exception("");
-            }
-            DrawerLayout drawer = activity.findViewById(R.id.drawer_layout);
-            if (drawer == null) {
-                throw new Exception("");
-            } else {
-                if (drawer.isDrawerOpen(GravityCompat.START)) {
-                    drawer.closeDrawer(GravityCompat.START);
-                } else {
-                    throw new Exception("");
-                }
-            }
-        } catch (Exception e) {
-            if (activity.back()) {
-                return true;
-            }
+        if (!activity.layoutWithMenu) {
+            return activity.back();
         }
-        return false;
+        DrawerLayout drawerLayout = activity.findViewById(R.id.drawer_layout);
+        if (drawerLayout == null) {
+            return activity.back();
+        }
+        int drawerLockMode = drawerLayout.getDrawerLockMode(GravityCompat.START);
+        if (drawerLayout.isDrawerVisible(GravityCompat.START)
+                && (drawerLockMode != DrawerLayout.LOCK_MODE_LOCKED_OPEN)) {
+            drawerLayout.closeDrawer(GravityCompat.START);
+            return false;
+        }
+        return activity.back();
     }
 
     private void invoke(Class connectedFragmentClass, Bundle extras) {

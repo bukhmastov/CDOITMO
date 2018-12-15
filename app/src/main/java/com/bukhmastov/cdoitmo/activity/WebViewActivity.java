@@ -36,7 +36,16 @@ public class WebViewActivity extends Activity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        return !presenter.onToolbarSelected(item) || super.onOptionsItemSelected(item);
+        if (android.R.id.home == item.getItemId()) {
+            if (presenter.onBackPressed()) {
+                finish();
+            }
+            return true;
+        }
+        if (presenter.onToolbarSelected(item)) {
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 
     @Override

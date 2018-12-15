@@ -151,13 +151,7 @@ public class WebViewActivityPresenterImpl implements WebViewActivityPresenter {
 
     @Override
     public boolean onToolbarSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case android.R.id.home:
-                activity.finish();
-                return false;
-            default:
-                return true;
-        }
+        return false;
     }
 
     @Override
