@@ -805,7 +805,7 @@ public class ScheduleLessonsTabFragmentPresenterImpl implements ScheduleLessonsT
     // -<-- Lessons global menu --<- || -->- Lesson menu ->--
 
     private void lessonMenu(View view, RVALessons entity) {
-        thread.run(() -> {
+        thread.runOnUI(() -> {
             if (schedule == null || entity.getLesson() == null) {
                 notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
                 return;
@@ -823,8 +823,10 @@ public class ScheduleLessonsTabFragmentPresenterImpl implements ScheduleLessonsT
             bindMenuItem(popup, R.id.delete_lesson, "synthetic".equals(lesson.getCdoitmoType()) ? activity.getString(R.string.delete_lesson) : null);
             bindMenuItem(popup, R.id.edit_lesson, "synthetic".equals(lesson.getCdoitmoType()) ? activity.getString(R.string.edit_lesson) : null);
             popup.setOnMenuItemClickListener(item -> {
-                lessonMenuSelected(item, schedule, lesson, weekday);
-                popup.dismiss();
+                thread.runOnUI(() -> {
+                    lessonMenuSelected(item, schedule, lesson, weekday);
+                    popup.dismiss();
+                });
                 return true;
             });
             popup.show();
@@ -854,68 +856,38 @@ public class ScheduleLessonsTabFragmentPresenterImpl implements ScheduleLessonsT
                     break;
                 }
                 case R.id.open_location: {
-                    thread.run(() -> {
-                        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("geo:0,0?q=Санкт-Петербург, " + lesson.getBuilding()));
-                        eventBus.fire(new OpenIntentEvent(intent).withIdentity(ScheduleLessonsTabFragmentPresenterImpl.class.getName()));
-                    }, throwable -> {
-                        log.exception(throwable);
-                        notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
-                    });
+                    Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("geo:0,0?q=Санкт-Петербург, " + lesson.getBuilding()));
+                    eventBus.fire(new OpenIntentEvent(intent).withIdentity(ScheduleLessonsTabFragmentPresenterImpl.class.getName()));
                     break;
                 }
                 case R.id.reduce_lesson: {
-                    thread.run(() -> {
-                        if (!scheduleLessonsHelper.reduceLesson(schedule.getQuery(), weekday, lesson, () -> tabHostPresenter.invalidateOnDemand())) {
-                            notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
-                        }
-                    }, throwable -> {
-                        log.exception(throwable);
+                    if (!scheduleLessonsHelper.reduceLesson(schedule.getQuery(), weekday, lesson, () -> tabHostPresenter.invalidateOnDemand())) {
                         notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
-                    });
+                    }
                     break;
                 }
                 case R.id.restore_lesson: {
-                    thread.run(() -> {
-                        if (!scheduleLessonsHelper.restoreLesson(schedule.getQuery(), weekday, lesson, () -> tabHostPresenter.invalidateOnDemand())) {
-                            notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
-                        }
-                    }, throwable -> {
-                        log.exception(throwable);
+                    if (!scheduleLessonsHelper.restoreLesson(schedule.getQuery(), weekday, lesson, () -> tabHostPresenter.invalidateOnDemand())) {
                         notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
-                    });
+                    }
                     break;
                 }
                 case R.id.delete_lesson: {
-                    thread.run(() -> {
-                        if (!scheduleLessonsHelper.deleteLesson(schedule.getQuery(), weekday, lesson, () -> tabHostPresenter.invalidateOnDemand())) {
-                            notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
-                        }
-                    }, throwable -> {
-                        log.exception(throwable);
+                    if (!scheduleLessonsHelper.deleteLesson(schedule.getQuery(), weekday, lesson, () -> tabHostPresenter.invalidateOnDemand())) {
                         notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
-                    });
+                    }
                     break;
                 }
                 case R.id.copy_lesson: {
-                    thread.run(() -> {
-                        if (!scheduleLessonsHelper.createLesson(activity, schedule.getQuery(), schedule.getTitle(), schedule.getType(), weekday, lesson, null)) {
-                            notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
-                        }
-                    }, throwable -> {
-                        log.exception(throwable);
+                    if (!scheduleLessonsHelper.createLesson(activity, schedule.getQuery(), schedule.getTitle(), schedule.getType(), weekday, lesson, null)) {
                         notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
-                    });
+                    }
                     break;
                 }
                 case R.id.edit_lesson: {
-                    thread.run(() -> {
-                        if (!scheduleLessonsHelper.editLesson(activity, schedule.getQuery(), schedule.getTitle(), schedule.getType(), weekday, lesson, null)) {
-                            notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
-                        }
-                    }, throwable -> {
-                        log.exception(throwable);
+                    if (!scheduleLessonsHelper.editLesson(activity, schedule.getQuery(), schedule.getTitle(), schedule.getType(), weekday, lesson, null)) {
                         notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
-                    });
+                    }
                     break;
                 }
             }

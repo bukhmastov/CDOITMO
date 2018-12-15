@@ -632,7 +632,7 @@ public class ScheduleExamsTabFragmentPresenterImpl implements ScheduleExamsTabFr
     // -<-- Exams global menu --<- || -->- Subject menu ->--
 
     private void subjectMenu(View view, RVAExams entity) {
-        thread.run(() -> {
+        thread.runOnUI(() -> {
             if (schedule == null || entity.getSubject() == null) {
                 notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
                 return;
@@ -661,8 +661,10 @@ public class ScheduleExamsTabFragmentPresenterImpl implements ScheduleExamsTabFr
                 }
             }
             popup.setOnMenuItemClickListener(item -> {
-                subjectMenuSelected(item, schedule, subject);
-                popup.dismiss();
+                thread.runOnUI(() -> {
+                    subjectMenuSelected(item, schedule, subject);
+                    popup.dismiss();
+                });
                 return true;
             });
             popup.show();
