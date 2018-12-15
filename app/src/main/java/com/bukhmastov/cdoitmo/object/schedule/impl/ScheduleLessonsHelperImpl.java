@@ -25,6 +25,7 @@ import com.bukhmastov.cdoitmo.util.singleton.StringUtils;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.Objects;
 import java.util.TreeSet;
 
@@ -304,7 +305,8 @@ public class ScheduleLessonsHelperImpl implements ScheduleLessonsHelper {
             if (lessonsAdded == null || CollectionUtils.isEmpty(lessonsAdded.getSchedule())) {
                 return false;
             }
-            for (SDay day : lessonsAdded.getSchedule()) {
+            for (Iterator<SDay> it = lessonsAdded.getSchedule().iterator(); it.hasNext(); ) {
+                SDay day = it.next();
                 if (day.getWeekday() != weekday) {
                     continue;
                 }
@@ -315,7 +317,7 @@ public class ScheduleLessonsHelperImpl implements ScheduleLessonsHelper {
                     }
                 }
                 if (day.getLessons().size() == 0) {
-                    lessonsAdded.getSchedule().remove(day);
+                    it.remove();
                 }
             }
             if (lessonsAdded.getSchedule().size() == 0) {
