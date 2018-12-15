@@ -440,7 +440,7 @@ public class UniversityPersonsFragmentPresenterImpl implements UniversityPersons
             thread.runOnUI(() -> {
                 if (personsRecyclerViewAdapter != null) {
                     personsRecyclerViewAdapter.addItems(items);
-                    if (offset + limit < persons.getCount()) {
+                    if (persons != null && offset + limit < persons.getCount()) {
                         personsRecyclerViewAdapter.setState(R.id.load_more);
                     } else {
                         personsRecyclerViewAdapter.setState(R.id.no_more);

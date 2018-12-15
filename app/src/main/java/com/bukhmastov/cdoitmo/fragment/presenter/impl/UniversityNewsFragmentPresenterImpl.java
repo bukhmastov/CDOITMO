@@ -443,7 +443,7 @@ public class UniversityNewsFragmentPresenterImpl implements UniversityNewsFragme
             thread.runOnUI(() -> {
                 if (newsRecyclerViewAdapter != null) {
                     newsRecyclerViewAdapter.addItems(items);
-                    if (offset + limit < news.getCount()) {
+                    if (news != null && offset + limit < news.getCount()) {
                         newsRecyclerViewAdapter.setState(R.id.load_more);
                     } else {
                         newsRecyclerViewAdapter.setState(R.id.no_more);

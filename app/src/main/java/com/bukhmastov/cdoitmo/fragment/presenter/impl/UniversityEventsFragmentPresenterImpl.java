@@ -444,7 +444,7 @@ public class UniversityEventsFragmentPresenterImpl implements UniversityEventsFr
             thread.runOnUI(() -> {
                 if (eventsRecyclerViewAdapter != null) {
                     eventsRecyclerViewAdapter.addItems(items);
-                    if (offset + limit < events.getCount()) {
+                    if (events != null && offset + limit < events.getCount()) {
                         eventsRecyclerViewAdapter.setState(R.id.load_more);
                     } else {
                         eventsRecyclerViewAdapter.setState(R.id.no_more);
