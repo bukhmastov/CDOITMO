@@ -111,14 +111,10 @@ public abstract class JsonEntity implements Entity {
     public <T extends JsonEntity> T fromJson(JSONObject input) throws JSONException, IllegalAccessException, InstantiationException {
         HashMap<String, EntityMetaData> fields = getFields();
         for (Field field : this.getClass().getDeclaredFields()) {
-            String fieldName = field.getName();
-            if (!fields.containsKey(fieldName)) {
-                continue;
-            }
             field.setAccessible(true);
-            EntityMetaData meta = fields.get(fieldName);
-            if (input.isNull(meta.key)) {
-                // value is null or not present, we are skipping value
+            EntityMetaData meta = fields.get(field.getName());
+            if (meta == null || input.isNull(meta.key)) {
+                // metadata not exists or value is null / not present, we are skipping value
                 continue;
             }
             if (!meta.isArray) {
