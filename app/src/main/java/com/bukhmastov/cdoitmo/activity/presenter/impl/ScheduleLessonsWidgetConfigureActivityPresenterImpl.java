@@ -1,11 +1,13 @@
 package com.bukhmastov.cdoitmo.activity.presenter.impl;
 
+import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.WallpaperManager;
 import android.appwidget.AppWidgetManager;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.content.res.ColorStateList;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
@@ -56,6 +58,7 @@ import javax.inject.Inject;
 import androidx.annotation.LayoutRes;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.content.ContextCompat;
 
 public class ScheduleLessonsWidgetConfigureActivityPresenterImpl implements ScheduleLessonsWidgetConfigureActivityPresenter {
 
@@ -84,7 +87,6 @@ public class ScheduleLessonsWidgetConfigureActivityPresenterImpl implements Sche
 
     public ScheduleLessonsWidgetConfigureActivityPresenterImpl() {
         AppComponentProvider.getComponent().inject(this);
-
     }
 
     @Override
@@ -142,7 +144,9 @@ public class ScheduleLessonsWidgetConfigureActivityPresenterImpl implements Sche
             // Starting from Android 27 (8.1) there is no longer free access to current wallpaper
             // Getting wallpaper requires "dangerous" permission android.permission.READ_EXTERNAL_STORAGE
             // To avoid using this permission, we just not gonna use wallpaper for widget preview
-            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O_MR1) {
+            // UPD: Now we are using this permission. Here we gonna check for permission and _not_ gonna ask for it to be granted
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O_MR1 ||
+                    ContextCompat.checkSelfPermission(activity, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
                 try {
                     final WallpaperManager wallpaperManager = WallpaperManager.getInstance(activity);
                     if (wallpaperManager == null) {
@@ -224,9 +228,9 @@ public class ScheduleLessonsWidgetConfigureActivityPresenterImpl implements Sche
             partDynamicShiftSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
                 activatePartDynamicShift(isChecked);
             });
-            partDynamicShift.setOnClickListener(view -> {
+            partDynamicShift.setOnClickListener(view -> thread.runOnUI(() -> {
                 partDynamicShiftSwitch.setChecked(!partDynamicShiftSwitch.isChecked());
-            });
+            }));
         }, throwable -> {
             log.exception(throwable);
             notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
@@ -235,7 +239,7 @@ public class ScheduleLessonsWidgetConfigureActivityPresenterImpl implements Sche
     
     private void initFinishButton() {
         log.v(TAG, "initFinishButton");
-        thread.run(() -> {
+        thread.runOnUI(() -> {
             Button addButton = activity.findViewById(R.id.add_button);
             addButton.setText(R.string.add_widget);
             addButton.setVisibility(View.VISIBLE);
@@ -252,7 +256,7 @@ public class ScheduleLessonsWidgetConfigureActivityPresenterImpl implements Sche
     
     private void activatePartSchedule(String title) {
         log.v(TAG, "activatePartSchedule | scope=", title);
-        thread.run(() -> {
+        thread.runOnUI(() -> {
             if (activity.isFinishing() || activity.isDestroyed()) {
                 return;
             }
@@ -280,7 +284,7 @@ public class ScheduleLessonsWidgetConfigureActivityPresenterImpl implements Sche
                 public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {}
                 @Override
                 public void afterTextChanged(Editable editable) {
-                    thread.run(() -> {
+                    thread.runOnUI(() -> {
                         teacherPickerAdapter.clear();
                         searchTextView.dismissDropDown();
                     });
@@ -295,7 +299,7 @@ public class ScheduleLessonsWidgetConfigureActivityPresenterImpl implements Sche
                 scheduleLessons.search(query, new Schedule.Handler<SLessons>() {
                     @Override
                     public void onSuccess(final SLessons schedule, final boolean fromCache) {
-                        thread.run(() -> {
+                        thread.runOnUI(() -> {
                             log.v(TAG, "activatePartSchedule | search action | onSuccess | schedule=", (schedule == null ? "null" : "notnull"));
                             searchLoading.setVisibility(View.GONE);
                             searchAction.setVisibility(View.VISIBLE);
@@ -366,7 +370,7 @@ public class ScheduleLessonsWidgetConfigureActivityPresenterImpl implements Sche
                     @Override
                     public void onFailure(final int statusCode, final Client.Headers headers, final int state) {
                         log.v(TAG, "activatePartSchedule | search action | onFailure | state=", state, " | statusCode=", statusCode);
-                        thread.run(() -> {
+                        thread.runOnUI(() -> {
                             searchLoading.setVisibility(View.GONE);
                             searchAction.setVisibility(View.VISIBLE);
                             String text = activity.getString(R.string.schedule_not_found);
@@ -382,7 +386,7 @@ public class ScheduleLessonsWidgetConfigureActivityPresenterImpl implements Sche
                     @Override
                     public void onProgress(final int state) {
                         log.v(TAG, "activatePartSchedule | search action | onProgress | state=", state);
-                        thread.run(() -> {
+                        thread.runOnUI(() -> {
                             searchLoading.setVisibility(View.VISIBLE);
                             searchAction.setVisibility(View.GONE);
                         });
@@ -400,7 +404,7 @@ public class ScheduleLessonsWidgetConfigureActivityPresenterImpl implements Sche
                 });
             }));
             searchTextView.setOnItemClickListener((parent, view, position, id) -> {
-                thread.run(() -> {
+                thread.runOnUI(() -> {
                     log.v(TAG, "activatePartSchedule | search list selected");
                     STeacher teacher = teacherPickerAdapter.getItem(position);
                     if (teacher == null) {
@@ -429,7 +433,7 @@ public class ScheduleLessonsWidgetConfigureActivityPresenterImpl implements Sche
     
     private void activatePartTheme() {
         log.v(TAG, "activatePartTheme");
-        thread.run(() -> {
+        thread.runOnUI(() -> {
             if (activity.isFinishing() || activity.isDestroyed()) {
                 return;
             }
@@ -512,9 +516,11 @@ public class ScheduleLessonsWidgetConfigureActivityPresenterImpl implements Sche
                     Settings.Theme.text       = Default.Theme.Light.text;
                     Settings.Theme.background = Default.Theme.Light.background;
                     Settings.Theme.opacity    = Default.Theme.Light.opacity;
-                    if (alertDialog != null && alertDialog.isShowing()) {
-                        alertDialog.cancel();
-                    }
+                    thread.runOnUI(() -> {
+                        if (alertDialog != null && alertDialog.isShowing()) {
+                            alertDialog.cancel();
+                        }
+                    });
                     updateDemo();
                     updateThemeSummary();
                 } catch (Exception e) {
@@ -532,9 +538,11 @@ public class ScheduleLessonsWidgetConfigureActivityPresenterImpl implements Sche
                     Settings.Theme.text       = Default.Theme.Dark.text;
                     Settings.Theme.background = Default.Theme.Dark.background;
                     Settings.Theme.opacity    = Default.Theme.Dark.opacity;
-                    if (alertDialog != null && alertDialog.isShowing()) {
-                        alertDialog.cancel();
-                    }
+                    thread.runOnUI(() -> {
+                        if (alertDialog != null && alertDialog.isShowing()) {
+                            alertDialog.cancel();
+                        }
+                    });
                     updateDemo();
                     updateThemeSummary();
                 } catch (Exception e) {
@@ -551,7 +559,7 @@ public class ScheduleLessonsWidgetConfigureActivityPresenterImpl implements Sche
                 new ColorPickerDialog(activity, new ColorPickerDialog.ColorPickerCallback() {
                     @Override
                     public void result(final String hex) {
-                        thread.run(() -> {
+                        thread.runOnUI(() -> {
                             log.v(TAG, "activatePartTheme | background color picker | hex=" + hex);
                             applyColor(hex, background_color_picker, background_color_picker_image, background_color_picker_value, background_color_picker_header, background_color_picker_hint);
                         });
@@ -570,7 +578,7 @@ public class ScheduleLessonsWidgetConfigureActivityPresenterImpl implements Sche
                 new ColorPickerDialog(activity, new ColorPickerDialog.ColorPickerCallback() {
                     @Override
                     public void result(final String hex) {
-                        thread.run(() -> {
+                        thread.runOnUI(() -> {
                             log.v(TAG, "activatePartTheme | text color picker | hex=" + hex);
                             applyColor(hex, text_color_picker, text_color_picker_image, text_color_picker_value, text_color_picker_header, text_color_picker_hint);
                         });
@@ -617,7 +625,7 @@ public class ScheduleLessonsWidgetConfigureActivityPresenterImpl implements Sche
     
     private void activatePartUpdate() {
         log.v(TAG, "activatePartUpdate");
-        thread.run(() -> {
+        thread.runOnUI(() -> {
             if (activity.isFinishing() || activity.isDestroyed()) {
                 return;
             }
@@ -643,8 +651,8 @@ public class ScheduleLessonsWidgetConfigureActivityPresenterImpl implements Sche
                             }
                             log.v(TAG, "activatePartUpdate | apply | which=", which, " | updateTime=", Settings.updateTime);
                             updateUpdateSummary();
-                            dialog.dismiss();
                         });
+                        dialog.dismiss();
                     })
                     .setNegativeButton(R.string.do_cancel, null)
                     .create();
