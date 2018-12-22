@@ -35,7 +35,7 @@ public class ScheduleLessonsAdditionalConverter extends Converter<SLessons, SLes
             if (lessonsReduced != null && CollectionUtils.isNotEmpty(lessonsReduced.getSchedule())) {
                 for (SDay day : entity.getSchedule()) {
                     for (SLesson lesson : day.getLessons()) {
-                        applyReducedIfNeeded(lesson, lessonsReduced);
+                        applyReducedIfNeeded(lesson, day.getWeekday(), lessonsReduced);
                     }
                 }
             }
@@ -73,12 +73,15 @@ public class ScheduleLessonsAdditionalConverter extends Converter<SLessons, SLes
         days.add(day);
     }
 
-    private void applyReducedIfNeeded(SLesson lesson, SLessonsReduced lessonsReduced) throws Throwable {
+    private void applyReducedIfNeeded(SLesson lesson, int weekday, SLessonsReduced lessonsReduced) throws Throwable {
         if (Objects.equals(lesson.getCdoitmoType(), "synthetic")) {
             return;
         }
         String lessonHash = scheduleLessonsHelper.get().getLessonHash(lesson);
         for (SDayReduced dayReduced : lessonsReduced.getSchedule()) {
+            if (dayReduced.getWeekday() != weekday) {
+                continue;
+            }
             for (String hash : dayReduced.getLessons()) {
                 if (Objects.equals(lessonHash, hash)) {
                     lesson.setCdoitmoType("reduced");
