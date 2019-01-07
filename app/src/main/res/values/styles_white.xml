@@ -69,8 +69,10 @@
         <item name="android:textColorPrimaryInverse">@color/colorToolbarContentWhite</item>
         <item name="android:textColorSecondary">@color/colorToolbarContentWhite</item>
         <item name="android:colorControlNormal">@color/colorToolbarContentWhite</item>
+        <item name="colorControlNormal">@color/colorToolbarContentWhite</item>
         <item name="android:colorControlActivated">@color/colorToolbarContentOpacityWhite</item>
         <item name="android:colorControlHighlight">@color/colorToolbarContentOpacityWhite</item>
+        <item name="titleTextColor">@color/colorToolbarContentWhite</item>
     </style>
     <style name="AppTheme.Toolbar.Popup.White" parent="AppTheme.White" />
     <style name="AppTheme.Popup.White" parent="AppTheme.White">
