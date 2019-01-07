@@ -107,12 +107,16 @@ public class App extends Application {
 
     @Override
     public void onTrimMemory(int level) {
-        if (level >= TRIM_MEMORY_MODERATE) {
-            log.i(TAG, "onTrimMemory called with level = ", level, " | going to clear all cache");
-            eventBus.fire(new ClearCacheEvent(ClearCacheEvent.ALL));
-        } else if (level >= TRIM_MEMORY_BACKGROUND) {
-            log.i(TAG, "onTrimMemory called with level = ", level, " | going to clear not valuable cache");
-            eventBus.fire(new ClearCacheEvent(ClearCacheEvent.NOT_VALUABLE));
+        try {
+            if (level >= TRIM_MEMORY_MODERATE) {
+                log.i(TAG, "onTrimMemory called with level = ", level, " | going to clear all cache");
+                eventBus.fire(new ClearCacheEvent(ClearCacheEvent.ALL));
+            } else if (level >= TRIM_MEMORY_BACKGROUND) {
+                log.i(TAG, "onTrimMemory called with level = ", level, " | going to clear not valuable cache");
+                eventBus.fire(new ClearCacheEvent(ClearCacheEvent.NOT_VALUABLE));
+            }
+        } catch (Throwable throwable) {
+            log.exception(throwable, "onTrimMemory called with level = ", level, " | failed");
         }
         super.onTrimMemory(level);
     }

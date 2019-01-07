@@ -170,6 +170,11 @@ public class LogImpl implements Log {
     }
 
     @Override
+    public int exception(Throwable throwable, Object... log) {
+        return exception(joinObjects(log), throwable);
+    }
+
+    @Override
     public int exception(String msg, Throwable throwable) {
         LogMetrics.exception++;
         msg = wrapLog(msg);

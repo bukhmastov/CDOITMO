@@ -206,9 +206,11 @@ public class ScheduleAttestationsFragmentPresenterImpl extends ConnectedFragment
             public void onProgress(final int state) {
                 thread.runOnUI(() -> {
                     log.v(TAG, "onProgress | state=", state);
-                    final ViewGroup view = (ViewGroup) fragment.inflate(R.layout.state_loading_text);
-                    ((TextView) view.findViewById(R.id.loading_message)).setText(R.string.loading);
-                    fragment.draw(view);
+                    ViewGroup view = (ViewGroup) fragment.inflate(R.layout.state_loading_text);
+                    if (view != null) {
+                        ((TextView) view.findViewById(R.id.loading_message)).setText(R.string.loading);
+                        fragment.draw(view);
+                    }
                 }, throwable -> {
                     log.exception(throwable);
                 });

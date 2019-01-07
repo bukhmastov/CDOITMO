@@ -22,6 +22,8 @@ public interface Log {
 
     int exception(Throwable throwable);
 
+    int exception(Throwable throwable, Object... log);
+
     int exception(String msg, Throwable throwable);
 
     @NonNull

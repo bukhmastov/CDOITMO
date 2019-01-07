@@ -302,6 +302,9 @@ public class UniversityPersonCardActivityPresenterImpl implements UniversityPers
             activity.findViewById(R.id.back).setOnClickListener(v -> activity.finish());
             // кнопка сайта
             activity.findViewById(R.id.web).setOnClickListener(view -> thread.run(() -> {
+                if (person == null) {
+                    return;
+                }
                 Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("http://www.ifmo.ru/ru/viewperson/" + person.getId() + "/"));
                 eventBus.fire(new OpenIntentEvent(intent));
             }));

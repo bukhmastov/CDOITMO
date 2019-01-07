@@ -821,6 +821,9 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
 
     public static ArrayList<SLesson> getLessonsForWeekday(SLessons schedule, int week, int weekday) {
         ArrayList<SLesson> lessons = new ArrayList<>();
+        if (CollectionUtils.isEmpty(schedule.getSchedule())) {
+            return lessons;
+        }
         for (SDay day : schedule.getSchedule()) {
             if (day == null || day.getWeekday() != weekday || CollectionUtils.isEmpty(day.getLessons())) {
                 continue;

@@ -248,10 +248,10 @@ public class Room101AddRequestImpl implements Room101AddRequest {
                                     } else {
                                         data.getOptions().addAll(room101Request.getOptions());
                                     }
+                                    currentStage++;
+                                    proceedStage();
+                                    return;
                                 }
-                                currentStage++;
-                                proceedStage();
-                                return;
                             }
                             failed();
                         }, throwable -> {
@@ -610,8 +610,8 @@ public class Room101AddRequestImpl implements Room101AddRequest {
         if (headerView != null) {
             headerView.setText(header);
         }
-        if (CollectionUtils.isNotEmpty(options)) {
-            RadioGroup radioGroup = view.findViewById(R.id.ars_request_chooser);
+        RadioGroup radioGroup = view.findViewById(R.id.ars_request_chooser);
+        if (radioGroup != null && CollectionUtils.isNotEmpty(options)) {
             int textColor = Color.resolve(activity, android.R.attr.textColorPrimary);
             for (ROption option : options) {
                 String text = option.getTime();
