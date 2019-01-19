@@ -25,7 +25,6 @@ import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.Switch;
 import android.widget.TextView;
-import android.widget.Toolbar;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activity.ScheduleLessonsWidgetConfigureActivity;
@@ -58,6 +57,7 @@ import javax.inject.Inject;
 import androidx.annotation.LayoutRes;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.widget.Toolbar;
 import androidx.core.content.ContextCompat;
 
 public class ScheduleLessonsWidgetConfigureActivityPresenterImpl implements ScheduleLessonsWidgetConfigureActivityPresenter {
@@ -106,7 +106,7 @@ public class ScheduleLessonsWidgetConfigureActivityPresenterImpl implements Sche
             if (toolbar != null) {
                 theme.applyToolbarTheme(activity, toolbar);
                 toolbar.setTitle(R.string.configure_schedule_widget);
-                activity.setActionBar(toolbar);
+                activity.setSupportActionBar(toolbar);
             }
             Intent intent = activity.getIntent();
             Bundle extras = intent.getExtras();

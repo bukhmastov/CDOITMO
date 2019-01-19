@@ -1,6 +1,5 @@
 package com.bukhmastov.cdoitmo.activity;
 
-import android.app.Activity;
 import android.content.Context;
 import android.os.Bundle;
 
@@ -15,7 +14,9 @@ import com.bukhmastov.cdoitmo.util.singleton.CtxWrapper;
 
 import javax.inject.Inject;
 
-public class ScheduleLessonsWidgetConfigureActivity extends Activity {
+import androidx.appcompat.app.AppCompatActivity;
+
+public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
 
     @Inject
     ScheduleLessonsWidgetConfigureActivityPresenter presenter;

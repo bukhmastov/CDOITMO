@@ -4,7 +4,6 @@ import android.content.pm.PackageInfo;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.MenuItem;
-import android.widget.Toolbar;
 
 import com.bukhmastov.cdoitmo.App;
 import com.bukhmastov.cdoitmo.R;
@@ -53,6 +52,7 @@ import javax.inject.Inject;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBarDrawerToggle;
+import androidx.appcompat.widget.Toolbar;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 
@@ -388,9 +388,9 @@ public class MainActivityPresenterImpl implements MainActivityPresenter, Navigat
             DrawerLayout drawerLayout = activity.findViewById(R.id.drawer_layout);
             if (toolbar != null) {
                 theme.applyToolbarTheme(activity, toolbar);
-                activity.setActionBar(toolbar);
-                activity.getActionBar().setDisplayHomeAsUpEnabled(true);
-                activity.getActionBar().setHomeButtonEnabled(true);
+                activity.setSupportActionBar(toolbar);
+                activity.getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+                activity.getSupportActionBar().setHomeButtonEnabled(true);
             }
             if (drawerLayout != null) {
                 App.tablet = false;

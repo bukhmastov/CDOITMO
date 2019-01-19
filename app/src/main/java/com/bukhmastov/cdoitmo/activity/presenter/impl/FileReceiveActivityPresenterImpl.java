@@ -10,7 +10,6 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
-import android.widget.Toolbar;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activity.ConnectedActivity;
@@ -41,6 +40,7 @@ import javax.inject.Inject;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.widget.Toolbar;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import dagger.Lazy;
@@ -88,9 +88,9 @@ public class FileReceiveActivityPresenterImpl implements FileReceiveActivityPres
             Toolbar toolbar = activity.findViewById(R.id.toolbar_file);
             if (toolbar != null) {
                 theme.applyToolbarTheme(activity, toolbar);
-                activity.setActionBar(toolbar);
-                activity.getActionBar().setDisplayHomeAsUpEnabled(true);
-                activity.getActionBar().setHomeButtonEnabled(true);
+                activity.setSupportActionBar(toolbar);
+                activity.getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+                activity.getSupportActionBar().setHomeButtonEnabled(true);
             }
             proceed();
         });

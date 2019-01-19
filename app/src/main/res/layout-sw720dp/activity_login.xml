@@ -1,18 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <android.widget.Toolbar
+    <androidx.appcompat.widget.Toolbar
         android:id="@+id/toolbar_login"
-        android:theme="@style/AppTheme.Toolbar"
-        android:popupTheme="@style/AppTheme.Toolbar.Popup"
         android:layout_width="match_parent"
         android:layout_height="?android:attr/actionBarSize"
         android:elevation="4dp"
         android:background="?attr/colorPrimary"
-        android:logo="@drawable/ic_toolbar_security">
+        android:logo="@drawable/ic_toolbar_security"
+        app:theme="@style/AppTheme.Toolbar"
+        app:popupTheme="@style/AppTheme.Toolbar.Popup">
 
         <TextView
             android:layout_width="wrap_content"
@@ -28,7 +29,7 @@
             android:paddingEnd="16dp"
             android:gravity="center_vertical" />
 
-    </android.widget.Toolbar>
+    </androidx.appcompat.widget.Toolbar>
 
     <FrameLayout
         android:layout_width="match_parent"

@@ -13,7 +13,6 @@ import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.PopupMenu;
 import android.widget.TextView;
-import android.widget.Toolbar;
 
 import com.bukhmastov.cdoitmo.App;
 import com.bukhmastov.cdoitmo.R;
@@ -48,6 +47,7 @@ import javax.inject.Inject;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.widget.Toolbar;
 
 public class LoginActivityPresenterImpl implements LoginActivityPresenter {
 
@@ -114,7 +114,7 @@ public class LoginActivityPresenterImpl implements LoginActivityPresenter {
                 TypedArray resource = activity.obtainStyledAttributes(new int[]{R.attr.ic_toolbar_security});
                 toolbar.setLogo(resource.getDrawable(0));
                 resource.recycle();
-                activity.setActionBar(toolbar);
+                activity.setSupportActionBar(toolbar);
             }
             displayRemoteMessage();
             if (autoLogout) {

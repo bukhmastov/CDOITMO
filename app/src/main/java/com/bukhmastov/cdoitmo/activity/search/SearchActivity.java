@@ -1,6 +1,5 @@
 package com.bukhmastov.cdoitmo.activity.search;
 
-import android.app.Activity;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
@@ -42,10 +41,11 @@ import javax.inject.Inject;
 
 import androidx.annotation.Nullable;
 import androidx.annotation.StringDef;
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-public abstract class SearchActivity extends Activity {
+public abstract class SearchActivity extends AppCompatActivity {
 
     private static final String TAG = "SearchActivity";
     private static final int REQ_CODE_SPEECH_INPUT = 1337;

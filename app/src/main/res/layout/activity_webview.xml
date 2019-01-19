@@ -1,17 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <android.widget.Toolbar
+    <androidx.appcompat.widget.Toolbar
         android:id="@+id/toolbar_webview"
-        android:theme="@style/AppTheme.Toolbar"
-        android:popupTheme="@style/AppTheme.Toolbar.Popup"
         android:layout_width="match_parent"
         android:layout_height="?android:attr/actionBarSize"
         android:elevation="4dp"
-        android:background="?attr/colorPrimary"/>
+        android:background="?attr/colorPrimary"
+        app:theme="@style/AppTheme.Toolbar"
+        app:popupTheme="@style/AppTheme.Toolbar.Popup"/>
 
     <RelativeLayout
         android:layout_width="match_parent"

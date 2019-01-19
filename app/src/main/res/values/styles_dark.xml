@@ -66,10 +66,8 @@
         <item name="android:textColorPrimaryInverse">@color/colorToolbarContentDark</item>
         <item name="android:textColorSecondary">@color/colorToolbarContentDark</item>
         <item name="android:colorControlNormal">@color/colorToolbarContentDark</item>
-        <item name="colorControlNormal">@color/colorToolbarContentDark</item>
         <item name="android:colorControlActivated">@color/colorToolbarContentOpacityDark</item>
         <item name="android:colorControlHighlight">@color/colorToolbarContentOpacityDark</item>
-        <item name="titleTextColor">@color/colorToolbarContentDark</item>
     </style>
     <style name="AppTheme.Toolbar.Popup.Dark" parent="AppTheme.Dark" />
     <style name="AppTheme.Popup.Dark" parent="AppTheme.Dark">

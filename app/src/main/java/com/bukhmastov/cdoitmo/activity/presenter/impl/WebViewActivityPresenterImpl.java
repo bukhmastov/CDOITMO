@@ -5,9 +5,9 @@ import android.graphics.Bitmap;
 import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.ActionBar;
+import androidx.appcompat.widget.Toolbar;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
-import android.app.ActionBar;
-import android.widget.Toolbar;
 import android.view.MenuItem;
 import android.view.View;
 import android.webkit.WebChromeClient;
@@ -82,9 +82,9 @@ public class WebViewActivityPresenterImpl implements WebViewActivityPresenter {
             Toolbar toolbar = activity.findViewById(R.id.toolbar_webview);
             if (toolbar != null) {
                 theme.applyToolbarTheme(activity, toolbar);
-                activity.setActionBar(toolbar);
+                activity.setSupportActionBar(toolbar);
             }
-            ActionBar actionBar = activity.getActionBar();
+            ActionBar actionBar = activity.getSupportActionBar();
             if (actionBar != null) {
                 actionBar.setHomeButtonEnabled(true);
                 actionBar.setDisplayHomeAsUpEnabled(true);

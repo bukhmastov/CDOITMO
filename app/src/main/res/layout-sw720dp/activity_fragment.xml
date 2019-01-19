@@ -28,12 +28,13 @@
         android:layout_height="match_parent"
         android:elevation="4dp" >
 
-        <android.widget.Toolbar
+        <androidx.appcompat.widget.Toolbar
             android:id="@+id/toolbar_fragment"
-            android:theme="@style/AppTheme.Toolbar"
             android:layout_width="match_parent"
             android:layout_height="?android:attr/actionBarSize"
             android:background="?attr/colorPrimary"
+            app:theme="@style/AppTheme.Toolbar"
+            app:popupTheme="@style/AppTheme.Toolbar.Popup"
             app:contentInsetStart="24dp"
             app:elevation="4dp"
             app:titleMarginStart="12dp" />

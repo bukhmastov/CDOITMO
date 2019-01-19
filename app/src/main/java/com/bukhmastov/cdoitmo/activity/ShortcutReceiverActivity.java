@@ -1,6 +1,5 @@
 package com.bukhmastov.cdoitmo.activity;
 
-import android.app.Activity;
 import android.content.Context;
 import android.os.Bundle;
 
@@ -14,8 +13,9 @@ import com.bukhmastov.cdoitmo.util.singleton.CtxWrapper;
 import javax.inject.Inject;
 
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
 
-public class ShortcutReceiverActivity extends Activity {
+public class ShortcutReceiverActivity extends AppCompatActivity {
 
     @Inject
     ShortcutReceiverActivityPresenter presenter;

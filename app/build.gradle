@@ -44,7 +44,7 @@ ext {
     constraintlayoutVersion = "1.1.3"
     firebaseCoreVersion = "16.0.6"
     firebaseMessagingVersion = "17.3.4"
-    firebaseConfigVersion = "16.1.2"
+    firebaseConfigVersion = "16.1.3"
     firebasePerfVersion = "16.2.3"
     firebaseCrashlyticsVersion = "2.9.8"
     googlePlayServicesVersion = "16.0.0"

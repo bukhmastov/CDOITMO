@@ -2,7 +2,7 @@ package com.bukhmastov.cdoitmo.util.impl;
 
 import android.app.Activity;
 import android.content.Context;
-import android.widget.Toolbar;
+import android.view.View;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.dialog.ThemeDialog;
@@ -54,7 +54,7 @@ public class ThemeImpl implements Theme {
     }
 
     @Override
-    public void applyToolbarTheme(Context context, Toolbar toolbar) {
+    public void applyToolbarTheme(Context context, View toolbar) {
         if (context == null || toolbar == null) {
             return;
         }

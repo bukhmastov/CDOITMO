@@ -2,7 +2,7 @@ package com.bukhmastov.cdoitmo.util;
 
 import android.app.Activity;
 import android.content.Context;
-import android.widget.Toolbar;
+import android.view.View;
 
 public interface Theme {
 
@@ -12,5 +12,5 @@ public interface Theme {
 
     void applyActivityTheme(Activity activity);
 
-    void applyToolbarTheme(Context context, Toolbar toolbar);
+    void applyToolbarTheme(Context context, View toolbar);
 }
