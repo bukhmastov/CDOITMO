@@ -78,4 +78,9 @@ public class MainActivity extends ConnectedActivity {
     public int getRootViewId() {
         return R.id.activity_main;
     }
+
+    @Override
+    protected String getLogTag() {
+        return "MainActivity";
+    }
 }

@@ -39,4 +39,9 @@ public class IsuScholarshipPaidFragment extends ConnectedFragment<IsuScholarship
     protected int getRootId() {
         return R.id.container;
     }
+
+    @Override
+    protected String getLogTag() {
+        return "IsuScholarshipPaidFragment";
+    }
 }

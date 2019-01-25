@@ -62,4 +62,9 @@ public class LoginActivity extends ConnectedActivity {
     public int getRootViewId() {
         return R.id.login_content;
     }
+
+    @Override
+    protected String getLogTag() {
+        return "LoginActivity";
+    }
 }

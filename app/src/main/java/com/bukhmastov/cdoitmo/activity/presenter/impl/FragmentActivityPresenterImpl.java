@@ -2,18 +2,7 @@ package com.bukhmastov.cdoitmo.activity.presenter.impl;
 
 import android.content.Intent;
 import android.os.Bundle;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import com.google.android.material.navigation.NavigationView;
-
-import androidx.appcompat.widget.Toolbar;
-import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentManager;
-import androidx.fragment.app.FragmentTransaction;
-import androidx.core.view.GravityCompat;
-import androidx.drawerlayout.widget.DrawerLayout;
 import android.view.MenuItem;
-import android.view.ViewGroup;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activity.ConnectedActivity;
@@ -23,14 +12,22 @@ import com.bukhmastov.cdoitmo.event.bus.EventBus;
 import com.bukhmastov.cdoitmo.event.events.MainActivityEvent;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseConfigProvider;
-import com.bukhmastov.cdoitmo.fragment.ConnectedFragment;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.NavigationMenu;
+import com.bukhmastov.cdoitmo.util.NotificationMessage;
 import com.bukhmastov.cdoitmo.util.Storage;
 import com.bukhmastov.cdoitmo.util.Theme;
 import com.bukhmastov.cdoitmo.util.Thread;
+import com.google.android.material.navigation.NavigationView;
 
 import javax.inject.Inject;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.appcompat.widget.Toolbar;
+import androidx.core.view.GravityCompat;
+import androidx.drawerlayout.widget.DrawerLayout;
+import dagger.Lazy;
 
 public class FragmentActivityPresenterImpl implements FragmentActivityPresenter, NavigationView.OnNavigationItemSelectedListener {
 
@@ -51,6 +48,8 @@ public class FragmentActivityPresenterImpl implements FragmentActivityPresenter,
     Theme theme;
     @Inject
     FirebaseConfigProvider firebaseConfigProvider;
+    @Inject
+    Lazy<NotificationMessage> notificationMessage;
 
     public FragmentActivityPresenterImpl() {
         AppComponentProvider.getComponent().inject(this);
@@ -76,7 +75,7 @@ public class FragmentActivityPresenterImpl implements FragmentActivityPresenter,
             if (!extras.containsKey("class")) {
                 throw new IllegalStateException("Intent's extras should contains 'class'");
             }
-            Class fragmentClass = (Class) extras.get("class");
+            Class connectedFragmentClass = (Class) extras.get("class");
             if (!extras.containsKey("extras")) {
                 throw new IllegalStateException("Intent's extras should contains 'extras'");
             }
@@ -102,7 +101,7 @@ public class FragmentActivityPresenterImpl implements FragmentActivityPresenter,
                     navigationView.setNavigationItemSelectedListener(this);
                 }
             }
-            invoke(fragmentClass, fragmentExtras);
+            openRootFragment(connectedFragmentClass, fragmentExtras);
         }, throwable -> {
             log.exception(throwable);
             activity.finish();
@@ -174,25 +173,17 @@ public class FragmentActivityPresenterImpl implements FragmentActivityPresenter,
         return activity.back();
     }
 
-    private void invoke(Class connectedFragmentClass, Bundle extras) {
-        FragmentManager fragmentManager = activity.getSupportFragmentManager();
+    private void openRootFragment(Class connectedFragmentClass, Bundle extras) {
         thread.runOnUI(() -> {
-            log.v(TAG, "invoke | ", connectedFragmentClass.toString());
-            ConnectedFragment.Data data = ConnectedFragment.getData(activity, connectedFragmentClass);
-            activity.updateToolbar(activity, data.title, null);
-            ViewGroup root = activity.findViewById(activity.getRootViewId());
-            if (root != null) {
-                root.removeAllViews();
-            }
-            Fragment fragment = (Fragment) data.connectedFragmentClass.newInstance();
-            if (extras != null) {
-                fragment.setArguments(extras);
-            }
-            if (fragmentManager != null) {
-                FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
-                fragmentTransaction.replace(activity.getRootViewId(), fragment);
-                fragmentTransaction.commitAllowingStateLoss();
-                activity.pushFragment(new ConnectedActivity.StackElement(ConnectedActivity.TYPE.ROOT, data.connectedFragmentClass, extras));
+            log.v(TAG, "openRootFragment | ", connectedFragmentClass);
+            if (!activity.openFragment(ConnectedActivity.TYPE.ROOT, connectedFragmentClass, extras)) {
+                log.w(TAG, "openRootFragment | ", connectedFragmentClass, " | failed to open fragment");
+                notificationMessage.get().snackBar(
+                        activity,
+                        activity.getString(R.string.failed_to_open_fragment),
+                        activity.getString(R.string.redo),
+                        view -> openRootFragment(connectedFragmentClass, extras)
+                );
             }
         }, throwable -> {
             log.exception(throwable);

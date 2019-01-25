@@ -78,6 +78,11 @@ public abstract class SettingsTemplatePreferencesFragment extends ConnectedFragm
         return R.id.settings_container;
     }
 
+    @Override
+    protected String getLogTag() {
+        return getTAG();
+    }
+
     private void load() {
         try {
             if (activity() == null) {

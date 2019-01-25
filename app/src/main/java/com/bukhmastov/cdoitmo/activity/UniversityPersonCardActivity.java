@@ -54,4 +54,9 @@ public class UniversityPersonCardActivity extends ConnectedActivity {
     public int getRootViewId() {
         return R.id.person_common_container;
     }
+
+    @Override
+    protected String getLogTag() {
+        return "UniversityPersonCardActivity";
+    }
 }

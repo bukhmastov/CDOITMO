@@ -12,7 +12,7 @@
         android:elevation="4dp"
         android:background="?attr/colorPrimary"
         android:logo="@drawable/ic_toolbar_security"
-        app:theme="@style/AppTheme.Toolbar"
+        android:theme="@style/AppTheme.Toolbar"
         app:popupTheme="@style/AppTheme.Toolbar.Popup">
 
         <TextView

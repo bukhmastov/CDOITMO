@@ -23,6 +23,8 @@ import com.bukhmastov.cdoitmo.fragment.settings.SettingsScheduleExamsFragment;
 import com.bukhmastov.cdoitmo.fragment.settings.SettingsScheduleLessonsFragment;
 import com.bukhmastov.cdoitmo.fragment.settings.SettingsSystemsFragment;
 
+import java.util.Objects;
+
 import androidx.annotation.IdRes;
 import androidx.annotation.LayoutRes;
 import androidx.annotation.NonNull;
@@ -31,7 +33,6 @@ import androidx.fragment.app.FragmentManager;
 
 public abstract class ConnectedFragment<P extends ConnectedFragmentPresenter> extends ConnectedFragmentBase {
 
-    private static final String TAG = "ConnectedFragment";
     protected ConnectedActivity activity = null;
     protected View container = null;
     protected Bundle extras = null;
@@ -39,14 +40,16 @@ public abstract class ConnectedFragment<P extends ConnectedFragmentPresenter> ex
     protected abstract P getPresenter();
     protected abstract @LayoutRes int getLayoutId();
     protected abstract @IdRes int getRootId();
+    protected abstract String getLogTag();
 
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
+        log.v(getLogTag(), getMethodSignature("onAttach"));
         try {
             activity = (ConnectedActivity) context;
         } catch (ClassCastException e) {
-            log.wtf(TAG, context.toString(), " must implement ConnectedActivity");
+            log.wtf(getLogTag(), getMethodSignature("onAttach"), " | ", context.getClass(), " must implement ConnectedActivity");
         }
     }
 
@@ -57,6 +60,7 @@ public abstract class ConnectedFragment<P extends ConnectedFragmentPresenter> ex
             getPresenter().setFragment(this);
         }
         super.onCreate(savedInstanceState);
+        log.v(getLogTag(), getMethodSignature("onCreate"));
         if (getPresenter() != null) {
             getPresenter().onCreate(savedInstanceState);
         }
@@ -64,12 +68,24 @@ public abstract class ConnectedFragment<P extends ConnectedFragmentPresenter> ex
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        return inflater.inflate(getLayoutId(), container, false);
+        int layoutId = getLayoutId();
+        log.v(getLogTag(), getMethodSignature("onCreateView"), " | layoutId=", layoutId);
+        View view = inflater.inflate(layoutId, container, false);
+        log.v(getLogTag(), getMethodSignature("onCreateView"), " | layoutId=", layoutId, " | view=", view);
+        return view;
+    }
+
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        container = view;
+        log.v(getLogTag(), getMethodSignature("onViewCreated"), " | view=", view);
+        onViewCreated();
     }
 
     @Override
     public void onStart() {
         super.onStart();
+        log.v(getLogTag(), getMethodSignature("onStart"));
         if (getPresenter() != null && toolbar() != null) {
             getPresenter().onToolbarSetup(toolbar());
         }
@@ -78,6 +94,7 @@ public abstract class ConnectedFragment<P extends ConnectedFragmentPresenter> ex
     @Override
     public void onResume() {
         super.onResume();
+        log.v(getLogTag(), getMethodSignature("onResume"));
         if (getPresenter() != null) {
             getPresenter().onResume();
         }
@@ -86,6 +103,7 @@ public abstract class ConnectedFragment<P extends ConnectedFragmentPresenter> ex
     @Override
     public void onPause() {
         super.onPause();
+        log.v(getLogTag(), getMethodSignature("onPause"));
         if (getPresenter() != null) {
             getPresenter().onPause();
         }
@@ -94,6 +112,7 @@ public abstract class ConnectedFragment<P extends ConnectedFragmentPresenter> ex
     @Override
     public void onStop() {
         super.onStop();
+        log.v(getLogTag(), getMethodSignature("onStop"));
         if (getPresenter() != null && toolbar() != null) {
             getPresenter().onToolbarTeardown(toolbar());
         }
@@ -102,6 +121,7 @@ public abstract class ConnectedFragment<P extends ConnectedFragmentPresenter> ex
     @Override
     public void onDestroy() {
         super.onDestroy();
+        log.v(getLogTag(), getMethodSignature("onDestroy"));
         if (getPresenter() != null) {
             getPresenter().onDestroy();
         }
@@ -111,6 +131,7 @@ public abstract class ConnectedFragment<P extends ConnectedFragmentPresenter> ex
     public void onDetach() {
         activity = null;
         super.onDetach();
+        log.v(getLogTag(), getMethodSignature("onDetach"));
     }
 
     @Override
@@ -121,13 +142,7 @@ public abstract class ConnectedFragment<P extends ConnectedFragmentPresenter> ex
         super.onPrepareOptionsMenu(menu);
     }
 
-    @Override
-    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        container = view;
-        onViewCreated();
-    }
-
-    public void onViewCreated() {
+    private void onViewCreated() {
         if (getPresenter() != null) {
             getPresenter().onViewCreated();
         }
@@ -176,15 +191,15 @@ public abstract class ConnectedFragment<P extends ConnectedFragmentPresenter> ex
     }
 
     public void storeData(String data, String extra) {
-        log.v(TAG, "storeData | activity=", activity(), " | data=", (data == null ? "<null>" : "<notnull>"), " | extra=", (extra == null ? "<null>" : "<notnull>"));
+        log.v(getLogTag(), getMethodSignature("storeData"), " | data=", (data == null ? "<null>" : "<notnull>"), " | extra=", (extra == null ? "<null>" : "<notnull>"));
         ConnectedActivity.storedFragmentName = this.getClass().getCanonicalName();
         ConnectedActivity.storedFragmentData = data;
         ConnectedActivity.storedFragmentExtra = extra;
     }
 
     public String restoreData() {
-        log.v(TAG, "restoreData | activity=", activity());
-        if (ConnectedActivity.storedFragmentName != null && this.getClass().getCanonicalName().equals(ConnectedActivity.storedFragmentName)) {
+        log.v(getLogTag(), getMethodSignature("restoreData"));
+        if (ConnectedActivity.storedFragmentName != null && Objects.equals(this.getClass().getCanonicalName(), ConnectedActivity.storedFragmentName)) {
             return ConnectedActivity.storedFragmentData;
         } else {
             return null;
@@ -192,8 +207,8 @@ public abstract class ConnectedFragment<P extends ConnectedFragmentPresenter> ex
     }
 
     public String restoreDataExtra() {
-        log.v(TAG, "restoreDataExtra | activity=", activity());
-        if (ConnectedActivity.storedFragmentName != null && this.getClass().getCanonicalName().equals(ConnectedActivity.storedFragmentName)) {
+        log.v(getLogTag(), getMethodSignature("restoreDataExtra"));
+        if (ConnectedActivity.storedFragmentName != null && Objects.equals(this.getClass().getCanonicalName(), ConnectedActivity.storedFragmentName)) {
             return ConnectedActivity.storedFragmentExtra;
         } else {
             return null;
@@ -201,8 +216,8 @@ public abstract class ConnectedFragment<P extends ConnectedFragmentPresenter> ex
     }
 
     public boolean clearData() {
-        log.v(TAG, "clearData | activity=", activity());
-        if (this.getClass().getCanonicalName().equals(ConnectedActivity.storedFragmentName)) {
+        log.v(getLogTag(), getMethodSignature("clearData"));
+        if (Objects.equals(this.getClass().getCanonicalName(), ConnectedActivity.storedFragmentName)) {
             ConnectedActivity.storedFragmentName = null;
             ConnectedActivity.storedFragmentData = null;
             ConnectedActivity.storedFragmentExtra = null;
@@ -221,7 +236,7 @@ public abstract class ConnectedFragment<P extends ConnectedFragmentPresenter> ex
         try {
             View view = inflate(layout);
             if (view == null) {
-                log.e(TAG, "Failed to draw layout, view is null");
+                log.e(getLogTag(), getMethodSignature("draw"), " | Failed to draw layout, view is null");
                 return;
             }
             draw(view);
@@ -233,7 +248,7 @@ public abstract class ConnectedFragment<P extends ConnectedFragmentPresenter> ex
     public void draw(View view) {
         try {
             if (activity() == null) {
-                log.e(TAG, "Failed to draw layout, activity is null");
+                log.e(getLogTag(), getMethodSignature("draw"), " | Failed to draw layout, activity is null");
                 return;
             }
             ViewGroup vg = activity().findViewById(getRootId());
@@ -248,12 +263,12 @@ public abstract class ConnectedFragment<P extends ConnectedFragmentPresenter> ex
 
     public View inflate(@LayoutRes int layout) throws InflateException {
         if (activity() == null) {
-            log.e(TAG, "Failed to inflate layout, activity is null");
+            log.e(getLogTag(), getMethodSignature("inflate"), " | Failed to inflate layout, activity is null");
             return null;
         }
         LayoutInflater inflater = (LayoutInflater) activity().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         if (inflater == null) {
-            log.e(TAG, "Failed to inflate layout, inflater is null");
+            log.e(getLogTag(), getMethodSignature("inflate"), " | Failed to inflate layout, inflater is null");
             return null;
         }
         return inflater.inflate(layout, null);
@@ -304,5 +319,9 @@ public abstract class ConnectedFragment<P extends ConnectedFragmentPresenter> ex
         if (connectedFragment == IsuScholarshipAssignedFragment.class) return new Data(connectedFragment, context.getString(R.string.scholarship_assigned), R.drawable.ic_money_circle);
         if (connectedFragment == IsuScholarshipPaidDetailsFragment.class) return new Data(connectedFragment, context.getString(R.string.scholarship_paid), R.drawable.ic_money_circle);
         throw new IllegalStateException("Connected fragment class without declaration at ConnectedFragment#getData, class = " + connectedFragment.getName());
+    }
+
+    private String getMethodSignature(String methodName) {
+        return "ConnectedFragment[" + hashCode() + "]#" + methodName;
     }
 }

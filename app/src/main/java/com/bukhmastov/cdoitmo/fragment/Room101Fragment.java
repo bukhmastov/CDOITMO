@@ -39,4 +39,9 @@ public class Room101Fragment extends ConnectedFragment<Room101FragmentPresenter>
     protected int getRootId() {
         return R.id.container;
     }
+
+    @Override
+    protected String getLogTag() {
+        return "Room101Fragment";
+    }
 }

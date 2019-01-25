@@ -40,4 +40,8 @@ public class ERegisterFragment extends ConnectedFragment<ERegisterFragmentPresen
         return R.id.container;
     }
 
+    @Override
+    protected String getLogTag() {
+        return "ERegisterFragment";
+    }
 }

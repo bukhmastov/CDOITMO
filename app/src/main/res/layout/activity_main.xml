@@ -16,7 +16,7 @@
         android:layout_height="?android:attr/actionBarSize"
         android:background="?attr/colorPrimary"
         android:elevation="4dp"
-        app:theme="@style/AppTheme.Toolbar"
+        android:theme="@style/AppTheme.Toolbar"
         app:popupTheme="@style/AppTheme.Toolbar.Popup"/>
 
     <com.google.android.material.tabs.TabLayout

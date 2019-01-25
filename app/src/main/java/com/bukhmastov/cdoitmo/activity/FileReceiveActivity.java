@@ -70,4 +70,9 @@ public class FileReceiveActivity extends ConnectedActivity {
     public int getRootViewId() {
         return R.id.activity_file_receive;
     }
+
+    @Override
+    protected String getLogTag() {
+        return "FileReceiveActivity";
+    }
 }

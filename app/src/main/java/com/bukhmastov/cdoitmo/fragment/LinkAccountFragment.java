@@ -39,4 +39,9 @@ public class LinkAccountFragment extends ConnectedFragment<LinkAccountFragmentPr
     protected int getRootId() {
         return 0;
     }
+
+    @Override
+    protected String getLogTag() {
+        return "LinkAccountFragment";
+    }
 }

@@ -46,6 +46,11 @@ public class FragmentActivity extends ConnectedActivity {
     }
 
     @Override
+    protected String getLogTag() {
+        return "FragmentActivity";
+    }
+
+    @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.toolbar, menu);
         toolbar = menu;

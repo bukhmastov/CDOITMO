@@ -39,4 +39,9 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment<ScheduleLes
     protected int getRootId() {
         return 0;
     }
+
+    @Override
+    protected String getLogTag() {
+        return "ScheduleLessonsModifyFragment";
+    }
 }

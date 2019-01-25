@@ -38,6 +38,8 @@ public interface Thread {
      */
     void uncaught(Throwable throwable);
 
+    void initUncaughtExceptionHandler();
+
     @Retention(RetentionPolicy.SOURCE)
     @IntDef({FOREGROUND, BACKGROUND})
     @interface TYPE {}

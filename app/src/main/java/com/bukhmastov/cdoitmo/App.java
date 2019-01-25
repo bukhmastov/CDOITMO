@@ -75,6 +75,7 @@ public class App extends Application {
             throw throwable;
         }
         try {
+            thread.initUncaughtExceptionHandler();
             storagePref.applyDebug(this);
             eventBus.register(this);
             log.setEnabled(storagePref.get(this, "pref_allow_collect_logs", false));

@@ -16,6 +16,7 @@ import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.function.ThrowingConsumer;
 import com.bukhmastov.cdoitmo.function.ThrowingRunnable;
 import com.bukhmastov.cdoitmo.util.Log;
+import com.bukhmastov.cdoitmo.util.NotificationMessage;
 import com.bukhmastov.cdoitmo.util.Thread;
 
 import javax.inject.Inject;
@@ -26,11 +27,14 @@ public class ThreadImpl implements Thread {
 
     private static final String TAG = "Thread";
     private static final boolean DEBUG = App.DEBUG;
+    private java.lang.Thread.UncaughtExceptionHandler uncaughtExceptionHandler;
 
     @Inject
     Lazy<Log> log;
     @Inject
     Lazy<Context> context;
+    @Inject
+    Lazy<NotificationMessage> notificationMessage;
 
     public ThreadImpl() {
         AppComponentProvider.getComponent().inject(this);
@@ -154,6 +158,39 @@ public class ThreadImpl implements Thread {
         }
         java.lang.Thread.getDefaultUncaughtExceptionHandler()
                 .uncaughtException(java.lang.Thread.currentThread(), throwable);
+    }
+
+    @Override
+    public void initUncaughtExceptionHandler() {
+        uncaughtExceptionHandler = java.lang.Thread.getDefaultUncaughtExceptionHandler();
+        try {
+            java.lang.Thread.setDefaultUncaughtExceptionHandler((thread, throwable) -> {
+                try {
+                    if (throwable instanceof IllegalStateException ||
+                            throwable instanceof IllegalArgumentException) {
+                        log.get().exception("Intercepted exception", throwable);
+                        notificationMessage.get().toast(context.get(), R.string.something_went_wrong);
+                        if (App.DEBUG && uncaughtExceptionHandler != null) {
+                            uncaughtExceptionHandler.uncaughtException(thread, throwable);
+                        }
+                        return;
+                    }
+                    if (uncaughtExceptionHandler != null) {
+                        uncaughtExceptionHandler.uncaughtException(thread, throwable);
+                    } else {
+                        log.get().exception("Uncaught exception not passed to default handler", throwable);
+                    }
+                } catch (Throwable th) {
+                    try {
+                        log.get().exception("Exception while handling uncaught exception", th);
+                    } catch (Throwable ignore) {
+                        // There's nothing else we can do...
+                    }
+                }
+            });
+        } catch (SecurityException exception) {
+            log.get().v(TAG, "Failed to setDefaultUncaughtExceptionHandler", exception);
+        }
     }
 
     private boolean isMainThread() {

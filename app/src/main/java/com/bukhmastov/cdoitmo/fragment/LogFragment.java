@@ -39,4 +39,9 @@ public class LogFragment extends ConnectedFragment<LogFragmentPresenter> {
     protected int getRootId() {
         return 0;
     }
+
+    @Override
+    protected String getLogTag() {
+        return "LogFragment";
+    }
 }

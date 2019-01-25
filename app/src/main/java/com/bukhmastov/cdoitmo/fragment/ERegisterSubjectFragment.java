@@ -39,4 +39,9 @@ public class ERegisterSubjectFragment extends ConnectedFragment<ERegisterSubject
     protected int getRootId() {
         return 0;
     }
+
+    @Override
+    protected String getLogTag() {
+        return "ERegisterSubjectFragment";
+    }
 }

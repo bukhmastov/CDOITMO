@@ -11,7 +11,7 @@
         android:layout_height="?android:attr/actionBarSize"
         android:elevation="4dp"
         android:background="?attr/colorPrimary"
-        app:theme="@style/AppTheme.Toolbar"
+        android:theme="@style/AppTheme.Toolbar"
         app:popupTheme="@style/AppTheme.Toolbar.Popup"/>
 
     <RelativeLayout

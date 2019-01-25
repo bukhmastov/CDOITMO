@@ -10,6 +10,7 @@ import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseCrashlyticsProvider;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.singleton.LogMetrics;
+import com.bukhmastov.cdoitmo.util.singleton.StringUtils;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -177,7 +178,10 @@ public class LogImpl implements Log {
     @Override
     public int exception(String msg, Throwable throwable) {
         LogMetrics.exception++;
-        msg = wrapLog(msg);
+        msg = msg == null ? "" : wrapLog(msg);
+        if (StringUtils.isNotEmpty(msg)) {
+            firebaseCrashlyticsProvider.get().w("Exception", msg);
+        }
         firebaseCrashlyticsProvider.get().exception(throwable);
         if (enabled) {
             addLog(new LogItem(EXCEPTION, throwable));
@@ -291,6 +295,8 @@ public class LogImpl implements Log {
                 sb.append((long) item);
             } else if (item instanceof Context || item instanceof Fragment) {
                 sb.append("<notnull>");
+            } else if (item instanceof Class) {
+                sb.append(((Class) item).getSimpleName());
             } else {
                 sb.append(item);
             }

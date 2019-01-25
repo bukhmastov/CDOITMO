@@ -39,4 +39,9 @@ public class HomeScreenInteractionFragment extends ConnectedFragment<HomeScreenI
     protected int getRootId() {
         return 0;
     }
+
+    @Override
+    protected String getLogTag() {
+        return "HomeScreenInteractionFragment";
+    }
 }

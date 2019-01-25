@@ -39,4 +39,9 @@ public class ScheduleLessonsFragment extends ConnectedFragment<ScheduleLessonsFr
     protected int getRootId() {
         return R.id.container;
     }
+
+    @Override
+    protected String getLogTag() {
+        return "ScheduleLessonsFragment";
+    }
 }

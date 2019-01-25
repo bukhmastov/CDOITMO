@@ -39,4 +39,9 @@ public class RatingFragment extends ConnectedFragment<RatingFragmentPresenter> {
     protected int getRootId() {
         return R.id.container;
     }
+
+    @Override
+    protected String getLogTag() {
+        return "RatingFragment";
+    }
 }

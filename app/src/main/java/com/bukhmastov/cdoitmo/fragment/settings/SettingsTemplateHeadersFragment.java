@@ -73,6 +73,11 @@ public abstract class SettingsTemplateHeadersFragment extends ConnectedFragment 
         return R.id.settings_container;
     }
 
+    @Override
+    protected String getLogTag() {
+        return getTAG();
+    }
+
     private void load() {
         try {
             if (activity() == null) {

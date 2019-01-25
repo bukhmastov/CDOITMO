@@ -39,4 +39,9 @@ public class IsuGroupInfoFragment extends ConnectedFragment<IsuGroupInfoFragment
     protected int getRootId() {
         return R.id.container;
     }
+
+    @Override
+    protected String getLogTag() {
+        return "IsuGroupInfoFragment";
+    }
 }

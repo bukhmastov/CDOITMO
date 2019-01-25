@@ -41,4 +41,9 @@ public class UniversityFragment extends ConnectedFragment<UniversityFragmentPres
     protected int getRootId() {
         return 0;
     }
+
+    @Override
+    protected String getLogTag() {
+        return "UniversityFragment";
+    }
 }

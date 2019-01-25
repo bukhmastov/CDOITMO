@@ -43,4 +43,9 @@ public class IntroducingActivity extends ConnectedActivity {
     public int getRootViewId() {
         return R.id.content;
     }
+
+    @Override
+    protected String getLogTag() {
+        return "IntroducingActivity";
+    }
 }

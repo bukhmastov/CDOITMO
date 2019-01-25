@@ -3,6 +3,8 @@ package com.bukhmastov.cdoitmo.activity;
 import android.content.Context;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+
+import androidx.annotation.CallSuper;
 import androidx.annotation.IdRes;
 import androidx.annotation.LayoutRes;
 import androidx.annotation.StringDef;
@@ -37,7 +39,6 @@ import javax.inject.Inject;
 
 public abstract class ConnectedActivity extends AppCompatActivity {
 
-    private static final String TAG = "ConnectedActivity";
     private static final String STATE_STORED_FRAGMENT_NAME = "storedFragmentName";
     private static final String STATE_STORED_FRAGMENT_DATA = "storedFragmentData";
     private static final String STATE_STORED_FRAGMENT_EXTRA = "storedFragmentExtra";
@@ -80,9 +81,14 @@ public abstract class ConnectedActivity extends AppCompatActivity {
         }
     }
 
+    public abstract @IdRes int getRootViewId();
+    protected abstract String getLogTag();
+
     @Override
+    @CallSuper
     protected void onCreate(final Bundle savedInstanceState) {
         AppComponentProvider.getComponent().inject(this);
+        log.v(getLogTag(), getMethodSignature("onCreate"));
         super.onCreate(savedInstanceState);
     }
 
@@ -102,7 +108,11 @@ public abstract class ConnectedActivity extends AppCompatActivity {
         storedFragmentExtra = savedInstanceState.getString(STATE_STORED_FRAGMENT_EXTRA);
     }
 
-    public abstract @IdRes int getRootViewId();
+    @Override
+    protected void onDestroy() {
+        log.v(getLogTag(), getMethodSignature("onDestroy"));
+        super.onDestroy();
+    }
 
     public boolean openActivityOrFragment(Class connectedFragmentClass, Bundle extras) {
         return openActivityOrFragment(TYPE.STACKABLE, connectedFragmentClass, extras);
@@ -113,7 +123,7 @@ public abstract class ConnectedActivity extends AppCompatActivity {
     }
 
     public boolean openActivityOrFragment(StackElement stackElement) {
-        log.v(TAG, "openActivityOrFragment | type=", stackElement.type, " | class=", stackElement.connectedFragmentClass.toString());
+        log.v(getLogTag(), getMethodSignature("openActivityOrFragment"), " | type=", stackElement.type, " | class=", stackElement.connectedFragmentClass);
         if (App.tablet) {
             return openFragment(stackElement);
         } else {
@@ -130,7 +140,7 @@ public abstract class ConnectedActivity extends AppCompatActivity {
     }
 
     public boolean openFragment(StackElement stackElement) {
-        log.v(TAG, "openFragment | type=", stackElement.type, " | class=", stackElement.connectedFragmentClass.toString());
+        log.v(getLogTag(), getMethodSignature("openFragment"), " | type=", stackElement.type, " | class=", stackElement.connectedFragmentClass);
         try {
             ConnectedFragment.Data data = ConnectedFragment.getData(this, stackElement.connectedFragmentClass);
             ViewGroup rootLayout = findViewById(getRootViewId());
@@ -145,9 +155,15 @@ public abstract class ConnectedActivity extends AppCompatActivity {
             if (fragmentManager == null) {
                 return false;
             }
+            if (fragmentManager.isStateSaved() || fragmentManager.isDestroyed() || isDestroyed()) {
+                log.w(getLogTag(), getMethodSignature("openFragment"), " | Fragment not opened | ",
+                        "isStateSaved=", fragmentManager.isStateSaved(), " | isDestroyed=", fragmentManager.isDestroyed(), "/", isDestroyed());
+                return false;
+            }
+            log.v(getLogTag(), getMethodSignature("openFragment"), " | containerId=", getRootViewId(), " | fragment=", connectedFragment.toString());
             FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
             fragmentTransaction.replace(getRootViewId(), connectedFragment);
-            fragmentTransaction.commitAllowingStateLoss();
+            fragmentTransaction.commit();
             pushFragment(stackElement);
             updateToolbar(this, data.title, layoutWithMenu ? data.image : null);
             return true;
@@ -166,7 +182,7 @@ public abstract class ConnectedActivity extends AppCompatActivity {
     }
 
     public boolean openActivity(StackElement stackElement) {
-        log.v(TAG, "openActivity | type=", stackElement.type, " | class=", stackElement.connectedFragmentClass.toString());
+        log.v(getLogTag(), getMethodSignature("openActivity"), " | type=", stackElement.type, " | class=", stackElement.connectedFragmentClass);
         try {
             Bundle bundle = new Bundle();
             bundle.putSerializable("class", stackElement.connectedFragmentClass);
@@ -180,7 +196,7 @@ public abstract class ConnectedActivity extends AppCompatActivity {
     }
 
     public boolean back() {
-        log.v(TAG, "back | stack.size=", stack.size());
+        log.v(getLogTag(), getMethodSignature("back"), " | stack.size()=", stack.size());
         if (stack.size() > 0) {
             int index = stack.size() - 1;
             if (stack.get(index).type.equals(TYPE.ROOT)) {
@@ -201,28 +217,28 @@ public abstract class ConnectedActivity extends AppCompatActivity {
     }
 
     public void pushFragment(StackElement stackElement) {
-        log.v(TAG, "pushFragment | type=", stackElement.type, " | class=", stackElement.connectedFragmentClass.toString());
+        log.v(getLogTag(), getMethodSignature("pushFragment"), " | type=", stackElement.type, " | class=", stackElement.connectedFragmentClass);
         if (stackElement.type.equals(TYPE.ROOT)) {
             stack.clear();
         }
         stack.add(stackElement);
-        log.v(TAG, "stack.size() = ", stack.size());
+        log.v(getLogTag(), getMethodSignature("pushFragment"), " | stack.size()=", stack.size());
     }
 
     public void removeFragment(Class connectedFragmentClass) {
-        log.v(TAG, "removeFragment | class=", connectedFragmentClass.toString());
+        log.v(getLogTag(), getMethodSignature("removeFragment"), " | class=", connectedFragmentClass);
         for (int i = stack.size() - 1; i >= 0; i--) {
             StackElement stackElement = stack.get(i);
             if (stackElement.connectedFragmentClass == connectedFragmentClass) {
                 if (!stackElement.type.equals(TYPE.ROOT)) {
                     stack.remove(stackElement);
                 } else {
-                    log.e(TAG, "removeFragment | prevented root fragment removal from the stack");
+                    log.e(getLogTag(), getMethodSignature("removeFragment"), " | Prevented root fragment removal from the stack");
                 }
                 break;
             }
         }
-        log.v(TAG, "stack.size() = ", stack.size());
+        log.v(getLogTag(), getMethodSignature("removeFragment"), " | stack.size() = ", stack.size());
     }
 
     public void updateToolbar(Context context, String title, Integer image) {
@@ -255,7 +271,7 @@ public abstract class ConnectedActivity extends AppCompatActivity {
     public View inflate(@LayoutRes int layout) throws InflateException {
         LayoutInflater inflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         if (inflater == null) {
-            log.e(TAG, "Failed to inflate layout, inflater is null");
+            log.e(getLogTag(), getMethodSignature("inflate"), " | Failed to inflate layout, inflater is null");
             return null;
         }
         return inflater.inflate(layout, null);
@@ -285,6 +301,10 @@ public abstract class ConnectedActivity extends AppCompatActivity {
         storedFragmentName = null;
         storedFragmentData = null;
         storedFragmentExtra = null;
+    }
+
+    private String getMethodSignature(String methodName) {
+        return "ConnectedActivity[" + hashCode() + "]#" + methodName;
     }
 
     @Override
