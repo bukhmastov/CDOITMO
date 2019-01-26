@@ -4,7 +4,9 @@ import android.app.AlertDialog;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.ArrayAdapter;
+import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.adapter.rva.ERegisterSubjectViewRVA;
@@ -74,23 +76,32 @@ public class ERegisterSubjectFragmentPresenterImpl extends ConnectedFragmentWith
     }
 
     @Override
+    public void onPreCreate(@Nullable Bundle savedInstanceState) {
+        thread.run(() -> {
+            fragment.setHasOptionsMenu(true);
+        }, throwable -> {
+            log.exception(throwable);
+        });
+    }
+
+    @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         thread.run(() -> {
             log.v(TAG, "Fragment created");
             firebaseAnalyticsProvider.logCurrentScreen(activity, fragment);
-            fragment.setHasOptionsMenu(true);
             Bundle extras = fragment.getArguments();
             if (extras == null) {
-                activity.back();
+                loadFailed();
                 return;
             }
             setData((ERSubject) extras.getSerializable("subject"));
             if (getData() == null) {
-                activity.back();
+                loadFailed();
+                return;
             }
         }, throwable -> {
             log.exception(throwable);
-            activity.back();
+            loadFailed();
         });
     }
 
@@ -186,6 +197,19 @@ public class ERegisterSubjectFragmentPresenterImpl extends ConnectedFragmentWith
         }, throwable -> {
             log.exception(throwable);
             activity.back();
+        });
+    }
+
+    private void loadFailed() {
+        thread.runOnUI(() -> {
+            log.v(TAG, "loadFailed");
+            activity.draw(R.layout.state_failed_text);
+            TextView message = activity.findViewById(R.id.text);
+            if (message != null) {
+                message.setText(R.string.error_occurred);
+            }
+        }, throwable -> {
+            log.exception(throwable);
         });
     }
 

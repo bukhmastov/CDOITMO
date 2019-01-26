@@ -12,6 +12,8 @@ public interface ConnectedFragmentPresenter {
 
     void setFragment(ConnectedFragment fragment);
 
+    default void onPreCreate(@Nullable Bundle savedInstanceState) {}
+
     void onCreate(@Nullable Bundle savedInstanceState);
 
     void onDestroy();

@@ -3,6 +3,7 @@ package com.bukhmastov.cdoitmo.activity.presenter.impl;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.MenuItem;
+import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activity.ConnectedActivity;
@@ -104,7 +105,7 @@ public class FragmentActivityPresenterImpl implements FragmentActivityPresenter,
             openRootFragment(connectedFragmentClass, fragmentExtras);
         }, throwable -> {
             log.exception(throwable);
-            activity.finish();
+            loadFailed();
         });
     }
 
@@ -188,6 +189,19 @@ public class FragmentActivityPresenterImpl implements FragmentActivityPresenter,
         }, throwable -> {
             log.exception(throwable);
             activity.finish();
+        });
+    }
+
+    private void loadFailed() {
+        thread.runOnUI(() -> {
+            log.v(TAG, "loadFailed");
+            activity.draw(R.layout.state_failed_text);
+            TextView message = activity.findViewById(R.id.text);
+            if (message != null) {
+                message.setText(R.string.error_occurred);
+            }
+        }, throwable -> {
+            log.exception(throwable);
         });
     }
 }

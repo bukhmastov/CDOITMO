@@ -97,10 +97,18 @@ public class RatingListFragmentPresenterImpl extends ConnectedFragmentWithDataPr
     }
 
     @Override
+    public void onPreCreate(@Nullable Bundle savedInstanceState) {
+        thread.run(() -> {
+            fragment.setHasOptionsMenu(true);
+        }, throwable -> {
+            log.exception(throwable);
+        });
+    }
+
+    @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         thread.run(() -> {
             log.v(TAG, "Fragment created");
-            fragment.setHasOptionsMenu(true);
             firebaseAnalyticsProvider.logCurrentScreen(activity, fragment);
         });
     }
