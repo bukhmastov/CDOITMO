@@ -97,19 +97,11 @@ public class RatingListFragmentPresenterImpl extends ConnectedFragmentWithDataPr
     }
 
     @Override
-    public void onPreCreate(@Nullable Bundle savedInstanceState) {
-        thread.run(() -> {
-            fragment.setHasOptionsMenu(true);
-        }, throwable -> {
-            log.exception(throwable);
-        });
-    }
-
-    @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         thread.run(() -> {
             log.v(TAG, "Fragment created");
             firebaseAnalyticsProvider.logCurrentScreen(activity, fragment);
+            fragment.setHasOptionsMenu(true);
         });
     }
 
@@ -173,7 +165,7 @@ public class RatingListFragmentPresenterImpl extends ConnectedFragmentWithDataPr
             Bundle extras = fragment.getArguments();
             if (extras == null) {
                 log.e(TAG, "extras are null");
-                activity.back();
+                loadFailed();
                 return;
             }
             faculty = extras.getString("faculty");
@@ -188,12 +180,12 @@ public class RatingListFragmentPresenterImpl extends ConnectedFragmentWithDataPr
             log.v(TAG, "faculty=", faculty, " | course=", course, " | years=", years);
             if (StringUtils.isBlank(faculty) || StringUtils.isBlank(course)) {
                 log.e(TAG, "wrong extras provided | faculty=", faculty, " | course=", course);
-                activity.back();
+                loadFailed();
                 return;
             }
         }, throwable -> {
             log.exception(throwable);
-            activity.back();
+            loadFailed();
         });
     }
 

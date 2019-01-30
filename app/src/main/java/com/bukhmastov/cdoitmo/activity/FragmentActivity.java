@@ -8,6 +8,7 @@ import android.view.MenuItem;
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activity.presenter.FragmentActivityPresenter;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
+import com.bukhmastov.cdoitmo.util.Static;
 import com.bukhmastov.cdoitmo.util.Theme;
 
 import javax.inject.Inject;
@@ -18,6 +19,8 @@ public class FragmentActivity extends ConnectedActivity {
     FragmentActivityPresenter presenter;
     @Inject
     Theme theme;
+    @Inject
+    Static staticUtil;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -25,6 +28,7 @@ public class FragmentActivity extends ConnectedActivity {
         presenter.setActivity(this);
         theme.applyActivityTheme(this);
         super.onCreate(savedInstanceState);
+        staticUtil.lockOrientation(this, true);
         presenter.onCreate(savedInstanceState);
     }
 

@@ -76,19 +76,11 @@ public class ERegisterSubjectFragmentPresenterImpl extends ConnectedFragmentWith
     }
 
     @Override
-    public void onPreCreate(@Nullable Bundle savedInstanceState) {
-        thread.run(() -> {
-            fragment.setHasOptionsMenu(true);
-        }, throwable -> {
-            log.exception(throwable);
-        });
-    }
-
-    @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         thread.run(() -> {
             log.v(TAG, "Fragment created");
             firebaseAnalyticsProvider.logCurrentScreen(activity, fragment);
+            fragment.setHasOptionsMenu(true);
             Bundle extras = fragment.getArguments();
             if (extras == null) {
                 loadFailed();
@@ -184,7 +176,7 @@ public class ERegisterSubjectFragmentPresenterImpl extends ConnectedFragmentWith
                 final LinearLayoutManager layoutManager = new LinearLayoutManager(activity, RecyclerView.VERTICAL, false);
                 final RecyclerView recyclerView = fragment.container().findViewById(R.id.points_list);
                 if (recyclerView == null) {
-                    activity.back();
+                    loadFailed();
                     return;
                 }
                 recyclerView.setLayoutManager(layoutManager);
@@ -192,11 +184,11 @@ public class ERegisterSubjectFragmentPresenterImpl extends ConnectedFragmentWith
                 recyclerView.setHasFixedSize(true);
             }, throwable -> {
                 log.exception(throwable);
-                activity.back();
+                loadFailed();
             });
         }, throwable -> {
             log.exception(throwable);
-            activity.back();
+            loadFailed();
         });
     }
 

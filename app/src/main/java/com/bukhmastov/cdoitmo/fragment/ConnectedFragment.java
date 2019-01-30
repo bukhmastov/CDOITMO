@@ -62,7 +62,6 @@ public abstract class ConnectedFragment<P extends ConnectedFragmentPresenter> ex
         super.onCreate(savedInstanceState);
         log.v(getLogTag(), getMethodSignature("onCreate"));
         if (getPresenter() != null) {
-            getPresenter().onPreCreate(savedInstanceState);
             getPresenter().onCreate(savedInstanceState);
         }
     }
