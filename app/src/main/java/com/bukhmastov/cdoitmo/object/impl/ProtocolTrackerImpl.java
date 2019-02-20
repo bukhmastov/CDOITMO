@@ -223,7 +223,7 @@ public class ProtocolTrackerImpl implements ProtocolTracker {
 
     @Override
     public void setup(@NonNull Context context, @NonNull DeIfmoRestClient deIfmoRestClient, int attempt) {
-        thread.run(Thread.BACKGROUND, () -> {
+        thread.standalone(() -> {
             log.v(TAG, "setup | attempt=", attempt);
             if (!storagePref.get(context, "pref_protocol_changes_track", true)) {
                 log.v(TAG, "setup | pref_protocol_changes_track=false");
@@ -236,7 +236,7 @@ public class ProtocolTrackerImpl implements ProtocolTracker {
             deIfmoRestClient.get(context, "eregisterlog?days=126", null, new RestResponseHandler() {
                 @Override
                 public void onSuccess(final int statusCode, Client.Headers headers, JSONObject obj, final JSONArray arr) {
-                    thread.run(Thread.BACKGROUND, () -> {
+                    thread.standalone(() -> {
                         if (statusCode == 200 && arr != null) {
                             Protocol protocol = new Protocol().fromJson(new JSONObject().put("protocol", arr));
                             protocol.setTimestamp(time.get().getTimeInMillis());
@@ -250,7 +250,7 @@ public class ProtocolTrackerImpl implements ProtocolTracker {
                 }
                 @Override
                 public void onFailure(int statusCode, Client.Headers headers, int state) {
-                    thread.run(Thread.BACKGROUND, () -> setup(context, deIfmoRestClient, attempt + 1));
+                    setup(context, deIfmoRestClient, attempt + 1);
                 }
                 @Override
                 public void onProgress(int state) {}

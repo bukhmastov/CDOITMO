@@ -220,8 +220,8 @@ public class DeIfmoClientImpl extends DeIfmoClient {
                             responseHandler.onFailure(code, new Headers(headers), FAILED_SERVER_ERROR);
                             return;
                         }
-                        if (StringUtils.isBlank(response)) {
-                            log.v(TAG, "get | url=", url, " | success | code=", code, " | response is blank");
+                        if (response == null) {
+                            log.v(TAG, "get | url=", url, " | success | code=", code, " | response is null");
                             responseHandler.onFailure(code, new Headers(headers), FAILED_TRY_AGAIN);
                             return;
                         }
@@ -323,8 +323,8 @@ public class DeIfmoClientImpl extends DeIfmoClient {
                             responseHandler.onFailure(code, new Headers(headers), FAILED_SERVER_ERROR);
                             return;
                         }
-                        if (StringUtils.isBlank(response)) {
-                            log.v(TAG, "post | url=", url, " | success | code=", code, " | response is blank");
+                        if (response == null) {
+                            log.v(TAG, "post | url=", url, " | success | code=", code, " | response is null");
                             responseHandler.onFailure(code, new Headers(headers), FAILED_TRY_AGAIN);
                             return;
                         }

@@ -603,20 +603,20 @@ public class LoginActivityPresenterImpl implements LoginActivityPresenter {
     private void loginSetupInformation(Account.LoginHandler handler, boolean isNewUser, ThrowingRunnable onDone) {
         if (isNewUser) {
             thread.runOnUI(() -> handler.onProgress(activity.getString(R.string.data_initializing)));
-            loginSetupInformation(Thread.FOREGROUND, () -> thread.runOnUI(onDone));
+            loginSetupInformation(() -> thread.runOnUI(onDone));
         } else {
-            loginSetupInformation(Thread.BACKGROUND, () -> {});
+            loginSetupInformation(() -> {});
             thread.runOnUI(onDone);
         }
     }
 
-    private void loginSetupInformation(@Thread.TYPE int threadType, Runnable onDone) {
-        thread.run(threadType, () -> {
+    private void loginSetupInformation(Runnable onDone) {
+        thread.standalone(() -> {
             SetupInformationMeta setupInformationMeta = new SetupInformationMeta(onDone);
             deIfmoClient.get(activity, "servlet/distributedCDE?Rule=editPersonProfile", null, new ResponseHandler() {
                 @Override
                 public void onSuccess(int code, Client.Headers headers, String response) {
-                    thread.run(threadType, () -> {
+                    thread.standalone(() -> {
                         UserData userData = new UserDataParser(response).parse();
                         if (userData == null) {
                             log.v(TAG, "loginSetupInformation | deIfmoClient | success | not parsed");
@@ -647,7 +647,7 @@ public class LoginActivityPresenterImpl implements LoginActivityPresenter {
             isuRestClient.get(activity, "schedule/week/%apikey%", null, new RestResponseHandler() {
                 @Override
                 public void onSuccess(int code, Client.Headers headers, JSONObject obj, JSONArray arr) {
-                    thread.run(threadType, () -> {
+                    thread.standalone(() -> {
                         if (obj == null) {
                             setupInformationMeta.onIsuWeekFailed();
                             return;
@@ -671,7 +671,7 @@ public class LoginActivityPresenterImpl implements LoginActivityPresenter {
                 isuPrivateRestClient.get(activity, "userdata/%apikey%/%isutoken%", null, new RestResponseHandler() {
                     @Override
                     public void onSuccess(int code, Client.Headers headers, JSONObject obj, JSONArray arr) {
-                        thread.run(threadType, () -> {
+                        thread.standalone(() -> {
                             if (obj == null) {
                                 setupInformationMeta.onIsuUserFailed();
                                 return;

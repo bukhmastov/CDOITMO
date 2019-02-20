@@ -19,6 +19,8 @@ import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.NotificationMessage;
 import com.bukhmastov.cdoitmo.util.Thread;
 
+import java.util.Locale;
+
 import javax.inject.Inject;
 
 import dagger.Lazy;
@@ -26,8 +28,20 @@ import dagger.Lazy;
 public class ThreadImpl implements Thread {
 
     private static final String TAG = "Thread";
+    private static final String THREAD_NAME_BACKGROUND = "CDOExecutorBackground";
+    private static final String THREAD_NAME_FOREGROUND = "CDOExecutorForeground";
+    private static final String THREAD_NAME_STANDALONE = "CDOStandalone-%d";
     private static final boolean DEBUG = App.DEBUG;
     private java.lang.Thread.UncaughtExceptionHandler uncaughtExceptionHandler;
+
+    /* For autonumbering standalone threads. */
+    private static int standaloneThreadNumber = 0;
+    private static synchronized int nextStandaloneThreadNum() {
+        if (standaloneThreadNumber > Integer.MAX_VALUE - 10) {
+            standaloneThreadNumber = 0;
+        }
+        return standaloneThreadNumber++;
+    }
 
     @Inject
     Lazy<Log> log;
@@ -117,6 +131,31 @@ public class ThreadImpl implements Thread {
             } catch (Throwable throwable) {
                 onCaughtUncaughtException("main", throwable, errorHandler);
             }
+        }
+    }
+
+    @Override
+    public void standalone(@NonNull ThrowingRunnable runnable) {
+        standalone(runnable, null);
+    }
+
+    @Override
+    public void standalone(@NonNull ThrowingRunnable runnable, @Nullable ThrowingConsumer<Throwable, Throwable> errorHandler) {
+        String threadName = String.format(Locale.getDefault(), THREAD_NAME_STANDALONE, nextStandaloneThreadNum());
+        try {
+            java.lang.Thread thread = new java.lang.Thread(() -> {
+                try {
+                    runnable.run();
+                } catch (Throwable throwable) {
+                    onCaughtUncaughtException(threadName, throwable, errorHandler);
+                }
+            });
+            thread.setName(threadName);
+            thread.setPriority(java.lang.Thread.MIN_PRIORITY);
+            log("standalone | new thread is about to start | name = " + threadName);
+            thread.start();
+        } catch (Throwable throwable) {
+            onCaughtUncaughtException(threadName, throwable, errorHandler);
         }
     }
 
@@ -249,6 +288,6 @@ public class ThreadImpl implements Thread {
             this.priority = priority;
         }
     }
-    private static final ThreadFacade Foreground = new ThreadFacade(FOREGROUND, "CDOExecutorForeground", Process.THREAD_PRIORITY_FOREGROUND);
-    private static final ThreadFacade Background = new ThreadFacade(BACKGROUND, "CDOExecutorBackground", Process.THREAD_PRIORITY_BACKGROUND);
+    private static final ThreadFacade Foreground = new ThreadFacade(FOREGROUND, THREAD_NAME_FOREGROUND, Process.THREAD_PRIORITY_FOREGROUND);
+    private static final ThreadFacade Background = new ThreadFacade(BACKGROUND, THREAD_NAME_BACKGROUND, Process.THREAD_PRIORITY_BACKGROUND);
 }
