@@ -42,69 +42,69 @@ public class AccountsImpl implements Accounts {
     }
 
     @Override
-    public void add(@NonNull final Context context, @NonNull final String login) {
-        if (Account.USER_UNAUTHORIZED.equals(login)) return;
+    public void add(@NonNull Context context, @NonNull String login) {
+        if (Account.USER_UNAUTHORIZED.equals(login)) {
+            return;
+        }
         thread.run(() -> {
-            try {
-                log.v(TAG, "add | login=", login);
-                boolean isNewAuthorization = true;
-                // save login on top of the list of authorized users
-                UsersList list = get(context);
-                ArrayList<String> accounts = new ArrayList<>();
-                accounts.add(login);
-                if (CollectionUtils.isNotEmpty(list.getLogins())) {
-                    for (String entry : list.getLogins()) {
-                        if (Objects.equals(entry, login)) {
-                            isNewAuthorization = false;
-                        } else {
-                            accounts.add(entry);
-                        }
+            log.v(TAG, "add | login=", login);
+            boolean isNewAuthorization = true;
+            // save login on top of the list of authorized users
+            UsersList list = get(context);
+            ArrayList<String> accounts = new ArrayList<>();
+            accounts.add(login);
+            if (CollectionUtils.isNotEmpty(list.getLogins())) {
+                for (String entry : list.getLogins()) {
+                    if (Objects.equals(entry, login)) {
+                        isNewAuthorization = false;
+                    } else {
+                        accounts.add(entry);
                     }
                 }
-                list.setLogins(accounts);
-                storage.put(context, Storage.PERMANENT, Storage.GLOBAL, "users#list", list.toJsonString());
-                // track statistics
-                Bundle bundle;
-                bundle = firebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.LOGIN_COUNT, list.getLogins().size());
-                bundle = firebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.LOGIN_NEW, isNewAuthorization ? "new" : "old", bundle);
-                firebaseAnalyticsProvider.logEvent(
-                        context,
-                        FirebaseAnalyticsProvider.Event.LOGIN,
-                        bundle
-                );
-            } catch (Exception e) {
-                log.exception(e);
             }
+            list.setLogins(accounts);
+            storage.put(context, Storage.PERMANENT, Storage.GLOBAL, "users#list", list.toJsonString());
+            // track statistics
+            Bundle bundle;
+            bundle = firebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.LOGIN_COUNT, list.getLogins().size());
+            bundle = firebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.LOGIN_NEW, isNewAuthorization ? "new" : "old", bundle);
+            firebaseAnalyticsProvider.logEvent(
+                    context,
+                    FirebaseAnalyticsProvider.Event.LOGIN,
+                    bundle
+            );
+        }, throwable -> {
+            log.exception(throwable);
         });
     }
 
     @Override
-    public void remove(@NonNull final Context context, @NonNull final String login) {
-        if (Account.USER_UNAUTHORIZED.equals(login)) return;
+    public void remove(@NonNull Context context, @NonNull String login) {
+        if (Account.USER_UNAUTHORIZED.equals(login)) {
+            return;
+        }
         thread.run(() -> {
-            try {
-                log.v(TAG, "remove | login=", login);
-                // remove login from the list of authorized users
-                UsersList list = get(context);
-                if (CollectionUtils.isNotEmpty(list.getLogins())) {
-                    List<String> accounts = list.getLogins();
-                    for (String entry : accounts) {
-                        if (Objects.equals(entry, login)) {
-                            accounts.remove(entry);
-                            break;
-                        }
+            log.v(TAG, "remove | login=", login);
+            // remove login from the list of authorized users
+            UsersList list = get(context);
+            if (CollectionUtils.isNotEmpty(list.getLogins())) {
+                List<String> accounts = list.getLogins();
+                for (String entry : accounts) {
+                    if (Objects.equals(entry, login)) {
+                        accounts.remove(entry);
+                        break;
                     }
-                    storage.put(context, Storage.PERMANENT, Storage.GLOBAL, "users#list", list.toJsonString());
                 }
-                // track statistics
-                firebaseAnalyticsProvider.logEvent(
-                        context,
-                        FirebaseAnalyticsProvider.Event.LOGOUT,
-                        firebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.LOGIN_COUNT, list.getLogins().size())
-                );
-            } catch (Exception e) {
-                log.exception(e);
+                storage.put(context, Storage.PERMANENT, Storage.GLOBAL, "users#list", list.toJsonString());
             }
+            // track statistics
+            firebaseAnalyticsProvider.logEvent(
+                    context,
+                    FirebaseAnalyticsProvider.Event.LOGOUT,
+                    firebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.LOGIN_COUNT, list.getLogins().size())
+            );
+        }, throwable -> {
+            log.exception(throwable);
         });
     }
 

@@ -46,7 +46,7 @@ public class ScheduleExamsImpl extends ScheduleImpl<SExams> implements ScheduleE
                 public void onWebRequest(String query, String source, RestResponseHandler restResponseHandler) {
                     switch (source) {
                         case SOURCE.IFMO: // not available, using isu source
-                        case SOURCE.ISU: isuRestClient.get(context, "exams/personal/student/%apikey%/%isutoken%", null, restResponseHandler); break;
+                        case SOURCE.ISU: isuPrivateRestClient.get().get(context, "exams/personal/student/%apikey%/%isutoken%", null, restResponseHandler); break;
                     }
                 }
                 @Override
@@ -70,9 +70,9 @@ public class ScheduleExamsImpl extends ScheduleImpl<SExams> implements ScheduleE
                 @Override
                 public void onWebRequest(String query, String source, RestResponseHandler restResponseHandler) {
                     switch (source) {
-                        case SOURCE.ISU: isuRestClient.get(context, "exams/common/group/%apikey%/" + query, null, restResponseHandler); break;
+                        case SOURCE.ISU: isuRestClient.get().get(context, "exams/common/group/%apikey%/" + query, null, restResponseHandler); break;
                         case SOURCE.IFMO: {
-                            ifmoClient.get(context, "ru/exam/0/" + group + "/raspisanie_sessii.htm", null, new ResponseHandler() {
+                            ifmoClient.get().get(context, "ru/exam/0/" + group + "/raspisanie_sessii.htm", null, new ResponseHandler() {
                                 @Override
                                 public void onSuccess(final int statusCode, final Client.Headers headers, final String response) {
                                     thread.run(() -> {
@@ -135,9 +135,9 @@ public class ScheduleExamsImpl extends ScheduleImpl<SExams> implements ScheduleE
                 @Override
                 public void onWebRequest(String query, String source, RestResponseHandler restResponseHandler) {
                     switch (source) {
-                        case SOURCE.ISU: isuRestClient.get(context, "exams/common/teacher/%apikey%/" + query, null, restResponseHandler); break;
+                        case SOURCE.ISU: isuRestClient.get().get(context, "exams/common/teacher/%apikey%/" + query, null, restResponseHandler); break;
                         case SOURCE.IFMO: {
-                            ifmoClient.get(context, "ru/exam/3/" + query + "/raspisanie_sessii.htm", null, new ResponseHandler() {
+                            ifmoClient.get().get(context, "ru/exam/3/" + query + "/raspisanie_sessii.htm", null, new ResponseHandler() {
                                 @Override
                                 public void onSuccess(final int statusCode, final Client.Headers headers, final String response) {
                                     thread.run(() -> {
@@ -193,7 +193,7 @@ public class ScheduleExamsImpl extends ScheduleImpl<SExams> implements ScheduleE
                 public void onWebRequest(String query, String source, RestResponseHandler restResponseHandler) {
                     switch (source) {
                         case SOURCE.ISU: // not available, using ifmo source
-                        case SOURCE.IFMO: ifmoRestClient.get(context, "schedule_person?lastname=" + lastname, null, restResponseHandler); break;
+                        case SOURCE.IFMO: ifmoRestClient.get().get(context, "schedule_person?lastname=" + lastname, null, restResponseHandler); break;
                     }
                 }
                 @Override

@@ -6,8 +6,8 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 public interface RestResponseHandler {
-    void onSuccess(final int statusCode, final Client.Headers headers, final JSONObject obj, final JSONArray arr);
-    void onFailure(final int statusCode, final Client.Headers headers, final int state);
-    void onProgress(final int state);
-    void onNewRequest(final Client.Request request);
+    void onSuccess(int code, Client.Headers headers, JSONObject obj, JSONArray arr);
+    void onFailure(int code, Client.Headers headers, int state);
+    void onProgress(int state);
+    void onNewRequest(Client.Request request);
 }

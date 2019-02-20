@@ -29,7 +29,19 @@ import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseConfigProvider;
 import com.bukhmastov.cdoitmo.fragment.AboutFragment;
+import com.bukhmastov.cdoitmo.function.ThrowingRunnable;
+import com.bukhmastov.cdoitmo.model.parser.UserDataParser;
+import com.bukhmastov.cdoitmo.model.user.UserData;
+import com.bukhmastov.cdoitmo.model.user.UserWeek;
 import com.bukhmastov.cdoitmo.model.user.UsersList;
+import com.bukhmastov.cdoitmo.model.user.isu.IsuUserData;
+import com.bukhmastov.cdoitmo.model.user.isu.IsuUserDataGroup;
+import com.bukhmastov.cdoitmo.model.week.IsuWeek;
+import com.bukhmastov.cdoitmo.network.DeIfmoClient;
+import com.bukhmastov.cdoitmo.network.IsuPrivateRestClient;
+import com.bukhmastov.cdoitmo.network.IsuRestClient;
+import com.bukhmastov.cdoitmo.network.handlers.ResponseHandler;
+import com.bukhmastov.cdoitmo.network.handlers.RestResponseHandler;
 import com.bukhmastov.cdoitmo.network.model.Client;
 import com.bukhmastov.cdoitmo.util.Account;
 import com.bukhmastov.cdoitmo.util.Accounts;
@@ -37,17 +49,29 @@ import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.NotificationMessage;
 import com.bukhmastov.cdoitmo.util.Static;
 import com.bukhmastov.cdoitmo.util.Storage;
+import com.bukhmastov.cdoitmo.util.StoragePref;
 import com.bukhmastov.cdoitmo.util.Theme;
 import com.bukhmastov.cdoitmo.util.Thread;
+import com.bukhmastov.cdoitmo.util.Time;
 import com.bukhmastov.cdoitmo.util.singleton.CollectionUtils;
 import com.bukhmastov.cdoitmo.util.singleton.StringUtils;
 import com.bukhmastov.cdoitmo.view.Message;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
 
 import javax.inject.Inject;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.widget.Toolbar;
+import dagger.Lazy;
 
 public class LoginActivityPresenterImpl implements LoginActivityPresenter {
 
@@ -65,9 +89,17 @@ public class LoginActivityPresenterImpl implements LoginActivityPresenter {
     @Inject
     Storage storage;
     @Inject
+    StoragePref storagePref;
+    @Inject
     Account account;
     @Inject
     Accounts accounts;
+    @Inject
+    DeIfmoClient deIfmoClient;
+    @Inject
+    IsuRestClient isuRestClient;
+    @Inject
+    IsuPrivateRestClient isuPrivateRestClient;
     @Inject
     NotificationMessage notificationMessage;
     @Inject
@@ -80,6 +112,8 @@ public class LoginActivityPresenterImpl implements LoginActivityPresenter {
     FirebaseAnalyticsProvider firebaseAnalyticsProvider;
     @Inject
     FirebaseConfigProvider firebaseConfigProvider;
+    @Inject
+    Lazy<Time> time;
 
     public LoginActivityPresenterImpl() {
         AppComponentProvider.getComponent().inject(this);
@@ -239,34 +273,28 @@ public class LoginActivityPresenterImpl implements LoginActivityPresenter {
 
     private void show() {
         thread.run(() -> {
-            try {
-                log.v(TAG, "show");
-                firebaseAnalyticsProvider.logEvent(activity, FirebaseAnalyticsProvider.Event.LOGIN_REQUIRED);
-                String cLogin = "", cPassword = "", cRole = "";
-                if (!storage.get(activity, Storage.PERMANENT, Storage.GLOBAL, "users#current_login", "").isEmpty()) {
-                    cLogin = storage.get(activity, Storage.PERMANENT, Storage.USER, "user#deifmo#login", "");
-                    cPassword = storage.get(activity, Storage.PERMANENT, Storage.USER, "user#deifmo#password", "");
-                    cRole = storage.get(activity, Storage.PERMANENT, Storage.USER, "user#role", "");
-                }
-                if (!cLogin.isEmpty() && !cPassword.isEmpty()) {
-                    // already logged in
+            log.v(TAG, "show");
+            firebaseAnalyticsProvider.logEvent(activity, FirebaseAnalyticsProvider.Event.LOGIN_REQUIRED);
+            String currentLogin = storage.get(activity, Storage.PERMANENT, Storage.GLOBAL, "users#current_login", null);
+            if (StringUtils.isNotBlank(currentLogin)) {
+                String cLogin = storage.get(activity, Storage.PERMANENT, Storage.USER, "user#deifmo#login", null);
+                String cPassword = storage.get(activity, Storage.PERMANENT, Storage.USER, "user#deifmo#password", null);
+                if (StringUtils.isNotBlank(cLogin) && StringUtils.isNotBlank(cPassword)) {
+                    String cRole = storage.get(activity, Storage.PERMANENT, Storage.USER, "user#role", "");
                     login(cLogin, cPassword, cRole, false);
-                } else {
-                    // show login UI
-                    final LinearLayout container = new LinearLayout(activity);
-                    container.setOrientation(LinearLayout.VERTICAL);
-                    container.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-                    // append components
-                    appendNewUserView(container);
-                    appendAllUsersView(container);
-                    appendAnonUserView(container);
-                    // draw UI
-                    thread.runOnUI(() -> activity.draw(container));
+                    return;
                 }
-            } catch (Exception e) {
-                log.exception(e);
-                notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
             }
+            LinearLayout container = new LinearLayout(activity);
+            container.setOrientation(LinearLayout.VERTICAL);
+            container.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+            appendNewUserView(container);
+            appendAllUsersView(container);
+            appendAnonUserView(container);
+            thread.runOnUI(() -> activity.draw(container));
+        }, throwable -> {
+            log.exception(throwable);
+            notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
         });
     }
 
@@ -285,7 +313,7 @@ public class LoginActivityPresenterImpl implements LoginActivityPresenter {
                 password = inputPassword.getText().toString();
             }
             // we support only 'student' role at the moment
-            login(login, password, "student", true);
+            login(login, password, Account.ROLE_STUDENT, true);
         });
         newUserTile.findViewById(R.id.help).setOnClickListener(view -> {
             firebaseAnalyticsProvider.logBasicEvent(activity, "Help with login clicked");
@@ -332,7 +360,7 @@ public class LoginActivityPresenterImpl implements LoginActivityPresenter {
                     desc += login;
                 }
                 switch (role) {
-                    case "student": {
+                    case Account.ROLE_STUDENT: {
                         desc += desc.isEmpty() ? activity.getString(R.string.student) : " (" + activity.getString(R.string.student) + ")";
                         break;
                     }
@@ -383,41 +411,39 @@ public class LoginActivityPresenterImpl implements LoginActivityPresenter {
                             }
                             case R.id.change_password: {
                                 thread.runOnUI(() -> {
-                                    try {
-                                        if (activity.isFinishing() || activity.isDestroyed()) {
-                                            return;
-                                        }
-                                        View layout = activity.inflate(R.layout.preference_dialog_input);
-                                        EditText editText = layout.findViewById(R.id.edittext);
-                                        TextView message = layout.findViewById(R.id.message);
-                                        editText.setHint(R.string.new_password);
-                                        message.setText(activity.getString(R.string.change_password_message).replace("%login%", login));
-                                        new AlertDialog.Builder(activity)
-                                                .setTitle(R.string.change_password_title)
-                                                .setView(layout)
-                                                .setPositiveButton(R.string.accept, (dialog, which) -> {
-                                                    try {
-                                                        final String value = editText.getText().toString().trim();
-                                                        if (!value.isEmpty()) {
-                                                            thread.run(() -> {
-                                                                // unique situation, we need to modify account info in which we are not logged in
-                                                                // danger zone begins
-                                                                storage.put(activity, Storage.PERMANENT, Storage.GLOBAL, "users#current_login", acLogin);
-                                                                storage.put(activity, Storage.PERMANENT, Storage.USER, "user#deifmo#password", value);
-                                                                storage.delete(activity, Storage.PERMANENT, Storage.GLOBAL, "users#current_login");
-                                                                // danger zone ends
-                                                                notificationMessage.snackBar(activity, activity.getString(R.string.password_changed));
-                                                            });
-                                                        }
-                                                    } catch (Exception e) {
-                                                        log.exception(e);
-                                                    }
-                                                })
-                                                .setNegativeButton(R.string.cancel, null)
-                                                .create().show();
-                                    } catch (Exception e) {
-                                        log.exception(e);
+                                    if (activity.isFinishing() || activity.isDestroyed()) {
+                                        return;
                                     }
+                                    View layout = activity.inflate(R.layout.preference_dialog_input);
+                                    EditText editText = layout.findViewById(R.id.edittext);
+                                    TextView message = layout.findViewById(R.id.message);
+                                    editText.setHint(R.string.new_password);
+                                    message.setText(activity.getString(R.string.change_password_message).replace("%login%", login));
+                                    new AlertDialog.Builder(activity)
+                                            .setTitle(R.string.change_password_title)
+                                            .setView(layout)
+                                            .setPositiveButton(R.string.accept, (dialog, which) -> {
+                                                try {
+                                                    final String value = editText.getText().toString().trim();
+                                                    if (!value.isEmpty()) {
+                                                        thread.run(() -> {
+                                                            // unique situation, we need to modify account info in which we are not logged in
+                                                            // danger zone begins
+                                                            storage.put(activity, Storage.PERMANENT, Storage.GLOBAL, "users#current_login", acLogin);
+                                                            storage.put(activity, Storage.PERMANENT, Storage.USER, "user#deifmo#password", value);
+                                                            storage.delete(activity, Storage.PERMANENT, Storage.GLOBAL, "users#current_login");
+                                                            // danger zone ends
+                                                            notificationMessage.snackBar(activity, activity.getString(R.string.password_changed));
+                                                        });
+                                                    }
+                                                } catch (Exception e) {
+                                                    log.exception(e);
+                                                }
+                                            })
+                                            .setNegativeButton(R.string.cancel, null)
+                                            .create().show();
+                                }, throwable -> {
+                                    log.exception(throwable);
                                 });
                                 break;
                             }
@@ -515,8 +541,10 @@ public class LoginActivityPresenterImpl implements LoginActivityPresenter {
             @Override
             public void onSuccess() {
                 log.v(TAG, "login | onSuccess");
-                activity.finish();
-                staticUtil.lockOrientation(activity, false);
+                loginSetupInformation(this, isNewUser, () -> {
+                    activity.finish();
+                    staticUtil.lockOrientation(activity, false);
+                });
             }
             @Override
             public void onOffline() {
@@ -568,6 +596,135 @@ public class LoginActivityPresenterImpl implements LoginActivityPresenter {
             public void onNewRequest(Client.Request request) {
                 log.v(TAG, "login | onNewRequest");
                 requestHandle = request;
+            }
+        });
+    }
+
+    private void loginSetupInformation(Account.LoginHandler handler, boolean isNewUser, ThrowingRunnable onDone) {
+        if (isNewUser) {
+            thread.runOnUI(() -> handler.onProgress(activity.getString(R.string.data_initializing)));
+            loginSetupInformation(Thread.FOREGROUND, () -> thread.runOnUI(onDone));
+        } else {
+            loginSetupInformation(Thread.BACKGROUND, () -> {});
+            thread.runOnUI(onDone);
+        }
+    }
+
+    private void loginSetupInformation(@Thread.TYPE int threadType, Runnable onDone) {
+        thread.run(threadType, () -> {
+            SetupInformationMeta setupInformationMeta = new SetupInformationMeta(onDone);
+            deIfmoClient.get(activity, "servlet/distributedCDE?Rule=editPersonProfile", null, new ResponseHandler() {
+                @Override
+                public void onSuccess(int code, Client.Headers headers, String response) {
+                    thread.run(threadType, () -> {
+                        UserData userData = new UserDataParser(response).parse();
+                        if (userData == null) {
+                            log.v(TAG, "loginSetupInformation | deIfmoClient | success | not parsed");
+                            setupInformationMeta.onDeIfmoFailed();
+                            return;
+                        }
+                        log.v(TAG, "loginSetupInformation | deIfmoClient | success | parsed");
+                        String name = StringUtils.defaultIfBlank(userData.getName(), null);
+                        List<String> groups = StringUtils.isNotBlank(userData.getGroup()) ?
+                                Arrays.asList(userData.getGroup().split(",\\s|\\s|,")) :
+                                null;
+                        String avatar = StringUtils.defaultIfBlank(userData.getAvatar(), null);
+                        Integer week = userData.getWeek() < 0 ? null : userData.getWeek();
+                        setupInformationMeta.onDeIfmoReady(name, groups, avatar, week);
+                    }, throwable -> {
+                        setupInformationMeta.onDeIfmoFailed();
+                    });
+                }
+                @Override
+                public void onFailure(int code, Client.Headers headers, int state) {
+                    setupInformationMeta.onDeIfmoFailed();
+                }
+                @Override
+                public void onProgress(int state) {}
+                @Override
+                public void onNewRequest(Client.Request request) {}
+            });
+            isuRestClient.get(activity, "schedule/week/%apikey%", null, new RestResponseHandler() {
+                @Override
+                public void onSuccess(int code, Client.Headers headers, JSONObject obj, JSONArray arr) {
+                    thread.run(threadType, () -> {
+                        if (obj == null) {
+                            setupInformationMeta.onIsuWeekFailed();
+                            return;
+                        }
+                        IsuWeek isuWeek = new IsuWeek().fromJson(obj);
+                        setupInformationMeta.onIsuWeekReady(isuWeek.getWeek());
+                    }, throwable -> {
+                        setupInformationMeta.onIsuWeekFailed();
+                    });
+                }
+                @Override
+                public void onFailure(int code, Client.Headers headers, int state) {
+                    setupInformationMeta.onIsuWeekFailed();
+                }
+                @Override
+                public void onProgress(int state) {}
+                @Override
+                public void onNewRequest(Client.Request request) {}
+            });
+            if (isuPrivateRestClient.isAuthorized(activity)) {
+                isuPrivateRestClient.get(activity, "userdata/%apikey%/%isutoken%", null, new RestResponseHandler() {
+                    @Override
+                    public void onSuccess(int code, Client.Headers headers, JSONObject obj, JSONArray arr) {
+                        thread.run(threadType, () -> {
+                            if (obj == null) {
+                                setupInformationMeta.onIsuUserFailed();
+                                return;
+                            }
+                            IsuUserData isuUserData = new IsuUserData().fromJson(obj);
+                            String surname = StringUtils.defaultIfBlank(isuUserData.getSurname(), null);
+                            String nameO = StringUtils.defaultIfBlank(isuUserData.getName(), null);
+                            String patronymic = StringUtils.defaultIfBlank(isuUserData.getPatronymic(), null);
+                            String name = "";
+                            if (surname != null) {
+                                name += surname.trim();
+                                name = name.trim();
+                            }
+                            if (nameO != null) {
+                                name += " " + nameO;
+                                name = name.trim();
+                            }
+                            if (patronymic != null) {
+                                name += " " + patronymic;
+                                name = name.trim();
+                            }
+                            List<String> groups = new ArrayList<>();
+                            List<IsuUserDataGroup> isuGroups = CollectionUtils.emptyIfNull(isuUserData.getGroups());
+                            Collections.reverse(isuGroups);
+                            for (IsuUserDataGroup group : isuGroups) {
+                                if (StringUtils.isBlank(group.getGroup())) {
+                                    continue;
+                                }
+                                groups.add(group.getGroup());
+                            }
+                            if (groups.isEmpty()) {
+                                groups = null;
+                            }
+                            String avatar = null;
+                            if (isuUserData.getAvatar() != null && StringUtils.isNotBlank(isuUserData.getAvatar().getUrl())) {
+                                avatar = isuUserData.getAvatar().getUrl();
+                            }
+                            setupInformationMeta.onIsuUserReady(name, groups, avatar);
+                        }, throwable -> {
+                            setupInformationMeta.onIsuUserFailed();
+                        });
+                    }
+                    @Override
+                    public void onFailure(int code, Client.Headers headers, int state) {
+                        setupInformationMeta.onIsuUserFailed();
+                    }
+                    @Override
+                    public void onProgress(int state) {}
+                    @Override
+                    public void onNewRequest(Client.Request request) {}
+                });
+            } else {
+                setupInformationMeta.onIsuUserFailed();
             }
         });
     }
@@ -659,5 +816,112 @@ public class LoginActivityPresenterImpl implements LoginActivityPresenter {
                 });
             }, throwable -> {});
         }));
+    }
+
+    private class SetupInformationMeta {
+
+        private Runnable onDone;
+        private boolean isDeIfmoDone;
+        private boolean isIsuUserDone;
+        private boolean isIsuWeekDone;
+        private String deIfmoName;
+        private List<String> deIfmoGroups;
+        private String deIfmoAvatar;
+        private Integer deIfmoWeek;
+        private String isuName;
+        private List<String> isuGroups;
+        private String isuAvatar;
+        private Integer isuWeek;
+
+        SetupInformationMeta(Runnable onDone) {
+            this.onDone = onDone;
+            this.isDeIfmoDone = false;
+            this.isIsuUserDone = false;
+            this.isIsuWeekDone = false;
+        }
+
+        void onDeIfmoReady(String name, List<String> groups, String avatar, Integer week) {
+            isDeIfmoDone = true;
+            deIfmoName = name;
+            deIfmoGroups = groups;
+            deIfmoAvatar = avatar;
+            deIfmoWeek = week;
+            doneIfReady();
+        }
+
+        void onDeIfmoFailed() {
+            isDeIfmoDone = true;
+            doneIfReady();
+        }
+
+        void onIsuUserReady(String name, List<String> groups, String avatar) {
+            isIsuUserDone = true;
+            isuName = name;
+            isuGroups = groups;
+            isuAvatar = avatar;
+            doneIfReady();
+        }
+
+        void onIsuUserFailed() {
+            isIsuUserDone = true;
+            doneIfReady();
+        }
+
+        void onIsuWeekReady(Integer week) {
+            isIsuWeekDone = true;
+            isuWeek = week;
+            doneIfReady();
+        }
+
+        void onIsuWeekFailed() {
+            isIsuWeekDone = true;
+            doneIfReady();
+        }
+
+        private void doneIfReady() {
+            if (!isDeIfmoDone || !isIsuUserDone || !isIsuWeekDone) {
+                return;
+            }
+
+            String groupOverride = storagePref.get(activity, "pref_group_force_override", "");
+            List<String> groupsOverride = StringUtils.isNotBlank(groupOverride) ?
+                    Arrays.asList(groupOverride.split(",\\s|\\s|,")) :
+                    null;
+            String name = StringUtils.nvlt(isuName, deIfmoName);
+            List<String> groups = StringUtils.nvlt(groupsOverride, isuGroups, deIfmoGroups);
+            String avatar = StringUtils.nvlt(isuAvatar, deIfmoAvatar);
+            Integer week = StringUtils.nvlt(isuWeek, deIfmoWeek);
+
+            if (groups == null) {
+                groups = new ArrayList<>();
+            }
+            String groupCurrent = storage.get(activity, Storage.PERMANENT, Storage.USER, "user#group");
+            boolean gFound = false;
+            for (String g1 : groups) {
+                if (Objects.equals(g1, groupCurrent)) {
+                    gFound = true;
+                    break;
+                }
+            }
+            if (!gFound) {
+                groupCurrent = groups.size() > 0 ? groups.get(0) : "";
+            }
+
+            String weekStr = "";
+            try {
+                if (week != null) {
+                    weekStr = new UserWeek(week, time.get().getTimeInMillis()).toJsonString();
+                }
+            } catch (Exception ignore) {}
+
+            storage.put(activity, Storage.PERMANENT, Storage.USER, "user#name", name);
+            storage.put(activity, Storage.PERMANENT, Storage.USER, "user#group", groupCurrent);
+            storage.put(activity, Storage.PERMANENT, Storage.USER, "user#groups", TextUtils.join(", ", groups));
+            storage.put(activity, Storage.PERMANENT, Storage.USER, "user#avatar", avatar);
+            storage.put(activity, Storage.PERMANENT, Storage.GLOBAL, "user#week", weekStr);
+            firebaseAnalyticsProvider.setUserProperties(activity, groupCurrent);
+
+            onDone.run();
+        }
     }
 }

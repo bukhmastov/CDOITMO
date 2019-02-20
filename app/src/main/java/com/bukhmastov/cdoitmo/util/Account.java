@@ -10,22 +10,24 @@ import com.bukhmastov.cdoitmo.network.model.Client;
 public interface Account {
 
     String USER_UNAUTHORIZED = "unauthorized";
+    String ROLE_STUDENT = "student";
 
-    void login(@NonNull final Context context, @NonNull final String login, @NonNull final String password, @NonNull final String role, final boolean isNewUser, @NonNull final LoginHandler loginHandler);
+    void login(@NonNull Context context, @NonNull String login, @NonNull String password,
+               @NonNull String role, boolean isNewUser, @NonNull LoginHandler loginHandler);
 
-    void logout(@NonNull final Context context, @NonNull final LogoutHandler logoutHandler);
+    void logout(@NonNull Context context, @NonNull LogoutHandler logoutHandler);
 
-    void logout(@NonNull final Context context, @Nullable final String login, @NonNull final LogoutHandler logoutHandler);
+    void logout(@NonNull Context context, @Nullable String login, @NonNull LogoutHandler logoutHandler);
 
-    void logoutPermanently(@NonNull final Context context, @Nullable final Callable callback);
+    void logoutPermanently(@NonNull Context context, @Nullable Callable callback);
 
-    void logoutPermanently(@NonNull final Context context, @Nullable final String login, @Nullable final Callable callback);
+    void logoutPermanently(@NonNull Context context, @Nullable String login, @Nullable Callable callback);
 
-    void logoutTemporarily(@NonNull final Context context, @Nullable final Callable callback);
+    void logoutTemporarily(@NonNull Context context, @Nullable Callable callback);
 
-    void logoutTemporarily(@NonNull final Context context, @Nullable final String login, @Nullable final Callable callback);
+    void logoutTemporarily(@NonNull Context context, @Nullable String login, @Nullable Callable callback);
 
-    void logoutConfirmation(@NonNull final Context context, @NonNull final Callable callback);
+    void logoutConfirmation(@NonNull Context context, @NonNull Callable callback);
 
     void setAuthorized(boolean authorized);
 

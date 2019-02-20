@@ -6,7 +6,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 public interface RawJsonHandler {
-    void onDone(final int code, final okhttp3.Headers headers, final String response, final JSONObject obj, final JSONArray arr);
-    void onError(final int code, final okhttp3.Headers headers, final Throwable throwable);
-    void onNewRequest(final Client.Request request);
+    void onDone(int code, okhttp3.Headers headers, String response, JSONObject obj, JSONArray arr);
+    void onError(int code, okhttp3.Headers headers, Throwable throwable);
+    void onNewRequest(Client.Request request);
 }

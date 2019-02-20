@@ -46,7 +46,7 @@ public class ScheduleLessonsImpl extends ScheduleImpl<SLessons> implements Sched
                 public void onWebRequest(String query, String source, RestResponseHandler restResponseHandler) {
                     switch (source) {
                         case SOURCE.IFMO: // not available, using isu source
-                        case SOURCE.ISU: isuRestClient.get(context, "schedule/personal/student/%apikey%/%isutoken%", null, restResponseHandler); break;
+                        case SOURCE.ISU: isuPrivateRestClient.get().get(context, "schedule/personal/student/%apikey%/%isutoken%", null, restResponseHandler); break;
                     }
                 }
                 @Override
@@ -70,8 +70,8 @@ public class ScheduleLessonsImpl extends ScheduleImpl<SLessons> implements Sched
                 @Override
                 public void onWebRequest(String query, String source, RestResponseHandler restResponseHandler) {
                     switch (source) {
-                        case SOURCE.ISU: isuRestClient.get(context, "schedule/common/group/%apikey%/" + query, null, restResponseHandler); break;
-                        case SOURCE.IFMO: ifmoRestClient.get(context, "schedule_lesson_group/" + query, null, restResponseHandler); break;
+                        case SOURCE.ISU: isuRestClient.get().get(context, "schedule/common/group/%apikey%/" + query, null, restResponseHandler); break;
+                        case SOURCE.IFMO: ifmoRestClient.get().get(context, "schedule_lesson_group/" + query, null, restResponseHandler); break;
                     }
                 }
                 @Override
@@ -96,7 +96,7 @@ public class ScheduleLessonsImpl extends ScheduleImpl<SLessons> implements Sched
                 public void onWebRequest(String query, String source, RestResponseHandler restResponseHandler) {
                     switch (source) {
                         case SOURCE.ISU: // not available, using ifmo source
-                        case SOURCE.IFMO: ifmoRestClient.get(context, "schedule_lesson_room/" + query, null, restResponseHandler); break;
+                        case SOURCE.IFMO: ifmoRestClient.get().get(context, "schedule_lesson_room/" + query, null, restResponseHandler); break;
                     }
                 }
                 @Override
@@ -120,8 +120,8 @@ public class ScheduleLessonsImpl extends ScheduleImpl<SLessons> implements Sched
                 @Override
                 public void onWebRequest(String query, String source, RestResponseHandler restResponseHandler) {
                     switch (source) {
-                        case SOURCE.ISU: isuRestClient.get(context, "schedule/common/teacher/%apikey%/" + query, null, restResponseHandler); break;
-                        case SOURCE.IFMO: ifmoRestClient.get(context, "schedule_lesson_person/" + query, null, restResponseHandler); break;
+                        case SOURCE.ISU: isuRestClient.get().get(context, "schedule/common/teacher/%apikey%/" + query, null, restResponseHandler); break;
+                        case SOURCE.IFMO: ifmoRestClient.get().get(context, "schedule_lesson_person/" + query, null, restResponseHandler); break;
                     }
                 }
                 @Override
@@ -146,7 +146,7 @@ public class ScheduleLessonsImpl extends ScheduleImpl<SLessons> implements Sched
                 public void onWebRequest(String query, String source, RestResponseHandler restResponseHandler) {
                     switch (source) {
                         case SOURCE.ISU: // not available, using ifmo source
-                        case SOURCE.IFMO: ifmoRestClient.get(context, "schedule_person?lastname=" + lastname, null, restResponseHandler); break;
+                        case SOURCE.IFMO: ifmoRestClient.get().get(context, "schedule_person?lastname=" + lastname, null, restResponseHandler); break;
                     }
                 }
                 @Override

@@ -138,6 +138,7 @@
     <string name="need_to_peek_time_end">You must select the end time of the session</string>
     <string name="data_loading">Receiving data</string>
     <string name="data_handling">Data processing</string>
+    <string name="data_initializing">Data initializing</string>
     <string name="peek_date">Select the date for the session</string>
     <string name="no_date_to_peek">No available dates for visit 101 audience</string>
     <string name="peek_time_start">Select the start time of the session</string>

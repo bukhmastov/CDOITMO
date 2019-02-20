@@ -7,6 +7,7 @@ import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebasePerformanceProvider;
 import com.bukhmastov.cdoitmo.network.IfmoClient;
 import com.bukhmastov.cdoitmo.network.IfmoRestClient;
+import com.bukhmastov.cdoitmo.network.IsuPrivateRestClient;
 import com.bukhmastov.cdoitmo.network.IsuRestClient;
 import com.bukhmastov.cdoitmo.provider.StorageProvider;
 import com.bukhmastov.cdoitmo.util.Log;
@@ -17,6 +18,8 @@ import com.bukhmastov.cdoitmo.util.Thread;
 import com.bukhmastov.cdoitmo.util.Time;
 
 import javax.inject.Inject;
+
+import dagger.Lazy;
 
 public abstract class ScheduleBase {
 
@@ -35,11 +38,13 @@ public abstract class ScheduleBase {
     @Inject
     protected StorageProvider storageProvider;
     @Inject
-    protected IfmoRestClient ifmoRestClient;
+    protected Lazy<IfmoRestClient> ifmoRestClient;
     @Inject
-    protected IfmoClient ifmoClient;
+    protected Lazy<IfmoClient> ifmoClient;
     @Inject
-    protected IsuRestClient isuRestClient;
+    protected Lazy<IsuRestClient> isuRestClient;
+    @Inject
+    protected Lazy<IsuPrivateRestClient> isuPrivateRestClient;
     @Inject
     protected Time time;
     @Inject

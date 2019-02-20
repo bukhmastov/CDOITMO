@@ -10,6 +10,7 @@ import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.network.handlers.RawHandler;
 import com.bukhmastov.cdoitmo.network.handlers.RawJsonHandler;
+import com.bukhmastov.cdoitmo.network.handlers.ResponseHandler;
 import com.bukhmastov.cdoitmo.network.provider.NetworkUserAgentProvider;
 import com.bukhmastov.cdoitmo.util.Storage;
 
@@ -98,8 +99,8 @@ public abstract class DeIfmo extends Client {
      * @param context context
      * @return true if jsessionid is expired, false otherwise
      */
-    protected boolean checkJsessionId(@NonNull final Context context) {
-        boolean legit = false;
+    public boolean isAuthExpiredByJsessionId(@NonNull final Context context) {
+        boolean isExpired = true;
         JSONArray storedCookies;
         try {
             storedCookies = new JSONArray(storage.get(context, Storage.PERMANENT, Storage.USER, "user#deifmo#cookies", ""));
@@ -114,19 +115,19 @@ public abstract class DeIfmo extends Client {
                     for (int j = 0; j < attrs.length(); j++) {
                         JSONObject attr = attrs.getJSONObject(j);
                         if ("expires".equals(attr.getString("name"))) {
-                            legit = Long.parseLong(attr.getString("value")) > System.currentTimeMillis();
+                            isExpired = Long.parseLong(attr.getString("value")) <= System.currentTimeMillis();
                             break;
                         }
                     }
                 }
-                if (legit) {
+                if (!isExpired) {
                     break;
                 }
             }
         } catch (Exception ignore) {
             // ignore
         }
-        return !legit;
+        return isExpired;
     }
 
     @Override
@@ -293,5 +294,21 @@ public abstract class DeIfmo extends Client {
         } else {
             return Client.getFailureMessage();
         }
+    }
+
+    protected void invokeOnFailed(ResponseHandler handler, int code, okhttp3.Headers headers, int state) {
+        handler.onFailure(code, new Headers(headers), code >= 400 ? FAILED_SERVER_ERROR : state);
+    }
+
+    protected void invokeOnFailed(ResponseHandler handler, int code, Headers headers, int state) {
+        handler.onFailure(code, headers, code >= 400 ? FAILED_SERVER_ERROR : state);
+    }
+
+    protected void invokeOnFailed(ResponseHandler handler, int code, okhttp3.Headers headers,
+                                  Throwable throwable, int state) {
+        handler.onFailure(code, new Headers(headers), isInterrupted(throwable) ?
+                FAILED_INTERRUPTED :
+                (code >= 400 ? FAILED_SERVER_ERROR : state)
+        );
     }
 }

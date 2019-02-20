@@ -142,6 +142,7 @@
     <string name="need_to_peek_time_end">Необходимо выбрать время конца сеанса</string>
     <string name="data_loading">Загрузка данных</string>
     <string name="data_handling">Обработка данных сервером</string>
+    <string name="data_initializing">Инициализация данных</string>
     <string name="peek_date">Выберите дату сеанса</string>
     <string name="no_date_to_peek">Нет доступных дат для записи в 101 кабинет</string>
     <string name="peek_time_start">Выберите время начала сеанса</string>

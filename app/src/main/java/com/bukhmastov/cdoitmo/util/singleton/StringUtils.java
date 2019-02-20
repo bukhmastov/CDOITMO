@@ -29,17 +29,14 @@ public class StringUtils {
         return defaultIfNull(string, "");
     }
 
-    @NonNull
     public static String defaultIfNull(String string, String def) {
         return string == null ? def : string;
     }
 
-    @NonNull
     public static String defaultIfEmpty(String string, String def) {
         return isEmpty(string) ? def : string;
     }
 
-    @NonNull
     public static String defaultIfBlank(String string, String def) {
         return isBlank(string) ? def : string;
     }
@@ -74,5 +71,16 @@ public class StringUtils {
         } catch (Exception e) {
             return "";
         }
+    }
+
+    @Nullable
+    @SafeVarargs
+    public static <T> T nvlt(T...values) {
+        for (T value : values) {
+            if (value != null) {
+                return value;
+            }
+        }
+        return null;
     }
 }

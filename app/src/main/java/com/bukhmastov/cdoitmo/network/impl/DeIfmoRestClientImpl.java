@@ -55,7 +55,7 @@ public class DeIfmoRestClientImpl extends DeIfmoRestClient {
                     responseHandler.onFailure(STATUS_CODE_EMPTY, new Client.Headers(null), FAILED_UNAUTHORIZED_MODE);
                     return;
                 }
-                if (checkJsessionId(context)) {
+                if (isAuthExpiredByJsessionId(context)) {
                     log.v(TAG, "get | auth required");
                     deIfmoClient.authorize(context, new ResponseHandler() {
                         @Override

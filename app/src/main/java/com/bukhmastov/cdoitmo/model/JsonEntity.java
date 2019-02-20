@@ -108,6 +108,7 @@ public abstract class JsonEntity implements Entity {
         return fromJson(new JSONObject(json));
     }
 
+    @SuppressWarnings("unchecked")
     public <T extends JsonEntity> T fromJson(JSONObject input) throws JSONException, IllegalAccessException, InstantiationException {
         HashMap<String, EntityMetaData> fields = getFields();
         for (Field field : this.getClass().getDeclaredFields()) {
@@ -176,9 +177,6 @@ public abstract class JsonEntity implements Entity {
                 }
             }
             try {
-                if (list == null) {
-                    continue;
-                }
                 field.set(this, list);
             } catch (IllegalArgumentException ignore) {
                 // field#set(), probably servers returned changed value type

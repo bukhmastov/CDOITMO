@@ -11,7 +11,6 @@ import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebasePerformanceProvider;
 import com.bukhmastov.cdoitmo.function.Callable;
-import com.bukhmastov.cdoitmo.function.Consumer;
 import com.bukhmastov.cdoitmo.network.DeIfmoClient;
 import com.bukhmastov.cdoitmo.network.DeIfmoRestClient;
 import com.bukhmastov.cdoitmo.network.handlers.ResponseHandler;
@@ -22,11 +21,13 @@ import com.bukhmastov.cdoitmo.util.Accounts;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Storage;
 import com.bukhmastov.cdoitmo.util.Thread;
+import com.bukhmastov.cdoitmo.util.singleton.StringUtils;
 
 import javax.inject.Inject;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.StringRes;
 
 public class AccountImpl implements Account {
 
@@ -59,177 +60,202 @@ public class AccountImpl implements Account {
     }
 
     @Override
-    public void login(@NonNull final Context context, @NonNull final String login, @NonNull final String password, @NonNull final String role, final boolean isNewUser, @NonNull final LoginHandler loginHandler) {
-        final String trace = firebasePerformanceProvider.startTrace(FirebasePerformanceProvider.Trace.LOGIN);
+    public void login(@NonNull Context context, @NonNull String login, @NonNull String password,
+                      @NonNull String role, boolean isNewUser, @NonNull LoginHandler handler) {
+        String trace = firebasePerformanceProvider.startTrace(FirebasePerformanceProvider.Trace.LOGIN);
         thread.run(() -> {
-            final boolean IS_USER_UNAUTHORIZED = USER_UNAUTHORIZED.equals(login);
-            log.v(TAG, "login | login=", login, " | password.length()=", password.length(), " | role=", role, " | isNewUser=", isNewUser, " | IS_USER_UNAUTHORIZED=", IS_USER_UNAUTHORIZED, " | OFFLINE_MODE=", App.OFFLINE_MODE);
-            if (login.isEmpty() || password.isEmpty()) {
-                thread.runOnUI(() -> {
-                    loginHandler.onFailure(context.getString(R.string.required_login_password));
-                    firebasePerformanceProvider.putAttributeAndStop(trace, "state", "failed_credentials_required");
-                });
+            boolean isUserUnauthorized = USER_UNAUTHORIZED.equals(login);
+            log.v(TAG, "login | login=", login, " | password.length()=", password.length(),
+                    " | role=", role, " | isNewUser=", isNewUser, " | isUserUnauthorized=",
+                    isUserUnauthorized, " | OFFLINE_MODE=", App.OFFLINE_MODE);
+            if (StringUtils.isBlank(login) || StringUtils.isBlank(password)) {
+                loginInvokeFailed(context, handler, isNewUser, trace,
+                        "failed_credentials_required", R.string.required_login_password);
                 return;
             }
             if ("general".equals(login)) {
                 log.w(TAG, "login | got \"general\" login that does not supported");
-                thread.runOnUI(() -> {
-                    loginHandler.onFailure(context.getString(R.string.wrong_login_general));
-                    firebasePerformanceProvider.putAttributeAndStop(trace, "state", "failed_login_general");
-                });
+                loginInvokeFailed(context, handler, isNewUser, trace,
+                        "failed_login_general", R.string.wrong_login_general);
                 return;
             }
             authorized = false;
             storage.put(context, Storage.PERMANENT, Storage.GLOBAL, "users#current_login", login);
-            if (isNewUser || IS_USER_UNAUTHORIZED) {
+            if (isNewUser || isUserUnauthorized) {
                 storage.put(context, Storage.PERMANENT, Storage.USER,"user#deifmo#login", login);
                 storage.put(context, Storage.PERMANENT, Storage.USER, "user#deifmo#password", password);
                 storage.put(context, Storage.PERMANENT, Storage.USER, "user#role", role);
             }
-            if (IS_USER_UNAUTHORIZED) {
-                thread.runOnUI(() -> {
-                    authorized = true;
-                    App.UNAUTHORIZED_MODE = true;
-                    if (App.OFFLINE_MODE) {
-                        loginHandler.onOffline();
-                        firebasePerformanceProvider.putAttributeAndStop(trace, "state", "success_unauthorized_offline");
-                    } else {
-                        loginHandler.onSuccess();
-                        firebasePerformanceProvider.putAttributeAndStop(trace, "state", "success_unauthorized");
-                    }
-                });
+            App.UNAUTHORIZED_MODE = isUserUnauthorized;
+            if (App.UNAUTHORIZED_MODE) {
+                if (App.OFFLINE_MODE) {
+                    loginInvokeOffline(context, handler, trace, "success_unauthorized_offline", login, false);
+                } else {
+                    loginInvokeSuccess(context, handler, trace, login, isNewUser, false);
+                }
                 return;
             }
             if (App.OFFLINE_MODE) {
                 if (isNewUser) {
                     App.OFFLINE_MODE = false;
                 } else {
-                    thread.runOnUI(() -> {
-                        authorized = true;
-                        loginHandler.onOffline();
-                        firebasePerformanceProvider.putAttributeAndStop(trace, "state", "success_offline");
-                    });
+                    loginInvokeOffline(context, handler, trace, "success_offline", login, true);
                     return;
                 }
             }
-            deIfmoClient.check(context, new ResponseHandler() {
+            if (!deIfmoClient.isAuthExpiredByJsessionId(context)) {
+                loginInvokeSuccess(context, handler, trace, login, isNewUser, true);
+                return;
+            }
+            if (!Client.isOnline(context)) {
+                loginInvokeFailed(context, handler, isNewUser, trace,
+                        "failed_network_unavailable", R.string.network_unavailable);
+                return;
+            }
+            thread.runOnUI(() -> handler.onProgress(context.getString(R.string.auth_check)));
+            deIfmoClient.authorize(context, new ResponseHandler() {
                 @Override
-                public void onSuccess(int statusCode, Client.Headers headers, String response) {
+                public void onSuccess(int code, Client.Headers headers, String response) {
                     thread.run(() -> {
-                        authorized = true;
-                        accounts.add(context, login);
                         if (isNewUser) {
                             firebaseAnalyticsProvider.logBasicEvent(context, "New user authorized");
-                            protocolTracker.setup(context, deIfmoRestClient, 0);
                         }
-                        thread.runOnUI(() -> {
-                            loginHandler.onSuccess();
-                            firebasePerformanceProvider.putAttributeAndStop(trace, "state", "success");
-                        });
+                        loginInvokeSuccess(context, handler, trace, login, isNewUser, true);
+                    }, throwable -> {
+                        log.exception(TAG, throwable);
+                        loginInvokeFailed(context, handler, isNewUser, trace,
+                                "failed_throwable", R.string.auth_failed);
                     });
                 }
                 @Override
-                public void onFailure(final int statusCode, final Client.Headers headers, final int state) {
-                    thread.run(() -> {
-                        if (isNewUser) {
-                            firebaseAnalyticsProvider.logEvent(
-                                    context,
-                                    FirebaseAnalyticsProvider.Event.LOGIN_FAILED,
-                                    firebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.TYPE, "State " + state)
-                            );
-                        }
-                        final Consumer<String> callback = (text) -> thread.runOnUI(() -> {
-                            if ("offline".equals(text)) {
-                                loginHandler.onOffline();
-                            } else {
-                                loginHandler.onFailure(text);
-                            }
-                            firebasePerformanceProvider.stopTrace(trace);
-                        });
-                        Callable cb;
-                        switch (state) {
-                            case DeIfmoClient.FAILED_OFFLINE:
-                                if (isNewUser) {
-                                    logoutTemporarily(context, () -> {
-                                        callback.accept(context.getString(R.string.network_unavailable));
-                                        firebasePerformanceProvider.putAttribute(trace, "state", "failed_network_unavailable");
-                                    });
-                                } else {
-                                    authorized = true;
-                                    callback.accept("offline");
-                                    firebasePerformanceProvider.putAttribute(trace, "state", "failed_offline");
-                                }
-                                break;
-                            default:
-                            case DeIfmoClient.FAILED_TRY_AGAIN:
-                            case DeIfmoClient.FAILED_AUTH_TRY_AGAIN:
-                            case DeIfmoClient.FAILED_SERVER_ERROR:
+                public void onProgress(int state) {
+                    if (state == DeIfmoClient.STATE_AUTHORIZED) {
+                        thread.runOnUI(() -> handler.onProgress(context.getString(R.string.authorized)));
+                    } else {
+                        thread.runOnUI(() -> handler.onProgress(context.getString(R.string.authorization)));
+                    }
+                }
+                @Override
+                public void onFailure(int code, Client.Headers headers, int state) {
+                    switch (state) {
+                        case DeIfmoClient.FAILED_OFFLINE: {
+                            if (isNewUser) {
                                 logoutTemporarily(context, () -> {
-                                    callback.accept(context.getString(R.string.auth_failed) + (state == DeIfmoClient.FAILED_SERVER_ERROR ? ". " + DeIfmoClient.getFailureMessage(context, statusCode) : ""));
-                                    firebasePerformanceProvider.putAttribute(trace, "state", "failed_auth");
+                                    loginInvokeFailed(context, handler, isNewUser, trace,
+                                            "failed_network_unavailable", R.string.network_unavailable);
                                 });
-                                break;
-                            case DeIfmoClient.FAILED_INTERRUPTED:
-                                loginHandler.onInterrupted();
-                                break;
-                            case DeIfmoClient.FAILED_AUTH_CREDENTIALS_REQUIRED:
-                                cb = () -> {
-                                    callback.accept(context.getString(R.string.required_login_password));
-                                    firebasePerformanceProvider.putAttribute(trace, "state", "failed_credentials_required");
-                                };
-                                if (isNewUser) {
-                                    logoutPermanently(context, login, cb);
-                                } else {
-                                    logoutTemporarily(context, login, cb);
-                                }
-                                break;
-                            case DeIfmoClient.FAILED_AUTH_CREDENTIALS_FAILED:
-                                cb = () -> {
-                                    callback.accept(context.getString(R.string.invalid_login_password));
-                                    firebasePerformanceProvider.putAttribute(trace, "state", "failed_credentials_failed");
-                                };
-                                if (isNewUser) {
-                                    logoutPermanently(context, login, cb);
-                                } else {
-                                    logoutTemporarily(context, login, cb);
-                                }
-                                break;
+                            } else {
+                                loginInvokeOffline(context, handler, trace, "failed_offline", login, true);
+                            }
+                            break;
                         }
-                    });
-                }
-                @Override
-                public void onProgress(final int state) {
-                    thread.runOnUI(() -> {
-                        switch (state) {
-                            default:
-                            case DeIfmoClient.STATE_HANDLING:
-                            case DeIfmoClient.STATE_CHECKING:
-                                loginHandler.onProgress(context.getString(R.string.auth_check));
-                                break;
-                            case DeIfmoClient.STATE_AUTHORIZATION:
-                                loginHandler.onProgress(context.getString(R.string.authorization));
-                                break;
-                            case DeIfmoClient.STATE_AUTHORIZED:
-                                loginHandler.onProgress(context.getString(R.string.authorized));
-                                break;
+                        default:
+                        case DeIfmoClient.FAILED_TRY_AGAIN:
+                        case DeIfmoClient.FAILED_AUTH_TRY_AGAIN:
+                        case DeIfmoClient.FAILED_SERVER_ERROR: {
+                            logoutTemporarily(context, () -> {
+                                String message = context.getString(R.string.auth_failed);
+                                if (state == DeIfmoClient.FAILED_SERVER_ERROR) {
+                                    message += ". " + DeIfmoClient.getFailureMessage(context, code);
+                                }
+                                loginInvokeFailed(context, handler, isNewUser, trace,
+                                        "failed_auth", message);
+                            });
+                            break;
                         }
-                    });
+                        case DeIfmoClient.FAILED_INTERRUPTED: {
+                            handler.onInterrupted();
+                            break;
+                        }
+                        case DeIfmoClient.FAILED_AUTH_CREDENTIALS_REQUIRED: {
+                            if (isNewUser) {
+                                logoutPermanently(context, login, () -> {
+                                    loginInvokeFailed(context, handler, isNewUser, trace,
+                                            "failed_credentials_required", R.string.required_login_password);
+                                });
+                            } else {
+                                logoutTemporarily(context, login, () -> {
+                                    loginInvokeFailed(context, handler, isNewUser, trace,
+                                            "failed_credentials_required", R.string.required_login_password);
+                                });
+                            }
+                            break;
+                        }
+                        case DeIfmoClient.FAILED_AUTH_CREDENTIALS_FAILED: {
+                            if (isNewUser) {
+                                logoutPermanently(context, login, () -> {
+                                    loginInvokeFailed(context, handler, isNewUser, trace,
+                                            "failed_credentials_failed", R.string.invalid_login_password);
+                                });
+                            } else {
+                                logoutTemporarily(context, login, () -> {
+                                    loginInvokeFailed(context, handler, isNewUser, trace,
+                                            "failed_credentials_failed", R.string.invalid_login_password);
+                                });
+                            }
+                            break;
+                        }
+                    }
                 }
                 @Override
                 public void onNewRequest(Client.Request request) {
-                    loginHandler.onNewRequest(request);
+                    handler.onNewRequest(request);
                 }
             });
+        }, throwable -> {
+            log.exception(TAG, throwable);
+            loginInvokeFailed(context, handler, isNewUser, trace, "failed_throwable", R.string.auth_failed);
         });
     }
 
+    private void loginInvokeFailed(Context context, LoginHandler handler, boolean isNewUser,
+                                   String trace, String state, @StringRes int message) {
+        loginInvokeFailed(context, handler, isNewUser, trace, state, context.getString(message));
+    }
+
+    private void loginInvokeFailed(Context context, LoginHandler handler, boolean isNewUser,
+                                   String trace, String state, String message) {
+        if (isNewUser) {
+            firebaseAnalyticsProvider.logEvent(
+                    context,
+                    FirebaseAnalyticsProvider.Event.LOGIN_FAILED,
+                    firebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.TYPE, state)
+            );
+        }
+        thread.runOnUI(() -> handler.onFailure(message));
+        firebasePerformanceProvider.putAttributeAndStop(trace, "state", state);
+    }
+
+    private void loginInvokeOffline(Context context, LoginHandler handler, String trace, String traceValue,
+                                    String login, boolean isAuthorized) {
+        authorized = true;
+        thread.runOnUI(handler::onOffline);
+        firebasePerformanceProvider.putAttributeAndStop(trace, "state", traceValue);
+        if (isAuthorized) {
+            accounts.add(context, login);
+        }
+    }
+
+    private void loginInvokeSuccess(Context context, LoginHandler handler, String trace, String login,
+                                    boolean isNewUser, boolean isAuthorized) {
+        authorized = true;
+        thread.runOnUI(handler::onSuccess);
+        firebasePerformanceProvider.putAttributeAndStop(trace, "state", "success");
+        if (isAuthorized) {
+            accounts.add(context, login);
+        }
+        if (isNewUser && isAuthorized) {
+            protocolTracker.setup(context, deIfmoRestClient, 0);
+        }
+    }
+
     @Override
-    public void logout(@NonNull final Context context, @NonNull final LogoutHandler logoutHandler) {
+    public void logout(@NonNull Context context, @NonNull LogoutHandler logoutHandler) {
         logout(context, null, logoutHandler);
     }
 
     @Override
-    public void logout(@NonNull final Context context, @Nullable final String login, @NonNull final LogoutHandler logoutHandler) {
+    public void logout(@NonNull Context context, @Nullable String login, @NonNull LogoutHandler logoutHandler) {
         final String trace = firebasePerformanceProvider.startTrace(FirebasePerformanceProvider.Trace.LOGOUT);
         thread.run(() -> {
             @NonNull final String cLogin = login != null ? login : storage.get(context, Storage.PERMANENT, Storage.GLOBAL, "users#current_login");
@@ -282,12 +308,12 @@ public class AccountImpl implements Account {
     }
 
     @Override
-    public void logoutPermanently(@NonNull final Context context, @Nullable final Callable callback) {
+    public void logoutPermanently(@NonNull Context context, @Nullable Callable callback) {
         logoutPermanently(context, null, callback);
     }
 
     @Override
-    public void logoutPermanently(@NonNull final Context context, @Nullable final String login, @Nullable final Callable callback) {
+    public void logoutPermanently(@NonNull Context context, @Nullable String login, @Nullable Callable callback) {
         thread.run(() -> {
             @NonNull final String cLogin = login != null ? login : storage.get(context, Storage.PERMANENT, Storage.GLOBAL, "users#current_login");
             final boolean IS_USER_UNAUTHORIZED = USER_UNAUTHORIZED.equals(cLogin);
@@ -319,12 +345,12 @@ public class AccountImpl implements Account {
     }
 
     @Override
-    public void logoutTemporarily(@NonNull final Context context, @Nullable final Callable callback) {
+    public void logoutTemporarily(@NonNull Context context, @Nullable Callable callback) {
         logoutTemporarily(context, null, callback);
     }
 
     @Override
-    public void logoutTemporarily(@NonNull final Context context, @Nullable final String login, @Nullable final Callable callback) {
+    public void logoutTemporarily(@NonNull Context context, @Nullable String login, @Nullable Callable callback) {
         thread.run(() -> {
             @NonNull final String cLogin = login != null ? login : storage.get(context, Storage.PERMANENT, Storage.GLOBAL, "users#current_login");
             final boolean IS_USER_UNAUTHORIZED = USER_UNAUTHORIZED.equals(cLogin);
@@ -348,7 +374,7 @@ public class AccountImpl implements Account {
     }
 
     @Override
-    public void logoutConfirmation(@NonNull final Context context, @NonNull final Callable callback) {
+    public void logoutConfirmation(@NonNull Context context, @NonNull Callable callback) {
         thread.runOnUI(() -> new AlertDialog.Builder(context)
                 .setTitle(R.string.logout_confirmation)
                 .setMessage(R.string.logout_confirmation_message)

@@ -16,22 +16,28 @@ public abstract class DeIfmoClient extends DeIfmo {
         super();
     }
 
-    abstract public void check(@NonNull Context context, @NonNull ResponseHandler responseHandler);
+    public abstract void authorize(@NonNull Context context, @NonNull ResponseHandler responseHandler);
 
-    abstract public void authorize(@NonNull Context context, @NonNull ResponseHandler responseHandler);
+    public abstract void get(@NonNull Context context, @NonNull String url, @Nullable Map<String, String> query,
+                             @NonNull ResponseHandler responseHandler);
 
-    abstract public void get(@NonNull Context context, @NonNull String url, @Nullable Map<String, String> query, @NonNull ResponseHandler responseHandler);
+    public abstract void get(@NonNull Context context, @NonNull @Client.Protocol String protocol,
+                             @NonNull String url, @Nullable Map<String, String> query, @NonNull ResponseHandler responseHandler);
 
-    abstract public void get(@NonNull Context context, @NonNull @Client.Protocol String protocol, @NonNull String url, @Nullable Map<String, String> query, @NonNull  ResponseHandler responseHandler);
+    public abstract void get(@NonNull Context context, @NonNull String url, @Nullable Map<String, String> query,
+                             @NonNull ResponseHandler responseHandler, boolean reAuth);
 
-    abstract public void get(@NonNull Context context, @NonNull String url, @Nullable Map<String, String> query, @NonNull ResponseHandler responseHandler, boolean reAuth);
+    public abstract void get(@NonNull Context context, @NonNull @Client.Protocol String protocol,
+                             @NonNull String url, @Nullable Map<String, String> query,
+                             @NonNull ResponseHandler responseHandler, boolean reAuth);
 
-    abstract public void get(@NonNull Context context, @NonNull @Client.Protocol String protocol, @NonNull String url, @Nullable Map<String, String> query, @NonNull ResponseHandler responseHandler, boolean reAuth);
+    public abstract void post(@NonNull Context context, @NonNull String url, @Nullable Map<String, String> params,
+                              @NonNull ResponseHandler responseHandler);
 
-    abstract public void post(@NonNull Context context, @NonNull String url, @Nullable Map<String, String> params, @NonNull ResponseHandler responseHandler);
-
-    abstract public void post(@NonNull Context context, @NonNull @Client.Protocol String protocol, @NonNull String url, @Nullable Map<String, String> params, @NonNull ResponseHandler responseHandler);
+    public abstract void post(@NonNull Context context, @NonNull @Client.Protocol String protocol,
+                              @NonNull String url, @Nullable Map<String, String> params,
+                              @NonNull ResponseHandler responseHandler);
 
     @Override
-    abstract public boolean isAuthorized(@NonNull Context context);
+    public abstract boolean isAuthorized(@NonNull Context context);
 }
