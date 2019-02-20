@@ -1,8 +1,6 @@
 package com.bukhmastov.cdoitmo.network.impl;
 
 import android.content.Context;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.network.IfmoRestClient;
@@ -18,6 +16,9 @@ import org.json.JSONObject;
 import java.util.Map;
 
 import javax.inject.Inject;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 public class IfmoRestClientImpl extends IfmoRestClient {
 
@@ -36,43 +37,41 @@ public class IfmoRestClientImpl extends IfmoRestClient {
     }
 
     @Override
-    public void get(@NonNull final Context context, @NonNull final String url, @Nullable final Map<String, String> query, @NonNull final RestResponseHandler responseHandler) {
-        get(context, DEFAULT_PROTOCOL, url, query, responseHandler);
+    public void get(@NonNull Context context, @NonNull String url,
+                    @Nullable Map<String, String> query, @NonNull RestResponseHandler handler) {
+        get(context, DEFAULT_PROTOCOL, url, query, handler);
     }
 
     @Override
-    public void get(@NonNull final Context context, @NonNull final @Client.Protocol String protocol, @NonNull final String url, @Nullable final Map<String, String> query, @NonNull final RestResponseHandler responseHandler) {
-        thread.run(thread.BACKGROUND, () -> {
-            log.v(TAG, "get | url=", url);
-            if (Client.isOnline(context)) {
-                responseHandler.onProgress(STATE_HANDLING);
-                gJson(context, getAbsoluteUrl(protocol, url), query, new RawJsonHandler() {
-                    @Override
-                    public void onDone(final int code, final okhttp3.Headers headers, final String response, final JSONObject responseObj, final JSONArray responseArr) {
-                        thread.run(thread.BACKGROUND, () -> {
-                            log.v(TAG, "get | url=", url, " | success | statusCode=", code);
-                            if (code >= 400) {
-                                responseHandler.onFailure(code, new Client.Headers(headers), FAILED_SERVER_ERROR);
-                                return;
-                            }
-                            responseHandler.onSuccess(code, new Client.Headers(headers), responseObj, responseArr);
-                        });
-                    }
-                    @Override
-                    public void onError(final int code, final okhttp3.Headers headers, final Throwable throwable) {
-                        thread.run(thread.BACKGROUND, () -> {
-                            log.v(TAG, "get | url=", url, " | failure | statusCode=", code, " | throwable=", throwable);
-                            responseHandler.onFailure(code, new Client.Headers(headers), code >= 400 ? FAILED_SERVER_ERROR : (isCorruptedJson(throwable) ? FAILED_CORRUPTED_JSON : FAILED_TRY_AGAIN));
-                        });
-                    }
-                    @Override
-                    public void onNewRequest(Client.Request request) {
-                        responseHandler.onNewRequest(request);
-                    }
-                });
-            } else {
-                log.v(TAG, "get | url=", url, " | offline");
-                responseHandler.onFailure(STATUS_CODE_EMPTY, new Client.Headers(null), FAILED_OFFLINE);
+    public void get(@NonNull Context context, @NonNull @Client.Protocol String protocol,
+                    @NonNull String url, @Nullable  Map<String, String> query,
+                    @NonNull RestResponseHandler handler) {
+        log.v(TAG, "get | url=", url);
+        thread.assertNotUI();
+        if (!Client.isOnline(context)) {
+            log.v(TAG, "get | url=", url, " | offline");
+            handler.onFailure(STATUS_CODE_EMPTY, new Client.Headers(null), FAILED_OFFLINE);
+            return;
+        }
+        handler.onProgress(STATE_HANDLING);
+        gJson(context, getAbsoluteUrl(protocol, url), query, new RawJsonHandler() {
+            @Override
+            public void onDone(int code, okhttp3.Headers headers, String response, JSONObject obj, JSONArray arr) {
+                log.v(TAG, "get | url=", url, " | success | statusCode=", code);
+                if (code >= 400) {
+                    handler.onFailure(code, new Client.Headers(headers), FAILED_SERVER_ERROR);
+                    return;
+                }
+                handler.onSuccess(code, new Client.Headers(headers), obj, arr);
+            }
+            @Override
+            public void onError(int code, okhttp3.Headers headers, Throwable throwable) {
+                log.v(TAG, "get | url=", url, " | failure | statusCode=", code, " | throwable=", throwable);
+                invokeOnFailed(handler, code, headers, throwable, FAILED_TRY_AGAIN);
+            }
+            @Override
+            public void onNewRequest(Client.Request request) {
+                handler.onNewRequest(request);
             }
         });
     }

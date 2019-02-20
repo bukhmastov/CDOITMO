@@ -12,6 +12,7 @@ import com.bukhmastov.cdoitmo.network.model.Client;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Storage;
 import com.bukhmastov.cdoitmo.util.Thread;
+import com.bukhmastov.cdoitmo.util.singleton.StringUtils;
 
 import java.util.Map;
 
@@ -36,94 +37,91 @@ public class Room101ClientImpl extends Room101Client {
     }
 
     @Override
-    public void get(@NonNull final Context context, @NonNull final String url, @Nullable final Map<String, String> query, @NonNull final ResponseHandler responseHandler) {
-        get(context, DEFAULT_PROTOCOL, url, query, responseHandler);
+    public void get(@NonNull Context context, @NonNull String url,
+                    @Nullable Map<String, String> query, @NonNull ResponseHandler handler) {
+        get(context, DEFAULT_PROTOCOL, url, query, handler);
     }
 
     @Override
-    public void get(@NonNull final Context context, @NonNull final @Protocol String protocol, @NonNull final String url, @Nullable final Map<String, String> query, @NonNull final ResponseHandler responseHandler) {
-        thread.run(thread.BACKGROUND, () -> {
-            log.v(TAG, "get | url=", url);
-            if (Client.isOnline(context)) {
-                responseHandler.onProgress(STATE_HANDLING);
-                doGet(context, getAbsoluteUrl(protocol, url), query, new RawHandler() {
-                    @Override
-                    public void onDone(final int code, final okhttp3.Headers headers, final String response) {
-                        thread.run(thread.BACKGROUND, () -> {
-                            log.v(TAG, "get | url=", url, " | success | statusCode=", code);
-                            if (code >= 400) {
-                                responseHandler.onFailure(code, new Headers(headers), FAILED_SERVER_ERROR);
-                                return;
-                            }
-                            responseHandler.onSuccess(code, new Headers(headers), response);
-                        });
-                    }
-                    @Override
-                    public void onError(final int code, final okhttp3.Headers headers, final Throwable throwable) {
-                        thread.run(thread.BACKGROUND, () -> {
-                            log.v(TAG, "get | url=", url, " | failure | statusCode=", code, " | throwable=", throwable);
-                            responseHandler.onFailure(code, new Headers(headers), (code >= 400 ? FAILED_SERVER_ERROR : FAILED_TRY_AGAIN));
-                        });
-                    }
-                    @Override
-                    public void onNewRequest(Request request) {
-                        responseHandler.onNewRequest(request);
-                    }
-                });
-            } else {
-                log.v(TAG, "get | url=", url, " | offline");
-                responseHandler.onFailure(STATUS_CODE_EMPTY, new Headers(null), FAILED_OFFLINE);
+    public void get(@NonNull Context context, @NonNull @Protocol String protocol,
+                    @NonNull String url, @Nullable Map<String, String> query,
+                    @NonNull ResponseHandler handler) {
+        log.v(TAG, "get | url=", url);
+        thread.assertNotUI();
+        if (!Client.isOnline(context)) {
+            log.v(TAG, "get | url=", url, " | offline");
+            handler.onFailure(STATUS_CODE_EMPTY, new Headers(null), FAILED_OFFLINE);
+            return;
+        }
+        handler.onProgress(STATE_HANDLING);
+        doGet(context, getAbsoluteUrl(protocol, url), query, new RawHandler() {
+            @Override
+            public void onDone(int code, okhttp3.Headers headers, String response) {
+                log.v(TAG, "get | url=", url, " | success | statusCode=", code);
+                if (code >= 400) {
+                    handler.onFailure(code, new Headers(headers), FAILED_SERVER_ERROR);
+                    return;
+                }
+                handler.onSuccess(code, new Headers(headers), response);
+            }
+            @Override
+            public void onError(int code, okhttp3.Headers headers, Throwable throwable) {
+                log.v(TAG, "get | url=", url, " | failure | statusCode=", code, " | throwable=", throwable);
+                invokeOnFailed(handler, code, headers, throwable, FAILED_TRY_AGAIN);
+            }
+            @Override
+            public void onNewRequest(Request request) {
+                handler.onNewRequest(request);
             }
         });
     }
 
     @Override
-    public void post(@NonNull final Context context, @NonNull final String url, @Nullable final Map<String, String> params,@NonNull  final ResponseHandler responseHandler) {
-        post(context, DEFAULT_PROTOCOL, url, params, responseHandler);
+    public void post(@NonNull Context context, @NonNull String url,
+                     @Nullable Map<String, String> params, @NonNull ResponseHandler handler) {
+        post(context, DEFAULT_PROTOCOL, url, params, handler);
     }
 
     @Override
-    public void post(@NonNull final Context context, @NonNull final @Protocol String protocol, @NonNull final String url, @Nullable final Map<String, String> params, @NonNull final ResponseHandler responseHandler) {
-        thread.run(thread.BACKGROUND, () -> {
-            log.v(TAG, "post | url=", url);
-            if (Client.isOnline(context)) {
-                responseHandler.onProgress(STATE_HANDLING);
-                doPost(context, getAbsoluteUrl(protocol, url), params, new RawHandler() {
-                    @Override
-                    public void onDone(final int code, final okhttp3.Headers headers, final String response) {
-                        thread.run(thread.BACKGROUND, () -> {
-                            log.v(TAG, "post | url=", url, " | success | statusCode=", code);
-                            if (code >= 400) {
-                                responseHandler.onFailure(code, new Headers(headers), FAILED_SERVER_ERROR);
-                                return;
-                            }
-                            responseHandler.onSuccess(code, new Headers(headers), response);
-                        });
-                    }
-                    @Override
-                    public void onError(final int code, final okhttp3.Headers headers, final Throwable throwable) {
-                        thread.run(thread.BACKGROUND, () -> {
-                            log.v(TAG, "post | url=", url, " | failure | statusCode=", code, " | throwable=", throwable);
-                            responseHandler.onFailure(code, new Headers(headers), (code >= 400 ? FAILED_SERVER_ERROR : FAILED_TRY_AGAIN));
-                        });
-                    }
-                    @Override
-                    public void onNewRequest(Request request) {
-                        responseHandler.onNewRequest(request);
-                    }
-                });
-            } else {
-                log.v(TAG, "post | url=", url, " | offline");
-                responseHandler.onFailure(STATUS_CODE_EMPTY, new Headers(null), FAILED_OFFLINE);
+    public void post(@NonNull Context context, @NonNull @Protocol String protocol,
+                     @NonNull String url, @Nullable Map<String, String> params,
+                     @NonNull ResponseHandler handler) {
+        log.v(TAG, "post | url=", url);
+        thread.assertNotUI();
+        if (!Client.isOnline(context)) {
+            log.v(TAG, "post | url=", url, " | offline");
+            handler.onFailure(STATUS_CODE_EMPTY, new Headers(null), FAILED_OFFLINE);
+            return;
+        }
+        handler.onProgress(STATE_HANDLING);
+        doPost(context, getAbsoluteUrl(protocol, url), params, new RawHandler() {
+            @Override
+            public void onDone(int code, okhttp3.Headers headers, String response) {
+                log.v(TAG, "post | url=", url, " | success | statusCode=", code);
+                if (code >= 400) {
+                    handler.onFailure(code, new Headers(headers), FAILED_SERVER_ERROR);
+                    return;
+                }
+                handler.onSuccess(code, new Headers(headers), response);
+            }
+            @Override
+            public void onError(int code, okhttp3.Headers headers, Throwable throwable) {
+                log.v(TAG, "post | url=", url, " | failure | statusCode=", code, " | throwable=", throwable);
+                invokeOnFailed(handler, code, headers, throwable, FAILED_TRY_AGAIN);
+            }
+            @Override
+            public void onNewRequest(Request request) {
+                handler.onNewRequest(request);
             }
         });
     }
 
     @Override
     public boolean isAuthorized(@NonNull final Context context) {
+        thread.assertNotUI();
         final String login = storage.get(context, Storage.PERMANENT, Storage.USER, "user#deifmo#login", "").trim();
         final String password = storage.get(context, Storage.PERMANENT, Storage.USER, "user#deifmo#password", "").trim();
-        return !login.isEmpty() && !password.isEmpty();
+        return StringUtils.isNotEmpty(login) && StringUtils.isNotEmpty(password);
     }
 
     @NonNull

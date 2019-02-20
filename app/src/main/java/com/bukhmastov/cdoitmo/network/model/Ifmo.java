@@ -32,12 +32,13 @@ public abstract class Ifmo extends Client {
      * @param rawHandler of request, cannot be null
      * @see RawHandler
      */
-    protected void g(@NonNull final Context context, @NonNull final String url, @Nullable final Map<String, String> query, @NonNull final RawHandler rawHandler) {
-        thread.run(thread.BACKGROUND, () -> {
+    protected void doGet(@NonNull Context context, @NonNull String url,
+                         @Nullable Map<String, String> query, @NonNull RawHandler rawHandler) {
+        try {
             doGet(url, getHeaders(context), query, rawHandler);
-        }, throwable -> {
+        } catch (Throwable throwable) {
             rawHandler.onError(STATUS_CODE_EMPTY, null, throwable);
-        });
+        }
     }
 
     /**
@@ -48,12 +49,13 @@ public abstract class Ifmo extends Client {
      * @param rawHandler of request, cannot be null
      * @see RawHandler
      */
-    protected void p(@NonNull final Context context, @NonNull final String url, @Nullable final Map<String, String> params, @NonNull final RawHandler rawHandler) {
-        thread.run(thread.BACKGROUND, () -> {
+    protected void doPost(@NonNull Context context, @NonNull String url,
+                          @Nullable Map<String, String> params, @NonNull RawHandler rawHandler) {
+        try {
             doPost(url, getHeaders(context), null, params, rawHandler);
-        }, throwable -> {
+        } catch (Throwable throwable) {
             rawHandler.onError(STATUS_CODE_EMPTY, null, throwable);
-        });
+        }
     }
 
     /**
@@ -64,12 +66,13 @@ public abstract class Ifmo extends Client {
      * @param rawJsonHandler of request, cannot be null
      * @see RawJsonHandler
      */
-    protected void gJson(@NonNull final Context context, @NonNull final String url, @Nullable final Map<String, String> query, @NonNull final RawJsonHandler rawJsonHandler) {
-        thread.run(thread.BACKGROUND, () -> {
+    protected void gJson(@NonNull Context context, @NonNull String url,
+                         @Nullable Map<String, String> query, @NonNull RawJsonHandler rawJsonHandler) {
+        try {
             doGetJson(url, getHeaders(context), query, rawJsonHandler);
-        }, throwable -> {
+        } catch (Throwable throwable) {
             rawJsonHandler.onError(STATUS_CODE_EMPTY, null, throwable);
-        });
+        }
     }
 
     @NonNull

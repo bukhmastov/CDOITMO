@@ -17,15 +17,19 @@ public abstract class IsuPrivateRestClient extends Isu {
         super();
     }
 
-    public abstract void check(@NonNull Context context, @NonNull ResponseHandler responseHandler);
+    public abstract void check(@NonNull Context context, @NonNull ResponseHandler handler);
 
-    public abstract void authorize(@NonNull Context context, @NonNull ResponseHandler responseHandler);
+    public abstract void authorize(@NonNull Context context, @NonNull ResponseHandler handler);
 
-    public abstract void authorize(@NonNull Context context, @NonNull String username, @NonNull String password, @NonNull ResponseHandler responseHandler);
+    public abstract void authorize(@NonNull Context context, @NonNull String username,
+                                   @NonNull String password, @NonNull ResponseHandler handler);
 
-    public abstract void get(@NonNull Context context, @NonNull String url, @Nullable Map<String, String> query, @NonNull RestResponseHandler responseHandler);
+    public abstract void get(@NonNull Context context, @NonNull String url,
+                             @Nullable Map<String, String> query, @NonNull RestResponseHandler handler);
 
-    public abstract void get(@NonNull Context context, @NonNull @Protocol String protocol, @NonNull String url, @Nullable Map<String, String> query, @NonNull RestResponseHandler responseHandler);
+    public abstract void get(@NonNull Context context, @NonNull @Protocol String protocol,
+                             @NonNull String url, @Nullable Map<String, String> query,
+                             @NonNull RestResponseHandler handler);
 
     @Override
     public abstract boolean isAuthorized(@NonNull Context context);

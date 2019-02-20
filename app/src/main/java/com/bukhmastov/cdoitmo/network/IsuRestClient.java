@@ -16,7 +16,10 @@ public abstract class IsuRestClient extends Isu {
         super();
     }
 
-    public abstract void get(@NonNull Context context, @NonNull String url, @Nullable Map<String, String> query, @NonNull RestResponseHandler responseHandler);
+    public abstract void get(@NonNull Context context, @NonNull String url,
+                             @Nullable Map<String, String> query, @NonNull RestResponseHandler handler);
 
-    public abstract void get(@NonNull Context context, @NonNull @Protocol String protocol, @NonNull String url, @Nullable Map<String, String> query, @NonNull RestResponseHandler responseHandler);
+    public abstract void get(@NonNull Context context, @NonNull @Protocol String protocol,
+                             @NonNull String url, @Nullable Map<String, String> query,
+                             @NonNull RestResponseHandler handler);
 }

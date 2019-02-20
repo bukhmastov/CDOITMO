@@ -12,11 +12,13 @@ import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.network.handlers.RawHandler;
 import com.bukhmastov.cdoitmo.network.handlers.RawJsonHandler;
+import com.bukhmastov.cdoitmo.network.handlers.ResponseHasFailed;
 import com.bukhmastov.cdoitmo.network.provider.NetworkClientProvider;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Storage;
 import com.bukhmastov.cdoitmo.util.StoragePref;
 import com.bukhmastov.cdoitmo.util.Thread;
+import com.bukhmastov.cdoitmo.util.singleton.CollectionUtils;
 import com.bukhmastov.cdoitmo.util.singleton.StringUtils;
 
 import org.json.JSONArray;
@@ -85,8 +87,9 @@ public abstract class Client {
      * @param rawHandler of request, cannot be null
      * @see RawHandler
      */
-    protected void doGet(@NonNull String url, @Nullable okhttp3.Headers headers, @Nullable Map<String, String> query, @NonNull RawHandler rawHandler) {
-        thread.run(thread.BACKGROUND, () -> {
+    protected void doGet(@NonNull String url, @Nullable okhttp3.Headers headers,
+                         @Nullable Map<String, String> query, @NonNull RawHandler rawHandler) {
+        try {
             HttpUrl httpUrl = HttpUrl.parse(url);
             if (httpUrl == null) {
                 throw new NullPointerException("httpUrl is null");
@@ -99,9 +102,9 @@ public abstract class Client {
                 execute(builder.build(), headers, null, rawHandler);
             }
             execute(httpUrl, headers, null, rawHandler);
-        }, throwable -> {
+        } catch (Throwable throwable) {
             rawHandler.onError(STATUS_CODE_EMPTY, null, throwable);
-        });
+        }
     }
 
     /**
@@ -113,8 +116,10 @@ public abstract class Client {
      * @param rawHandler of request, cannot be null
      * @see RawHandler
      */
-    protected void doPost(@NonNull String url, @Nullable okhttp3.Headers headers, @Nullable Map<String, String> query, @Nullable Map<String, String> params, @NonNull RawHandler rawHandler) {
-        thread.run(thread.BACKGROUND, () -> {
+    protected void doPost(@NonNull String url, @Nullable okhttp3.Headers headers,
+                          @Nullable Map<String, String> query, @Nullable Map<String, String> params,
+                          @NonNull RawHandler rawHandler) {
+        try {
             HttpUrl httpUrl = HttpUrl.parse(url);
             if (httpUrl == null) {
                 throw new NullPointerException("httpUrl is null");
@@ -134,9 +139,9 @@ public abstract class Client {
             } else {
                 execute(builder.build(), headers, null, rawHandler);
             }
-        }, throwable -> {
+        } catch (Throwable throwable) {
             rawHandler.onError(STATUS_CODE_EMPTY, null, throwable);
-        });
+        }
     }
 
     /**
@@ -147,73 +152,74 @@ public abstract class Client {
      * @param rawJsonHandler of request, cannot be null
      * @see RawJsonHandler
      */
-    protected void doGetJson(@NonNull String url, @Nullable okhttp3.Headers headers, @Nullable Map<String, String> query, @NonNull RawJsonHandler rawJsonHandler) {
-        thread.run(thread.BACKGROUND, () -> {
+    protected void doGetJson(@NonNull String url, @Nullable okhttp3.Headers headers,
+                             @Nullable Map<String, String> query, @NonNull RawJsonHandler rawJsonHandler) {
+        try {
             HttpUrl httpUrl = HttpUrl.parse(url);
             if (httpUrl == null) {
                 throw new NullPointerException("httpUrl is null");
             }
             RawHandler rawHandler = new RawHandler() {
                 @Override
-                public void onDone(final int code, final okhttp3.Headers responseHeaders, final String response) {
-                    thread.run(thread.BACKGROUND, () -> {
+                public void onDone(int code, okhttp3.Headers responseHeaders, String response) {
+                    try {
                         if (code >= 400) {
                             rawJsonHandler.onDone(code, headers, response, null, null);
                             return;
                         }
                         if (StringUtils.isBlank(response)) {
                             rawJsonHandler.onDone(code, headers, response, new JSONObject(), new JSONArray());
-                        } else {
-                            try {
-                                Object object = new JSONTokener(response).nextValue();
-                                if (object instanceof JSONObject) {
-                                    rawJsonHandler.onDone(code, headers, response, (JSONObject) object, null);
-                                } else if (object instanceof JSONArray) {
-                                    rawJsonHandler.onDone(code, headers, response, null, (JSONArray) object);
-                                } else {
-                                    throw new Exception("Failed to use JSONTokener");
-                                }
-                            } catch (Exception e) {
-                                if (response.startsWith("{") && response.endsWith("}")) {
+                            return;
+                        }
+                        try {
+                            Object object = new JSONTokener(response).nextValue();
+                            if (object instanceof JSONObject) {
+                                rawJsonHandler.onDone(code, headers, response, (JSONObject) object, null);
+                            } else if (object instanceof JSONArray) {
+                                rawJsonHandler.onDone(code, headers, response, null, (JSONArray) object);
+                            } else {
+                                throw new Exception("Failed to use JSONTokener");
+                            }
+                        } catch (Exception e) {
+                            if (response.startsWith("{") && response.endsWith("}")) {
+                                try {
+                                    JSONObject jsonObject;
                                     try {
-                                        JSONObject jsonObject;
-                                        try {
-                                            jsonObject = new JSONObject(response);
-                                        } catch (Throwable throwable) {
-                                            jsonObject = new JSONObject(tryFixInvalidJsonResponse(response));
-                                        }
-                                        rawJsonHandler.onDone(code, headers, response, jsonObject, null);
+                                        jsonObject = new JSONObject(response);
                                     } catch (Throwable throwable) {
-                                        rawJsonHandler.onError(code, headers, new ParseException("Failed to parse JSONObject", 0));
+                                        jsonObject = new JSONObject(tryFixInvalidJsonResponse(response));
                                     }
-                                } else if (response.startsWith("[") && response.endsWith("]")) {
-                                    try {
-                                        JSONArray jsonArray;
-                                        try {
-                                            jsonArray = new JSONArray(response);
-                                        } catch (Throwable throwable) {
-                                            jsonArray = new JSONArray(tryFixInvalidJsonResponse(response));
-                                        }
-                                        rawJsonHandler.onDone(code, headers, response, null, jsonArray);
-                                    } catch (Throwable throwable) {
-                                        rawJsonHandler.onError(code, headers, new ParseException("Failed to parse JSONArray", 0));
-                                    }
-                                } else {
-                                    rawJsonHandler.onError(code, headers, new Exception("Response is not recognized as JSONObject or JSONArray"));
+                                    rawJsonHandler.onDone(code, headers, response, jsonObject, null);
+                                } catch (Throwable throwable) {
+                                    rawJsonHandler.onError(code, headers, new ParseException("Failed to parse JSONObject", 0));
                                 }
+                            } else if (response.startsWith("[") && response.endsWith("]")) {
+                                try {
+                                    JSONArray jsonArray;
+                                    try {
+                                        jsonArray = new JSONArray(response);
+                                    } catch (Throwable throwable) {
+                                        jsonArray = new JSONArray(tryFixInvalidJsonResponse(response));
+                                    }
+                                    rawJsonHandler.onDone(code, headers, response, null, jsonArray);
+                                } catch (Throwable throwable) {
+                                    rawJsonHandler.onError(code, headers, new ParseException("Failed to parse JSONArray", 0));
+                                }
+                            } else {
+                                rawJsonHandler.onError(code, headers, new Exception("Response is not recognized as JSONObject or JSONArray"));
                             }
                         }
-                    }, throwable -> {
+                    } catch (Throwable throwable) {
                         rawJsonHandler.onError(code, headers, throwable);
-                    });
+                    }
                 }
                 @Override
                 public void onNewRequest(Request request) {
                     rawJsonHandler.onNewRequest(request);
                 }
                 @Override
-                public void onError(int code, okhttp3.Headers headers1, Throwable throwable) {
-                    rawJsonHandler.onError(code, headers1, throwable);
+                public void onError(int code, okhttp3.Headers headers, Throwable throwable) {
+                    rawJsonHandler.onError(code, headers, throwable);
                 }
             };
             if (query != null) {
@@ -224,9 +230,9 @@ public abstract class Client {
                 execute(builder.build(), headers, null, rawHandler);
             }
             execute(httpUrl, headers, null, rawHandler);
-        }, throwable -> {
+        } catch (Throwable throwable) {
             rawJsonHandler.onError(STATUS_CODE_EMPTY, null, throwable);
-        });
+        }
     }
 
     /**
@@ -240,65 +246,65 @@ public abstract class Client {
      * @see RequestBody
      * @see RawHandler
      */
-    private void execute(@NonNull HttpUrl url, @Nullable okhttp3.Headers headers, @Nullable RequestBody requestBody, @NonNull RawHandler rawHandler) {
-        thread.run(thread.BACKGROUND, () -> {
-            try {
-                log.v(TAG,
-                        "execute | load | ",
-                        "url=", getUrl(url), " | ",
-                        "headers=", getLogHeaders(headers), " | ",
-                        "requestBody=", getLogRequestBody(requestBody)
-                );
-                // build request
-                okhttp3.Request.Builder builder = new okhttp3.Request.Builder();
-                builder.url(url);
-                if (headers != null) {
-                    builder.headers(headers);
-                }
-                if (requestBody != null) {
-                    if (!(requestBody instanceof FormBody) || ((FormBody) requestBody).size() > 0) {
-                        MediaType contentType = requestBody.contentType();
-                        builder.addHeader("Content-Type", contentType == null ? "application/x-www-form-urlencoded" : contentType.toString());
-                        builder.addHeader("Content-Length", String.valueOf(requestBody.contentLength()));
-                    }
-                    builder.post(requestBody);
-                }
-                okhttp3.Request request = builder.build();
-                // perform request
-                Call call = networkClientProvider.get().newCall(request);
-                rawHandler.onNewRequest(new Request(call));
-                Response response = call.execute();
-                // fetch response as string
-                String responseString = "";
-                if (response.body() != null) {
-                    int bufferSize = 1024;
-                    char[] buffer = new char[bufferSize];
-                    StringBuilder out = new StringBuilder();
-                    try (Reader reader = response.body().charStream()) {
-                        int length;
-                        while ((length = reader.read(buffer, 0, buffer.length)) != -1) {
-                            out.append(buffer, 0, length);
-                        }
-                    }
-                    responseString = out.toString();
-                }
-                call.cancel();
-                // it's all over..
-                int code = response.code();
-                okhttp3.Headers responseHeaders = response.headers();
-                log.v(TAG,
-                        "execute | done | ",
-                        "url=", getUrl(url), " | ",
-                        "code=", code, " | ",
-                        "headers=", getLogHeaders(responseHeaders), " | ",
-                        "response=", (responseString.isEmpty() ? "<empty>" : "<string>")
-                );
-                response.close();
-                rawHandler.onDone(code, responseHeaders, responseString);
-            } catch (Throwable throwable) {
-                rawHandler.onError(STATUS_CODE_EMPTY, null, throwable);
+    private void execute(@NonNull HttpUrl url, @Nullable okhttp3.Headers headers,
+                         @Nullable RequestBody requestBody, @NonNull RawHandler rawHandler) {
+        try {
+            thread.assertNotUI();
+            log.v(TAG,
+                    "execute | load | ",
+                    "url=", getUrl(url), " | ",
+                    "headers=", getLogHeaders(headers), " | ",
+                    "requestBody=", getLogRequestBody(requestBody)
+            );
+            // build request
+            okhttp3.Request.Builder builder = new okhttp3.Request.Builder();
+            builder.url(url);
+            if (headers != null) {
+                builder.headers(headers);
             }
-        });
+            if (requestBody != null) {
+                if (!(requestBody instanceof FormBody) || ((FormBody) requestBody).size() > 0) {
+                    MediaType contentType = requestBody.contentType();
+                    builder.addHeader("Content-Type", contentType == null ? "application/x-www-form-urlencoded" : contentType.toString());
+                    builder.addHeader("Content-Length", String.valueOf(requestBody.contentLength()));
+                }
+                builder.post(requestBody);
+            }
+            okhttp3.Request request = builder.build();
+            // perform request
+            Call call = networkClientProvider.get().newCall(request);
+            rawHandler.onNewRequest(new Request(call));
+            Response response = call.execute();
+            // fetch response as string
+            String responseString = "";
+            if (response.body() != null) {
+                int bufferSize = 1024;
+                char[] buffer = new char[bufferSize];
+                StringBuilder out = new StringBuilder();
+                try (Reader reader = response.body().charStream()) {
+                    int length;
+                    while ((length = reader.read(buffer, 0, buffer.length)) != -1) {
+                        out.append(buffer, 0, length);
+                    }
+                }
+                responseString = out.toString();
+            }
+            call.cancel();
+            // it's all over..
+            int code = response.code();
+            okhttp3.Headers responseHeaders = response.headers();
+            log.v(TAG,
+                    "execute | done | ",
+                    "url=", getUrl(url), " | ",
+                    "code=", code, " | ",
+                    "headers=", getLogHeaders(responseHeaders), " | ",
+                    "response=", (responseString.isEmpty() ? "<empty>" : "<string>")
+            );
+            response.close();
+            rawHandler.onDone(code, responseHeaders, responseString);
+        } catch (Throwable throwable) {
+            rawHandler.onError(STATUS_CODE_EMPTY, null, throwable);
+        }
     }
 
     @Nullable
@@ -315,6 +321,7 @@ public abstract class Client {
         }
         return response;
     }
+
     @NonNull
     protected String getProtocol(@NonNull @Protocol String protocol) {
         switch (protocol) {
@@ -326,42 +333,44 @@ public abstract class Client {
                 return getProtocol(p);
         }
     }
+
     @Nullable
-    protected JSONArray parseCookies(@Nullable final okhttp3.Headers headers) {
+    protected JSONArray parseCookies(@Nullable okhttp3.Headers headers) {
         try {
             if (headers == null) {
                 return null;
             }
-            final JSONArray parsed = new JSONArray();
             Map<String, List<String>> headersMap = headers.toMultimap();
-            if (headersMap.containsKey("set-cookie")) {
-                List<String> set_cookie = headersMap.get("set-cookie");
-                for (String cookieAndAttributes : set_cookie) {
-                    String[] attributes = cookieAndAttributes.split(";");
-                    if (attributes.length == 0) continue;
-                    String[] cookie = attributes[0].split("=");
-                    if (cookie.length != 2) continue;
-                    String cookieName = cookie[0].trim();
-                    String cookieValue = cookie[1].trim();
-                    //log.v(TAG, "parseCookies | cookie: " + cookieName + "=" + cookieValue);
-                    JSONArray attrs = new JSONArray();
-                    for (int i = 1; i < attributes.length; i++) {
-                        String[] attribute = attributes[i].split("=");
-                        if (attribute.length != 2) continue;
-                        String attrName = attribute[0].trim().toLowerCase();
-                        String attrValue = attribute[1].trim();
-                        //log.v(TAG, "parseCookies |    attr: " + attrName + "=" + attrValue);
-                        attrs.put(new JSONObject()
-                                .put("name", attrName)
-                                .put("value", attrValue)
-                        );
-                    }
-                    parsed.put(new JSONObject()
-                            .put("name", cookieName)
-                            .put("value", cookieValue)
-                            .put("attrs", attrs)
+            if (!headersMap.containsKey("set-cookie")) {
+                return new JSONArray();
+            }
+            JSONArray parsed = new JSONArray();
+            List<String> set_cookie = headersMap.get("set-cookie");
+            for (String cookieAndAttributes : CollectionUtils.emptyIfNull(set_cookie)) {
+                String[] attributes = cookieAndAttributes.split(";");
+                if (attributes.length == 0) continue;
+                String[] cookie = attributes[0].split("=");
+                if (cookie.length != 2) continue;
+                String cookieName = cookie[0].trim();
+                String cookieValue = cookie[1].trim();
+                //log.v(TAG, "parseCookies | cookie: " + cookieName + "=" + cookieValue);
+                JSONArray attrs = new JSONArray();
+                for (int i = 1; i < attributes.length; i++) {
+                    String[] attribute = attributes[i].split("=");
+                    if (attribute.length != 2) continue;
+                    String attrName = attribute[0].trim().toLowerCase();
+                    String attrValue = attribute[1].trim();
+                    //log.v(TAG, "parseCookies |    attr: " + attrName + "=" + attrValue);
+                    attrs.put(new JSONObject()
+                            .put("name", attrName)
+                            .put("value", attrValue)
                     );
                 }
+                parsed.put(new JSONObject()
+                        .put("name", cookieName)
+                        .put("value", cookieValue)
+                        .put("attrs", attrs)
+                );
             }
             return parsed;
         } catch (Exception e) {
@@ -370,13 +379,15 @@ public abstract class Client {
         }
     }
 
-    public boolean isAuthorized(@NonNull final Context context) {
+    public boolean isAuthorized(@NonNull Context context) {
         return true;
     }
-    protected boolean isInterrupted(@Nullable final Throwable throwable) {
+
+    protected boolean isInterrupted(@Nullable Throwable throwable) {
         return throwable != null && throwable.getMessage() != null && "socket closed".equalsIgnoreCase(throwable.getMessage());
     }
-    protected boolean isCorruptedJson(@Nullable final Throwable throwable) {
+
+    protected boolean isCorruptedJson(@Nullable Throwable throwable) {
         return throwable != null && throwable.getMessage() != null && (
                 "Response is not recognized as JSONObject or JSONArray".equalsIgnoreCase(throwable.getMessage()) ||
                 "Failed to parse JSONArray".equalsIgnoreCase(throwable.getMessage()) ||
@@ -384,8 +395,28 @@ public abstract class Client {
         );
     }
 
+    protected void invokeOnFailed(ResponseHasFailed handler, int code, okhttp3.Headers headers, int state) {
+        handler.onFailure(code, new Headers(headers), code >= 400 ? FAILED_SERVER_ERROR : state);
+    }
+
+    protected void invokeOnFailed(ResponseHasFailed handler, int code, Headers headers, int state) {
+        handler.onFailure(code, headers, code >= 400 ? FAILED_SERVER_ERROR : state);
+    }
+
+    protected void invokeOnFailed(ResponseHasFailed handler, int code, okhttp3.Headers headers,
+                                  Throwable throwable, int state) {
+        if (code >= 400) {
+            state = FAILED_SERVER_ERROR;
+        } else if (isInterrupted(throwable)) {
+            state = FAILED_INTERRUPTED;
+        } else if (isCorruptedJson(throwable)) {
+            state = FAILED_CORRUPTED_JSON;
+        }
+        handler.onFailure(code, new Headers(headers), state);
+    }
+
     @NonNull
-    private String getUrl(@Nullable final HttpUrl httpUrl) {
+    private String getUrl(@Nullable HttpUrl httpUrl) {
         try {
             if (httpUrl == null) {
                 return "<null>";
@@ -406,8 +437,9 @@ public abstract class Client {
             return "<error>";
         }
     }
+
     @NonNull
-    private String getLogRequestBody(@Nullable final RequestBody requestBody) {
+    private String getLogRequestBody(@Nullable RequestBody requestBody) {
         try {
             if (requestBody == null) {
                 return "<null>";
@@ -428,8 +460,9 @@ public abstract class Client {
             return "<error>";
         }
     }
+
     @NonNull
-    private String getLogHeaders(@Nullable final okhttp3.Headers headers) {
+    private String getLogHeaders(@Nullable okhttp3.Headers headers) {
         try {
             if (headers == null) {
                 return "<null>";
@@ -448,13 +481,15 @@ public abstract class Client {
     }
 
     @NonNull
-    public static String getFailureMessage(@NonNull final Context context, final int statusCode) {
+    public static String getFailureMessage(@NonNull Context context, int statusCode) {
         return context.getString(R.string.server_error) + (statusCode > 0 ? "\n[status code: " + statusCode + "]" : "");
     }
+
     public static @StringRes int getFailureMessage() {
         return R.string.server_error;
     }
-    public static boolean isOnline(@NonNull final Context context) {
+
+    public static boolean isOnline(@NonNull Context context) {
         try {
             ConnectivityManager connectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
             if (connectivityManager == null) {

@@ -1,8 +1,6 @@
 package com.bukhmastov.cdoitmo.network.impl;
 
 import android.content.Context;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 import com.bukhmastov.cdoitmo.App;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
@@ -21,6 +19,9 @@ import org.json.JSONObject;
 import java.util.Map;
 
 import javax.inject.Inject;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 public class DeIfmoRestClientImpl extends DeIfmoRestClient {
 
@@ -41,82 +42,80 @@ public class DeIfmoRestClientImpl extends DeIfmoRestClient {
     }
 
     @Override
-    public void get(@NonNull final Context context, @NonNull final String url, @Nullable final Map<String, String> query, @NonNull final RestResponseHandler responseHandler) {
-        get(context, DEFAULT_PROTOCOL, url, query, responseHandler);
+    public void get(@NonNull Context context, @NonNull String url,
+                    @Nullable Map<String, String> query, @NonNull RestResponseHandler handler) {
+        get(context, DEFAULT_PROTOCOL, url, query, handler);
     }
 
     @Override
-    public void get(@NonNull final Context context, @NonNull final @Client.Protocol String protocol, @NonNull final String url, @Nullable final Map<String, String> query, @NonNull final RestResponseHandler responseHandler) {
-        thread.run(thread.BACKGROUND, () -> {
-            log.v(TAG, "get | url=", url);
-            if (Client.isOnline(context)) {
-                if (App.UNAUTHORIZED_MODE) {
-                    log.v(TAG, "get | UNAUTHORIZED_MODE | failed");
-                    responseHandler.onFailure(STATUS_CODE_EMPTY, new Client.Headers(null), FAILED_UNAUTHORIZED_MODE);
+    public void get(@NonNull Context context, @NonNull @Client.Protocol String protocol,
+                    @NonNull String url, @Nullable Map<String, String> query,
+                    @NonNull RestResponseHandler handler) {
+        log.v(TAG, "get | url=", url);
+        thread.assertNotUI();
+        if (!Client.isOnline(context)) {
+            log.v(TAG, "get | url=", url, " | offline");
+            handler.onFailure(STATUS_CODE_EMPTY, new Client.Headers(null), FAILED_OFFLINE);
+            return;
+        }
+        if (App.UNAUTHORIZED_MODE) {
+            log.v(TAG, "get | UNAUTHORIZED_MODE | failed");
+            handler.onFailure(STATUS_CODE_EMPTY, new Client.Headers(null), FAILED_UNAUTHORIZED_MODE);
+            return;
+        }
+        if (isAuthExpiredByJsessionId(context)) {
+            log.v(TAG, "get | auth required");
+            deIfmoClient.authorize(context, new ResponseHandler() {
+                @Override
+                public void onSuccess(int statusCode, Client.Headers headers, String response) {
+                    get(context, protocol, url, query, handler);
+                }
+                @Override
+                public void onProgress(int state) {
+                    handler.onProgress(STATE_HANDLING);
+                }
+                @Override
+                public void onFailure(int statusCode, Client.Headers headers, int state) {
+                    switch (state) {
+                        case DeIfmoClient.FAILED_OFFLINE:
+                        case DeIfmoClient.FAILED_SERVER_ERROR:
+                        case DeIfmoClient.FAILED_INTERRUPTED:
+                            break;
+                        case DeIfmoClient.FAILED_TRY_AGAIN:
+                        case DeIfmoClient.FAILED_AUTH_TRY_AGAIN:
+                        case DeIfmoClient.FAILED_AUTH_CREDENTIALS_REQUIRED:
+                        case DeIfmoClient.FAILED_AUTH_CREDENTIALS_FAILED:
+                            state = FAILED_TRY_AGAIN;
+                            break;
+                    }
+                    handler.onFailure(statusCode, headers, state);
+                }
+                @Override
+                public void onNewRequest(Client.Request request) {
+                    handler.onNewRequest(request);
+                }
+            });
+            return;
+        }
+        handler.onProgress(STATE_HANDLING);
+        doGetJson(context, getAbsoluteUrl(protocol, url), query, new RawJsonHandler() {
+            @Override
+            public void onDone(int code, okhttp3.Headers headers, String response, JSONObject obj, JSONArray arr) {
+                log.v(TAG, "get | url=", url, " | success | statusCode=", code);
+                if (code >= 400) {
+                    handler.onFailure(code, new Client.Headers(headers), FAILED_SERVER_ERROR);
                     return;
                 }
-                if (isAuthExpiredByJsessionId(context)) {
-                    log.v(TAG, "get | auth required");
-                    deIfmoClient.authorize(context, new ResponseHandler() {
-                        @Override
-                        public void onSuccess(int statusCode, Client.Headers headers, String response) {
-                            get(context, protocol, url, query, responseHandler);
-                        }
-                        @Override
-                        public void onProgress(int state) {
-                            responseHandler.onProgress(STATE_HANDLING);
-                        }
-                        @Override
-                        public void onFailure(int statusCode, Client.Headers headers, int state) {
-                            switch (state) {
-                                case DeIfmoClient.FAILED_OFFLINE:
-                                case DeIfmoClient.FAILED_SERVER_ERROR:
-                                case DeIfmoClient.FAILED_INTERRUPTED:
-                                    break;
-                                case DeIfmoClient.FAILED_TRY_AGAIN:
-                                case DeIfmoClient.FAILED_AUTH_TRY_AGAIN:
-                                case DeIfmoClient.FAILED_AUTH_CREDENTIALS_REQUIRED:
-                                case DeIfmoClient.FAILED_AUTH_CREDENTIALS_FAILED:
-                                    state = FAILED_TRY_AGAIN;
-                                    break;
-                            }
-                            responseHandler.onFailure(statusCode, headers, state);
-                        }
-                        @Override
-                        public void onNewRequest(Client.Request request) {
-                            responseHandler.onNewRequest(request);
-                        }
-                    });
-                    return;
-                }
-                responseHandler.onProgress(STATE_HANDLING);
-                doGetJson(context, getAbsoluteUrl(protocol, url), query, new RawJsonHandler() {
-                    @Override
-                    public void onDone(final int code, final okhttp3.Headers headers, final String response, final JSONObject responseObj, final JSONArray responseArr) {
-                        thread.run(thread.BACKGROUND, () -> {
-                            log.v(TAG, "get | url=", url, " | success | statusCode=", code);
-                            if (code >= 400) {
-                                responseHandler.onFailure(code, new Client.Headers(headers), FAILED_SERVER_ERROR);
-                                return;
-                            }
-                            responseHandler.onSuccess(code, new Client.Headers(headers), responseObj, responseArr);
-                        });
-                    }
-                    @Override
-                    public void onError(final int code, final okhttp3.Headers headers, final Throwable throwable) {
-                        thread.run(thread.BACKGROUND, () -> {
-                            log.v(TAG, "get | url=", url, " | failure | statusCode=", code, " | throwable=", throwable);
-                            responseHandler.onFailure(code, new Client.Headers(headers), isInterrupted(throwable) ? FAILED_INTERRUPTED : (code >= 400 ? FAILED_SERVER_ERROR : (isCorruptedJson(throwable) ? FAILED_CORRUPTED_JSON : FAILED_TRY_AGAIN)));
-                        });
-                    }
-                    @Override
-                    public void onNewRequest(Client.Request request) {
-                        responseHandler.onNewRequest(request);
-                    }
-                });
-            } else {
-                log.v(TAG, "get | url=", url, " | offline");
-                responseHandler.onFailure(STATUS_CODE_EMPTY, new Client.Headers(null), FAILED_OFFLINE);
+                handler.onSuccess(code, new Client.Headers(headers), obj, arr);
+            }
+            @Override
+            public void onError(int code, okhttp3.Headers headers, Throwable throwable) {
+                log.v(TAG, "get | url=", url, " | failure | statusCode=", code, " | throwable=", throwable);
+                invokeOnFailed(handler, code, headers, throwable, FAILED_TRY_AGAIN);
+            }
+            @Override
+            public void onNewRequest(Client.Request request) {
+                handler.onNewRequest(request);
             }
         });
     }

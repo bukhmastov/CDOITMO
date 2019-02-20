@@ -15,7 +15,10 @@ public abstract class IfmoClient extends Ifmo {
         super();
     }
 
-    public abstract void get(@NonNull Context context, @NonNull String url, @Nullable Map<String, String> query, @NonNull ResponseHandler responseHandler);
+    public abstract void get(@NonNull Context context, @NonNull String url,
+                             @Nullable Map<String, String> query, @NonNull ResponseHandler handler);
 
-    public abstract void get(@NonNull Context context, @NonNull @Protocol String protocol, @NonNull String url, @Nullable Map<String, String> query, @NonNull ResponseHandler responseHandler);
+    public abstract void get(@NonNull Context context, @NonNull @Protocol String protocol,
+                             @NonNull String url, @Nullable Map<String, String> query,
+                             @NonNull ResponseHandler handler);
 }

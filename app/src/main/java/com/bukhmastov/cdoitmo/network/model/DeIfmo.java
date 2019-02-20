@@ -1,16 +1,13 @@
 package com.bukhmastov.cdoitmo.network.model;
 
 import android.content.Context;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.StringRes;
 import android.text.TextUtils;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.network.handlers.RawHandler;
 import com.bukhmastov.cdoitmo.network.handlers.RawJsonHandler;
-import com.bukhmastov.cdoitmo.network.handlers.ResponseHandler;
+import com.bukhmastov.cdoitmo.network.handlers.ResponseHasFailed;
 import com.bukhmastov.cdoitmo.network.provider.NetworkUserAgentProvider;
 import com.bukhmastov.cdoitmo.util.Storage;
 
@@ -25,6 +22,10 @@ import java.util.Locale;
 import java.util.Map;
 
 import javax.inject.Inject;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.StringRes;
 
 public abstract class DeIfmo extends Client {
 
@@ -54,12 +55,13 @@ public abstract class DeIfmo extends Client {
      * @param rawHandler of request, cannot be null
      * @see RawHandler
      */
-    protected void doGet(@NonNull final Context context, @NonNull final String url, @Nullable final Map<String, String> query, @NonNull final RawHandler rawHandler) {
-        thread.run(thread.BACKGROUND, () -> {
+    protected void doGet(@NonNull Context context, @NonNull String url,
+                         @Nullable Map<String, String> query, @NonNull RawHandler rawHandler) {
+        try {
             doGet(url, getHeaders(context), query, rawHandler);
-        }, throwable -> {
+        } catch (Throwable throwable) {
             rawHandler.onError(STATUS_CODE_EMPTY, null, throwable);
-        });
+        }
     }
 
     /**
@@ -70,12 +72,13 @@ public abstract class DeIfmo extends Client {
      * @param rawHandler of request, cannot be null
      * @see RawHandler
      */
-    protected void doPost(@NonNull final Context context, @NonNull final String url, @Nullable final Map<String, String> params, @NonNull final RawHandler rawHandler) {
-        thread.run(thread.BACKGROUND, () -> {
+    protected void doPost(@NonNull Context context, @NonNull String url,
+                          @Nullable Map<String, String> params, @NonNull RawHandler rawHandler) {
+        try {
             doPost(url, getHeaders(context), null, params, rawHandler);
-        }, throwable -> {
+        } catch (Throwable throwable) {
             rawHandler.onError(STATUS_CODE_EMPTY, null, throwable);
-        });
+        }
     }
 
     /**
@@ -86,12 +89,13 @@ public abstract class DeIfmo extends Client {
      * @param rawJsonHandler of request, cannot be null
      * @see RawJsonHandler
      */
-    protected void doGetJson(@NonNull final Context context, @NonNull final String url, @Nullable final Map<String, String> query, @NonNull final RawJsonHandler rawJsonHandler) {
-        thread.run(thread.BACKGROUND, () -> {
+    protected void doGetJson(@NonNull Context context, @NonNull String url,
+                             @Nullable Map<String, String> query, @NonNull RawJsonHandler rawJsonHandler) {
+        try {
             doGetJson(url, getHeaders(context), query, rawJsonHandler);
-        }, throwable -> {
+        } catch (Throwable throwable) {
             rawJsonHandler.onError(STATUS_CODE_EMPTY, null, throwable);
-        });
+        }
     }
 
     /**
@@ -99,7 +103,8 @@ public abstract class DeIfmo extends Client {
      * @param context context
      * @return true if jsessionid is expired, false otherwise
      */
-    public boolean isAuthExpiredByJsessionId(@NonNull final Context context) {
+    public boolean isAuthExpiredByJsessionId(@NonNull Context context) {
+        thread.assertNotUI();
         boolean isExpired = true;
         JSONArray storedCookies;
         try {
@@ -132,7 +137,7 @@ public abstract class DeIfmo extends Client {
 
     @Override
     @Nullable
-    protected JSONArray parseCookies(@Nullable final okhttp3.Headers headers) {
+    protected JSONArray parseCookies(@Nullable okhttp3.Headers headers) {
         try {
             final JSONArray parsed = super.parseCookies(headers);
             if (parsed == null) {
@@ -185,15 +190,18 @@ public abstract class DeIfmo extends Client {
         }
     }
 
-    protected void storeCookies(@NonNull final Context context, final okhttp3.Headers headers) {
+    protected void storeCookies(@NonNull Context context, okhttp3.Headers headers) {
         storeCookies(context, headers, true);
     }
-    protected void storeCookies(@NonNull final Context context, final okhttp3.Headers headers, final boolean refreshJsessionid) {
-        JSONArray cookies = mergeCookies(headers, storage.get(context, Storage.PERMANENT, Storage.USER, "user#deifmo#cookies", ""), refreshJsessionid);
+
+    protected void storeCookies(@NonNull Context context, okhttp3.Headers headers, boolean refreshJsessionid) {
+        String cookiesStr = storage.get(context, Storage.PERMANENT, Storage.USER, "user#deifmo#cookies", "");
+        JSONArray cookies = mergeCookies(headers, cookiesStr, refreshJsessionid);
         storage.put(context, Storage.PERMANENT, Storage.USER, "user#deifmo#cookies", cookies.toString());
     }
+
     @NonNull
-    private JSONArray mergeCookies(@NonNull final okhttp3.Headers headers, final String stored, final boolean refreshJsessionid) {
+    private JSONArray mergeCookies(@NonNull okhttp3.Headers headers, String stored, boolean refreshJsessionid) {
         JSONArray newCookies;
         JSONArray storedCookies;
         try {
@@ -281,34 +289,19 @@ public abstract class DeIfmo extends Client {
     }
 
     @NonNull
-    public static String getFailureMessage(@NonNull final Context context, final int statusCode) {
+    public static String getFailureMessage(@NonNull Context context, int statusCode) {
         if (statusCode == 591) {
             return context.getString(R.string.server_maintenance);
         } else {
             return Client.getFailureMessage(context, statusCode);
         }
     }
-    public static @StringRes int getFailureMessage(final int statusCode) {
+
+    public static @StringRes int getFailureMessage(int statusCode) {
         if (statusCode == 591) {
             return R.string.server_maintenance;
         } else {
             return Client.getFailureMessage();
         }
-    }
-
-    protected void invokeOnFailed(ResponseHandler handler, int code, okhttp3.Headers headers, int state) {
-        handler.onFailure(code, new Headers(headers), code >= 400 ? FAILED_SERVER_ERROR : state);
-    }
-
-    protected void invokeOnFailed(ResponseHandler handler, int code, Headers headers, int state) {
-        handler.onFailure(code, headers, code >= 400 ? FAILED_SERVER_ERROR : state);
-    }
-
-    protected void invokeOnFailed(ResponseHandler handler, int code, okhttp3.Headers headers,
-                                  Throwable throwable, int state) {
-        handler.onFailure(code, new Headers(headers), isInterrupted(throwable) ?
-                FAILED_INTERRUPTED :
-                (code >= 400 ? FAILED_SERVER_ERROR : state)
-        );
     }
 }

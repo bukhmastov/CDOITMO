@@ -16,7 +16,10 @@ public abstract class DeIfmoRestClient extends DeIfmo {
         super();
     }
 
-    abstract public void get(@NonNull Context context, @NonNull String url, @Nullable Map<String, String> query, @NonNull RestResponseHandler responseHandler);
+    abstract public void get(@NonNull Context context, @NonNull String url,
+                             @Nullable Map<String, String> query, @NonNull RestResponseHandler handler);
 
-    abstract public void get(@NonNull Context context, @NonNull @Client.Protocol String protocol, @NonNull String url, @Nullable Map<String, String> query, @NonNull RestResponseHandler responseHandler);
+    abstract public void get(@NonNull Context context, @NonNull @Client.Protocol String protocol,
+                             @NonNull String url, @Nullable Map<String, String> query,
+                             @NonNull RestResponseHandler handler);
 }

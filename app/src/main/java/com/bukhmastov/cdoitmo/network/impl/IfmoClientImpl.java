@@ -1,8 +1,6 @@
 package com.bukhmastov.cdoitmo.network.impl;
 
 import android.content.Context;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.network.IfmoClient;
@@ -15,6 +13,9 @@ import com.bukhmastov.cdoitmo.util.Thread;
 import java.util.Map;
 
 import javax.inject.Inject;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 public class IfmoClientImpl extends IfmoClient {
 
@@ -33,43 +34,41 @@ public class IfmoClientImpl extends IfmoClient {
     }
 
     @Override
-    public void get(@NonNull final Context context, @NonNull final String url, @Nullable final Map<String, String> query, @NonNull final ResponseHandler responseHandler) {
-        get(context, DEFAULT_PROTOCOL, url, query, responseHandler);
+    public void get(@NonNull Context context, @NonNull String url,
+                    @Nullable Map<String, String> query, @NonNull ResponseHandler handler) {
+        get(context, DEFAULT_PROTOCOL, url, query, handler);
     }
 
     @Override
-    public void get(@NonNull final Context context, @NonNull final @Protocol String protocol, @NonNull final String url, @Nullable final Map<String, String> query, @NonNull final ResponseHandler responseHandler) {
-        thread.run(thread.BACKGROUND, () -> {
-            log.v(TAG, "get | url=", url);
-            if (Client.isOnline(context)) {
-                responseHandler.onProgress(STATE_HANDLING);
-                g(context, getAbsoluteUrl(protocol, url), query, new RawHandler() {
-                    @Override
-                    public void onDone(final int code, final okhttp3.Headers headers, final String response) {
-                        thread.run(thread.BACKGROUND, () -> {
-                            log.v(TAG, "get | url=", url, " | success | statusCode=", code);
-                            if (code >= 400) {
-                                responseHandler.onFailure(code, new Headers(headers), FAILED_SERVER_ERROR);
-                                return;
-                            }
-                            responseHandler.onSuccess(code, new Headers(headers), response);
-                        });
-                    }
-                    @Override
-                    public void onError(final int code, final okhttp3.Headers headers, final Throwable throwable) {
-                        thread.run(thread.BACKGROUND, () -> {
-                            log.v(TAG, "get | url=", url, " | failure | statusCode=", code, " | throwable=", throwable);
-                            responseHandler.onFailure(code, new Headers(headers), (code >= 400 ? FAILED_SERVER_ERROR : FAILED_TRY_AGAIN));
-                        });
-                    }
-                    @Override
-                    public void onNewRequest(Request request) {
-                        responseHandler.onNewRequest(request);
-                    }
-                });
-            } else {
-                log.v(TAG, "get | url=", url, " | offline");
-                responseHandler.onFailure(STATUS_CODE_EMPTY, new Headers(null), FAILED_OFFLINE);
+    public void get(@NonNull Context context, @NonNull @Protocol String protocol,
+                    @NonNull String url, @Nullable Map<String, String> query,
+                    @NonNull ResponseHandler handler) {
+        log.v(TAG, "get | url=", url);
+        thread.assertNotUI();
+        if (!Client.isOnline(context)) {
+            log.v(TAG, "get | url=", url, " | offline");
+            handler.onFailure(STATUS_CODE_EMPTY, new Headers(null), FAILED_OFFLINE);
+            return;
+        }
+        handler.onProgress(STATE_HANDLING);
+        doGet(context, getAbsoluteUrl(protocol, url), query, new RawHandler() {
+            @Override
+            public void onDone(int code, okhttp3.Headers headers, String response) {
+                log.v(TAG, "get | url=", url, " | success | statusCode=", code);
+                if (code >= 400) {
+                    handler.onFailure(code, new Headers(headers), FAILED_SERVER_ERROR);
+                    return;
+                }
+                handler.onSuccess(code, new Headers(headers), response);
+            }
+            @Override
+            public void onError(int code, okhttp3.Headers headers, Throwable throwable) {
+                log.v(TAG, "get | url=", url, " | failure | statusCode=", code, " | throwable=", throwable);
+                invokeOnFailed(handler, code, headers, throwable, FAILED_TRY_AGAIN);
+            }
+            @Override
+            public void onNewRequest(Request request) {
+                handler.onNewRequest(request);
             }
         });
     }

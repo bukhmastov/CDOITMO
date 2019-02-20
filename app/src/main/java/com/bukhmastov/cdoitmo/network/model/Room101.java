@@ -18,17 +18,18 @@ public abstract class Room101 extends DeIfmo {
     }
 
     @Override
-    protected void doGet(@NonNull final Context context, @NonNull final String url, @Nullable final Map<String, String> query, @NonNull final RawHandler rawHandler) {
-        thread.run(thread.BACKGROUND, () -> {
+    protected void doGet(@NonNull Context context, @NonNull String url,
+                         @Nullable Map<String, String> query, @NonNull RawHandler rawHandler) {
+        try {
             doGet(url, getHeaders(context), query, new RawHandler() {
                 @Override
                 public void onDone(final int code, final okhttp3.Headers headers, final String response) {
-                    thread.run(thread.BACKGROUND, () -> {
+                    try {
                         storeCookies(context, headers, false);
                         rawHandler.onDone(code, headers, response);
-                    }, throwable -> {
+                    } catch (Throwable throwable) {
                         rawHandler.onError(code, headers, throwable);
-                    });
+                    }
                 }
                 @Override
                 public void onError(final int code, final okhttp3.Headers headers, final Throwable throwable) {
@@ -39,23 +40,24 @@ public abstract class Room101 extends DeIfmo {
                     rawHandler.onNewRequest(request);
                 }
             });
-        }, throwable -> {
+        } catch (Throwable throwable) {
             rawHandler.onError(STATUS_CODE_EMPTY, null, throwable);
-        });
+        }
     }
 
     @Override
-    protected void doPost(@NonNull final Context context, @NonNull final String url, @Nullable final Map<String, String> params, @NonNull final RawHandler rawHandler) {
-        thread.run(thread.BACKGROUND, () -> {
+    protected void doPost(@NonNull Context context, @NonNull String url,
+                          @Nullable Map<String, String> params, @NonNull RawHandler rawHandler) {
+        try {
             doPost(url, getHeaders(context), null, params, new RawHandler() {
                 @Override
                 public void onDone(final int code, final okhttp3.Headers headers, final String response) {
-                    thread.run(thread.BACKGROUND, () -> {
+                    try {
                         storeCookies(context, headers, false);
                         rawHandler.onDone(code, headers, response);
-                    }, throwable -> {
+                    } catch (Throwable throwable) {
                         rawHandler.onError(code, headers, throwable);
-                    });
+                    }
                 }
                 @Override
                 public void onError(final int code, final okhttp3.Headers headers, final Throwable throwable) {
@@ -66,8 +68,8 @@ public abstract class Room101 extends DeIfmo {
                     rawHandler.onNewRequest(request);
                 }
             });
-        }, throwable -> {
+        } catch (Throwable throwable) {
             rawHandler.onError(STATUS_CODE_EMPTY, null, throwable);
-        });
+        }
     }
 }

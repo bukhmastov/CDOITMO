@@ -15,13 +15,19 @@ public abstract class Room101Client extends Room101 {
         super();
     }
 
-    public abstract void get(@NonNull Context context, @NonNull String url, @Nullable Map<String, String> query, @NonNull ResponseHandler responseHandler);
+    public abstract void get(@NonNull Context context, @NonNull String url,
+                             @Nullable Map<String, String> query, @NonNull ResponseHandler handler);
 
-    public abstract void get(@NonNull Context context, @NonNull @Protocol String protocol, @NonNull String url, @Nullable Map<String, String> query, @NonNull ResponseHandler responseHandler);
+    public abstract void get(@NonNull Context context, @NonNull @Protocol String protocol,
+                             @NonNull String url, @Nullable Map<String, String> query,
+                             @NonNull ResponseHandler handler);
 
-    public abstract void post(@NonNull Context context, @NonNull String url, @Nullable Map<String, String> params, @NonNull ResponseHandler responseHandler);
+    public abstract void post(@NonNull Context context, @NonNull String url,
+                              @Nullable Map<String, String> params, @NonNull ResponseHandler handler);
 
-    public abstract void post(@NonNull Context context, @NonNull @Protocol String protocol, @NonNull String url, @Nullable Map<String, String> params, @NonNull ResponseHandler responseHandler);
+    public abstract void post(@NonNull Context context, @NonNull @Protocol String protocol,
+                              @NonNull String url, @Nullable Map<String, String> params,
+                              @NonNull ResponseHandler handler);
 
     @Override
     public abstract boolean isAuthorized(@NonNull Context context);
