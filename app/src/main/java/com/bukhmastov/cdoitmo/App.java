@@ -75,12 +75,12 @@ public class App extends Application {
             throw throwable;
         }
         try {
-            thread.initUncaughtExceptionHandler();
             storagePref.applyDebug(this);
             eventBus.register(this);
             log.setEnabled(storagePref.get(this, "pref_allow_collect_logs", false));
             if (storagePref.get(this, "pref_first_launch", true)) {
-                checkInstallerSource();
+                // Disable until APK will not replace bundle
+                // checkInstallerSource();
                 if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
                     notifications.get().init(this);
                 }

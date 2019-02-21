@@ -6,6 +6,7 @@ import android.app.job.JobService;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.function.Callable;
 import com.bukhmastov.cdoitmo.util.Log;
+import com.bukhmastov.cdoitmo.util.Thread;
 
 import javax.inject.Inject;
 
@@ -17,14 +18,18 @@ public class ProtocolTrackerJobService extends JobService implements Callable {
     @Inject
     Log log;
     @Inject
+    Thread thread;
+    @Inject
     ProtocolTrackerService protocolTrackerService;
 
     @Override
     public boolean onStartJob(JobParameters params) {
         AppComponentProvider.getComponent().inject(this);
-        log.i(TAG, "onStartJob");
         this.params = params;
-        protocolTrackerService.request(getBaseContext(), this);
+        thread.standalone(() -> {
+            log.i(TAG, "onStartJob");
+            protocolTrackerService.request(getBaseContext(), this);
+        });
         return true;
     }
 

@@ -122,19 +122,17 @@ public abstract class ScheduleImpl<T extends ScheduleJsonEntity> extends Schedul
 
     /**
      * Remote source of schedules to be downloaded from
-     * Source.ISU - Currently unavailable
      */
     @Retention(RetentionPolicy.SOURCE)
     @StringDef({SOURCE.ISU, SOURCE.IFMO})
     protected @interface Source {}
     protected static class SOURCE {
-        protected static final String ISU = "isu"; // Currently unavailable
+        protected static final String ISU = "isu";
         protected static final String IFMO = "ifmo";
     }
 
     /**
      * Search personal schedule, only from Source.ISU
-     * Currently unavailable
      * @see Source
      */
     protected abstract void searchPersonal(int refreshRate, boolean forceToCache, boolean withUserChanges);
@@ -300,7 +298,7 @@ public abstract class ScheduleImpl<T extends ScheduleJsonEntity> extends Schedul
      * Add pending request to existing request or initialize new one
      * @return true - initialized new stack, false - attached to existing one
      */
-    protected boolean addPending(@NonNull String query, boolean withUserChanges, @NonNull Handler<T> handler) {
+    private boolean addPending(@NonNull String query, boolean withUserChanges, @NonNull Handler<T> handler) {
         log.v(TAG, "addPending | query=", query, " | withUserChanges=", withUserChanges);
         String token = getType() + "_" + query.toLowerCase() + "_" + (withUserChanges ? "t" : "f");
         if (pendingStack.containsKey(token)) {
@@ -322,7 +320,7 @@ public abstract class ScheduleImpl<T extends ScheduleJsonEntity> extends Schedul
     /**
      * Invokes new state on all handlers from related stack. Then clears stack, if remove=true
      */
-    protected void invokePending(String query, boolean withUserChanges, boolean remove, Pending<T> pending) {
+    private void invokePending(String query, boolean withUserChanges, boolean remove, Pending<T> pending) {
         log.v(TAG, "invokePending | query=", query, " | withUserChanges=", withUserChanges, " | remove=", remove);
         String token = getType() + "_" + query.toLowerCase() + "_" + (withUserChanges ? "t" : "f");
         List<Handler<T>> handlers = pendingStack.get(token);

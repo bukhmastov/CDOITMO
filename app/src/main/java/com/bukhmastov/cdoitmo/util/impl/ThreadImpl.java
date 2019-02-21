@@ -32,7 +32,6 @@ public class ThreadImpl implements Thread {
     private static final String THREAD_NAME_FOREGROUND = "CDOExecutorForeground";
     private static final String THREAD_NAME_STANDALONE = "CDOStandalone-%d";
     private static final boolean DEBUG = App.DEBUG;
-    private java.lang.Thread.UncaughtExceptionHandler uncaughtExceptionHandler;
 
     /* For autonumbering standalone threads. */
     private static int standaloneThreadNumber = 0;
@@ -160,11 +159,6 @@ public class ThreadImpl implements Thread {
     }
 
     @Override
-    public void sleep(long millis) throws InterruptedException {
-        java.lang.Thread.sleep(millis, 0);
-    }
-
-    @Override
     public boolean assertUI() {
         if (isMainThread()) {
             return true;
@@ -197,39 +191,6 @@ public class ThreadImpl implements Thread {
         }
         java.lang.Thread.getDefaultUncaughtExceptionHandler()
                 .uncaughtException(java.lang.Thread.currentThread(), throwable);
-    }
-
-    @Override
-    public void initUncaughtExceptionHandler() {
-        uncaughtExceptionHandler = java.lang.Thread.getDefaultUncaughtExceptionHandler();
-        try {
-            java.lang.Thread.setDefaultUncaughtExceptionHandler((thread, throwable) -> {
-                try {
-                    if (throwable instanceof IllegalStateException ||
-                            throwable instanceof IllegalArgumentException) {
-                        log.get().exception("Intercepted exception", throwable);
-                        notificationMessage.get().toast(context.get(), R.string.something_went_wrong);
-                        if (App.DEBUG && uncaughtExceptionHandler != null) {
-                            uncaughtExceptionHandler.uncaughtException(thread, throwable);
-                        }
-                        return;
-                    }
-                    if (uncaughtExceptionHandler != null) {
-                        uncaughtExceptionHandler.uncaughtException(thread, throwable);
-                    } else {
-                        log.get().exception("Uncaught exception not passed to default handler", throwable);
-                    }
-                } catch (Throwable th) {
-                    try {
-                        log.get().exception("Exception while handling uncaught exception", th);
-                    } catch (Throwable ignore) {
-                        // There's nothing else we can do...
-                    }
-                }
-            });
-        } catch (SecurityException exception) {
-            log.get().v(TAG, "Failed to setDefaultUncaughtExceptionHandler", exception);
-        }
     }
 
     private boolean isMainThread() {

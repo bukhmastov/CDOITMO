@@ -36,6 +36,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 
 import javax.inject.Inject;
 
@@ -44,6 +45,7 @@ import dagger.Lazy;
 public class ProtocolTrackerServiceImpl implements ProtocolTrackerService {
 
     private static final String TAG = "ProtocolTrackerService";
+    private static final long RETRY_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(1);
     private static int notificationId = 0;
     private Callable callback = null;
     private Client.Request requestHandle = null;
@@ -73,17 +75,25 @@ public class ProtocolTrackerServiceImpl implements ProtocolTrackerService {
     }
 
     @Override
-    public void request(@NonNull final Context context, Callable callback) {
+    public void request(@NonNull Context context, Callable callback) {
         this.callback = callback;
         this.attempt = 0;
-        request(context);
+        try {
+            thread.assertNotUI();
+            request(context);
+        } catch (Throwable throwable) {
+            log.w(TAG, "request | catch | ", throwable.getMessage());
+            finish();
+        }
     }
 
     @Override
     public void shutdown() {
         try {
             log.v(TAG, "shutdown");
-            if (requestHandle != null) requestHandle.cancel();
+            if (requestHandle != null) {
+                requestHandle.cancel();
+            }
             firebasePerformanceProvider.stopTrace(trace);
         } catch (Throwable throwable) {
             log.w(TAG, "shutdown | catch | ", throwable.getMessage());
@@ -93,58 +103,45 @@ public class ProtocolTrackerServiceImpl implements ProtocolTrackerService {
     private void request(@NonNull Context context) {
         try {
             trace = firebasePerformanceProvider.startTrace(FirebasePerformanceProvider.Trace.PROTOCOL_TRACKER);
-            thread.run(thread.BACKGROUND, () -> {
-                attempt++;
-                if (attempt > maxAttempts) {
-                    throw new Exception("Number of attempts exceeded the limit");
-                }
-                log.v(TAG, "request | attempt #" + attempt);
-                deIfmoRestClient.get(context, "eregisterlog?days=2", null, new RestResponseHandler() {
-                    @Override
-                    public void onSuccess(final int statusCode, Client.Headers headers, JSONObject obj, final JSONArray arr) {
-                        try {
-                            thread.run(thread.BACKGROUND, () -> {
-                                if (statusCode == 200 && arr != null) {
-                                    Protocol protocol = new Protocol().fromJson(new JSONObject().put("protocol", arr));
-                                    protocol.setTimestamp(time.get().getTimeInMillis());
-                                    protocol.setNumberOfWeeks(0);
-                                    protocol = new ProtocolConverter(protocol).convert();
-                                    try {
-                                        handle(context, protocol);
-                                    } catch (Exception e) {
-                                        log.w(TAG, "request | catch(onSuccess, Thread, ProtocolConverter) | ", e.getMessage());
-                                        finish();
-                                    }
-                                } else {
-                                    w8andRequest(context);
-                                }
-                            }, throwable -> {
-                                log.w(TAG, "request | catch(onSuccess, Thread) | ", throwable.getMessage());
-                                finish();
-                            });
-                        } catch (Throwable throwable) {
-                            log.w(TAG, "request | catch(onSuccess) | ", throwable.getMessage());
-                            finish();
-                        }
-                    }
-                    @Override
-                    public void onFailure(int statusCode, Client.Headers headers, int state) {
-                        if (state != DeIfmoRestClient.FAILED_INTERRUPTED) {
-                            w8andRequest(context);
-                        } else {
-                            finish();
-                        }
-                    }
-                    @Override
-                    public void onProgress(int state) {}
-                    @Override
-                    public void onNewRequest(Client.Request request) {
-                        requestHandle = request;
-                    }
-                });
-            }, throwable -> {
-                log.w(TAG, "request | catch(Thread) | ", throwable.getMessage());
+            attempt++;
+            if (attempt > maxAttempts) {
+                log.w(TAG, "Number of attempts exceeded the limit");
                 finish();
+                return;
+            }
+            log.v(TAG, "request | attempt #" + attempt);
+            deIfmoRestClient.get(context, "eregisterlog?days=2", null, new RestResponseHandler() {
+                @Override
+                public void onSuccess(int code, Client.Headers headers, JSONObject obj, JSONArray arr) {
+                    try {
+                        if (code != 200 || arr == null) {
+                            w8andRequest(context);
+                            return;
+                        }
+                        Protocol protocol = new Protocol().fromJson(new JSONObject().put("protocol", arr));
+                        protocol.setTimestamp(time.get().getTimeInMillis());
+                        protocol.setNumberOfWeeks(0);
+                        protocol = new ProtocolConverter(protocol).convert();
+                        handle(context, protocol);
+                    } catch (Throwable throwable) {
+                        log.w(TAG, "request | catch(onSuccess) | ", throwable.getMessage());
+                        finish();
+                    }
+                }
+                @Override
+                public void onFailure(int code, Client.Headers headers, int state) {
+                    if (state != DeIfmoRestClient.FAILED_INTERRUPTED) {
+                        w8andRequest(context);
+                    } else {
+                        finish();
+                    }
+                }
+                @Override
+                public void onProgress(int state) {}
+                @Override
+                public void onNewRequest(Client.Request request) {
+                    requestHandle = request;
+                }
             });
         } catch (Throwable throwable) {
             log.w(TAG, "request | catch | ", throwable.getMessage());
@@ -155,18 +152,13 @@ public class ProtocolTrackerServiceImpl implements ProtocolTrackerService {
     private void w8andRequest(@NonNull Context context) {
         try {
             firebasePerformanceProvider.stopTrace(trace);
-            thread.run(thread.BACKGROUND, () -> {
-                log.v(TAG, "w8andRequest");
-                try {
-                    thread.sleep(1000);
-                } catch (InterruptedException ignore) {
-                    // just ignore
-                }
-                request(context);
-            }, throwable -> {
-                log.w(TAG, "w8andRequest | catch(Thread) | ", throwable.getMessage());
-                finish();
-            });
+            log.v(TAG, "w8andRequest");
+            try {
+                java.lang.Thread.sleep(RETRY_TIMEOUT_MS, 0);
+            } catch (InterruptedException ignore) {
+                // just ignore
+            }
+            request(context);
         } catch (Exception e) {
             log.w(TAG, "w8andRequest | catch | ", e.getMessage());
             finish();
@@ -175,135 +167,131 @@ public class ProtocolTrackerServiceImpl implements ProtocolTrackerService {
 
     private void handle(@NonNull Context context, Protocol protocol) {
         try {
-            thread.run(thread.BACKGROUND, () -> {
-                log.v(TAG, "handle");
-                if (protocol == null) {
-                    throw new NullPointerException("protocol cannot be null");
+            log.v(TAG, "handle");
+            // step 1
+            // fetching previous protocol value
+            // saving current protocol value for future fetching
+            // preventing displaying notifications, if there is no previous protocol value
+            Protocol protocolPrevious = null;
+            try {
+                String previousProtocolValue = storage.get().get(context, Storage.PERMANENT, Storage.USER, "protocol_tracker#protocol");
+                if (StringUtils.isNotBlank(previousProtocolValue)) {
+                    protocolPrevious = new Protocol().fromJsonString(previousProtocolValue);
                 }
-                // step 1
-                // fetching previous protocol value
-                // saving current protocol value for future fetching
-                // preventing displaying notifications, if there is no previous protocol value
-                Protocol protocolPrevious = null;
-                try {
-                    String previousProtocolValue = storage.get().get(context, Storage.PERMANENT, Storage.USER, "protocol_tracker#protocol");
-                    if (StringUtils.isNotBlank(previousProtocolValue)) {
-                        protocolPrevious = new Protocol().fromJsonString(previousProtocolValue);
+            } catch (Exception ignore) {/* ignore */}
+            storage.get().put(context, Storage.PERMANENT, Storage.USER, "protocol_tracker#protocol", protocol.toJsonString());
+            if (protocolPrevious == null) {
+                finish();
+                return;
+            }
+            // step 2
+            // creating list of changes based on current and previous protocol values
+            List<PChange> pChanges = protocol.getChanges();
+            List<PChange> pChangesPrev = CollectionUtils.emptyIfNull(protocolPrevious.getChanges());
+            Map<String, ArrayList<PChange>> changes = new HashMap<>();
+            if (CollectionUtils.isEmpty(pChanges)) {
+                finish();
+                return;
+            }
+            for (PChange pChange : pChanges) {
+                boolean found = false;
+                for (PChange pChangePrev : pChangesPrev) {
+                    if (Objects.equals(pChange, pChangePrev)) {
+                        found = true;
+                        break;
                     }
-                } catch (Exception ignore) {/* ignore */}
-                storage.get().put(context, Storage.PERMANENT, Storage.USER, "protocol_tracker#protocol", protocol.toJsonString());
-                if (protocolPrevious == null) {
-                    finish();
-                    return;
                 }
-                // step 2
-                // creating list of changes based on current and previous protocol values
-                List<PChange> pChanges = protocol.getChanges();
-                List<PChange> pChangesPrev = CollectionUtils.emptyIfNull(protocolPrevious.getChanges());
-                Map<String, ArrayList<PChange>> changes = new HashMap<>();
-                if (CollectionUtils.isEmpty(pChanges)) {
-                    finish();
-                    return;
+                if (!found) {
+                    String subject = pChange.getSubject();
+                    ArrayList<PChange> changes4subject = changes.containsKey(subject) ? changes.get(subject) : new ArrayList<>();
+                    if (changes4subject == null) {
+                        changes4subject = new ArrayList<>();
+                    }
+                    changes4subject.add(pChange);
+                    changes.put(subject, changes4subject);
                 }
-                for (PChange pChange : pChanges) {
-                    boolean found = false;
-                    for (PChange pChangePrev : pChangesPrev) {
-                        if (Objects.equals(pChange, pChangePrev)) {
-                            found = true;
+            }
+            // step 3
+            // creating notifications for existing new changes
+            if (changes.isEmpty()) {
+                finish();
+                return;
+            }
+            long timestamp = System.currentTimeMillis();
+            String pref_notify_type = storagePref.get().get(context, "pref_notify_type", Build.VERSION.SDK_INT <= Build.VERSION_CODES.M ? "0" : "1");
+            if ("0".equals(pref_notify_type)) {
+                // show single notification per subject that contains all changes related to that subject
+                // best suitable: android <= 6.0 and android == 8.0
+                int index = 0;
+                for (Map.Entry<String, ArrayList<PChange>> change : changes.entrySet()) {
+                    final String subject = change.getKey();
+                    final ArrayList<PChange> changes4subject = change.getValue();
+                    StringBuilder text = new StringBuilder();
+                    for (int i = changes4subject.size() - 1; i >= 0; i--) {
+                        // show up to 8 changes
+                        // for more changes placeholder will be shown: "+13 событий"
+                        if (i > changes4subject.size() - 9) {
+                            text.append(change2string(changes4subject.get(i)));
+                            if (i > 0) {
+                                text.append("\n");
+                            }
+                        } else {
+                            text.append("+").append(i + 1).append(" ").append(getActionsLabel(context, i + 1));
                             break;
                         }
                     }
-                    if (!found) {
-                        String subject = pChange.getSubject();
-                        ArrayList<PChange> changes4subject = changes.containsKey(subject) ? changes.get(subject) : new ArrayList<>();
-                        changes4subject.add(pChange);
-                        changes.put(subject, changes4subject);
+                    addNotification(context, subject, text.toString(), timestamp, index, true);
+                    index++;
+                }
+            } else {
+                // show notifications per each change that grouped together
+                // best suitable: android >= 7.0 except android == 8.0
+                int size = 0;
+                for (Map.Entry<String, ArrayList<PChange>> change : changes.entrySet()) {
+                    size += change.getValue().size();
+                }
+                if (size > 1) {
+                    addNotification(context, context.getString(R.string.protocol_changes), String.valueOf(size) + " " + getActionsLabel(context, size), timestamp, 0, true);
+                }
+                for (Map.Entry<String, ArrayList<PChange>> change : changes.entrySet()) {
+                    final String subject = change.getKey();
+                    final ArrayList<PChange> changes4subject = change.getValue();
+                    for (int i = changes4subject.size() - 1; i >= 0; i--) {
+                        addNotification(context, subject, change2string(changes4subject.get(i)), timestamp, 0, size == 1);
                     }
                 }
-                // step 3
-                // creating notifications for existing new changes
-                if (changes.isEmpty()) {
-                    finish();
-                    return;
-                }
-                long timestamp = System.currentTimeMillis();
-                String pref_notify_type = storagePref.get().get(context, "pref_notify_type", Build.VERSION.SDK_INT <= Build.VERSION_CODES.M ? "0" : "1");
-                if ("0".equals(pref_notify_type)) {
-                    // show single notification per subject that contains all changes related to that subject
-                    // best suitable: android <= 6.0 and android == 8.0
-                    int index = 0;
-                    for (Map.Entry<String, ArrayList<PChange>> change : changes.entrySet()) {
-                        final String subject = change.getKey();
-                        final ArrayList<PChange> changes4subject = change.getValue();
-                        StringBuilder text = new StringBuilder();
-                        for (int i = changes4subject.size() - 1; i >= 0; i--) {
-                            // show up to 8 changes
-                            // for more changes placeholder will be shown: "+13 событий"
-                            if (i > changes4subject.size() - 9) {
-                                text.append(change2string(changes4subject.get(i)));
-                                if (i > 0) {
-                                    text.append("\n");
-                                }
-                            } else {
-                                text.append("+").append(i + 1).append(" ").append(getActionsLabel(context, i + 1));
-                                break;
-                            }
-                        }
-                        addNotification(context, subject, text.toString(), timestamp, index, true);
-                        index++;
-                    }
-                } else {
-                    // show notifications per each change that grouped together
-                    // best suitable: android >= 7.0 except android == 8.0
-                    int size = 0;
-                    for (Map.Entry<String, ArrayList<PChange>> change : changes.entrySet()) {
-                        size += change.getValue().size();
-                    }
-                    if (size > 1) {
-                        addNotification(context, context.getString(R.string.protocol_changes), String.valueOf(size) + " " + getActionsLabel(context, size), timestamp, 0, true);
-                    }
-                    for (Map.Entry<String, ArrayList<PChange>> change : changes.entrySet()) {
-                        final String subject = change.getKey();
-                        final ArrayList<PChange> changes4subject = change.getValue();
-                        for (int i = changes4subject.size() - 1; i >= 0; i--) {
-                            addNotification(context, subject, change2string(changes4subject.get(i)), timestamp, 0, size == 1);
-                        }
-                    }
-                }
-                // step 4
-                // there is no step 4
-                finish();
-            }, throwable -> {
-                log.w(TAG, "handle | catch(Thread) | ", throwable.getMessage());
-                finish();
-            });
+            }
+            // step 4
+            // there is no step 4
+            finish();
         } catch (Exception e) {
             log.w(TAG, "handle | catch | ", e.getMessage());
             finish();
         }
     }
 
-    private void addNotification(@NonNull Context context, String title, String text, long timestamp, int group, boolean isSummary) {
+    private void addNotification(@NonNull Context context, String title, String text,
+                                 long timestamp, int group, boolean isSummary) {
         try {
-            thread.run(() -> {
-                log.v(TAG, "addNotification | title=", title, " | text=", text.replaceAll("\n", "\\n"), " | timestamp=", timestamp, " | isSummary=", isSummary);
-                if (notificationId > Integer.MAX_VALUE - 10) notificationId = 0;
-                // prepare intent
-                Intent intent = new Intent(context, MainActivity.class);
-                intent.addFlags(App.intentFlagRestart);
-                intent.putExtra("action", "protocol_changes");
-                PendingIntent pIntent = PendingIntent.getActivity(context, (int) System.currentTimeMillis(), intent, 0);
-                // prepare and send notification
-                notifications.get()
-                        .init(context)
-                        .notify(
-                                context,
-                                notificationId++,
-                                notifications.get().getProtocol(context, title, text, timestamp, group, isSummary, pIntent)
-                        );
-            }, throwable -> {
-                log.w(TAG, "addNotification | catch(Thread) | ", throwable.getMessage());
-            });
+            log.v(TAG, "addNotification | title=", title, " | text=",
+                    text.replaceAll("\n", "\\n"), " | timestamp=", timestamp,
+                    " | isSummary=", isSummary);
+            if (notificationId > Integer.MAX_VALUE - 10) {
+                notificationId = 0;
+            }
+            // prepare intent
+            Intent intent = new Intent(context, MainActivity.class);
+            intent.addFlags(App.intentFlagRestart);
+            intent.putExtra("action", "protocol_changes");
+            PendingIntent pIntent = PendingIntent.getActivity(context, (int) System.currentTimeMillis(), intent, 0);
+            // prepare and send notification
+            notifications.get()
+                    .init(context)
+                    .notify(
+                            context,
+                            notificationId++,
+                            notifications.get().getProtocol(context, title, text, timestamp, group, isSummary, pIntent)
+                    );
         } catch (Exception e) {
             log.w(TAG, "addNotification | catch | ", e.getMessage());
         }
@@ -312,20 +300,13 @@ public class ProtocolTrackerServiceImpl implements ProtocolTrackerService {
     private void finish() {
         try {
             firebasePerformanceProvider.stopTrace(trace);
-            thread.run(thread.BACKGROUND, () -> {
-                try {
-                    log.i(TAG, "Executed");
-                    if (requestHandle != null) requestHandle.cancel();
-                } catch (Exception e) {
-                    log.w(TAG, "finish | catch(Thread) | ", e.getMessage());
-                } finally {
-                    if (callback != null) {
-                        callback.call();
-                    }
-                }
-            });
+            log.i(TAG, "Executed");
+            if (requestHandle != null) {
+                requestHandle.cancel();
+            }
         } catch (Exception e) {
             log.w(TAG, "finish | catch | ", e.getMessage());
+        } finally {
             if (callback != null) {
                 callback.call();
             }

@@ -7,7 +7,7 @@ import com.bukhmastov.cdoitmo.function.Callable;
 
 public interface ProtocolTrackerService {
 
-    void request(@NonNull final Context context, Callable callback);
+    void request(@NonNull Context context, Callable callback);
 
     void shutdown();
 }

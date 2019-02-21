@@ -124,11 +124,13 @@ public abstract class Preference {
             case "pref_use_notifications":
             case "pref_notify_frequency":
             case "pref_notify_network_unmetered":
-                thread.get().run(Thread.BACKGROUND, () -> protocolTracker.get().restart(activity));
+                thread.get().standalone(() -> protocolTracker.get().restart(activity));
                 break;
             case "pref_protocol_changes_track":
                 if (storagePref.get().get(activity, "pref_protocol_changes_track", true)) {
-                    protocolTracker.get().setup(activity, deIfmoRestClient.get(), 0);
+                    thread.get().standalone(() -> {
+                        protocolTracker.get().setup(activity, deIfmoRestClient.get());
+                    });
                 } else {
                     storage.get().clear(activity, Storage.CACHE, Storage.USER, "protocol#log");
                 }

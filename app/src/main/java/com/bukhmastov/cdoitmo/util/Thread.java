@@ -46,8 +46,6 @@ public interface Thread {
 
     void standalone(@NonNull ThrowingRunnable runnable, @Nullable ThrowingConsumer<Throwable, Throwable> errorHandler);
 
-    void sleep(long millis) throws InterruptedException;
-
     boolean assertUI();
 
     boolean assertNotUI();
@@ -59,8 +57,6 @@ public interface Thread {
      * @see com.bukhmastov.cdoitmo.App.DEBUG
      */
     void uncaught(Throwable throwable);
-
-    void initUncaughtExceptionHandler();
 
     @Retention(RetentionPolicy.SOURCE)
     @IntDef({FOREGROUND, BACKGROUND})

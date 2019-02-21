@@ -245,7 +245,7 @@ public class AccountImpl implements Account {
             accounts.add(context, login);
         }
         if (isNewUser && isAuthorized) {
-            protocolTracker.setup(context, deIfmoRestClient, 0);
+            thread.standalone(() -> protocolTracker.setup(context, deIfmoRestClient));
         }
     }
 

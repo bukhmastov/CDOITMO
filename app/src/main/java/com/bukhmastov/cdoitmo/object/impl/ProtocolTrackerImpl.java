@@ -74,6 +74,7 @@ public class ProtocolTrackerImpl implements ProtocolTracker {
     @Override
     public ProtocolTracker check(@NonNull Context context, @Nullable Callable callback) {
         log.v(TAG, "check");
+        thread.assertNotUI();
         boolean enabled = storagePref.get(context, "pref_use_notifications", true);
         boolean running = TRUE.equals(storage.get(context, Storage.PERMANENT, Storage.USER, "protocol_tracker#job_service_running", FALSE));
         log.v(TAG, "check | enabled=", enabled, " | running=", running);
@@ -116,6 +117,7 @@ public class ProtocolTrackerImpl implements ProtocolTracker {
     @Override
     public ProtocolTracker start(@NonNull Context context, @Nullable Callable callback) {
         log.v(TAG, "start");
+        thread.assertNotUI();
         if (App.UNAUTHORIZED_MODE) {
             log.v(TAG, "start | UNAUTHORIZED_MODE");
             stop(context, callback);
@@ -181,6 +183,7 @@ public class ProtocolTrackerImpl implements ProtocolTracker {
     @Override
     public ProtocolTracker stop(@NonNull Context context, @Nullable Callable callback) {
         log.v(TAG, "stop");
+        thread.assertNotUI();
         boolean running = TRUE.equals(storage.get(context, Storage.PERMANENT, Storage.USER, "protocol_tracker#job_service_running", FALSE));
         log.v(TAG, "stop | running=", running);
         if (running) {
@@ -209,6 +212,7 @@ public class ProtocolTrackerImpl implements ProtocolTracker {
     @Override
     public ProtocolTracker reset(@NonNull Context context, @Nullable Callable callback) {
         log.v(TAG, "reset");
+        thread.assertNotUI();
         try {
             getJobScheduler(context).cancelAll();
             storage.put(context, Storage.PERMANENT, Storage.USER, "protocol_tracker#job_service_running", FALSE);
@@ -222,41 +226,45 @@ public class ProtocolTrackerImpl implements ProtocolTracker {
     }
 
     @Override
-    public void setup(@NonNull Context context, @NonNull DeIfmoRestClient deIfmoRestClient, int attempt) {
-        thread.standalone(() -> {
-            log.v(TAG, "setup | attempt=", attempt);
-            if (!storagePref.get(context, "pref_protocol_changes_track", true)) {
-                log.v(TAG, "setup | pref_protocol_changes_track=false");
-                return;
-            }
-            if (attempt >= 3) {
-                log.v(TAG, "setup | failed to setup, number of attempts exceeded the limit");
-                return;
-            }
-            deIfmoRestClient.get(context, "eregisterlog?days=126", null, new RestResponseHandler() {
-                @Override
-                public void onSuccess(final int statusCode, Client.Headers headers, JSONObject obj, final JSONArray arr) {
-                    thread.standalone(() -> {
-                        if (statusCode == 200 && arr != null) {
-                            Protocol protocol = new Protocol().fromJson(new JSONObject().put("protocol", arr));
-                            protocol.setTimestamp(time.get().getTimeInMillis());
-                            protocol.setNumberOfWeeks(18);
-                            new ProtocolConverter(protocol).convert();
-                            log.i(TAG, "setup | uploaded");
-                        } else {
-                            setup(context, deIfmoRestClient, attempt + 1);
-                        }
-                    });
-                }
-                @Override
-                public void onFailure(int statusCode, Client.Headers headers, int state) {
+    public void setup(@NonNull Context context, @NonNull DeIfmoRestClient deIfmoRestClient) {
+        setup(context, deIfmoRestClient, 0);
+    }
+
+    private void setup(@NonNull Context context, @NonNull DeIfmoRestClient deIfmoRestClient, int attempt) {
+        log.v(TAG, "setup | attempt=", attempt);
+        thread.assertNotUI();
+        if (!storagePref.get(context, "pref_protocol_changes_track", true)) {
+            log.v(TAG, "setup | pref_protocol_changes_track=false");
+            return;
+        }
+        if (attempt >= 3) {
+            log.v(TAG, "setup | failed to setup, number of attempts exceeded the limit");
+            return;
+        }
+        deIfmoRestClient.get(context, "eregisterlog?days=126", null, new RestResponseHandler() {
+            @Override
+            public void onSuccess(int code, Client.Headers headers, JSONObject obj, JSONArray arr) {
+                if (code != 200 || arr == null) {
                     setup(context, deIfmoRestClient, attempt + 1);
                 }
-                @Override
-                public void onProgress(int state) {}
-                @Override
-                public void onNewRequest(Client.Request request) {}
-            });
+                try {
+                    Protocol protocol = new Protocol().fromJson(new JSONObject().put("protocol", arr));
+                    protocol.setTimestamp(time.get().getTimeInMillis());
+                    protocol.setNumberOfWeeks(18);
+                    new ProtocolConverter(protocol).convert();
+                    log.i(TAG, "setup | uploaded");
+                } catch (Exception e) {
+                    setup(context, deIfmoRestClient, attempt + 1);
+                }
+            }
+            @Override
+            public void onFailure(int code, Client.Headers headers, int state) {
+                setup(context, deIfmoRestClient, attempt + 1);
+            }
+            @Override
+            public void onProgress(int state) {}
+            @Override
+            public void onNewRequest(Client.Request request) {}
         });
     }
 }

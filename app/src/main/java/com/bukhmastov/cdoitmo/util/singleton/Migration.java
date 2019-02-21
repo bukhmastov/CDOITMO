@@ -180,7 +180,7 @@ public class Migration {
             // ignore
         }
         // Reset protocol tracker
-        injectProvider.getThread().run(Thread.BACKGROUND, () -> injectProvider.getProtocolTracker().reset(context));
+        injectProvider.getThread().standalone(() -> injectProvider.getProtocolTracker().reset(context));
     }
 
     @Keep
@@ -311,12 +311,12 @@ public class Migration {
             }
         }
         // Reset protocol tracker
-        injectProvider.getThread().run(Thread.BACKGROUND, () -> injectProvider.getProtocolTracker().reset(context));
+        injectProvider.getThread().standalone(() -> injectProvider.getProtocolTracker().reset(context));
     }
 
     @Keep
     private static void migrate115(Context context, InjectProvider injectProvider) {
-        injectProvider.getThread().run(Thread.BACKGROUND, () -> injectProvider.getProtocolTracker().reset(context));
+        injectProvider.getThread().standalone(() -> injectProvider.getProtocolTracker().reset(context));
         try {
             final String rootPath = context.getCacheDir() + File.separator + "app_data";
             getUsersFolder(rootPath, (file, user) -> {
@@ -383,7 +383,7 @@ public class Migration {
     @Keep
     private static void migrate106(Context context, InjectProvider injectProvider) {
         injectProvider.getStoragePref().put(context, "pref_notify_type", Build.VERSION.SDK_INT <= Build.VERSION_CODES.M ? "0" : "1");
-        injectProvider.getThread().run(Thread.BACKGROUND, () -> injectProvider.getProtocolTracker().reset(context));
+        injectProvider.getThread().standalone(() -> injectProvider.getProtocolTracker().reset(context));
     }
 
     @Keep
@@ -1017,7 +1017,7 @@ public class Migration {
     private static void migrate71(Context context, InjectProvider injectProvider) {
         injectProvider.getStoragePref().delete(context, "pref_open_drawer_at_startup");
         injectProvider.getStoragePref().put(context, "pref_first_launch", injectProvider.getStorage().get(context, Storage.PERMANENT, Storage.GLOBAL, "users#list", "").trim().isEmpty());
-        injectProvider.getThread().run(Thread.BACKGROUND, () -> injectProvider.getProtocolTracker().reset(context));
+        injectProvider.getThread().standalone(() -> injectProvider.getProtocolTracker().reset(context));
     }
 
     @Keep

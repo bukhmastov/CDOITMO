@@ -230,7 +230,7 @@ public class MainActivityPresenterImpl implements MainActivityPresenter, Navigat
             log.v(TAG, "authorized");
             if (!loaded) {
                 loaded = true;
-                thread.run(thread.BACKGROUND, () -> protocolTracker.check(activity));
+                thread.standalone(() -> protocolTracker.check(activity));
                 selectSection(selectedSection);
                 navigationMenu.displayUserData(activity, storage, activity.findViewById(R.id.nav_view));
                 navigationMenu.displayRemoteMessage(activity, firebaseConfigProvider, storage);

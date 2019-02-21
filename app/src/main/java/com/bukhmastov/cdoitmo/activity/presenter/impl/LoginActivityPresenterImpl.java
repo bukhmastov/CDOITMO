@@ -611,12 +611,12 @@ public class LoginActivityPresenterImpl implements LoginActivityPresenter {
     }
 
     private void loginSetupInformation(Runnable onDone) {
+        SetupInformationMeta setupInformationMeta = new SetupInformationMeta(onDone);
         thread.standalone(() -> {
-            SetupInformationMeta setupInformationMeta = new SetupInformationMeta(onDone);
             deIfmoClient.get(activity, "servlet/distributedCDE?Rule=editPersonProfile", null, new ResponseHandler() {
                 @Override
                 public void onSuccess(int code, Client.Headers headers, String response) {
-                    thread.standalone(() -> {
+                    try {
                         UserData userData = new UserDataParser(response).parse();
                         if (userData == null) {
                             log.v(TAG, "loginSetupInformation | deIfmoClient | success | not parsed");
@@ -631,9 +631,9 @@ public class LoginActivityPresenterImpl implements LoginActivityPresenter {
                         String avatar = StringUtils.defaultIfBlank(userData.getAvatar(), null);
                         Integer week = userData.getWeek() < 0 ? null : userData.getWeek();
                         setupInformationMeta.onDeIfmoReady(name, groups, avatar, week);
-                    }, throwable -> {
+                    } catch (Throwable throwable) {
                         setupInformationMeta.onDeIfmoFailed();
-                    });
+                    }
                 }
                 @Override
                 public void onFailure(int code, Client.Headers headers, int state) {
@@ -644,19 +644,21 @@ public class LoginActivityPresenterImpl implements LoginActivityPresenter {
                 @Override
                 public void onNewRequest(Client.Request request) {}
             });
+        });
+        thread.standalone(() -> {
             isuRestClient.get(activity, "schedule/week/%apikey%", null, new RestResponseHandler() {
                 @Override
                 public void onSuccess(int code, Client.Headers headers, JSONObject obj, JSONArray arr) {
-                    thread.standalone(() -> {
+                    try {
                         if (obj == null) {
                             setupInformationMeta.onIsuWeekFailed();
                             return;
                         }
                         IsuWeek isuWeek = new IsuWeek().fromJson(obj);
                         setupInformationMeta.onIsuWeekReady(isuWeek.getWeek());
-                    }, throwable -> {
+                    } catch (Throwable throwable) {
                         setupInformationMeta.onIsuWeekFailed();
-                    });
+                    };
                 }
                 @Override
                 public void onFailure(int code, Client.Headers headers, int state) {
@@ -667,65 +669,67 @@ public class LoginActivityPresenterImpl implements LoginActivityPresenter {
                 @Override
                 public void onNewRequest(Client.Request request) {}
             });
-            if (isuPrivateRestClient.isAuthorized(activity)) {
-                isuPrivateRestClient.get(activity, "userdata/%apikey%/%isutoken%", null, new RestResponseHandler() {
-                    @Override
-                    public void onSuccess(int code, Client.Headers headers, JSONObject obj, JSONArray arr) {
-                        thread.standalone(() -> {
-                            if (obj == null) {
-                                setupInformationMeta.onIsuUserFailed();
-                                return;
-                            }
-                            IsuUserData isuUserData = new IsuUserData().fromJson(obj);
-                            String surname = StringUtils.defaultIfBlank(isuUserData.getSurname(), null);
-                            String nameO = StringUtils.defaultIfBlank(isuUserData.getName(), null);
-                            String patronymic = StringUtils.defaultIfBlank(isuUserData.getPatronymic(), null);
-                            String name = "";
-                            if (surname != null) {
-                                name += surname.trim();
-                                name = name.trim();
-                            }
-                            if (nameO != null) {
-                                name += " " + nameO;
-                                name = name.trim();
-                            }
-                            if (patronymic != null) {
-                                name += " " + patronymic;
-                                name = name.trim();
-                            }
-                            List<String> groups = new ArrayList<>();
-                            List<IsuUserDataGroup> isuGroups = CollectionUtils.emptyIfNull(isuUserData.getGroups());
-                            Collections.reverse(isuGroups);
-                            for (IsuUserDataGroup group : isuGroups) {
-                                if (StringUtils.isBlank(group.getGroup())) {
-                                    continue;
-                                }
-                                groups.add(group.getGroup());
-                            }
-                            if (groups.isEmpty()) {
-                                groups = null;
-                            }
-                            String avatar = null;
-                            if (isuUserData.getAvatar() != null && StringUtils.isNotBlank(isuUserData.getAvatar().getUrl())) {
-                                avatar = isuUserData.getAvatar().getUrl();
-                            }
-                            setupInformationMeta.onIsuUserReady(name, groups, avatar);
-                        }, throwable -> {
+        });
+        thread.standalone(() -> {
+            if (!isuPrivateRestClient.isAuthorized(activity)) {
+                setupInformationMeta.onIsuUserFailed();
+                return;
+            }
+            isuPrivateRestClient.get(activity, "userdata/%apikey%/%isutoken%", null, new RestResponseHandler() {
+                @Override
+                public void onSuccess(int code, Client.Headers headers, JSONObject obj, JSONArray arr) {
+                    try {
+                        if (obj == null) {
                             setupInformationMeta.onIsuUserFailed();
-                        });
-                    }
-                    @Override
-                    public void onFailure(int code, Client.Headers headers, int state) {
+                            return;
+                        }
+                        IsuUserData isuUserData = new IsuUserData().fromJson(obj);
+                        String surname = StringUtils.defaultIfBlank(isuUserData.getSurname(), null);
+                        String nameO = StringUtils.defaultIfBlank(isuUserData.getName(), null);
+                        String patronymic = StringUtils.defaultIfBlank(isuUserData.getPatronymic(), null);
+                        String name = "";
+                        if (surname != null) {
+                            name += surname.trim();
+                            name = name.trim();
+                        }
+                        if (nameO != null) {
+                            name += " " + nameO;
+                            name = name.trim();
+                        }
+                        if (patronymic != null) {
+                            name += " " + patronymic;
+                            name = name.trim();
+                        }
+                        List<String> groups = new ArrayList<>();
+                        List<IsuUserDataGroup> isuGroups = CollectionUtils.emptyIfNull(isuUserData.getGroups());
+                        Collections.reverse(isuGroups);
+                        for (IsuUserDataGroup group : isuGroups) {
+                            if (StringUtils.isBlank(group.getGroup())) {
+                                continue;
+                            }
+                            groups.add(group.getGroup());
+                        }
+                        if (groups.isEmpty()) {
+                            groups = null;
+                        }
+                        String avatar = null;
+                        if (isuUserData.getAvatar() != null && StringUtils.isNotBlank(isuUserData.getAvatar().getUrl())) {
+                            avatar = isuUserData.getAvatar().getUrl();
+                        }
+                        setupInformationMeta.onIsuUserReady(name, groups, avatar);
+                    } catch (Throwable throwable) {
                         setupInformationMeta.onIsuUserFailed();
                     }
-                    @Override
-                    public void onProgress(int state) {}
-                    @Override
-                    public void onNewRequest(Client.Request request) {}
-                });
-            } else {
-                setupInformationMeta.onIsuUserFailed();
-            }
+                }
+                @Override
+                public void onFailure(int code, Client.Headers headers, int state) {
+                    setupInformationMeta.onIsuUserFailed();
+                }
+                @Override
+                public void onProgress(int state) {}
+                @Override
+                public void onNewRequest(Client.Request request) {}
+            });
         });
     }
 
