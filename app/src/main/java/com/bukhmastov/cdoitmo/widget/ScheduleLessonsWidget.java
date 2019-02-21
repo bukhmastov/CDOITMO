@@ -14,9 +14,6 @@ import android.graphics.PorterDuffColorFilter;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
-import androidx.annotation.DrawableRes;
-import androidx.annotation.IntDef;
-import androidx.annotation.LayoutRes;
 import android.view.View;
 import android.widget.RemoteViews;
 
@@ -30,7 +27,6 @@ import com.bukhmastov.cdoitmo.event.events.OpenActivityEvent;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.model.converter.ScheduleLessonsAdditionalConverter;
-import com.bukhmastov.cdoitmo.model.schedule.lessons.SDay;
 import com.bukhmastov.cdoitmo.model.schedule.lessons.SLesson;
 import com.bukhmastov.cdoitmo.model.schedule.lessons.SLessons;
 import com.bukhmastov.cdoitmo.model.widget.schedule.lessons.WSLSettings;
@@ -39,6 +35,7 @@ import com.bukhmastov.cdoitmo.network.IfmoRestClient;
 import com.bukhmastov.cdoitmo.network.model.Client;
 import com.bukhmastov.cdoitmo.object.schedule.Schedule;
 import com.bukhmastov.cdoitmo.object.schedule.ScheduleLessons;
+import com.bukhmastov.cdoitmo.object.schedule.ScheduleLessonsHelper;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Thread;
 import com.bukhmastov.cdoitmo.util.Time;
@@ -48,10 +45,17 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
+import java.util.List;
+import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.inject.Inject;
+
+import androidx.annotation.DrawableRes;
+import androidx.annotation.IntDef;
+import androidx.annotation.LayoutRes;
 
 public class ScheduleLessonsWidget extends AppWidgetProvider {
 
@@ -72,6 +76,8 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
     EventBus eventBus;
     @Inject
     ScheduleLessons scheduleLessons;
+    @Inject
+    ScheduleLessonsHelper scheduleLessonsHelper;
     @Inject
     Time time;
     @Inject
@@ -617,14 +623,15 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
                 }
                 int week = time.getWeek(context, seek) % 2;
                 int weekday = time.getWeekDay(seek);
-                ArrayList<SLesson> lessons = getLessonsForWeekday(schedule, week, weekday);
+                TreeSet<SLesson> lessons = scheduleLessonsHelper.filterAndSortLessonsForWeekday(schedule, week, weekday, true);
                 // if this day contains lessons
                 if (CollectionUtils.isNotEmpty(lessons)) {
                     if (day == 0) {
                         // if this day - today
                         // seek for last lesson that contains proper timeEnd value
-                        for (int i = lessons.size() - 1; i >= 0 ; i--) {
-                            SLesson lesson = lessons.get(i);
+                        List<SLesson> list = new ArrayList<>(lessons);
+                        Collections.sort(list, Collections.reverseOrder());
+                        for (SLesson lesson : list) {
                             Matcher lessonTimeEnd = pattern.matcher(lesson.getTimeEnd());
                             if (lessonTimeEnd.find()) {
                                 Calendar calendarLTE = (Calendar) seek.clone();
@@ -817,27 +824,6 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
         } else {
             return REGULAR;
         }
-    }
-
-    public static ArrayList<SLesson> getLessonsForWeekday(SLessons schedule, int week, int weekday) {
-        ArrayList<SLesson> lessons = new ArrayList<>();
-        if (CollectionUtils.isEmpty(schedule.getSchedule())) {
-            return lessons;
-        }
-        for (SDay day : schedule.getSchedule()) {
-            if (day == null || day.getWeekday() != weekday || CollectionUtils.isEmpty(day.getLessons())) {
-                continue;
-            }
-            for (SLesson lesson : day.getLessons()) {
-                if (lesson == null || "reduced".equals(lesson.getCdoitmoType())) {
-                    continue;
-                }
-                if (week == -1 || (lesson.getParity() == 2 || lesson.getParity() == week)) {
-                    lessons.add(lesson);
-                }
-            }
-        }
-        return lessons;
     }
 
     private void logStatistic(Context context, String info) {

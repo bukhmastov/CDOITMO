@@ -4,6 +4,7 @@ import com.bukhmastov.cdoitmo.activity.ConnectedActivity;
 import com.bukhmastov.cdoitmo.function.Callable;
 import com.bukhmastov.cdoitmo.model.schedule.lessons.SDay;
 import com.bukhmastov.cdoitmo.model.schedule.lessons.SLesson;
+import com.bukhmastov.cdoitmo.model.schedule.lessons.SLessons;
 
 import java.util.Collection;
 import java.util.TreeSet;
@@ -31,4 +32,6 @@ public interface ScheduleLessonsHelper {
     TreeSet<SLesson> filterAndSortLessons(Collection<SLesson> lessons, int parity, boolean hideReducedLessons);
 
     TreeSet<SDay> filterAndSortDays(Collection<SDay> days);
+
+    TreeSet<SLesson> filterAndSortLessonsForWeekday(SLessons schedule, int parity, int weekday, boolean hideReducedLessons);
 }

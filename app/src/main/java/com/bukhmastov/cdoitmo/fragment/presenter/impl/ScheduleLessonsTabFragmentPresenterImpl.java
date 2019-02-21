@@ -708,7 +708,8 @@ public class ScheduleLessonsTabFragmentPresenterImpl implements ScheduleLessonsT
             sbb.append("\n");
         }
         int lessonsThisWeek = 0;
-        for (SDay day : days) {
+        TreeSet<SDay> daysSorted = scheduleLessonsHelper.filterAndSortDays(days);
+        for (SDay day : daysSorted) {
             if (day == null) {
                 continue;
             }

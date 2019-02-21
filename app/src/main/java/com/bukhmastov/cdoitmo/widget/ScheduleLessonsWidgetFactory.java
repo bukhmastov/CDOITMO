@@ -11,12 +11,14 @@ import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.model.schedule.lessons.SLesson;
 import com.bukhmastov.cdoitmo.model.schedule.lessons.SLessons;
 import com.bukhmastov.cdoitmo.model.widget.schedule.lessons.WSLSettings;
+import com.bukhmastov.cdoitmo.object.schedule.ScheduleLessonsHelper;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Time;
 import com.bukhmastov.cdoitmo.util.singleton.StringUtils;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.TreeSet;
 
 import javax.inject.Inject;
 
@@ -35,6 +37,8 @@ public class ScheduleLessonsWidgetFactory implements RemoteViewsService.RemoteVi
     Time time;
     @Inject
     ScheduleLessonsWidgetStorage scheduleLessonsWidgetStorage;
+    @Inject
+    ScheduleLessonsHelper scheduleLessonsHelper;
 
     ScheduleLessonsWidgetFactory(Context context, Intent intent) {
         AppComponentProvider.getComponent().inject(this);
@@ -69,9 +73,10 @@ public class ScheduleLessonsWidgetFactory implements RemoteViewsService.RemoteVi
             if (shift != 0) {
                 calendar.add(Calendar.HOUR, shift * 24);
             }
+            TreeSet<SLesson> lessons = scheduleLessonsHelper.filterAndSortLessonsForWeekday(schedule, week, time.getWeekDay(calendar), true);
+            this.lessons.addAll(lessons);
             this.week = time.getWeek(context, calendar) % 2;
             this.type = schedule.getType();
-            this.lessons.addAll(ScheduleLessonsWidget.getLessonsForWeekday(schedule, week, time.getWeekDay(calendar)));
         } catch (Exception e) {
             log.exception(e);
         }

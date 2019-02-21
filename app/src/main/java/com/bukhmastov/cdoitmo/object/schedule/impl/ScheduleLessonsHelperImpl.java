@@ -11,6 +11,7 @@ import com.bukhmastov.cdoitmo.fragment.presenter.ScheduleLessonsModifyFragmentPr
 import com.bukhmastov.cdoitmo.function.Callable;
 import com.bukhmastov.cdoitmo.model.schedule.lessons.SDay;
 import com.bukhmastov.cdoitmo.model.schedule.lessons.SLesson;
+import com.bukhmastov.cdoitmo.model.schedule.lessons.SLessons;
 import com.bukhmastov.cdoitmo.model.schedule.lessons.added.SLessonsAdded;
 import com.bukhmastov.cdoitmo.model.schedule.lessons.reduced.SDayReduced;
 import com.bukhmastov.cdoitmo.model.schedule.lessons.reduced.SLessonsReduced;
@@ -426,5 +427,19 @@ public class ScheduleLessonsHelperImpl implements ScheduleLessonsHelper {
             filtered.add(day);
         }
         return filtered;
+    }
+
+    @Override
+    public TreeSet<SLesson> filterAndSortLessonsForWeekday(SLessons schedule, int parity, int weekday, boolean hideReducedLessons) {
+        if (CollectionUtils.isEmpty(schedule.getSchedule())) {
+            return new TreeSet<>();
+        }
+        for (SDay day : schedule.getSchedule()) {
+            if (day == null || day.getWeekday() != weekday || CollectionUtils.isEmpty(day.getLessons())) {
+                continue;
+            }
+            return filterAndSortLessons(day.getLessons(), parity, hideReducedLessons);
+        }
+        return new TreeSet<>();
     }
 }
