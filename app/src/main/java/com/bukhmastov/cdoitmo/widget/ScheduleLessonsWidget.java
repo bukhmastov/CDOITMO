@@ -57,6 +57,8 @@ import androidx.annotation.DrawableRes;
 import androidx.annotation.IntDef;
 import androidx.annotation.LayoutRes;
 
+import static com.bukhmastov.cdoitmo.util.Thread.WSL;
+
 public class ScheduleLessonsWidget extends AppWidgetProvider {
 
     private static final String TAG = "SLWidget";
@@ -132,7 +134,7 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
     }
 
     public void updateAppWidget(Context context, AppWidgetManager appWidgetManager, int appWidgetId, boolean force, boolean controls) {
-        thread.run(() -> {
+        thread.run(WSL, () -> {
             log.i(TAG, "update | appWidgetId=", appWidgetId);
             WSLSettings settings = scheduleLessonsWidgetStorage.getSettings(appWidgetId);
             SLessons cache = scheduleLessonsWidgetStorage.getConvertedCache(appWidgetId);
@@ -156,14 +158,14 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
     }
 
     public void deleteAppWidget(Context context, int appWidgetId) {
-        thread.run(() -> {
+        thread.run(WSL, () -> {
             log.i(TAG, "delete | appWidgetId=", appWidgetId);
             scheduleLessonsWidgetStorage.delete(appWidgetId);
         });
     }
 
     private void refresh(Context context, AppWidgetManager appWidgetManager, int appWidgetId, WSLSettings settings) {
-        thread.run(() -> {
+        thread.run(WSL, () -> {
             log.i(TAG, "refresh | appWidgetId=", appWidgetId);
             scheduleLessons.search(
                     settings.getQuery(),
@@ -172,8 +174,8 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
                     false,
                     new Schedule.Handler<SLessons>() {
                         @Override
-                        public void onSuccess(final SLessons schedule, final boolean fromCache) {
-                            thread.run(() -> {
+                        public void onSuccess(SLessons schedule, boolean fromCache) {
+                            try {
                                 if (schedule == null) {
                                     failed(context, appWidgetManager, appWidgetId, settings, context.getString(R.string.failed_to_show_schedule));
                                     return;
@@ -186,17 +188,17 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
                                 }
                                 scheduleLessonsWidgetStorage.save(appWidgetId, converted);
                                 display(context, appWidgetManager, appWidgetId, false);
-                            }, throwable -> {
+                            } catch (Throwable throwable) {
                                 log.exception(throwable);
                                 failed(context, appWidgetManager, appWidgetId, settings, context.getString(R.string.failed_to_show_schedule));
-                            });
+                            }
                         }
                         @Override
-                        public void onFailure(int statusCode, Client.Headers headers, int state) {
+                        public void onFailure(int code, Client.Headers headers, int state) {
                             //R.string.server_provided_corrupted_json
                             String message;
                             switch (state) {
-                                case IfmoRestClient.FAILED_SERVER_ERROR: message = IfmoRestClient.getFailureMessage(context, statusCode); break;
+                                case IfmoRestClient.FAILED_SERVER_ERROR: message = IfmoRestClient.getFailureMessage(context, code); break;
                                 case IfmoRestClient.FAILED_CORRUPTED_JSON: message = context.getString(R.string.server_provided_corrupted_json); break;
                                 default: message = context.getString(R.string.failed_to_load_schedule); break;
                             }
@@ -225,7 +227,7 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
     }
 
     private void progress(Context context, AppWidgetManager appWidgetManager, int appWidgetId, WSLSettings settings) {
-        thread.run(() -> {
+        thread.run(WSL, () -> {
             log.v(TAG, "progress | appWidgetId=" + appWidgetId);
             final @SIZE int size = getSize(appWidgetManager.getAppWidgetOptions(appWidgetId));
             final Colors colors = getColors(settings);
@@ -269,11 +271,11 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
     }
 
     private void display(Context context, AppWidgetManager appWidgetManager, int appWidgetId, boolean controls) {
-        thread.run(() -> {
+        thread.run(WSL, () -> {
             log.v(TAG, "display | appWidgetId=", appWidgetId, " | controls=", controls);
             WSLSettings settings = scheduleLessonsWidgetStorage.getSettings(appWidgetId);
             SLessons schedule = scheduleLessonsWidgetStorage.getConvertedCache(appWidgetId);
-            thread.run(() -> {
+            thread.run(WSL, () -> {
                 if (settings == null) {
                     needPreparations(context, appWidgetManager, appWidgetId);
                     return;
@@ -299,7 +301,9 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
                 // заголовки
                 layout.setViewVisibility(R.id.widget_title, View.VISIBLE);
                 layout.setViewVisibility(R.id.widget_day_title, View.VISIBLE);
-                layout.setTextViewText(R.id.widget_title, schedule.getTitle() == null ? context.getString(R.string.schedule_lessons) : schedule.getTitle() + ("room".equals(schedule.getType()) ? " " + context.getString(R.string.room).toLowerCase() : ""));
+                layout.setTextViewText(R.id.widget_title, schedule.getTitle() == null ?
+                        context.getString(R.string.schedule_lessons) : schedule.getTitle() + ("room".equals(schedule.getType()) ? " " + context.getString(R.string.room).toLowerCase() :
+                        ""));
                 layout.setTextViewText(R.id.widget_day_title,
                         (
                                 (shift[0] != 0 ? ((shift[0] > 0 ? "+" : "") + String.valueOf(shift[0]) + " ") : "") +
@@ -403,7 +407,7 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
     }
 
     private void failed(Context context, AppWidgetManager appWidgetManager, int appWidgetId, WSLSettings settings, String text) {
-        thread.run(() -> {
+        thread.run(WSL, () -> {
             log.v(TAG, "failed | appWidgetId=" + appWidgetId + " | text=" + text);
             final @SIZE int size = getSize(appWidgetManager.getAppWidgetOptions(appWidgetId));
             final Colors colors = getColors(settings);
@@ -452,7 +456,7 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
     }
 
     private void needPreparations(Context context, AppWidgetManager appWidgetManager, int appWidgetId) {
-        thread.run(() -> {
+        thread.run(WSL, () -> {
             log.v(TAG, "needPreparations | appWidgetId=" + appWidgetId);
             final @SIZE int size = getSize(appWidgetManager.getAppWidgetOptions(appWidgetId));
             final Colors colors = getColors();
@@ -683,7 +687,7 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
     public void onReceive(Context context, Intent intent) {
         inject();
         super.onReceive(context, intent);
-        thread.run(() -> {
+        thread.run(WSL, () -> {
             String action = intent.getAction() != null ? intent.getAction() : "";
             int appWidgetId = intent.getIntExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID);
             log.v(TAG, "onReceive | action=", action);
@@ -706,7 +710,7 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
                 case ACTION_WIDGET_CONTROLS_NEXT:
                 case ACTION_WIDGET_CONTROLS_BEFORE:
                 case ACTION_WIDGET_CONTROLS_RESET: {
-                    thread.run(() -> {
+                    thread.run(WSL, () -> {
                         switch (action) {
                             case ACTION_WIDGET_CONTROLS_NEXT: logStatistic(context, "shift_next"); break;
                             case ACTION_WIDGET_CONTROLS_BEFORE: logStatistic(context, "shift_before"); break;
@@ -732,7 +736,7 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
                     break;
                 }
                 case ACTION_WIDGET_OPEN: {
-                    thread.run(() -> {
+                    thread.run(WSL, () -> {
                         logStatistic(context, "schedule_open");
                         Bundle extras = new Bundle();
                         extras.putString("action", "schedule_lessons");

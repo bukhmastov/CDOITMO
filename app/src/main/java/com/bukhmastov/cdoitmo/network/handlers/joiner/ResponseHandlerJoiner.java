@@ -12,7 +12,7 @@ public class ResponseHandlerJoiner implements ResponseHandler {
     }
 
     @Override
-    public void onSuccess(int code, Client.Headers headers, String response) {
+    public void onSuccess(int code, Client.Headers headers, String response) throws Exception {
         handler.onSuccess(code, headers, response);
     }
 

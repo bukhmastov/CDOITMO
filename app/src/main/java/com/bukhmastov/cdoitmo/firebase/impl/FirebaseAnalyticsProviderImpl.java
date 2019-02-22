@@ -50,10 +50,12 @@ public class FirebaseAnalyticsProviderImpl implements FirebaseAnalyticsProvider 
     public boolean setEnabled(Context context) {
         return setEnabled(context, storagePref.get().get(context, "pref_allow_collect_analytics", true));
     }
+
     @Override
     public boolean setEnabled(Context context, boolean enabled) {
         return setEnabled(context, enabled, false);
     }
+
     @Override
     public boolean setEnabled(Context context, boolean enabled, boolean notify) {
         try {
@@ -75,32 +77,32 @@ public class FirebaseAnalyticsProviderImpl implements FirebaseAnalyticsProvider 
     public void setCurrentScreen(Activity activity) {
         setCurrentScreen(activity, null, null);
     }
+
     @Override
     public void setCurrentScreen(Activity activity, String screenOverride) {
         logCurrentScreen(activity, null, screenOverride);
     }
+
     @Override
     public void setCurrentScreen(Activity activity, Fragment fragment) {
         logCurrentScreen(activity, fragment, null);
     }
+
     @Override
-    public void setCurrentScreen(final Activity activity, final Fragment fragment, final String view_screen) {
-        thread.run(thread.BACKGROUND, () -> {
-            try {
-                if (!enabled) return;
-                if (activity == null) return;
-                String vs = view_screen;
-                if (view_screen == null) {
-                    if (fragment != null) {
-                        vs = fragment.getClass().getSimpleName();
-                    } else {
-                        vs = activity.getClass().getSimpleName();
-                    }
+    public void setCurrentScreen(Activity activity, Fragment fragment, String viewScreen) {
+        if (!enabled || activity == null) return;
+        thread.standalone(() -> {
+            String vs = viewScreen;
+            if (viewScreen == null) {
+                if (fragment != null) {
+                    vs = fragment.getClass().getSimpleName();
+                } else {
+                    vs = activity.getClass().getSimpleName();
                 }
-                getFirebaseAnalytics(activity).setCurrentScreen(activity, vs, null);
-            } catch (Exception e) {
-                log.exception(e);
             }
+            getFirebaseAnalytics(activity).setCurrentScreen(activity, vs, null);
+        }, throwable -> {
+            log.exception(throwable);
         });
     }
 
@@ -108,30 +110,32 @@ public class FirebaseAnalyticsProviderImpl implements FirebaseAnalyticsProvider 
     public void logCurrentScreen(Activity activity) {
         logCurrentScreen(activity, null, null);
     }
+
     @Override
     public void logCurrentScreen(Activity activity, String screenOverride) {
         logCurrentScreen(activity, null, screenOverride);
     }
+
     @Override
     public void logCurrentScreen(Activity activity, Fragment fragment) {
         logCurrentScreen(activity, fragment, null);
     }
+
     @Override
-    public void logCurrentScreen(Activity activity, Fragment fragment, String view_screen) {
+    public void logCurrentScreen(Activity activity, Fragment fragment, String viewScreen) {
         try {
-            if (!enabled) return;
-            if (activity == null) return;
-            if (view_screen == null) {
+            if (!enabled || activity == null) return;
+            if (viewScreen == null) {
                 if (fragment != null) {
-                    view_screen = fragment.getClass().getSimpleName();
+                    viewScreen = fragment.getClass().getSimpleName();
                 } else {
-                    view_screen = activity.getClass().getSimpleName();
+                    viewScreen = activity.getClass().getSimpleName();
                 }
             }
             logEvent(
                     activity,
                     FirebaseAnalyticsProvider.Event.APP_VIEW,
-                    getBundle(FirebaseAnalyticsProvider.Param.APP_VIEW_SCREEN, view_screen)
+                    getBundle(FirebaseAnalyticsProvider.Param.APP_VIEW_SCREEN, viewScreen)
             );
         } catch (Exception e) {
             log.exception(e);
@@ -186,15 +190,14 @@ public class FirebaseAnalyticsProviderImpl implements FirebaseAnalyticsProvider 
             log.exception(e);
         }
     }
+
     @Override
-    public void setUserProperty(final Context context, final String property, final String value) {
-        thread.run(thread.BACKGROUND, () -> {
-            try {
-                if (!enabled) return;
-                getFirebaseAnalytics(context).setUserProperty(property, value);
-            } catch (Exception e) {
-                log.exception(e);
-            }
+    public void setUserProperty(Context context, String property, String value) {
+        if (!enabled) return;
+        thread.standalone(() -> {
+            getFirebaseAnalytics(context).setUserProperty(property, value);
+        }, throwable -> {
+            log.exception(throwable);
         });
     }
 
@@ -202,29 +205,27 @@ public class FirebaseAnalyticsProviderImpl implements FirebaseAnalyticsProvider 
     public void logEvent(Context context, String name) {
         logEvent(context, name, null);
     }
+
     @Override
-    public void logEvent(final Context context, final String name, final Bundle params) {
-        thread.run(thread.BACKGROUND, () -> {
-            try {
-                if (!enabled) return;
-                getFirebaseAnalytics(context).logEvent(name, params);
-            } catch (Exception e) {
-                log.exception(e);
-            }
+    public void logEvent(Context context, String name, Bundle params) {
+        if (!enabled) return;
+        thread.standalone(() -> {
+            getFirebaseAnalytics(context).logEvent(name, params);
+        }, throwable -> {
+            log.exception(throwable);
         });
     }
+
     @Override
-    public void logBasicEvent(final Context context, final String content) {
-        thread.run(thread.BACKGROUND, () -> {
-            try {
-                if (!enabled) return;
-                getFirebaseAnalytics(context).logEvent(
-                        Event.EVENT,
-                        getBundle(Param.EVENT_EXTRA, content)
-                );
-            } catch (Exception e) {
-                log.exception(e);
-            }
+    public void logBasicEvent(Context context, String content) {
+        if (!enabled) return;
+        thread.standalone(() -> {
+            getFirebaseAnalytics(context).logEvent(
+                    Event.EVENT,
+                    getBundle(Param.EVENT_EXTRA, content)
+            );
+        }, throwable -> {
+            log.exception(throwable);
         });
     }
 
@@ -232,14 +233,17 @@ public class FirebaseAnalyticsProviderImpl implements FirebaseAnalyticsProvider 
     public Bundle getBundle(String key, Object value) {
         return getBundle(key, value, null);
     }
+
     @Override
     public Bundle getBundle(String key, int value) {
         return getBundle(key, value, null);
     }
+
     @Override
     public Bundle getBundle(String key, int value, Bundle bundle) {
         return getBundle(key, (Integer) value, bundle);
     }
+
     @Override
     public Bundle getBundle(String key, Object value, Bundle bundle) {
         if (bundle == null) {

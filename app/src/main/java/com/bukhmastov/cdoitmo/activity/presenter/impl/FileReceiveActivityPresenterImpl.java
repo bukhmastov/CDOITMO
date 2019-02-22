@@ -117,7 +117,7 @@ public class FileReceiveActivityPresenterImpl implements FileReceiveActivityPres
     }
 
     private void proceed() {
-        thread.run(() -> {
+        thread.standalone(() -> {
             Intent intent = activity.getIntent();
             if (intent == null) {
                 throw new NullPointerException("Intent is null");
@@ -131,7 +131,7 @@ public class FileReceiveActivityPresenterImpl implements FileReceiveActivityPres
     }
 
     private void proceed(Uri uri) {
-        thread.run(() -> {
+        thread.standalone(() -> {
             if (uri == null) {
                 throw new NullPointerException("Uri is null");
             }

@@ -33,9 +33,9 @@ public class SettingsGeneralFragment extends SettingsTemplatePreferencesFragment
         preferences.add(new PreferenceBasic("pref_theme", "light", R.string.theme, true, new PreferenceBasic.Callback() {
             @Override
             public void onPreferenceClicked(final ConnectedActivity activity, final Preference preference, final InjectProvider injectProvider, final PreferenceBasic.OnPreferenceClickedCallback callback) {
-                injectProvider.getThread().run(() -> {
-                    final String theme = injectProvider.getStoragePref().get(activity, "pref_theme", "light");
-                    new ThemeDialog(activity, theme, (theme1, desc) -> injectProvider.getThread().run(() -> {
+                injectProvider.getThread().standalone(() -> {
+                    String theme = injectProvider.getStoragePref().get(activity, "pref_theme", "light");
+                    new ThemeDialog(activity, theme, (theme1, desc) -> injectProvider.getThread().standalone(() -> {
                         injectProvider.getStoragePref().put(activity, "pref_theme", theme1);
                         callback.onSetSummary(activity, desc);
                         injectProvider.getNotificationMessage().snackBar(activity, activity.getString(R.string.restart_required), activity.getString(R.string.restart), NotificationMessage.LENGTH_LONG, view -> {
@@ -130,7 +130,11 @@ public class SettingsGeneralFragment extends SettingsTemplatePreferencesFragment
                             .setTitle(R.string.pref_reset_application_summary)
                             .setMessage(R.string.pref_reset_application_warning)
                             .setIcon(R.drawable.ic_warning)
-                            .setPositiveButton(R.string.proceed, (dialog, which) -> injectProvider.getStaticUtil().hardReset(activity))
+                            .setPositiveButton(R.string.proceed, (dialog, which) -> {
+                                injectProvider.getThread().standalone(() -> {
+                                    injectProvider.getStaticUtil().hardReset(activity);
+                                });
+                            })
                             .setNegativeButton(R.string.cancel, null)
                             .create().show();
                 });

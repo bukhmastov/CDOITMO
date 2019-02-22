@@ -11,6 +11,8 @@ import com.bukhmastov.cdoitmo.util.Thread;
 
 import javax.inject.Inject;
 
+import static com.bukhmastov.cdoitmo.util.Thread.SL;
+
 public class ScheduleLessonsTabHostFragmentPresenterImpl implements ScheduleLessonsTabHostFragmentPresenter {
 
     private static final String FRAGMENT_NAME = "com.bukhmastov.cdoitmo.fragments.ScheduleLessonsTabHostFragment";
@@ -99,12 +101,10 @@ public class ScheduleLessonsTabHostFragmentPresenterImpl implements ScheduleLess
     @Override
     public void invalidateOnDemand() {
         if (!isActive() || activity == null) return;
-        thread.run(() -> {
-            notificationMessage.snackBar(activity, activity.findViewById(android.R.id.content), activity.getString(R.string.schedule_refresh), activity.getString(R.string.update), v -> thread.run(() -> {
-                setQuery(getQuery());
-                invalidate();
-            }));
-        });
+        notificationMessage.snackBar(activity, activity.findViewById(android.R.id.content), activity.getString(R.string.schedule_refresh), activity.getString(R.string.update), v -> thread.run(SL, () -> {
+            setQuery(getQuery());
+            invalidate();
+        }));
     }
 
     @Override

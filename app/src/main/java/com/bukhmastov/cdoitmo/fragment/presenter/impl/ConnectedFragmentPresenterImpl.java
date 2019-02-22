@@ -6,6 +6,7 @@ import com.bukhmastov.cdoitmo.activity.ConnectedActivity;
 import com.bukhmastov.cdoitmo.fragment.ConnectedFragment;
 import com.bukhmastov.cdoitmo.fragment.presenter.ConnectedFragmentPresenter;
 import com.bukhmastov.cdoitmo.network.model.Client;
+import com.bukhmastov.cdoitmo.util.Thread;
 
 import androidx.annotation.Nullable;
 
@@ -23,6 +24,9 @@ public abstract class ConnectedFragmentPresenterImpl extends ConnectedFragmentBa
     }
 
     protected abstract String getLogTag();
+    protected @Thread.ThreadToken String getThreadToken() {
+        return null;
+    }
 
     @Override
     public void setFragment(ConnectedFragment fragment) {
@@ -32,30 +36,32 @@ public abstract class ConnectedFragmentPresenterImpl extends ConnectedFragmentBa
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
-        thread.run(() -> {
-            log.v(getLogTag(), "Fragment created");
-            firebaseAnalyticsProvider.logCurrentScreen(activity, fragment);
-        });
+        log.v(getLogTag(), "Fragment created");
+        if (getThreadToken() != null) {
+            thread.initialize(getThreadToken());
+        }
+        firebaseAnalyticsProvider.logCurrentScreen(activity, fragment);
     }
 
     @Override
     public void onDestroy() {
         log.v(getLogTag(), "Fragment destroyed");
+        if (getThreadToken() != null) {
+            thread.interrupt(getThreadToken());
+        }
         loaded = false;
     }
 
     @Override
     public void onResume() {
-        thread.run(() -> {
-            log.v(getLogTag(), "Fragment resumed");
-            firebaseAnalyticsProvider.setCurrentScreen(activity, fragment);
-        });
+        log.v(getLogTag(), "Fragment resumed");
+        firebaseAnalyticsProvider.setCurrentScreen(activity, fragment);
     }
 
     @Override
     public void onPause() {
-        thread.run(() -> {
-            log.v(getLogTag(), "Fragment paused");
+        log.v(getLogTag(), "Fragment paused");
+        thread.standalone(() -> {
             if (requestHandle != null && requestHandle.cancel()) {
                 loaded = false;
             }

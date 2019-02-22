@@ -27,6 +27,8 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.FragmentManager;
 import androidx.viewpager.widget.ViewPager;
 
+import static com.bukhmastov.cdoitmo.util.Thread.SE;
+
 public class ScheduleExamsFragmentPresenterImpl extends ConnectedFragmentPresenterImpl
         implements ScheduleExamsFragmentPresenter, ViewPager.OnPageChangeListener {
 
@@ -55,7 +57,8 @@ public class ScheduleExamsFragmentPresenterImpl extends ConnectedFragmentPresent
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
-        thread.run(() -> {
+        thread.initialize(SE);
+        thread.run(SE, () -> {
             log.v(TAG, "Fragment created");
             firebaseAnalyticsProvider.logCurrentScreen(activity, fragment);
             // define query
@@ -77,37 +80,40 @@ public class ScheduleExamsFragmentPresenterImpl extends ConnectedFragmentPresent
 
     @Override
     public void onDestroy() {
-        thread.runOnUI(() -> {
+        thread.runOnUI(SE, () -> {
             log.v(TAG, "Fragment destroyed");
             loaded = false;
-            final TabLayout fixed_tabs = activity.findViewById(R.id.fixed_tabs);
-            if (fixed_tabs != null) {
-                fixed_tabs.setVisibility(View.GONE);
+            TabLayout fixedTabs = activity.findViewById(R.id.fixed_tabs);
+            if (fixedTabs != null) {
+                fixedTabs.setVisibility(View.GONE);
             }
             if (fragment != null && fragment.toolbar() != null) {
-                MenuItem action_search = fragment.toolbar().findItem(R.id.action_search);
-                if (action_search != null && action_search.isVisible()) {
-                    log.v(TAG, "Hiding action_search");
-                    action_search.setVisible(false);
-                    action_search.setOnMenuItemClickListener(null);
+                MenuItem actionSearch = fragment.toolbar().findItem(R.id.action_search);
+                if (actionSearch != null && actionSearch.isVisible()) {
+                    log.v(TAG, "Hiding actionSearch");
+                    actionSearch.setVisible(false);
+                    actionSearch.setOnMenuItemClickListener(null);
                 }
             }
+            thread.standalone(() -> {
+                thread.interrupt(SE);
+            });
         });
     }
 
     @Override
     public void onResume() {
-        thread.run(() -> {
+        thread.run(SE, () -> {
             log.v(TAG, "Fragment resumed");
             firebaseAnalyticsProvider.setCurrentScreen(activity, fragment);
-            thread.runOnUI(() -> {
+            thread.runOnUI(SE, () -> {
                 if (fragment != null && fragment.toolbar() != null) {
                     MenuItem action_search = fragment.toolbar().findItem(R.id.action_search);
                     if (action_search != null && !action_search.isVisible()) {
                         log.v(TAG, "Revealing action_search");
                         action_search.setVisible(true);
                         action_search.setOnMenuItemClickListener(item -> {
-                            thread.run(() -> {
+                            thread.run(SE, () -> {
                                 log.v(TAG, "action_search clicked");
                                 eventBus.fire(new OpenActivityEvent(ScheduleExamsSearchActivity.class));
                             });
@@ -135,7 +141,7 @@ public class ScheduleExamsFragmentPresenterImpl extends ConnectedFragmentPresent
     public void onPageScrollStateChanged(int state) {}
 
     private void load() {
-        thread.runOnUI(() -> {
+        thread.runOnUI(SE, () -> {
             if (fragment.isNotAddedToActivity()) {
                 log.w(TAG, "load | fragment not added to activity");
                 return;
@@ -145,11 +151,11 @@ public class ScheduleExamsFragmentPresenterImpl extends ConnectedFragmentPresent
                 return;
             }
             final FragmentManager fragmentManager = fragment.getChildFragmentManager();
-            thread.run(() -> {
+            thread.run(SE, () -> {
                 if (tabHostPresenter.getQuery() == null) {
                     tabHostPresenter.setQuery(scheduleExams.getDefaultScope());
                 }
-                thread.runOnUI(() -> {
+                thread.runOnUI(SE, () -> {
                     if (activity == null) {
                         log.w(TAG, "load | activity is null");
                         return;
@@ -212,5 +218,10 @@ public class ScheduleExamsFragmentPresenterImpl extends ConnectedFragmentPresent
     @Override
     protected String getLogTag() {
         return TAG;
+    }
+
+    @Override
+    protected String getThreadToken() {
+        return SE;
     }
 }

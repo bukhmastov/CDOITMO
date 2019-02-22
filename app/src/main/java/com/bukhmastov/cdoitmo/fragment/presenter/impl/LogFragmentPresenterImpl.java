@@ -94,126 +94,126 @@ public class LogFragmentPresenterImpl extends ConnectedFragmentPresenterImpl
             ((TextView) fragment.container().findViewById(R.id.exception)).setText(String.valueOf(LogMetrics.exception));
             ((TextView) fragment.container().findViewById(R.id.wtf)).setText(String.valueOf(LogMetrics.wtf));
             // init firebase logs enabler
-            final ViewGroup firebase_logs = activity.findViewById(R.id.firebase_logs);
-            final Switch firebase_logs_switch = activity.findViewById(R.id.firebase_logs_switch);
-            firebase_logs.setOnClickListener(v -> thread.runOnUI(() -> {
+            ViewGroup firebaseLogs = activity.findViewById(R.id.firebase_logs);
+            Switch firebaseLogsSwitch = activity.findViewById(R.id.firebase_logs_switch);
+            firebaseLogs.setOnClickListener(v -> thread.runOnUI(() -> {
                 try {
-                    firebase_logs_switch.setChecked(!storagePref.get(activity, "pref_allow_send_reports", true));
+                    firebaseLogsSwitch.setChecked(!storagePref.get(activity, "pref_allow_send_reports", true));
                 } catch (Exception e) {
                     log.exception(e);
                 }
             }));
-            firebase_logs_switch.setChecked(storagePref.get(activity, "pref_allow_send_reports", true));
-            firebase_logs_switch.setOnCheckedChangeListener((compoundButton, allowed) -> thread.run(() -> {
+            firebaseLogsSwitch.setChecked(storagePref.get(activity, "pref_allow_send_reports", true));
+            firebaseLogsSwitch.setOnCheckedChangeListener((compoundButton, allowed) -> {
                 try {
                     storagePref.put(activity, "pref_allow_send_reports", allowed);
                     firebaseToggled(allowed);
                 } catch (Exception e) {
                     log.exception(e);
                 }
-            }));
+            });
             // init generic logs enabler
-            final ViewGroup generic_logs = activity.findViewById(R.id.generic_logs);
-            final Switch generic_logs_switch = activity.findViewById(R.id.generic_logs_switch);
-            generic_logs.setOnClickListener(v -> thread.runOnUI(() -> {
+            ViewGroup genericLogs = activity.findViewById(R.id.generic_logs);
+            Switch genericLogsSwitch = activity.findViewById(R.id.generic_logs_switch);
+            genericLogs.setOnClickListener(v -> thread.runOnUI(() -> {
                 try {
-                    generic_logs_switch.setChecked(!storagePref.get(activity, "pref_allow_collect_logs", false));
+                    genericLogsSwitch.setChecked(!storagePref.get(activity, "pref_allow_collect_logs", false));
                 } catch (Exception e) {
                     log.exception(e);
                 }
             }));
-            generic_logs_switch.setChecked(storagePref.get(activity, "pref_allow_collect_logs", false));
-            generic_logs_switch.setOnCheckedChangeListener((compoundButton, allowed) -> thread.run(() -> {
-                try {
+            genericLogsSwitch.setChecked(storagePref.get(activity, "pref_allow_collect_logs", false));
+            genericLogsSwitch.setOnCheckedChangeListener((compoundButton, allowed) -> {
+                thread.standalone(() -> {
                     storagePref.put(activity, "pref_allow_collect_logs", allowed);
                     genericToggled(allowed);
                     log.setEnabled(allowed);
                     if (allowed) {
                         log.i(TAG, "Logging has been enabled");
                     }
-                } catch (Exception e) {
-                    log.exception(e);
-                }
-            }));
-            genericToggled(generic_logs_switch.isChecked());
+                }, throwable -> {
+                    log.exception(throwable);
+                });
+            });
+            genericToggled(genericLogsSwitch.isChecked());
         });
     }
 
     private void firebaseToggled(final boolean allowed) {
-        thread.run(() -> firebaseCrashlyticsProvider.setEnabled(activity, allowed));
+        thread.standalone(() -> firebaseCrashlyticsProvider.setEnabled(activity, allowed));
     }
 
     private void genericToggled(final boolean allowed) {
-        thread.run(() -> {
+        thread.standalone(() -> {
             log.setEnabled(allowed);
-            final ViewGroup generic = activity.findViewById(R.id.generic);
-            final ViewGroup generic_send_logs = activity.findViewById(R.id.generic_send_logs);
-            final ViewGroup generic_download_logs = activity.findViewById(R.id.generic_download_logs);
-            final TextView log_container = activity.findViewById(R.id.log_container);
-            if (allowed) {
-                if (generic_send_logs != null) {
-                    generic_send_logs.setOnClickListener(v -> thread.run(() -> {
-                        try {
-                            File logFile = getLogFile(log.getLog(false));
-                            if (logFile != null) {
-                                Uri tempUri = FileProvider.getUriForFile(activity, "com.bukhmastov.cdoitmo.fileprovider", logFile);
-                                Intent intent = new Intent(Intent.ACTION_SEND);
-                                intent.putExtra(Intent.EXTRA_EMAIL, new String[] {"bukhmastov-alex@ya.ru"});
-                                intent.putExtra(Intent.EXTRA_SUBJECT, "CDOITMO - log report");
-                                intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                                intent.setType(activity.getContentResolver().getType(tempUri));
-                                intent.putExtra(Intent.EXTRA_STREAM, tempUri);
-                                eventBus.fire(new OpenIntentEvent(Intent.createChooser(intent, activity.getString(R.string.send_mail) + "...")));
-                            }
-                        } catch (Exception e) {
-                            log.exception(e);
-                            notificationMessage.toast(activity, activity.getString(R.string.something_went_wrong));
-                        }
-                    }));
-                }
-                if (generic_download_logs != null) {
-                    generic_download_logs.setOnClickListener(v -> thread.run(() -> {
-                        try {
-                            File logFile = getLogFile(log.getLog(false));
-                            if (logFile != null) {
-                                Uri tempUri = FileProvider.getUriForFile(activity, "com.bukhmastov.cdoitmo.fileprovider", logFile);
-                                Intent intent = new Intent(Intent.ACTION_SEND);
-                                intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                                intent.setType(activity.getContentResolver().getType(tempUri));
-                                intent.putExtra(Intent.EXTRA_STREAM, tempUri);
-                                eventBus.fire(new OpenIntentEvent(Intent.createChooser(intent, activity.getString(R.string.share) + "...")));
-                            }
-                        } catch (Exception e) {
-                            log.exception(e);
-                            notificationMessage.toast(activity, activity.getString(R.string.something_went_wrong));
-                        }
-                    }));
-                }
-                thread.runOnUI(() -> {
-                    if (generic != null) {
-                        generic.setAlpha(1F);
-                    }
-                    if (log_container != null) {
-                        log_container.setText(log.getLog());
-                    }
-                });
-            } else {
-                if (generic_send_logs != null) generic_send_logs.setOnClickListener(null);
-                if (generic_download_logs != null) generic_download_logs.setOnClickListener(null);
+            ViewGroup generic = activity.findViewById(R.id.generic);
+            ViewGroup genericSendLogs = activity.findViewById(R.id.generic_send_logs);
+            ViewGroup genericDownloadLogs = activity.findViewById(R.id.generic_download_logs);
+            TextView logContainer = activity.findViewById(R.id.log_container);
+            if (!allowed) {
+                if (genericSendLogs != null) genericSendLogs.setOnClickListener(null);
+                if (genericDownloadLogs != null) genericDownloadLogs.setOnClickListener(null);
                 thread.runOnUI(() -> {
                     if (generic != null) {
                         generic.setAlpha(0.3F);
                     }
-                    if (log_container != null) {
-                        log_container.setText("");
+                    if (logContainer != null) {
+                        logContainer.setText("");
                     }
                 });
+                return;
             }
+            if (genericSendLogs != null) {
+                genericSendLogs.setOnClickListener(v -> {
+                    thread.standalone(() -> {
+                        File logFile = getLogFile(log.getLog(false));
+                        if (logFile != null) {
+                            Uri tempUri = FileProvider.getUriForFile(activity, "com.bukhmastov.cdoitmo.fileprovider", logFile);
+                            Intent intent = new Intent(Intent.ACTION_SEND);
+                            intent.putExtra(Intent.EXTRA_EMAIL, new String[] {"bukhmastov-alex@ya.ru"});
+                            intent.putExtra(Intent.EXTRA_SUBJECT, "CDOITMO - log report");
+                            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                            intent.setType(activity.getContentResolver().getType(tempUri));
+                            intent.putExtra(Intent.EXTRA_STREAM, tempUri);
+                            eventBus.fire(new OpenIntentEvent(Intent.createChooser(intent, activity.getString(R.string.send_mail) + "...")));
+                        }
+                    }, throwable -> {
+                        log.exception(throwable);
+                        notificationMessage.toast(activity, activity.getString(R.string.something_went_wrong));
+                    });
+                });
+            }
+            if (genericDownloadLogs != null) {
+                genericDownloadLogs.setOnClickListener(v -> {
+                    thread.standalone(() -> {
+                        File logFile = getLogFile(log.getLog(false));
+                        if (logFile != null) {
+                            Uri tempUri = FileProvider.getUriForFile(activity, "com.bukhmastov.cdoitmo.fileprovider", logFile);
+                            Intent intent = new Intent(Intent.ACTION_SEND);
+                            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                            intent.setType(activity.getContentResolver().getType(tempUri));
+                            intent.putExtra(Intent.EXTRA_STREAM, tempUri);
+                            eventBus.fire(new OpenIntentEvent(Intent.createChooser(intent, activity.getString(R.string.share) + "...")));
+                        }
+                    }, throwable -> {
+                        log.exception(throwable);
+                        notificationMessage.toast(activity, activity.getString(R.string.something_went_wrong));
+                    });
+                });
+            }
+            thread.runOnUI(() -> {
+                if (generic != null) {
+                    generic.setAlpha(1F);
+                }
+                if (logContainer != null) {
+                    logContainer.setText(log.getLog());
+                }
+            });
         });
     }
 
     private void hardResetPreferences() {
-        thread.run(() -> {
+        thread.standalone(() -> {
             if (activity == null) {
                 return;
             }

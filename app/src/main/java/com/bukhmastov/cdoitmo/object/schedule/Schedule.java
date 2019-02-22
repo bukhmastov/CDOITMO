@@ -37,7 +37,7 @@ public interface Schedule<T extends ScheduleJsonEntity> {
         default void onFailure(int state) {
             onFailure(0, null, state);
         }
-        void onFailure(int statusCode, Client.Headers headers, int state);
+        void onFailure(int code, Client.Headers headers, int state);
         void onProgress(int state);
         void onNewRequest(Client.Request request);
         void onCancelRequest();

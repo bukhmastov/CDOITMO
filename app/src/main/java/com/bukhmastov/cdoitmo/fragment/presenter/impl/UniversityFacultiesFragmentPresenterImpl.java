@@ -65,6 +65,8 @@ import javax.inject.Inject;
 
 import dagger.Lazy;
 
+import static com.bukhmastov.cdoitmo.util.Thread.UF;
+
 public class UniversityFacultiesFragmentPresenterImpl implements UniversityFacultiesFragmentPresenter, SwipeRefreshLayout.OnRefreshListener {
 
     private static final String TAG = "UniversityFacultiesFragment";
@@ -119,6 +121,7 @@ public class UniversityFacultiesFragmentPresenterImpl implements UniversityFacul
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
+        thread.initialize(UF);
         log.v(TAG, "Fragment created");
         firebaseAnalyticsProvider.logCurrentScreen(activity, fragment);
     }
@@ -127,11 +130,12 @@ public class UniversityFacultiesFragmentPresenterImpl implements UniversityFacul
     public void onDestroy() {
         log.v(TAG, "Fragment destroyed");
         loaded = false;
+        thread.interrupt(UF);
     }
 
     @Override
     public void onResume() {
-        thread.run(() -> {
+        thread.run(UF, () -> {
             log.v(TAG, "Fragment resumed");
             firebaseAnalyticsProvider.setCurrentScreen(activity, fragment);
             if (!loaded) {
@@ -143,8 +147,8 @@ public class UniversityFacultiesFragmentPresenterImpl implements UniversityFacul
 
     @Override
     public void onPause() {
-        thread.run(() -> {
-            log.v(TAG, "Fragment paused");
+        log.v(TAG, "Fragment paused");
+        thread.standalone(() -> {
             if (requestHandle != null && requestHandle.cancel()) {
                 loaded = false;
             }
@@ -163,13 +167,15 @@ public class UniversityFacultiesFragmentPresenterImpl implements UniversityFacul
     }
 
     private void load() {
-        thread.run(() -> load(storagePref.get(activity, "pref_use_cache", true) && storagePref.get(activity, "pref_use_university_cache", false)
-                ? Integer.parseInt(storagePref.get(activity, "pref_static_refresh", "168"))
-                : 0));
+        thread.run(UF, () -> {
+            load(storagePref.get(activity, "pref_use_cache", true) && storagePref.get(activity, "pref_use_university_cache", false)
+                    ? Integer.parseInt(storagePref.get(activity, "pref_static_refresh", "168"))
+                    : 0);
+        });
     }
 
-    private void load(final int refresh_rate) {
-        thread.run(() -> {
+    private void load(int refresh_rate) {
+        thread.run(UF, () -> {
             log.v(TAG, "load | refresh_rate=", refresh_rate);
             String fid = stack.size() == 0 ? "0" : stack.get(stack.size() - 1);
             if (!(storagePref.get(activity, "pref_use_cache", true) && storagePref.get(activity, "pref_use_university_cache", false))) {
@@ -192,12 +198,12 @@ public class UniversityFacultiesFragmentPresenterImpl implements UniversityFacul
         });
     }
 
-    private void load(final boolean force) {
-        thread.run(() -> load(force, null));
+    private void load(boolean force) {
+        thread.run(UF, () -> load(force, null));
     }
 
-    private void load(final boolean force, final UFaculties cached) {
-        thread.run(() -> {
+    private void load(boolean force, UFaculties cached) {
+        thread.run(UF, () -> {
             log.v(TAG, "load | force=", force);
             String fid = stack.size() == 0 ? "0" : stack.get(stack.size() - 1);
             if (!force && history.containsKey(fid)) {
@@ -215,7 +221,7 @@ public class UniversityFacultiesFragmentPresenterImpl implements UniversityFacul
                 }
             }
             if (App.OFFLINE_MODE) {
-                thread.runOnUI(() -> {
+                thread.runOnUI(UF, () -> {
                     draw(R.layout.state_offline_text);
                     View reload = container.findViewById(R.id.offline_reload);
                     if (reload != null) {
@@ -228,27 +234,23 @@ public class UniversityFacultiesFragmentPresenterImpl implements UniversityFacul
             }
             loadProvider(new RestResponseHandler() {
                 @Override
-                public void onSuccess(final int statusCode, final Client.Headers headers, final JSONObject obj, final JSONArray arr) {
-                    thread.run(() -> {
-                        if (statusCode == 200 && obj != null) {
-                            UFaculties data = new UFaculties().fromJson(obj);
-                            data.setTimestamp(time.getTimeInMillis());
-                            if (storagePref.get(activity, "pref_use_cache", true) && storagePref.get(activity, "pref_use_university_cache", false)) {
-                                storage.put(activity, Storage.CACHE, Storage.GLOBAL, "university#faculties#" + fid, data.toJsonString());
-                            }
-                            timestamp = data.getTimestamp();
-                            history.put(fid, data);
-                            display(data);
-                            return;
+                public void onSuccess(int code, Client.Headers headers, JSONObject obj, JSONArray arr) throws Exception {
+                    if (code == 200 && obj != null) {
+                        UFaculties data = new UFaculties().fromJson(obj);
+                        data.setTimestamp(time.getTimeInMillis());
+                        if (storagePref.get(activity, "pref_use_cache", true) && storagePref.get(activity, "pref_use_university_cache", false)) {
+                            storage.put(activity, Storage.CACHE, Storage.GLOBAL, "university#faculties#" + fid, data.toJsonString());
                         }
-                        loadFailed();
-                    }, throwable -> {
-                        loadFailed();
-                    });
+                        timestamp = data.getTimestamp();
+                        history.put(fid, data);
+                        display(data);
+                        return;
+                    }
+                    loadFailed();
                 }
                 @Override
-                public void onFailure(final int statusCode, final Client.Headers headers, final int state) {
-                    thread.runOnUI(() -> {
+                public void onFailure(int code, Client.Headers headers, int state) {
+                    thread.runOnUI(UF, () -> {
                         log.v(TAG, "forceLoad | failure ", state);
                         switch (state) {
                             case IfmoRestClient.FAILED_OFFLINE: {
@@ -266,7 +268,7 @@ public class UniversityFacultiesFragmentPresenterImpl implements UniversityFacul
                                 TextView message = activity.findViewById(R.id.try_again_message);
                                 if (message != null) {
                                     switch (state) {
-                                        case IfmoRestClient.FAILED_SERVER_ERROR:   message.setText(IfmoRestClient.getFailureMessage(activity, statusCode)); break;
+                                        case IfmoRestClient.FAILED_SERVER_ERROR:   message.setText(IfmoRestClient.getFailureMessage(activity, code)); break;
                                         case IfmoRestClient.FAILED_CORRUPTED_JSON: message.setText(R.string.server_provided_corrupted_json); break;
                                     }
                                 }
@@ -282,8 +284,8 @@ public class UniversityFacultiesFragmentPresenterImpl implements UniversityFacul
                     });
                 }
                 @Override
-                public void onProgress(final int state) {
-                    thread.runOnUI(() -> {
+                public void onProgress(int state) {
+                    thread.runOnUI(UF, () -> {
                         log.v(TAG, "forceLoad | progress ", state);
                         draw(R.layout.state_loading_text);
                         TextView message = container.findViewById(R.id.loading_message);
@@ -314,7 +316,7 @@ public class UniversityFacultiesFragmentPresenterImpl implements UniversityFacul
     }
 
     private void loadFailed() {
-        thread.runOnUI(() -> {
+        thread.runOnUI(UF, () -> {
             log.v(TAG, "loadFailed");
             draw(R.layout.state_failed_button);
             TextView message = container.findViewById(R.id.try_again_message);
@@ -331,7 +333,7 @@ public class UniversityFacultiesFragmentPresenterImpl implements UniversityFacul
     }
 
     private void display(UFaculties faculties) {
-        thread.runOnUI(() -> {
+        thread.runOnUI(UF, () -> {
             log.v(TAG, "display");
             if (faculties == null) {
                 loadFailed();
@@ -364,7 +366,7 @@ public class UniversityFacultiesFragmentPresenterImpl implements UniversityFacul
                     link = null;
                 }
                 if (StringUtils.isNotBlank(link)) {
-                    container.findViewById(R.id.web).setOnClickListener(view -> thread.run(() -> {
+                    container.findViewById(R.id.web).setOnClickListener(view -> thread.run(UF, () -> {
                         Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(link.trim()));
                         eventBus.fire(new OpenIntentEvent(intent));
                     }));
@@ -418,7 +420,7 @@ public class UniversityFacultiesFragmentPresenterImpl implements UniversityFacul
     }
 
     private void displayFaculties(UFaculties faculties) {
-        thread.run(() -> {
+        thread.run(UF, () -> {
             Collection<RVA.Item> items = new ArrayList<>();
             if (faculties != null && faculties.getStructure() != null && faculties.getStructure().getStructureInfo() != null) {
                 UStructureInfo structureInfo = faculties.getStructure().getStructureInfo();
@@ -447,7 +449,7 @@ public class UniversityFacultiesFragmentPresenterImpl implements UniversityFacul
             if (items.size() == 0) {
                 items.add(new UniversityFacultiesRVA.Item(UniversityFacultiesRVA.TYPE_NO_DATA));
             }
-            thread.runOnUI(() -> {
+            thread.runOnUI(UF, () -> {
                 if (facultiesRecyclerViewAdapter != null) {
                     facultiesRecyclerViewAdapter.addItems(items);
                 }
@@ -464,7 +466,7 @@ public class UniversityFacultiesFragmentPresenterImpl implements UniversityFacul
         }
         facultiesRecyclerViewAdapter.clearClickListeners();
         facultiesRecyclerViewAdapter.setClickListener(R.id.division, (v, entity) -> {
-            thread.run(() -> {
+            thread.run(UF, () -> {
                 if (!(entity.getEntity() instanceof UDivision)) {
                     return;
                 }
@@ -476,7 +478,7 @@ public class UniversityFacultiesFragmentPresenterImpl implements UniversityFacul
             });
         });
         facultiesRecyclerViewAdapter.setClickListener(R.id.university_tile_map, (v, entity) -> {
-            thread.run(() -> {
+            thread.run(UF, () -> {
                 Uri uri = Uri.parse("geo:0,0?q=" + entity.getValueString());
                 Intent intent = new Intent(Intent.ACTION_VIEW, uri);
                 eventBus.fire(new OpenIntentEvent(intent));
@@ -485,7 +487,7 @@ public class UniversityFacultiesFragmentPresenterImpl implements UniversityFacul
             });
         });
         facultiesRecyclerViewAdapter.setClickListener(R.id.university_tile_phone, (v, entity) -> {
-            thread.run(() -> {
+            thread.run(UF, () -> {
                 Intent intent = new Intent(Intent.ACTION_DIAL, Uri.parse("tel:" + entity.getValueString()));
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 eventBus.fire(new OpenIntentEvent(intent));
@@ -494,7 +496,7 @@ public class UniversityFacultiesFragmentPresenterImpl implements UniversityFacul
             });
         });
         facultiesRecyclerViewAdapter.setClickListener(R.id.university_tile_web, (v, entity) -> {
-            thread.run(() -> {
+            thread.run(UF, () -> {
                 Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(entity.getValueString()));
                 eventBus.fire(new OpenIntentEvent(intent));
             }, throwable -> {
@@ -502,7 +504,7 @@ public class UniversityFacultiesFragmentPresenterImpl implements UniversityFacul
             });
         });
         facultiesRecyclerViewAdapter.setClickListener(R.id.university_tile_mail, (v, entity) -> {
-            thread.run(() -> {
+            thread.run(UF, () -> {
                 Intent intent = new Intent(Intent.ACTION_SEND);
                 intent.setType("message/rfc822");
                 intent.putExtra(Intent.EXTRA_EMAIL, new String[]{entity.getValueString()});
@@ -513,7 +515,7 @@ public class UniversityFacultiesFragmentPresenterImpl implements UniversityFacul
             });
         });
         facultiesRecyclerViewAdapter.setClickListener(R.id.university_tile_person, (v, entity) -> {
-            thread.run(() -> {
+            thread.run(UF, () -> {
                 Bundle extras = new Bundle();
                 extras.putInt("pid", entity.getValueInteger());
                 eventBus.fire(new OpenActivityEvent(UniversityPersonCardActivity.class, extras));

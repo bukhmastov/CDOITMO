@@ -6,7 +6,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 public interface RestResponseHandler extends ResponseHasFailed {
-    void onSuccess(int code, Client.Headers headers, JSONObject obj, JSONArray arr);
+    void onSuccess(int code, Client.Headers headers, JSONObject obj, JSONArray arr) throws Exception;
     void onFailure(int code, Client.Headers headers, int state);
     void onProgress(int state);
     void onNewRequest(Client.Request request);

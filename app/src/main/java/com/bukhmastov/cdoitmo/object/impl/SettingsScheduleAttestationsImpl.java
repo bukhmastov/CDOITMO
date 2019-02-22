@@ -37,7 +37,7 @@ public class SettingsScheduleAttestationsImpl extends SettingsSchedule<SAttestat
 
     @Override
     public void onSuccess(SAttestations schedule, boolean fromCache) {
-        thread.run(() -> {
+        try {
             log.v(TAG, "search | onSuccess | schedule=", (schedule == null ? "null" : "notnull"));
             toggleSearchState("action");
             if (schedule == null || StringUtils.isBlank(schedule.getType())) {
@@ -60,10 +60,10 @@ public class SettingsScheduleAttestationsImpl extends SettingsSchedule<SAttestat
                     break;
                 }
             }
-        }, throwable -> {
+        } catch (Throwable throwable) {
             log.exception(throwable);
             notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
-        });
+        }
     }
 
     @Override

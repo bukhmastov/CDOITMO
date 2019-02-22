@@ -38,6 +38,8 @@ import java.util.regex.Pattern;
 
 import javax.inject.Inject;
 
+import static com.bukhmastov.cdoitmo.util.Thread.WTR;
+
 public class TimeRemainingWidgetActivityPresenterImpl implements TimeRemainingWidgetActivityPresenter, ScheduleLessons.Handler<SLessons>, TimeRemainingWidget.Delegate {
 
     private static final String TAG = "TRWidgetActivity";
@@ -74,7 +76,8 @@ public class TimeRemainingWidgetActivityPresenterImpl implements TimeRemainingWi
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
-        thread.runOnUI(() -> {
+        thread.initialize(WTR);
+        thread.runOnUI(WTR, () -> {
             log.i(TAG, "Activity created");
             firebaseAnalyticsProvider.logCurrentScreen(activity);
             String shortcutData = activity.getIntent().getStringExtra("shortcut_data");
@@ -118,7 +121,7 @@ public class TimeRemainingWidgetActivityPresenterImpl implements TimeRemainingWi
 
     @Override
     public void onResume() {
-        thread.run(() -> {
+        thread.run(WTR, () -> {
             log.v(TAG, "Activity resumed");
             if (schedule != null) {
                 begin();
@@ -135,7 +138,7 @@ public class TimeRemainingWidgetActivityPresenterImpl implements TimeRemainingWi
 
     @Override
     public void onPause() {
-        thread.run(() -> {
+        thread.run(WTR, () -> {
             log.v(TAG, "Activity paused");
             timeRemainingWidget.stop();
         });
@@ -144,11 +147,12 @@ public class TimeRemainingWidgetActivityPresenterImpl implements TimeRemainingWi
     @Override
     public void onDestroy() {
         log.i(TAG, "Activity destroyed");
+        thread.interrupt(WTR);
     }
 
     @Override
     public void onSuccess(SLessons data, boolean fromCache) {
-        thread.run(() -> {
+        thread.run(WTR, () -> {
             log.v(TAG, "success");
             if (data == null || StringUtils.isBlank(data.getType())) {
                 log.w(TAG, "onSuccess | schedule cannot be null");
@@ -173,36 +177,34 @@ public class TimeRemainingWidgetActivityPresenterImpl implements TimeRemainingWi
     }
 
     @Override
-    public void onFailure(int statusCode, Client.Headers headers, int state) {
-        thread.run(() -> {
-            log.v(TAG, "failure " + state);
-            switch (state) {
-                case IfmoRestClient.FAILED_OFFLINE:
-                case ScheduleLessons.FAILED_OFFLINE:
-                    message(activity.getString(R.string.no_connection));
-                    break;
-                case IfmoRestClient.FAILED_SERVER_ERROR:
-                    message(IfmoRestClient.getFailureMessage(activity, statusCode));
-                    break;
-                case IfmoRestClient.FAILED_CORRUPTED_JSON:
-                    message(activity.getString(R.string.server_provided_corrupted_json));
-                    break;
-                case IfmoRestClient.FAILED_TRY_AGAIN:
-                case ScheduleLessons.FAILED_LOAD:
-                case ScheduleLessons.FAILED_EMPTY_QUERY:
-                    message(activity.getString(R.string.load_failed));
-                    break;
-                case ScheduleLessons.FAILED_NOT_FOUND:
-                    message(activity.getString(R.string.no_schedule));
-                    break;
-                case ScheduleLessons.FAILED_INVALID_QUERY:
-                    message(activity.getString(R.string.incorrect_query));
-                    break;
-                case ScheduleLessons.FAILED_PERSONAL_NEED_ISU:
-                    message(activity.getString(R.string.load_failed_need_isu));
-                    break;
-            }
-        });
+    public void onFailure(int code, Client.Headers headers, int state) {
+        log.v(TAG, "failure " + state);
+        switch (state) {
+            case IfmoRestClient.FAILED_OFFLINE:
+            case ScheduleLessons.FAILED_OFFLINE:
+                message(activity.getString(R.string.no_connection));
+                break;
+            case IfmoRestClient.FAILED_SERVER_ERROR:
+                message(IfmoRestClient.getFailureMessage(activity, code));
+                break;
+            case IfmoRestClient.FAILED_CORRUPTED_JSON:
+                message(activity.getString(R.string.server_provided_corrupted_json));
+                break;
+            case IfmoRestClient.FAILED_TRY_AGAIN:
+            case ScheduleLessons.FAILED_LOAD:
+            case ScheduleLessons.FAILED_EMPTY_QUERY:
+                message(activity.getString(R.string.load_failed));
+                break;
+            case ScheduleLessons.FAILED_NOT_FOUND:
+                message(activity.getString(R.string.no_schedule));
+                break;
+            case ScheduleLessons.FAILED_INVALID_QUERY:
+                message(activity.getString(R.string.incorrect_query));
+                break;
+            case ScheduleLessons.FAILED_PERSONAL_NEED_ISU:
+                message(activity.getString(R.string.load_failed_need_isu));
+                break;
+        }
     }
 
     @Override
@@ -225,7 +227,7 @@ public class TimeRemainingWidgetActivityPresenterImpl implements TimeRemainingWi
 
     @Override
     public void onAction(TimeRemainingWidget.Data data) {
-        thread.runOnUI(() -> {
+        thread.runOnUI(WTR, () -> {
             this.data = data;
             if (data.current == null && data.next == null && data.day == null) {
                 message(activity.getString(R.string.lessons_gone));
@@ -273,7 +275,7 @@ public class TimeRemainingWidgetActivityPresenterImpl implements TimeRemainingWi
     }
 
     private void begin() {
-        thread.run(() -> {
+        thread.run(WTR, () -> {
             log.v(TAG, "begin");
             message(activity.getString(R.string.loaded));
             timeRemainingWidget.stop();
@@ -282,17 +284,17 @@ public class TimeRemainingWidgetActivityPresenterImpl implements TimeRemainingWi
     }
 
     private void close() {
-        thread.run(() -> {
-            log.v(TAG, "close");
+        log.v(TAG, "close");
+        thread.standalone(() -> {
             if (requestHandle != null) {
                 requestHandle.cancel();
             }
-            activity.finish();
         });
+        thread.runOnUI(WTR, () -> activity.finish());
     }
 
     private void message(String text) {
-        thread.runOnUI(() -> {
+        thread.runOnUI(WTR, () -> {
             if (isMessageDisplaying == null || !isMessageDisplaying) {
                 draw(R.layout.widget_remaining_message);
                 isMessageDisplaying = true;
@@ -305,7 +307,7 @@ public class TimeRemainingWidgetActivityPresenterImpl implements TimeRemainingWi
     }
 
     private void share() {
-        thread.runOnUI(() -> {
+        thread.runOnUI(WTR, () -> {
             if (data == null) {
                 notificationMessage.snackBar(activity, activity.getString(R.string.share_unable));
                 return;
@@ -320,7 +322,7 @@ public class TimeRemainingWidgetActivityPresenterImpl implements TimeRemainingWi
                     new BottomSheetDialog.Entry(data.current != null ? activity.getString(R.string.current_lesson) : null, "current"),
                     new BottomSheetDialog.Entry(data.next != null ? activity.getString(R.string.next_lesson) : null, "next"),
                     new BottomSheetDialog.Entry(data.day != null ? activity.getString(R.string.lessons_day_end) : null, "day")
-            ).setListener(tag -> {
+            ).setListener(tag -> thread.standalone(() -> {
                 switch (tag) {
                     case "current":
                         eventBus.fire(new ShareTextEvent(activity.getString(R.string.time_remaining_widget_share_2) + " " + time2readable(data.current), "txt_widget_remaining_time"));
@@ -332,7 +334,7 @@ public class TimeRemainingWidgetActivityPresenterImpl implements TimeRemainingWi
                         eventBus.fire(new ShareTextEvent(activity.getString(R.string.time_remaining_widget_share_4) + " " + time2readable(data.day), "txt_widget_remaining_time"));
                         break;
                 }
-            }).show();
+            })).show();
         });
     }
 

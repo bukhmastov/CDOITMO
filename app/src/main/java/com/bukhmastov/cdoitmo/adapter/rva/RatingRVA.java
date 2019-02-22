@@ -1,8 +1,6 @@
 package com.bukhmastov.cdoitmo.adapter.rva;
 
 import android.content.Context;
-import androidx.annotation.LayoutRes;
-import androidx.annotation.NonNull;
 import android.util.ArrayMap;
 import android.view.View;
 import android.widget.AdapterView;
@@ -22,7 +20,6 @@ import com.bukhmastov.cdoitmo.model.rva.RVARating;
 import com.bukhmastov.cdoitmo.model.rva.RVASingleValue;
 import com.bukhmastov.cdoitmo.network.DeIfmoClient;
 import com.bukhmastov.cdoitmo.util.Storage;
-import com.bukhmastov.cdoitmo.util.Thread;
 import com.bukhmastov.cdoitmo.util.Time;
 import com.bukhmastov.cdoitmo.util.singleton.CollectionUtils;
 import com.bukhmastov.cdoitmo.util.singleton.StringUtils;
@@ -32,6 +29,9 @@ import java.util.Calendar;
 import java.util.List;
 
 import javax.inject.Inject;
+
+import androidx.annotation.LayoutRes;
+import androidx.annotation.NonNull;
 
 public class RatingRVA extends RVA<RVARating> {
 
@@ -46,8 +46,6 @@ public class RatingRVA extends RVA<RVARating> {
     private String commonSelectedFaculty;
     private String commonSelectedCourse;
 
-    @Inject
-    Thread thread;
     @Inject
     Storage storage;
     @Inject
@@ -207,13 +205,13 @@ public class RatingRVA extends RVA<RVARating> {
                 spinner.setAdapter(adapter);
                 spinner.setSelection(selected.get(0));
                 spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-                    public void onItemSelected(final AdapterView<?> parent, final View view, final int position, final long selectedId) {
-                        thread.run(() -> {
-                            commonSelectedFaculty = item.data.getFaculties().get(position).getDepId();
-                            storage.put(context, Storage.CACHE, Storage.USER, "rating#choose#faculty", commonSelectedFaculty);
-                        }, throwable -> {
-                            log.exception(throwable);
-                        });
+                    public void onItemSelected(AdapterView<?> parent, View view, int position, long selectedId) {
+                        commonSelectedFaculty = item.data.getFaculties().get(position).getDepId();
+                        if (onElementClickListeners.containsKey(R.id.faculty)) {
+                            RVARating rvaRating = new RVARating();
+                            rvaRating.setExtra(commonSelectedFaculty);
+                            onElementClickListeners.get(R.id.faculty).onClick(view, rvaRating);
+                        }
                     }
                     public void onNothingSelected(AdapterView<?> parent) {}
                 });
@@ -227,13 +225,13 @@ public class RatingRVA extends RVA<RVARating> {
                 spinner.setAdapter(adapter);
                 spinner.setSelection(selected.get(1));
                 spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-                    public void onItemSelected(final AdapterView<?> parent, final View item, final int position, final long selectedId) {
-                        thread.run(() -> {
-                            commonSelectedCourse = String.valueOf(position + 1);
-                            storage.put(context, Storage.CACHE, Storage.USER, "rating#choose#course", commonSelectedCourse);
-                        }, throwable -> {
-                            log.exception(throwable);
-                        });
+                    public void onItemSelected(AdapterView<?> parent, View view, int position, long selectedId) {
+                        commonSelectedCourse = String.valueOf(position + 1);
+                        if (onElementClickListeners.containsKey(R.id.course)) {
+                            RVARating rvaRating = new RVARating();
+                            rvaRating.setExtra(commonSelectedCourse);
+                            onElementClickListeners.get(R.id.course).onClick(view, rvaRating);
+                        }
                     }
                     public void onNothingSelected(AdapterView<?> parent) {}
                 });
@@ -242,17 +240,13 @@ public class RatingRVA extends RVA<RVARating> {
             // apply button
             if (onElementClickListeners.containsKey(R.id.common_apply)) {
                 container.findViewById(R.id.common_apply).setOnClickListener(v -> {
-                    thread.run(() -> {
-                        OnElementClickListener<RVARating> listener = onElementClickListeners.get(R.id.common_apply);
-                        if (listener != null) {
-                            RVARating rvaRating = new RVARating();
-                            rvaRating.setTitle(commonSelectedFaculty);
-                            rvaRating.setDesc(commonSelectedCourse);
-                            listener.onClick(v, rvaRating);
-                        }
-                    }, throwable -> {
-                        log.exception(throwable);
-                    });
+                    OnElementClickListener<RVARating> listener = onElementClickListeners.get(R.id.common_apply);
+                    if (listener != null) {
+                        RVARating rvaRating = new RVARating();
+                        rvaRating.setTitle(commonSelectedFaculty);
+                        rvaRating.setDesc(commonSelectedCourse);
+                        listener.onClick(v, rvaRating);
+                    }
                 });
             }
         } catch (Exception e) {

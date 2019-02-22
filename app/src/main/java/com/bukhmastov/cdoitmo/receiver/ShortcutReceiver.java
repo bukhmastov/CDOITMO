@@ -60,7 +60,7 @@ public class ShortcutReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
         AppComponentProvider.getComponent().inject(this);
-        thread.run(() -> {
+        thread.standalone(() -> {
             String action = intent.getAction();
             log.i(TAG, "onReceive | action=", action);
             switch (StringUtils.emptyIfNull(action)) {
@@ -102,178 +102,166 @@ public class ShortcutReceiver extends BroadcastReceiver {
         });
     }
 
-    private void resolve(Context context, String shortcutType, String shortcutData, String shortcutMode) {
-        thread.run(() -> {
-            log.v(TAG, "resolve | shortcutType=", shortcutType, " | shortcutData=", shortcutData, " | shortcutMode=", shortcutMode);
-            firebaseAnalyticsProvider.logEvent(
-                    context,
-                    FirebaseAnalyticsProvider.Event.SHORTCUT_USE,
-                    firebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.SHORTCUT_TYPE, shortcutType)
-            );
-            switch (shortcutType) {
-                case "offline": {
-                    Bundle extras = new Bundle();
-                    extras.putString("mode", "offline");
-                    eventBus.fire(new OpenActivityEvent(MainActivity.class, extras, App.intentFlagRestart));
-                    break;
-                }
-                case "tab": {
-                    Bundle extras = new Bundle();
-                    extras.putString("mode", shortcutMode);
-                    extras.putString("action", shortcutData);
-                    eventBus.fire(new OpenActivityEvent(MainActivity.class, extras, App.intentFlagRestart));
-                    break;
-                }
-                case "room101":
-                case "university": {
-                    Bundle extras = new Bundle();
-                    extras.putString("mode", shortcutMode);
-                    extras.putString("action", shortcutType);
-                    extras.putString("action_extra", shortcutData);
-                    eventBus.fire(new OpenActivityEvent(MainActivity.class, extras, App.intentFlagRestart));
-                    break;
-                }
-                case "schedule_lessons":
-                case "schedule_exams":
-                case "schedule_attestations": {
-                    ShortcutQuery shortcutQuery = new ShortcutQuery().fromJsonString(shortcutData);
-                    Bundle extras = new Bundle();
-                    extras.putString("mode", shortcutMode);
-                    extras.putString("action", shortcutType);
-                    extras.putString("action_extra", shortcutQuery.getQuery());
-                    eventBus.fire(new OpenActivityEvent(MainActivity.class, extras, App.intentFlagRestart));
-                    break;
-                }
-                case "time_remaining_widget": {
-                    Bundle extras = new Bundle();
-                    extras.putString("mode", shortcutMode);
-                    extras.putString("shortcut_data", shortcutData);
-                    eventBus.fire(new OpenActivityEvent(TimeRemainingWidgetActivity.class, extras, App.intentFlagRestart));
-                    break;
-                }
-                case "days_remaining_widget": {
-                    Bundle extras = new Bundle();
-                    extras.putString("mode", shortcutMode);
-                    extras.putString("shortcut_data", shortcutData);
-                    eventBus.fire(new OpenActivityEvent(DaysRemainingWidgetActivity.class, extras, App.intentFlagRestart));
-                    break;
-                }
+    private void resolve(Context context, String shortcutType, String shortcutData, String shortcutMode) throws Exception {
+        log.v(TAG, "resolve | shortcutType=", shortcutType, " | shortcutData=", shortcutData, " | shortcutMode=", shortcutMode);
+        firebaseAnalyticsProvider.logEvent(
+                context,
+                FirebaseAnalyticsProvider.Event.SHORTCUT_USE,
+                firebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.SHORTCUT_TYPE, shortcutType)
+        );
+        switch (shortcutType) {
+            case "offline": {
+                Bundle extras = new Bundle();
+                extras.putString("mode", "offline");
+                eventBus.fire(new OpenActivityEvent(MainActivity.class, extras, App.intentFlagRestart));
+                break;
             }
-        }, throwable -> {
-            log.exception(throwable);
-        });
+            case "tab": {
+                Bundle extras = new Bundle();
+                extras.putString("mode", shortcutMode);
+                extras.putString("action", shortcutData);
+                eventBus.fire(new OpenActivityEvent(MainActivity.class, extras, App.intentFlagRestart));
+                break;
+            }
+            case "room101":
+            case "university": {
+                Bundle extras = new Bundle();
+                extras.putString("mode", shortcutMode);
+                extras.putString("action", shortcutType);
+                extras.putString("action_extra", shortcutData);
+                eventBus.fire(new OpenActivityEvent(MainActivity.class, extras, App.intentFlagRestart));
+                break;
+            }
+            case "schedule_lessons":
+            case "schedule_exams":
+            case "schedule_attestations": {
+                ShortcutQuery shortcutQuery = new ShortcutQuery().fromJsonString(shortcutData);
+                Bundle extras = new Bundle();
+                extras.putString("mode", shortcutMode);
+                extras.putString("action", shortcutType);
+                extras.putString("action_extra", shortcutQuery.getQuery());
+                eventBus.fire(new OpenActivityEvent(MainActivity.class, extras, App.intentFlagRestart));
+                break;
+            }
+            case "time_remaining_widget": {
+                Bundle extras = new Bundle();
+                extras.putString("mode", shortcutMode);
+                extras.putString("shortcut_data", shortcutData);
+                eventBus.fire(new OpenActivityEvent(TimeRemainingWidgetActivity.class, extras, App.intentFlagRestart));
+                break;
+            }
+            case "days_remaining_widget": {
+                Bundle extras = new Bundle();
+                extras.putString("mode", shortcutMode);
+                extras.putString("shortcut_data", shortcutData);
+                eventBus.fire(new OpenActivityEvent(DaysRemainingWidgetActivity.class, extras, App.intentFlagRestart));
+                break;
+            }
+        }
     }
 
-    private void addShortcut(Context context, String type, String data, String mode) {
-        thread.run(() -> {
-            log.v(TAG, "addShortcut | type=", type, " | data=", data);
-            switch (type) {
-                case "offline": {
-                    installShortcut(context, type, data, mode, context.getString(R.string.app_name), R.mipmap.ic_shortcut_offline);
-                    break;
-                }
-                case "tab": {
-                    switch (data) {
-                        case "e_journal":
-                            installShortcut(context, type, data, mode, context.getString(R.string.e_journal), R.mipmap.ic_shortcut_e_journal);
-                            break;
-                        case "protocol_changes":
-                            installShortcut(context, type, data, mode, context.getString(R.string.protocol_changes), R.mipmap.ic_shortcut_protocol_changes);
-                            break;
-                        case "rating":
-                            installShortcut(context, type, data, mode, context.getString(R.string.rating), R.mipmap.ic_shortcut_rating);
-                            break;
-                        case "room101":
-                            installShortcut(context, type, data, mode, context.getString(R.string.room101), R.mipmap.ic_shortcut_room101);
-                            break;
-                        case "groups":
-                            installShortcut(context, type, data, mode, context.getString(R.string.study_groups), R.mipmap.ic_shortcut_groups);
-                            break;
-                        case "scholarship":
-                            installShortcut(context, type, data, mode, context.getString(R.string.scholarship), R.mipmap.ic_shortcut_scholarship);
-                            break;
-                    }
-                    break;
-                }
-                case "room101": {
-                    installShortcut(context, type, data, mode, context.getString(R.string.shortcut_room101_short), R.mipmap.ic_shortcut_room101_add);
-                    break;
-                }
-                case "schedule_lessons": {
-                    ShortcutQuery shortcutQuery = new ShortcutQuery().fromJsonString(data);
-                    installShortcut(context, type, data, mode, shortcutQuery.getLabel(), R.mipmap.ic_shortcut_schedule_lessons);
-                    break;
-                }
-                case "schedule_exams": {
-                    ShortcutQuery shortcutQuery = new ShortcutQuery().fromJsonString(data);
-                    installShortcut(context, type, data, mode, shortcutQuery.getLabel(), R.mipmap.ic_shortcut_schedule_exams);
-                    break;
-                }
-                case "schedule_attestations": {
-                    ShortcutQuery shortcutQuery = new ShortcutQuery().fromJsonString(data);
-                    installShortcut(context, type, data, mode, shortcutQuery.getLabel(), R.mipmap.ic_shortcut_schedule_attestations);
-                    break;
-                }
-                case "time_remaining_widget": {
-                    ShortcutQuery shortcutQuery = new ShortcutQuery().fromJsonString(data);
-                    installShortcut(context, type, data, mode, shortcutQuery.getLabel(), R.mipmap.ic_shortcut_time_remaining_widget);
-                    break;
-                }
-                case "days_remaining_widget": {
-                    ShortcutQuery shortcutQuery = new ShortcutQuery().fromJsonString(data);
-                    installShortcut(context, type, data, mode, shortcutQuery.getLabel(), R.mipmap.ic_shortcut_days_remaining_widget);
-                    break;
-                }
-                case "university": {
-                    ShortcutQuery shortcutQuery = new ShortcutQuery().fromJsonString(data);
-                    installShortcut(context, type, shortcutQuery.getQuery(), mode, shortcutQuery.getLabel(), R.mipmap.ic_shortcut_university);
-                    break;
-                }
+    private void addShortcut(Context context, String type, String data, String mode) throws Exception {
+        log.v(TAG, "addShortcut | type=", type, " | data=", data);
+        switch (type) {
+            case "offline": {
+                installShortcut(context, type, data, mode, context.getString(R.string.app_name), R.mipmap.ic_shortcut_offline);
+                break;
             }
-        }, throwable -> {
-            log.exception(throwable);
-        });
+            case "tab": {
+                switch (data) {
+                    case "e_journal":
+                        installShortcut(context, type, data, mode, context.getString(R.string.e_journal), R.mipmap.ic_shortcut_e_journal);
+                        break;
+                    case "protocol_changes":
+                        installShortcut(context, type, data, mode, context.getString(R.string.protocol_changes), R.mipmap.ic_shortcut_protocol_changes);
+                        break;
+                    case "rating":
+                        installShortcut(context, type, data, mode, context.getString(R.string.rating), R.mipmap.ic_shortcut_rating);
+                        break;
+                    case "room101":
+                        installShortcut(context, type, data, mode, context.getString(R.string.room101), R.mipmap.ic_shortcut_room101);
+                        break;
+                    case "groups":
+                        installShortcut(context, type, data, mode, context.getString(R.string.study_groups), R.mipmap.ic_shortcut_groups);
+                        break;
+                    case "scholarship":
+                        installShortcut(context, type, data, mode, context.getString(R.string.scholarship), R.mipmap.ic_shortcut_scholarship);
+                        break;
+                }
+                break;
+            }
+            case "room101": {
+                installShortcut(context, type, data, mode, context.getString(R.string.shortcut_room101_short), R.mipmap.ic_shortcut_room101_add);
+                break;
+            }
+            case "schedule_lessons": {
+                ShortcutQuery shortcutQuery = new ShortcutQuery().fromJsonString(data);
+                installShortcut(context, type, data, mode, shortcutQuery.getLabel(), R.mipmap.ic_shortcut_schedule_lessons);
+                break;
+            }
+            case "schedule_exams": {
+                ShortcutQuery shortcutQuery = new ShortcutQuery().fromJsonString(data);
+                installShortcut(context, type, data, mode, shortcutQuery.getLabel(), R.mipmap.ic_shortcut_schedule_exams);
+                break;
+            }
+            case "schedule_attestations": {
+                ShortcutQuery shortcutQuery = new ShortcutQuery().fromJsonString(data);
+                installShortcut(context, type, data, mode, shortcutQuery.getLabel(), R.mipmap.ic_shortcut_schedule_attestations);
+                break;
+            }
+            case "time_remaining_widget": {
+                ShortcutQuery shortcutQuery = new ShortcutQuery().fromJsonString(data);
+                installShortcut(context, type, data, mode, shortcutQuery.getLabel(), R.mipmap.ic_shortcut_time_remaining_widget);
+                break;
+            }
+            case "days_remaining_widget": {
+                ShortcutQuery shortcutQuery = new ShortcutQuery().fromJsonString(data);
+                installShortcut(context, type, data, mode, shortcutQuery.getLabel(), R.mipmap.ic_shortcut_days_remaining_widget);
+                break;
+            }
+            case "university": {
+                ShortcutQuery shortcutQuery = new ShortcutQuery().fromJsonString(data);
+                installShortcut(context, type, shortcutQuery.getQuery(), mode, shortcutQuery.getLabel(), R.mipmap.ic_shortcut_university);
+                break;
+            }
+        }
     }
 
     @SuppressWarnings("deprecation")
     private void installShortcut(Context context, String type, String data, String mode, String label, @DrawableRes int icon) {
-        thread.run(() -> {
-            log.v(TAG, "installShortcut | type=", type, " | data=", data);
-            Intent intent = new Intent(context, ShortcutReceiverActivity.class);
-            intent.setAction(ShortcutReceiver.ACTION_CLICK_SHORTCUT);
-            intent.putExtra(ShortcutReceiver.EXTRA_TYPE, type);
-            intent.putExtra(ShortcutReceiver.EXTRA_MODE, mode);
-            intent.putExtra(ShortcutReceiver.EXTRA_DATA, data);
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-                ShortcutManager shortcutManager = context.getSystemService(ShortcutManager.class);
-                if (shortcutManager == null || !shortcutManager.isRequestPinShortcutSupported()) {
-                    notificationMessage.toast(context, context.getString(R.string.pin_shortcut_not_supported));
-                    return;
-                }
-                ShortcutInfo pinShortcutInfo = new ShortcutInfo.Builder(context, "synthetic-" + time.getTimeInMillis())
-                    .setIcon(Icon.createWithResource(context, icon))
-                    .setShortLabel(label)
-                    .setIntent(intent)
-                    .build();
-                Intent pinnedShortcutCallbackIntent = new Intent(context, ShortcutReceiver.class);
-                pinnedShortcutCallbackIntent.setAction(ShortcutReceiver.ACTION_SHORTCUT_INSTALLED);
-                IntentSender pinnedShortcutCallbackPendingIntentSender = PendingIntent.getBroadcast(context, 0, pinnedShortcutCallbackIntent, 0).getIntentSender();
-                shortcutManager.requestPinShortcut(pinShortcutInfo, pinnedShortcutCallbackPendingIntentSender);
-            } else {
-                Intent addIntent = new Intent(ShortcutReceiver.ACTION_INSTALL_SHORTCUT);
-                addIntent.putExtra(Intent.EXTRA_SHORTCUT_INTENT, intent);
-                addIntent.putExtra(Intent.EXTRA_SHORTCUT_NAME, label);
-                addIntent.putExtra(Intent.EXTRA_SHORTCUT_ICON_RESOURCE, Intent.ShortcutIconResource.fromContext(context, icon));
-                addIntent.putExtra("duplicate", false);
-                context.sendBroadcast(addIntent);
+        log.v(TAG, "installShortcut | type=", type, " | data=", data);
+        Intent intent = new Intent(context, ShortcutReceiverActivity.class);
+        intent.setAction(ShortcutReceiver.ACTION_CLICK_SHORTCUT);
+        intent.putExtra(ShortcutReceiver.EXTRA_TYPE, type);
+        intent.putExtra(ShortcutReceiver.EXTRA_MODE, mode);
+        intent.putExtra(ShortcutReceiver.EXTRA_DATA, data);
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            ShortcutManager shortcutManager = context.getSystemService(ShortcutManager.class);
+            if (shortcutManager == null || !shortcutManager.isRequestPinShortcutSupported()) {
+                notificationMessage.toast(context, context.getString(R.string.pin_shortcut_not_supported));
+                return;
             }
-            firebaseAnalyticsProvider.logEvent(
-                    context,
-                    FirebaseAnalyticsProvider.Event.SHORTCUT_INSTALL,
-                    firebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.SHORTCUT_TYPE, type)
-            );
-        }, throwable -> {
-            log.exception(throwable);
-        });
+            ShortcutInfo pinShortcutInfo = new ShortcutInfo.Builder(context, "synthetic-" + time.getTimeInMillis())
+                .setIcon(Icon.createWithResource(context, icon))
+                .setShortLabel(label)
+                .setIntent(intent)
+                .build();
+            Intent pinnedShortcutCallbackIntent = new Intent(context, ShortcutReceiver.class);
+            pinnedShortcutCallbackIntent.setAction(ShortcutReceiver.ACTION_SHORTCUT_INSTALLED);
+            IntentSender pinnedShortcutCallbackPendingIntentSender = PendingIntent.getBroadcast(context, 0, pinnedShortcutCallbackIntent, 0).getIntentSender();
+            shortcutManager.requestPinShortcut(pinShortcutInfo, pinnedShortcutCallbackPendingIntentSender);
+        } else {
+            Intent addIntent = new Intent(ShortcutReceiver.ACTION_INSTALL_SHORTCUT);
+            addIntent.putExtra(Intent.EXTRA_SHORTCUT_INTENT, intent);
+            addIntent.putExtra(Intent.EXTRA_SHORTCUT_NAME, label);
+            addIntent.putExtra(Intent.EXTRA_SHORTCUT_ICON_RESOURCE, Intent.ShortcutIconResource.fromContext(context, icon));
+            addIntent.putExtra("duplicate", false);
+            context.sendBroadcast(addIntent);
+        }
+        firebaseAnalyticsProvider.logEvent(
+                context,
+                FirebaseAnalyticsProvider.Event.SHORTCUT_INSTALL,
+                firebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.SHORTCUT_TYPE, type)
+        );
     }
 }

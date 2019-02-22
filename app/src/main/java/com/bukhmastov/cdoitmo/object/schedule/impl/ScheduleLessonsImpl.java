@@ -37,136 +37,130 @@ public class ScheduleLessonsImpl extends ScheduleImpl<SLessons> implements Sched
     }
 
     @Override
-    protected void searchPersonal(int refreshRate, boolean forceToCache, boolean withUserChanges) {
-        thread.run(() -> {
-            @Source String source = SOURCE.ISU/*getSource()*/;
-            log.v(TAG, "searchPersonal | refreshRate=", refreshRate, " | forceToCache=", forceToCache, " | withUserChanges=", withUserChanges, " | source=", source);
-            searchByQuery("personal", source, refreshRate, withUserChanges, new SearchByQuery<SLessons>() {
-                @Override
-                public void onWebRequest(String query, String source, RestResponseHandler restResponseHandler) {
-                    switch (source) {
-                        case SOURCE.IFMO: // not available, using isu source
-                        case SOURCE.ISU: isuPrivateRestClient.get().get(context, "schedule/personal/student/%apikey%/%isutoken%", null, restResponseHandler); break;
-                    }
+    protected void searchPersonal(int refreshRate, boolean forceToCache, boolean withUserChanges) throws Exception {
+        @Source String source = SOURCE.ISU/*getSource()*/;
+        log.v(TAG, "searchPersonal | refreshRate=", refreshRate, " | forceToCache=", forceToCache,
+                " | withUserChanges=", withUserChanges, " | source=", source);
+        searchByQuery("personal", source, refreshRate, withUserChanges, new SearchByQuery<SLessons>() {
+            @Override
+            public void onWebRequest(String query, String source, RestResponseHandler handler) {
+                switch (source) {
+                    case SOURCE.IFMO: // not available, using isu source
+                    case SOURCE.ISU: isuPrivateRestClient.get().get(context, "schedule/personal/student/%apikey%/%isutoken%", null, handler); break;
                 }
-                @Override
-                public SLessons onGetScheduleFromJson(String query, String source, JSONObject json) throws Exception {
-                    return makeSchedule(query, source, "personal", json);
-                }
-                @Override
-                public void onFound(String query, SLessons schedule, boolean fromCache) {
-                    onScheduleFound(query, schedule, forceToCache, fromCache, withUserChanges);
-                }
-            });
+            }
+            @Override
+            public SLessons onGetScheduleFromJson(String query, String source, JSONObject json) throws Exception {
+                return makeSchedule(query, source, "personal", json);
+            }
+            @Override
+            public void onFound(String query, SLessons schedule, boolean fromCache) {
+                onScheduleFound(query, schedule, forceToCache, fromCache, withUserChanges);
+            }
         });
     }
 
     @Override
-    protected void searchGroup(String group, int refreshRate, boolean forceToCache, boolean withUserChanges) {
-        thread.run(() -> {
-            @Source String source = getSource();
-            log.v(TAG, "searchGroup | group=", group, " | refreshRate=", refreshRate, " | forceToCache=", forceToCache, " | withUserChanges=", withUserChanges, " | source=", source);
-            searchByQuery(group, source, refreshRate, withUserChanges, new SearchByQuery<SLessons>() {
-                @Override
-                public void onWebRequest(String query, String source, RestResponseHandler restResponseHandler) {
-                    switch (source) {
-                        case SOURCE.ISU: isuRestClient.get().get(context, "schedule/common/group/%apikey%/" + query, null, restResponseHandler); break;
-                        case SOURCE.IFMO: ifmoRestClient.get().get(context, "schedule_lesson_group/" + query, null, restResponseHandler); break;
-                    }
+    protected void searchGroup(String group, int refreshRate, boolean forceToCache, boolean withUserChanges) throws Exception {
+        @Source String source = getSource();
+        log.v(TAG, "searchGroup | group=", group, " | refreshRate=", refreshRate,
+                " | forceToCache=", forceToCache, " | withUserChanges=", withUserChanges, " | source=", source);
+        searchByQuery(group, source, refreshRate, withUserChanges, new SearchByQuery<SLessons>() {
+            @Override
+            public void onWebRequest(String query, String source, RestResponseHandler handler) {
+                switch (source) {
+                    case SOURCE.ISU: isuRestClient.get().get(context, "schedule/common/group/%apikey%/" + query, null, handler); break;
+                    case SOURCE.IFMO: ifmoRestClient.get().get(context, "schedule_lesson_group/" + query, null, handler); break;
                 }
-                @Override
-                public SLessons onGetScheduleFromJson(String query, String source, JSONObject json) throws Exception {
-                    return makeSchedule(query, source, "group", json);
-                }
-                @Override
-                public void onFound(String query, SLessons schedule, boolean fromCache) {
-                    onScheduleFound(query, schedule, forceToCache, fromCache, withUserChanges);
-                }
-            });
+            }
+            @Override
+            public SLessons onGetScheduleFromJson(String query, String source, JSONObject json) throws Exception {
+                return makeSchedule(query, source, "group", json);
+            }
+            @Override
+            public void onFound(String query, SLessons schedule, boolean fromCache) {
+                onScheduleFound(query, schedule, forceToCache, fromCache, withUserChanges);
+            }
         });
     }
 
     @Override
-    protected void searchRoom(String room, int refreshRate, boolean forceToCache, boolean withUserChanges) {
-        thread.run(() -> {
-            @Source String source = SOURCE.IFMO/*getSource()*/;
-            log.v(TAG, "searchRoom | room=", room, " | refreshRate=", refreshRate, " | forceToCache=", forceToCache, " | withUserChanges=", withUserChanges, " | source=", source);
-            searchByQuery(room, source, refreshRate, withUserChanges, new SearchByQuery<SLessons>() {
-                @Override
-                public void onWebRequest(String query, String source, RestResponseHandler restResponseHandler) {
-                    switch (source) {
-                        case SOURCE.ISU: // not available, using ifmo source
-                        case SOURCE.IFMO: ifmoRestClient.get().get(context, "schedule_lesson_room/" + query, null, restResponseHandler); break;
-                    }
+    protected void searchRoom(String room, int refreshRate, boolean forceToCache, boolean withUserChanges) throws Exception {
+        @Source String source = SOURCE.IFMO/*getSource()*/;
+        log.v(TAG, "searchRoom | room=", room, " | refreshRate=", refreshRate,
+                " | forceToCache=", forceToCache, " | withUserChanges=", withUserChanges, " | source=", source);
+        searchByQuery(room, source, refreshRate, withUserChanges, new SearchByQuery<SLessons>() {
+            @Override
+            public void onWebRequest(String query, String source, RestResponseHandler handler) {
+                switch (source) {
+                    case SOURCE.ISU: // not available, using ifmo source
+                    case SOURCE.IFMO: ifmoRestClient.get().get(context, "schedule_lesson_room/" + query, null, handler); break;
                 }
-                @Override
-                public SLessons onGetScheduleFromJson(String query, String source, JSONObject json) throws Exception {
-                    return makeSchedule(query, source, "room", json);
-                }
-                @Override
-                public void onFound(String query, SLessons schedule, boolean fromCache) {
-                    onScheduleFound(query, schedule, forceToCache, fromCache, withUserChanges);
-                }
-            });
+            }
+            @Override
+            public SLessons onGetScheduleFromJson(String query, String source, JSONObject json) throws Exception {
+                return makeSchedule(query, source, "room", json);
+            }
+            @Override
+            public void onFound(String query, SLessons schedule, boolean fromCache) {
+                onScheduleFound(query, schedule, forceToCache, fromCache, withUserChanges);
+            }
         });
     }
 
     @Override
-    protected void searchTeacher(String teacherId, int refreshRate, boolean forceToCache, boolean withUserChanges) {
-        thread.run(() -> {
-            @Source String source = getSource();
-            log.v(TAG, "searchTeacher | teacherId=", teacherId, " | refreshRate=", refreshRate, " | forceToCache=", forceToCache, " | withUserChanges=", withUserChanges, " | source=", source);
-            searchByQuery(teacherId, source, refreshRate, withUserChanges, new SearchByQuery<SLessons>() {
-                @Override
-                public void onWebRequest(String query, String source, RestResponseHandler restResponseHandler) {
-                    switch (source) {
-                        case SOURCE.ISU: isuRestClient.get().get(context, "schedule/common/teacher/%apikey%/" + query, null, restResponseHandler); break;
-                        case SOURCE.IFMO: ifmoRestClient.get().get(context, "schedule_lesson_person/" + query, null, restResponseHandler); break;
-                    }
+    protected void searchTeacher(String teacherId, int refreshRate, boolean forceToCache, boolean withUserChanges) throws Exception {
+        @Source String source = getSource();
+        log.v(TAG, "searchTeacher | teacherId=", teacherId, " | refreshRate=", refreshRate,
+                " | forceToCache=", forceToCache, " | withUserChanges=", withUserChanges, " | source=", source);
+        searchByQuery(teacherId, source, refreshRate, withUserChanges, new SearchByQuery<SLessons>() {
+            @Override
+            public void onWebRequest(String query, String source, RestResponseHandler handler) {
+                switch (source) {
+                    case SOURCE.ISU: isuRestClient.get().get(context, "schedule/common/teacher/%apikey%/" + query, null, handler); break;
+                    case SOURCE.IFMO: ifmoRestClient.get().get(context, "schedule_lesson_person/" + query, null, handler); break;
                 }
-                @Override
-                public SLessons onGetScheduleFromJson(String query, String source, JSONObject json) throws Exception {
-                    return makeSchedule(query, source, "teacher", json);
-                }
-                @Override
-                public void onFound(String query, SLessons schedule, boolean fromCache) {
-                    onScheduleFound(query, schedule, forceToCache, fromCache, withUserChanges);
-                }
-            });
+            }
+            @Override
+            public SLessons onGetScheduleFromJson(String query, String source, JSONObject json) throws Exception {
+                return makeSchedule(query, source, "teacher", json);
+            }
+            @Override
+            public void onFound(String query, SLessons schedule, boolean fromCache) {
+                onScheduleFound(query, schedule, forceToCache, fromCache, withUserChanges);
+            }
         });
     }
 
     @Override
-    protected void searchTeachers(String lastname, boolean withUserChanges) {
-        thread.run(() -> {
-            @Source String source = SOURCE.IFMO/*getSource()*/;
-            log.v(TAG, "searchTeachers | lastname=", lastname);
-            searchByQuery(lastname, source, 0, withUserChanges, new SearchByQuery<SLessons>() {
-                @Override
-                public void onWebRequest(String query, String source, RestResponseHandler restResponseHandler) {
-                    switch (source) {
-                        case SOURCE.ISU: // not available, using ifmo source
-                        case SOURCE.IFMO: ifmoRestClient.get().get(context, "schedule_person?lastname=" + lastname, null, restResponseHandler); break;
-                    }
+    protected void searchTeachers(String lastname, boolean withUserChanges) throws Exception {
+        @Source String source = SOURCE.IFMO/*getSource()*/;
+        log.v(TAG, "searchTeachers | lastname=", lastname);
+        searchByQuery(lastname, source, 0, withUserChanges, new SearchByQuery<SLessons>() {
+            @Override
+            public void onWebRequest(String query, String source, RestResponseHandler handler) {
+                switch (source) {
+                    case SOURCE.ISU: // not available, using ifmo source
+                    case SOURCE.IFMO: ifmoRestClient.get().get(context, "schedule_person?lastname=" + lastname, null, handler); break;
                 }
-                @Override
-                public SLessons onGetScheduleFromJson(String query, String source, JSONObject json) throws Exception {
-                    STeachers teachers = new STeachers().fromJson(json);
-                    if (teachers == null) {
-                        return null;
-                    }
-                    SLessons schedule = new SLessons();
-                    schedule.setQuery(query);
-                    schedule.setType("teachers");
-                    schedule.setTimestamp(time.getTimeInMillis());
-                    schedule.setTeachers(teachers);
-                    return schedule;
+            }
+            @Override
+            public SLessons onGetScheduleFromJson(String query, String source, JSONObject json) throws Exception {
+                STeachers teachers = new STeachers().fromJson(json);
+                if (teachers == null) {
+                    return null;
                 }
-                @Override
-                public void onFound(String query, SLessons schedule, boolean fromCache) {
-                    onScheduleFound(query, schedule, false, false, withUserChanges);
-                }
-            });
+                SLessons schedule = new SLessons();
+                schedule.setQuery(query);
+                schedule.setType("teachers");
+                schedule.setTimestamp(time.getTimeInMillis());
+                schedule.setTeachers(teachers);
+                return schedule;
+            }
+            @Override
+            public void onFound(String query, SLessons schedule, boolean fromCache) {
+                onScheduleFound(query, schedule, false, false, withUserChanges);
+            }
         });
     }
 
@@ -224,7 +218,7 @@ public class ScheduleLessonsImpl extends ScheduleImpl<SLessons> implements Sched
     }
 
     private void onScheduleFound(String query, SLessons schedule, boolean forceToCache, boolean fromCache, boolean withUserChanges) {
-        thread.run(() -> {
+        try {
             if (context == null || query == null || schedule == null) {
                 log.w(TAG, "onFound | some values are null | context=", context, " | query=", query, " | data=", schedule);
                 if (query == null) {
@@ -269,9 +263,9 @@ public class ScheduleLessonsImpl extends ScheduleImpl<SLessons> implements Sched
                 putToLocalCache(query, schedule);
             }
             invokePendingAndClose(query, withUserChanges, handler -> handler.onFailure(FAILED_NOT_FOUND));
-        }, throwable -> {
+        } catch (Throwable throwable) {
             log.exception(throwable);
             invokePendingAndClose(query, withUserChanges, handler -> handler.onFailure(FAILED_LOAD));
-        });
+        }
     }
 }

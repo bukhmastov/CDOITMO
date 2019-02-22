@@ -65,6 +65,8 @@ import javax.inject.Inject;
 
 import dagger.Lazy;
 
+import static com.bukhmastov.cdoitmo.util.Thread.UU;
+
 public class UniversityUnitsFragmentPresenterImpl implements UniversityUnitsFragmentPresenter, SwipeRefreshLayout.OnRefreshListener {
 
     private static final String TAG = "UniversityUnitsFragment";
@@ -120,6 +122,7 @@ public class UniversityUnitsFragmentPresenterImpl implements UniversityUnitsFrag
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
+        thread.initialize(UU);
         log.v(TAG, "Fragment created");
         firebaseAnalyticsProvider.logCurrentScreen(activity, fragment);
     }
@@ -128,11 +131,12 @@ public class UniversityUnitsFragmentPresenterImpl implements UniversityUnitsFrag
     public void onDestroy() {
         log.v(TAG, "Fragment destroyed");
         loaded = false;
+        thread.interrupt(UU);
     }
 
     @Override
     public void onResume() {
-        thread.run(() -> {
+        thread.run(UU, () -> {
             log.v(TAG, "Fragment resumed");
             firebaseAnalyticsProvider.setCurrentScreen(activity, fragment);
             if (!loaded) {
@@ -144,8 +148,8 @@ public class UniversityUnitsFragmentPresenterImpl implements UniversityUnitsFrag
 
     @Override
     public void onPause() {
-        thread.run(() -> {
-            log.v(TAG, "Fragment paused");
+        log.v(TAG, "Fragment paused");
+        thread.standalone(() -> {
             if (requestHandle != null && requestHandle.cancel()) {
                 loaded = false;
             }
@@ -164,13 +168,15 @@ public class UniversityUnitsFragmentPresenterImpl implements UniversityUnitsFrag
     }
 
     private void load() {
-        thread.run(() -> load(storagePref.get(activity, "pref_use_cache", true) && storagePref.get(activity, "pref_use_university_cache", false)
-                ? Integer.parseInt(storagePref.get(activity, "pref_static_refresh", "168"))
-                : 0));
+        thread.run(UU, () -> {
+            load(storagePref.get(activity, "pref_use_cache", true) && storagePref.get(activity, "pref_use_university_cache", false)
+                    ? Integer.parseInt(storagePref.get(activity, "pref_static_refresh", "168"))
+                    : 0);
+        });
     }
 
-    private void load(final int refresh_rate) {
-        thread.run(() -> {
+    private void load(int refresh_rate) {
+        thread.run(UU, () -> {
             log.v(TAG, "load | refresh_rate=", refresh_rate);
             String fid = stack.size() == 0 ? "0" : stack.get(stack.size() - 1);
             if (!(storagePref.get(activity, "pref_use_cache", true) && storagePref.get(activity, "pref_use_university_cache", false))) {
@@ -193,12 +199,12 @@ public class UniversityUnitsFragmentPresenterImpl implements UniversityUnitsFrag
         });
     }
 
-    private void load(final boolean force) {
-        thread.run(() -> load(force, null));
+    private void load(boolean force) {
+        thread.run(UU, () -> load(force, null));
     }
 
-    private void load(final boolean force, final UUnits cached) {
-        thread.run(() -> {
+    private void load(boolean force, UUnits cached) {
+        thread.run(UU, () -> {
             log.v(TAG, "load | force=" + (force ? "true" : "false"));
             final String uid = stack.size() == 0 ? "0" : stack.get(stack.size() - 1);
             if (!force && history.containsKey(uid)) {
@@ -216,7 +222,7 @@ public class UniversityUnitsFragmentPresenterImpl implements UniversityUnitsFrag
                 }
             }
             if (App.OFFLINE_MODE) {
-                thread.runOnUI(() -> {
+                thread.runOnUI(UU, () -> {
                     draw(R.layout.state_offline_text);
                     View reload = container.findViewById(R.id.offline_reload);
                     if (reload != null) {
@@ -229,27 +235,23 @@ public class UniversityUnitsFragmentPresenterImpl implements UniversityUnitsFrag
             }
             loadProvider(new RestResponseHandler() {
                 @Override
-                public void onSuccess(final int statusCode, final Client.Headers headers, final JSONObject obj, final JSONArray arr) {
-                    thread.run(() -> {
-                        if (statusCode == 200 && obj != null) {
-                            UUnits data = new UUnits().fromJson(obj);
-                            data.setTimestamp(time.getTimeInMillis());
-                            if (storagePref.get(activity, "pref_use_cache", true) && storagePref.get(activity, "pref_use_university_cache", false)) {
-                                storage.put(activity, Storage.CACHE, Storage.GLOBAL, "university#units#" + uid, data.toJsonString());
-                            }
-                            timestamp = data.getTimestamp();
-                            history.put(uid, data);
-                            display(data);
-                            return;
+                public void onSuccess(int code, Client.Headers headers, JSONObject obj, JSONArray arr) throws Exception {
+                    if (code == 200 && obj != null) {
+                        UUnits data = new UUnits().fromJson(obj);
+                        data.setTimestamp(time.getTimeInMillis());
+                        if (storagePref.get(activity, "pref_use_cache", true) && storagePref.get(activity, "pref_use_university_cache", false)) {
+                            storage.put(activity, Storage.CACHE, Storage.GLOBAL, "university#units#" + uid, data.toJsonString());
                         }
-                        loadFailed();
-                    }, throwable -> {
-                        loadFailed();
-                    });
+                        timestamp = data.getTimestamp();
+                        history.put(uid, data);
+                        display(data);
+                        return;
+                    }
+                    loadFailed();
                 }
                 @Override
-                public void onFailure(final int statusCode, final Client.Headers headers, final int state) {
-                    thread.runOnUI(() -> {
+                public void onFailure(int code, Client.Headers headers, int state) {
+                    thread.runOnUI(UU, () -> {
                         log.v(TAG, "forceLoad | failure ", state);
                         switch (state) {
                             case IfmoRestClient.FAILED_OFFLINE: {
@@ -267,7 +269,7 @@ public class UniversityUnitsFragmentPresenterImpl implements UniversityUnitsFrag
                                 TextView message = container.findViewById(R.id.try_again_message);
                                 if (message != null) {
                                     switch (state) {
-                                        case IfmoRestClient.FAILED_SERVER_ERROR:   message.setText(IfmoRestClient.getFailureMessage(activity, statusCode)); break;
+                                        case IfmoRestClient.FAILED_SERVER_ERROR:   message.setText(IfmoRestClient.getFailureMessage(activity, code)); break;
                                         case IfmoRestClient.FAILED_CORRUPTED_JSON: message.setText(R.string.server_provided_corrupted_json); break;
                                     }
                                 }
@@ -283,8 +285,8 @@ public class UniversityUnitsFragmentPresenterImpl implements UniversityUnitsFrag
                     });
                 }
                 @Override
-                public void onProgress(final int state) {
-                    thread.runOnUI(() -> {
+                public void onProgress(int state) {
+                    thread.runOnUI(UU, () -> {
                         log.v(TAG, "forceLoad | progress ", state);
                         draw(R.layout.state_loading_text);
                         TextView message = container.findViewById(R.id.loading_message);
@@ -315,7 +317,7 @@ public class UniversityUnitsFragmentPresenterImpl implements UniversityUnitsFrag
     }
 
     private void loadFailed() {
-        thread.runOnUI(() -> {
+        thread.runOnUI(UU, () -> {
             log.v(TAG, "loadFailed");
             draw(R.layout.state_failed_button);
             TextView message = container.findViewById(R.id.try_again_message);
@@ -332,7 +334,7 @@ public class UniversityUnitsFragmentPresenterImpl implements UniversityUnitsFrag
     }
 
     private void display(UUnits units) {
-        thread.runOnUI(() -> {
+        thread.runOnUI(UU, () -> {
             log.v(TAG, "display");
             if (units == null) {
                 loadFailed();
@@ -363,7 +365,7 @@ public class UniversityUnitsFragmentPresenterImpl implements UniversityUnitsFrag
                     link = null;
                 }
                 if (StringUtils.isNotBlank(link)) {
-                    container.findViewById(R.id.web).setOnClickListener(view -> thread.run(() -> {
+                    container.findViewById(R.id.web).setOnClickListener(view -> thread.run(UU, () -> {
                         Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(link.trim()));
                         eventBus.fire(new OpenIntentEvent(intent));
                     }));
@@ -417,7 +419,7 @@ public class UniversityUnitsFragmentPresenterImpl implements UniversityUnitsFrag
     }
 
     private void displayUnits(UUnits units) {
-        thread.run(() -> {
+        thread.run(UU, () -> {
             Collection<RVA.Item> items = new ArrayList<>();
             if (units != null && units.getUnit() != null) {
                 UUnit unit = units.getUnit();
@@ -440,7 +442,7 @@ public class UniversityUnitsFragmentPresenterImpl implements UniversityUnitsFrag
             if (items.size() == 0) {
                 items.add(new UniversityRVA.Item(UniversityFacultiesRVA.TYPE_NO_DATA));
             }
-            thread.runOnUI(() -> {
+            thread.runOnUI(UU, () -> {
                 if (unitsRecyclerViewAdapter != null) {
                     unitsRecyclerViewAdapter.addItems(items);
                 }
@@ -457,7 +459,7 @@ public class UniversityUnitsFragmentPresenterImpl implements UniversityUnitsFrag
         }
         unitsRecyclerViewAdapter.clearClickListeners();
         unitsRecyclerViewAdapter.setClickListener(R.id.division, (v, entity) -> {
-            thread.run(() -> {
+            thread.run(UU, () -> {
                 if (!(entity.getEntity() instanceof UDivision)) {
                     return;
                 }
@@ -469,7 +471,7 @@ public class UniversityUnitsFragmentPresenterImpl implements UniversityUnitsFrag
             });
         });
         unitsRecyclerViewAdapter.setClickListener(R.id.university_tile_map, (v, entity) -> {
-            thread.run(() -> {
+            thread.run(UU, () -> {
                 Uri uri = Uri.parse("geo:0,0?q=" + entity.getValueString());
                 Intent intent = new Intent(Intent.ACTION_VIEW, uri);
                 eventBus.fire(new OpenIntentEvent(intent));
@@ -478,7 +480,7 @@ public class UniversityUnitsFragmentPresenterImpl implements UniversityUnitsFrag
             });
         });
         unitsRecyclerViewAdapter.setClickListener(R.id.university_tile_phone, (v, entity) -> {
-            thread.run(() -> {
+            thread.run(UU, () -> {
                 Intent intent = new Intent(Intent.ACTION_DIAL, Uri.parse("tel:" + entity.getValueString()));
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 eventBus.fire(new OpenIntentEvent(intent));
@@ -487,7 +489,7 @@ public class UniversityUnitsFragmentPresenterImpl implements UniversityUnitsFrag
             });
         });
         unitsRecyclerViewAdapter.setClickListener(R.id.university_tile_web, (v, entity) -> {
-            thread.run(() -> {
+            thread.run(UU, () -> {
                 Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(entity.getValueString()));
                 eventBus.fire(new OpenIntentEvent(intent));
             }, throwable -> {
@@ -495,7 +497,7 @@ public class UniversityUnitsFragmentPresenterImpl implements UniversityUnitsFrag
             });
         });
         unitsRecyclerViewAdapter.setClickListener(R.id.university_tile_mail, (v, entity) -> {
-            thread.run(() -> {
+            thread.run(UU, () -> {
                 Intent intent = new Intent(Intent.ACTION_SEND);
                 intent.setType("message/rfc822");
                 intent.putExtra(Intent.EXTRA_EMAIL, new String[]{entity.getValueString()});
@@ -506,7 +508,7 @@ public class UniversityUnitsFragmentPresenterImpl implements UniversityUnitsFrag
             });
         });
         unitsRecyclerViewAdapter.setClickListener(R.id.university_tile_person, (v, entity) -> {
-            thread.run(() -> {
+            thread.run(UU, () -> {
                 Bundle extras = new Bundle();
                 extras.putInt("pid", entity.getValueInteger());
                 eventBus.fire(new OpenActivityEvent(UniversityPersonCardActivity.class, extras));

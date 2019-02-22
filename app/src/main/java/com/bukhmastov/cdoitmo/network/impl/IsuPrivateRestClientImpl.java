@@ -51,57 +51,61 @@ public class IsuPrivateRestClientImpl extends IsuPrivateRestClient {
 
     @Override
     public void check(@NonNull Context context, @NonNull ResponseHandler handler) {
-        log.v(TAG, "check");
-        thread.assertNotUI();
-        if (!Client.isOnline(context)) {
-            handler.onFailure(STATUS_CODE_EMPTY, new Headers(null), FAILED_OFFLINE);
-            return;
-        }
-        handler.onProgress(STATE_CHECKING);
-        String accessToken = storage.get(context, Storage.PERMANENT, Storage.USER, "user#isu#access_token", "").trim();
-        String refreshToken = storage.get(context, Storage.PERMANENT, Storage.USER, "user#isu#refresh_token", "").trim();
-        long expiresAt = Long.parseLong(storage.get(context, Storage.PERMANENT, Storage.USER, "user#isu#expires_at", "0").trim());
-        if (expiresAt >= time.getTimeInMillis()) {
-            if (StringUtils.isNotBlank(accessToken)) {
-                log.v(TAG, "check | all systems operational");
-                handler.onProgress(STATE_AUTHORIZED);
-                handler.onSuccess(STATUS_CODE_EMPTY, new Headers(null), "authorized");
-            } else {
-                log.v(TAG, "check | access token is empty");
-                handler.onFailure(STATUS_CODE_EMPTY, new Headers(null), FAILED_AUTH_CREDENTIALS_REQUIRED);
+        try {
+            log.v(TAG, "check");
+            thread.assertNotUI();
+            if (!Client.isOnline(context)) {
+                handler.onFailure(STATUS_CODE_EMPTY, new Headers(null), FAILED_OFFLINE);
+                return;
             }
-            return;
-        }
-        if (StringUtils.isBlank(refreshToken)) {
-            log.v(TAG, "check | refresh token is empty");
-            handler.onFailure(STATUS_CODE_EMPTY, new Headers(null), FAILED_AUTH_CREDENTIALS_REQUIRED);
-            return;
-        }
-        log.v(TAG, "check | refresh token expired, going to retrieve new access token");
-        authorize(context, new ResponseHandler() {
-            @Override
-            public void onSuccess(int statusCode, Headers headers, String response) {
-                if ("authorized".equals(response)) {
-                    log.v(TAG, "check | authorize | all systems operational");
+            handler.onProgress(STATE_CHECKING);
+            String accessToken = storage.get(context, Storage.PERMANENT, Storage.USER, "user#isu#access_token", "").trim();
+            String refreshToken = storage.get(context, Storage.PERMANENT, Storage.USER, "user#isu#refresh_token", "").trim();
+            long expiresAt = Long.parseLong(storage.get(context, Storage.PERMANENT, Storage.USER, "user#isu#expires_at", "0").trim());
+            if (expiresAt >= time.getTimeInMillis()) {
+                if (StringUtils.isNotBlank(accessToken)) {
+                    log.v(TAG, "check | all systems operational");
                     handler.onProgress(STATE_AUTHORIZED);
                     handler.onSuccess(STATUS_CODE_EMPTY, new Headers(null), "authorized");
                 } else {
-                    log.v(TAG, "check | authorize | failed | statusCode=", statusCode, " | response=", response);
-                    handler.onFailure(statusCode, headers, FAILED_AUTH_TRY_AGAIN);
+                    log.v(TAG, "check | access token is empty");
+                    handler.onFailure(STATUS_CODE_EMPTY, new Headers(null), FAILED_AUTH_CREDENTIALS_REQUIRED);
                 }
+                return;
             }
-            @Override
-            public void onFailure(int statusCode, Headers headers, int state) {
-                log.v(TAG, "check | authorize | failed | statusCode=", statusCode, " | state=", state);
-                handler.onFailure(statusCode, headers, state);
+            if (StringUtils.isBlank(refreshToken)) {
+                log.v(TAG, "check | refresh token is empty");
+                handler.onFailure(STATUS_CODE_EMPTY, new Headers(null), FAILED_AUTH_CREDENTIALS_REQUIRED);
+                return;
             }
-            @Override
-            public void onProgress(int state) {}
-            @Override
-            public void onNewRequest(Request request) {
-                handler.onNewRequest(request);
-            }
-        });
+            log.v(TAG, "check | refresh token expired, going to retrieve new access token");
+            authorize(context, new ResponseHandler() {
+                @Override
+                public void onSuccess(int statusCode, Headers headers, String response) throws Exception {
+                    if ("authorized".equals(response)) {
+                        log.v(TAG, "check | authorize | all systems operational");
+                        handler.onProgress(STATE_AUTHORIZED);
+                        handler.onSuccess(STATUS_CODE_EMPTY, new Headers(null), "authorized");
+                    } else {
+                        log.v(TAG, "check | authorize | failed | statusCode=", statusCode, " | response=", response);
+                        handler.onFailure(statusCode, headers, FAILED_AUTH_TRY_AGAIN);
+                    }
+                }
+                @Override
+                public void onFailure(int statusCode, Headers headers, int state) {
+                    log.v(TAG, "check | authorize | failed | statusCode=", statusCode, " | state=", state);
+                    handler.onFailure(statusCode, headers, state);
+                }
+                @Override
+                public void onProgress(int state) {}
+                @Override
+                public void onNewRequest(Request request) {
+                    handler.onNewRequest(request);
+                }
+            });
+        } catch (Throwable throwable) {
+            invokeOnFailed(handler, STATUS_CODE_EMPTY, null, throwable, FAILED_TRY_AGAIN);
+        }
     }
 
     @Override
@@ -331,7 +335,7 @@ public class IsuPrivateRestClientImpl extends IsuPrivateRestClient {
         handler.onProgress(STATE_HANDLING);
         gJson(context, getAbsoluteUrl(protocol, BASE_URL, url), query, new RawJsonHandler() {
             @Override
-            public void onDone(int code, okhttp3.Headers headers, String response, JSONObject obj, JSONArray arr) {
+            public void onDone(int code, okhttp3.Headers headers, String response, JSONObject obj, JSONArray arr) throws Exception {
                 log.v(TAG, "get | url=", url, " | success | statusCode=", code);
                 handler.onSuccess(code, new Headers(headers), obj, arr);
             }

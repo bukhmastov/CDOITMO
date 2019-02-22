@@ -24,7 +24,7 @@ public class SettingsScheduleExamsFragment extends SettingsTemplatePreferencesFr
         preferences.add(new PreferenceBasic("pref_schedule_exams_default", "{\"query\":\"auto\",\"title\":\"\"}", R.string.default_schedule, true, new PreferenceBasic.Callback() {
             @Override
             public void onPreferenceClicked(final ConnectedActivity activity, final Preference preference, final InjectProvider injectProvider, final PreferenceBasic.OnPreferenceClickedCallback callback) {
-                injectProvider.getSettingsScheduleExams().show(activity, preference, value -> injectProvider.getThread().run(() -> {
+                injectProvider.getSettingsScheduleExams().show(activity, preference, value -> injectProvider.getThread().standalone(() -> {
                     injectProvider.getStoragePref().put(activity, "pref_schedule_exams_default", value);
                     callback.onSetSummary(activity, value);
                 }));
@@ -49,7 +49,7 @@ public class SettingsScheduleExamsFragment extends SettingsTemplatePreferencesFr
         preferences.add(new PreferenceBasic("pref_schedule_exams_clear_cache", null, R.string.clear_schedule_cache, false, new PreferenceBasic.Callback() {
             @Override
             public void onPreferenceClicked(final ConnectedActivity activity, final Preference preference, final InjectProvider injectProvider, final PreferenceBasic.OnPreferenceClickedCallback callback) {
-                injectProvider.getThread().run(() -> {
+                injectProvider.getThread().standalone(() -> {
                     if (activity != null) {
                         boolean success = injectProvider.getStorage().clear(activity, Storage.CACHE, Storage.GLOBAL, "schedule_exams");
                         injectProvider.getNotificationMessage().snackBar(activity, activity.getString(success ? R.string.cache_cleared : R.string.something_went_wrong));

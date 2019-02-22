@@ -69,7 +69,8 @@ public abstract class ScheduleImpl<T extends ScheduleJsonEntity> extends Schedul
 
     @Override
     public void search(@NonNull String query, int refreshRate, boolean forceToCache, boolean withUserChanges, @NonNull Handler<T> handler) {
-        thread.run(() -> {
+        try {
+            thread.assertNotUI();
             if (StringUtils.isBlank(query)) {
                 log.v(TAG, "search | empty query provided");
                 handler.onFailure(FAILED_EMPTY_QUERY);
@@ -117,7 +118,10 @@ public abstract class ScheduleImpl<T extends ScheduleJsonEntity> extends Schedul
             }
             log.v(TAG, "search | got invalid query: " + q);
             invokePendingAndClose(q, withUserChanges, h -> h.onFailure(FAILED_INVALID_QUERY));
-        });
+        } catch (Throwable throwable) {
+            log.exception(throwable);
+            invokePendingAndClose(query, withUserChanges, h -> h.onFailure(FAILED_LOAD));
+        }
     }
 
     /**
@@ -135,28 +139,28 @@ public abstract class ScheduleImpl<T extends ScheduleJsonEntity> extends Schedul
      * Search personal schedule, only from Source.ISU
      * @see Source
      */
-    protected abstract void searchPersonal(int refreshRate, boolean forceToCache, boolean withUserChanges);
+    protected abstract void searchPersonal(int refreshRate, boolean forceToCache, boolean withUserChanges) throws Exception;
 
     /**
      * Searches schedule for defined group
      */
-    protected abstract void searchGroup(String group, int refreshRate, boolean forceToCache, boolean withUserChanges);
+    protected abstract void searchGroup(String group, int refreshRate, boolean forceToCache, boolean withUserChanges) throws Exception;
 
     /**
      * Searches schedule for defined room
      */
-    protected abstract void searchRoom(String room, int refreshRate, boolean forceToCache, boolean withUserChanges);
+    protected abstract void searchRoom(String room, int refreshRate, boolean forceToCache, boolean withUserChanges) throws Exception;
 
     /**
      * Searches schedule for defined teacher
      */
-    protected abstract void searchTeacher(String teacherId, int refreshRate, boolean forceToCache, boolean withUserChanges);
+    protected abstract void searchTeacher(String teacherId, int refreshRate, boolean forceToCache, boolean withUserChanges) throws Exception;
 
     /**
      * Searches list of teachers by surname
      * Surname supports no spaces
      */
-    protected abstract void searchTeachers(String lastname, boolean withUserChanges);
+    protected abstract void searchTeachers(String lastname, boolean withUserChanges) throws Exception;
 
     /**
      * Defines the type of the current schedule
@@ -420,69 +424,67 @@ public abstract class ScheduleImpl<T extends ScheduleJsonEntity> extends Schedul
 
     // --<- Cache mechanism -<--
 
-    protected void searchByQuery(String query, @Source String source, int refreshRate, boolean withUserChanges, SearchByQuery<T> search) {
-        thread.run(() -> {
-            log.v(TAG, "searchByQuery | query=", query, " | source=", source, " | refreshRate=", refreshRate, " | withUserChanges=", withUserChanges);
-            T cached = getFromCache(query);
-            if (App.OFFLINE_MODE) {
-                if (cached != null) {
-                    search.onFound(query, cached, true);
-                } else {
-                    invokePendingAndClose(query, withUserChanges, handler -> handler.onFailure(FAILED_OFFLINE));
-                }
-                return;
-            }
-            RestResponseHandler restResponseHandler = new RestResponseHandler() {
-                @Override
-                public void onSuccess(final int statusCode, final Client.Headers headers, final JSONObject obj, final JSONArray arr) {
-                    thread.run(() -> {
-                        log.v(TAG, "searchByQuery | query=", query, " || onSuccess | statusCode=", statusCode, " | data=", obj);
-                        if (statusCode == 200 && obj != null) {
-                            T schedule = search.onGetScheduleFromJson(query, source, obj);
-                            if (schedule != null) {
-                                search.onFound(query, schedule, false);
-                                return;
-                            }
-                        }
-                        if (cached != null) {
-                            search.onFound(query, cached, true);
-                        } else {
-                            invokePendingAndClose(query, withUserChanges, handler -> handler.onFailure(statusCode, headers, FAILED_LOAD));
-                        }
-                    }, throwable -> {
-                        invokePendingAndClose(query, withUserChanges, handler -> handler.onFailure(statusCode, headers, FAILED_LOAD));
-                    });
-                }
-                @Override
-                public void onFailure(final int statusCode, final Client.Headers headers, final int state) {
-                    log.v(TAG, "searchByQuery | query=", query, " || onFailure | statusCode=", statusCode, " | state=", state);
-                    if (cached != null) {
-                        search.onFound(query, cached, true);
-                    } else {
-                        invokePendingAndClose(query, withUserChanges, handler -> handler.onFailure(statusCode, headers, state));
-                    }
-                }
-                @Override
-                public void onProgress(final int state) {
-                    log.v(TAG, "searchByQuery | query=", query, " || onProgress | state=", state);
-                    invokePending(query, withUserChanges, handler -> handler.onProgress(state));
-                }
-                @Override
-                public void onNewRequest(final Client.Request request) {
-                    invokePending(query, withUserChanges, handler -> handler.onNewRequest(request));
-                }
-            };
-            if (isForceRefresh(cached, refreshRate)) {
-                log.v(TAG, "searchByQuery | query=", query, " | force refresh");
-                search.onWebRequest(query, source, restResponseHandler);
-                return;
-            }
+    protected void searchByQuery(String query, @Source String source, int refreshRate, boolean withUserChanges, SearchByQuery<T> search) throws Exception {
+        log.v(TAG, "searchByQuery | query=", query, " | source=", source, " | refreshRate=", refreshRate, " | withUserChanges=", withUserChanges);
+        T cached = getFromCache(query);
+        if (App.OFFLINE_MODE) {
             if (cached != null) {
                 search.onFound(query, cached, true);
             } else {
-                search.onWebRequest(query, source, restResponseHandler);
+                invokePendingAndClose(query, withUserChanges, handler -> handler.onFailure(FAILED_OFFLINE));
             }
-        });
+            return;
+        }
+        RestResponseHandler restResponseHandler = new RestResponseHandler() {
+            @Override
+            public void onSuccess(int code, Client.Headers headers, JSONObject obj, JSONArray arr) {
+                try {
+                    log.v(TAG, "searchByQuery | query=", query, " || onSuccess | code=", code, " | data=", obj);
+                    if (code == 200 && obj != null) {
+                        T schedule = search.onGetScheduleFromJson(query, source, obj);
+                        if (schedule != null) {
+                            search.onFound(query, schedule, false);
+                            return;
+                        }
+                    }
+                    if (cached != null) {
+                        search.onFound(query, cached, true);
+                    } else {
+                        invokePendingAndClose(query, withUserChanges, handler -> handler.onFailure(code, headers, FAILED_LOAD));
+                    }
+                } catch (Throwable throwable) {
+                    invokePendingAndClose(query, withUserChanges, handler -> handler.onFailure(code, headers, FAILED_LOAD));
+                }
+            }
+            @Override
+            public void onFailure(int code, Client.Headers headers, int state) {
+                log.v(TAG, "searchByQuery | query=", query, " || onFailure | code=", code, " | state=", state);
+                if (cached != null && state != Client.FAILED_INTERRUPTED) {
+                    search.onFound(query, cached, true);
+                } else {
+                    invokePendingAndClose(query, withUserChanges, handler -> handler.onFailure(code, headers, state));
+                }
+            }
+            @Override
+            public void onProgress(int state) {
+                log.v(TAG, "searchByQuery | query=", query, " || onProgress | state=", state);
+                invokePending(query, withUserChanges, handler -> handler.onProgress(state));
+            }
+            @Override
+            public void onNewRequest(final Client.Request request) {
+                invokePending(query, withUserChanges, handler -> handler.onNewRequest(request));
+            }
+        };
+        if (isForceRefresh(cached, refreshRate)) {
+            log.v(TAG, "searchByQuery | query=", query, " | force refresh");
+            search.onWebRequest(query, source, restResponseHandler);
+            return;
+        }
+        if (cached != null) {
+            search.onFound(query, cached, true);
+        } else {
+            search.onWebRequest(query, source, restResponseHandler);
+        }
     }
 
     protected interface SearchByQuery<J extends ScheduleJsonEntity> {

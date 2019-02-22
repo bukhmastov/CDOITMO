@@ -1,6 +1,5 @@
 package com.bukhmastov.cdoitmo.object.schedule.impl;
 
-import com.bukhmastov.cdoitmo.event.bus.EventBus;
 import com.bukhmastov.cdoitmo.event.bus.annotation.Event;
 import com.bukhmastov.cdoitmo.event.events.ClearCacheEvent;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
@@ -12,11 +11,6 @@ import com.bukhmastov.cdoitmo.network.handlers.ResponseHandler;
 import com.bukhmastov.cdoitmo.network.handlers.RestResponseHandler;
 import com.bukhmastov.cdoitmo.network.model.Client;
 import com.bukhmastov.cdoitmo.object.schedule.ScheduleAttestations;
-import com.bukhmastov.cdoitmo.util.Log;
-import com.bukhmastov.cdoitmo.util.StoragePref;
-import com.bukhmastov.cdoitmo.util.TextUtils;
-import com.bukhmastov.cdoitmo.util.Thread;
-import com.bukhmastov.cdoitmo.util.Time;
 
 import org.json.JSONObject;
 
@@ -29,19 +23,7 @@ public class ScheduleAttestationsImpl extends ScheduleImpl<SAttestations> implem
     private static final String TAG = "ScheduleExams";
 
     @Inject
-    Log log;
-    @Inject
-    Thread thread;
-    @Inject
-    EventBus eventBus;
-    @Inject
-    StoragePref storagePref;
-    @Inject
     DeIfmoClient deIfmoClient;
-    @Inject
-    Time time;
-    @Inject
-    TextUtils textUtils;
 
     public ScheduleAttestationsImpl() {
         AppComponentProvider.getComponent().inject(this);
@@ -57,94 +39,87 @@ public class ScheduleAttestationsImpl extends ScheduleImpl<SAttestations> implem
     }
 
     @Override
-    protected void searchPersonal(int refreshRate, boolean forceToCache, boolean withUserChanges) {
-        thread.run(() -> {
-            log.v(TAG, "searchPersonal | personal schedule is unavailable");
-            invokePendingAndClose("personal", withUserChanges, handler -> handler.onFailure(FAILED_INVALID_QUERY));
-        });
+    protected void searchPersonal(int refreshRate, boolean forceToCache, boolean withUserChanges) throws Exception {
+        log.v(TAG, "searchPersonal | personal schedule is unavailable");
+        invokePendingAndClose("personal", withUserChanges, handler -> handler.onFailure(FAILED_INVALID_QUERY));
     }
 
     @Override
-    protected void searchGroup(String group, int refreshRate, boolean forceToCache, boolean withUserChanges) {
-        thread.run(() -> {
-            @Source String source = SOURCE.IFMO;
-            log.v(TAG, "searchGroup | group=", group, " | refreshRate=", refreshRate, " | forceToCache=", forceToCache, " | withUserChanges=", withUserChanges, " | source=", source);
-            searchByQuery(group, source, refreshRate, withUserChanges, new SearchByQuery<SAttestations>() {
-                @Override
-                public void onWebRequest(String query, String source, RestResponseHandler restResponseHandler) {
-                    switch (source) {
-                        case SOURCE.ISU: invokePendingAndClose(query, withUserChanges, handler -> handler.onFailure(FAILED_INVALID_QUERY)); break;
-                        case SOURCE.IFMO: {
-                            int term = getTerm();
-                            deIfmoClient.get(context, "index.php?node=schedule&index=sched&semiId=" + String.valueOf(term) + "&group=" + textUtils.prettifyGroupNumber(group), null, new ResponseHandler() {
-                                @Override
-                                public void onSuccess(final int statusCode, final Client.Headers headers, final String response) {
-                                    thread.run(() -> {
-                                        SAttestations schedule = new ScheduleAttestationsParser(response, term).parse();
-                                        if (schedule != null) {
-                                            schedule.setQuery(query);
-                                            schedule.setType("group");
-                                            schedule.setTitle(textUtils.prettifyGroupNumber(group));
-                                            schedule.setTimestamp(time.getTimeInMillis());
-                                            restResponseHandler.onSuccess(statusCode, headers, schedule.toJson(), null);
-                                        } else {
-                                            restResponseHandler.onFailure(statusCode, headers, FAILED_LOAD);
-                                        }
-                                    }, throwable -> {
-                                        restResponseHandler.onFailure(statusCode, headers, FAILED_LOAD);
-                                    });
+    protected void searchGroup(String group, int refreshRate, boolean forceToCache, boolean withUserChanges) throws Exception {
+        @Source String source = SOURCE.IFMO;
+        log.v(TAG, "searchGroup | group=", group, " | refreshRate=", refreshRate,
+                " | forceToCache=", forceToCache, " | withUserChanges=", withUserChanges, " | source=", source);
+        searchByQuery(group, source, refreshRate, withUserChanges, new SearchByQuery<SAttestations>() {
+            @Override
+            public void onWebRequest(String query, String source, RestResponseHandler handler) {
+                switch (source) {
+                    case SOURCE.ISU: invokePendingAndClose(query, withUserChanges, h -> h.onFailure(FAILED_INVALID_QUERY)); break;
+                    case SOURCE.IFMO: {
+                        int term = getTerm();
+                        String url = "index.php?node=schedule&index=sched&semiId=" + String.valueOf(term) +
+                                "&group=" + textUtils.prettifyGroupNumber(group);
+                        deIfmoClient.get(context, url, null, new ResponseHandler() {
+                            @Override
+                            public void onSuccess(int code, Client.Headers headers, String response) {
+                                try {
+                                    SAttestations schedule = new ScheduleAttestationsParser(response, term).parse();
+                                    if (schedule != null) {
+                                        schedule.setQuery(query);
+                                        schedule.setType("group");
+                                        schedule.setTitle(textUtils.prettifyGroupNumber(group));
+                                        schedule.setTimestamp(time.getTimeInMillis());
+                                        handler.onSuccess(code, headers, schedule.toJson(), null);
+                                    } else {
+                                        handler.onFailure(code, headers, FAILED_LOAD);
+                                    }
+                                } catch (Throwable throwable) {
+                                    handler.onFailure(code, headers, FAILED_LOAD);
                                 }
-                                @Override
-                                public void onFailure(int statusCode, Client.Headers headers, int state) {
-                                    restResponseHandler.onFailure(statusCode, headers, state);
-                                }
-                                @Override
-                                public void onProgress(int state) {
-                                    restResponseHandler.onProgress(state);
-                                }
-                                @Override
-                                public void onNewRequest(Client.Request request) {
-                                    restResponseHandler.onNewRequest(request);
-                                }
-                            });
-                            break;
-                        }
+                            }
+                            @Override
+                            public void onFailure(int code, Client.Headers headers, int state) {
+                                handler.onFailure(code, headers, state);
+                            }
+                            @Override
+                            public void onProgress(int state) {
+                                handler.onProgress(state);
+                            }
+                            @Override
+                            public void onNewRequest(Client.Request request) {
+                                handler.onNewRequest(request);
+                            }
+                        });
+                        break;
                     }
                 }
-                @Override
-                public SAttestations onGetScheduleFromJson(String query, String source, JSONObject json) throws Exception {
-                    return getNewInstance().fromJson(json);
-                }
-                @Override
-                public void onFound(String query, SAttestations schedule, boolean fromCache) {
-                    onScheduleFound(query, schedule, forceToCache, fromCache, withUserChanges);
-                }
-            });
+            }
+            @Override
+            public SAttestations onGetScheduleFromJson(String query, String source, JSONObject json) throws Exception {
+                return getNewInstance().fromJson(json);
+            }
+            @Override
+            public void onFound(String query, SAttestations schedule, boolean fromCache) {
+                onScheduleFound(query, schedule, forceToCache, fromCache, withUserChanges);
+            }
         });
     }
 
     @Override
-    protected void searchRoom(String room, int refreshRate, boolean forceToCache, boolean withUserChanges) {
-        thread.run(() -> {
-            log.v(TAG, "searchRoom | rooms schedule is unavailable");
-            invokePendingAndClose(room, withUserChanges, handler -> handler.onFailure(FAILED_INVALID_QUERY));
-        });
+    protected void searchRoom(String room, int refreshRate, boolean forceToCache, boolean withUserChanges) throws Exception {
+        log.v(TAG, "searchRoom | rooms schedule is unavailable");
+        invokePendingAndClose(room, withUserChanges, handler -> handler.onFailure(FAILED_INVALID_QUERY));
     }
 
     @Override
-    protected void searchTeacher(String teacherId, int refreshRate, boolean forceToCache, boolean withUserChanges) {
-        thread.run(() -> {
-            log.v(TAG, "searchTeacher | teacher schedule is unavailable");
-            invokePendingAndClose(teacherId, withUserChanges, handler -> handler.onFailure(FAILED_INVALID_QUERY));
-        });
+    protected void searchTeacher(String teacherId, int refreshRate, boolean forceToCache, boolean withUserChanges) throws Exception {
+        log.v(TAG, "searchTeacher | teacher schedule is unavailable");
+        invokePendingAndClose(teacherId, withUserChanges, handler -> handler.onFailure(FAILED_INVALID_QUERY));
     }
 
     @Override
-    protected void searchTeachers(String lastname, boolean withUserChanges) {
-        thread.run(() -> {
-            log.v(TAG, "searchTeachers | teachers schedule is unavailable");
-            invokePendingAndClose(lastname, withUserChanges, handler -> handler.onFailure(FAILED_INVALID_QUERY));
-        });
+    protected void searchTeachers(String lastname, boolean withUserChanges) throws Exception {
+        log.v(TAG, "searchTeachers | teachers schedule is unavailable");
+        invokePendingAndClose(lastname, withUserChanges, handler -> handler.onFailure(FAILED_INVALID_QUERY));
     }
 
     @Override
@@ -190,24 +165,22 @@ public class ScheduleAttestationsImpl extends ScheduleImpl<SAttestations> implem
     }
 
     private void onScheduleFound(String query, SAttestations schedule, boolean forceToCache, boolean fromCache, boolean withUserChanges) {
-        thread.run(() -> {
-            try {
-                if (context == null || query == null || schedule == null) {
-                    log.w(TAG, "onFound | some values are null | context=", context, " | query=", query, " | data=", schedule);
-                    if (query == null) {
-                        return;
-                    }
-                    invokePendingAndClose(query, withUserChanges, handler -> handler.onFailure(FAILED_LOAD));
+        try {
+            if (context == null || query == null || schedule == null) {
+                log.w(TAG, "onFound | some values are null | context=", context, " | query=", query, " | data=", schedule);
+                if (query == null) {
                     return;
                 }
-                if (!fromCache) {
-                    putToCache(query, schedule, forceToCache);
-                }
-                invokePendingAndClose(query, withUserChanges, handler -> handler.onSuccess(schedule, fromCache));
-            } catch (Exception e) {
-                log.exception(e);
                 invokePendingAndClose(query, withUserChanges, handler -> handler.onFailure(FAILED_LOAD));
+                return;
             }
-        });
+            if (!fromCache) {
+                putToCache(query, schedule, forceToCache);
+            }
+            invokePendingAndClose(query, withUserChanges, handler -> handler.onSuccess(schedule, fromCache));
+        } catch (Exception e) {
+            log.exception(e);
+            invokePendingAndClose(query, withUserChanges, handler -> handler.onFailure(FAILED_LOAD));
+        }
     }
 }

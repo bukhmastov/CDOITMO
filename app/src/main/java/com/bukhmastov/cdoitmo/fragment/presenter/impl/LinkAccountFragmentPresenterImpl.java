@@ -113,22 +113,20 @@ public class LinkAccountFragmentPresenterImpl extends ConnectedFragmentPresenter
     }
 
     private void auth(@Type String type, String login, String password) {
-        thread.run(() -> {
-            log.v(TAG, "auth | type=", type, " | login=", login);
-            if (StringUtils.isBlank(login) || StringUtils.isBlank(password)) {
-                log.v(TAG, "auth | empty fields");
-                notificationMessage.snackBar(activity, activity.getString(R.string.fill_fields));
-                return;
-            }
-            switch (type) {
-                case ISU: authIsu(login, password); break;
-                /* Place for future types, if any */
-            }
-        });
+        log.v(TAG, "auth | type=", type, " | login=", login);
+        if (StringUtils.isBlank(login) || StringUtils.isBlank(password)) {
+            log.v(TAG, "auth | empty fields");
+            notificationMessage.snackBar(activity, activity.getString(R.string.fill_fields));
+            return;
+        }
+        switch (type) {
+            case ISU: authIsu(login, password); break;
+            /* Place for future types, if any */
+        }
     }
 
     private void authIsu(String login, String password) {
-        thread.run(() -> {
+        thread.standalone(() -> {
             storage.delete(activity, Storage.PERMANENT, Storage.USER, "user#isu#access_token");
             storage.delete(activity, Storage.PERMANENT, Storage.USER, "user#isu#refresh_token");
             storage.delete(activity, Storage.PERMANENT, Storage.USER, "user#isu#expires_at");

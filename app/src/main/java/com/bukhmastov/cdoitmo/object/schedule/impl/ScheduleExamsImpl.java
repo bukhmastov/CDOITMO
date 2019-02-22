@@ -37,183 +37,176 @@ public class ScheduleExamsImpl extends ScheduleImpl<SExams> implements ScheduleE
     }
 
     @Override
-    protected void searchPersonal(int refreshRate, boolean forceToCache, boolean withUserChanges) {
-        thread.run(() -> {
-            @Source String source = SOURCE.ISU/*getSource()*/;
-            log.v(TAG, "searchPersonal | refreshRate=", refreshRate, " | forceToCache=", forceToCache, " | withUserChanges=", withUserChanges, " | source=", source);
-            searchByQuery("personal", source, refreshRate, withUserChanges, new SearchByQuery<SExams>() {
-                @Override
-                public void onWebRequest(String query, String source, RestResponseHandler restResponseHandler) {
-                    switch (source) {
-                        case SOURCE.IFMO: // not available, using isu source
-                        case SOURCE.ISU: isuPrivateRestClient.get().get(context, "exams/personal/student/%apikey%/%isutoken%", null, restResponseHandler); break;
-                    }
+    protected void searchPersonal(int refreshRate, boolean forceToCache, boolean withUserChanges) throws Exception {
+        @Source String source = SOURCE.ISU/*getSource()*/;
+        log.v(TAG, "searchPersonal | refreshRate=", refreshRate, " | forceToCache=", forceToCache,
+                " | withUserChanges=", withUserChanges, " | source=", source);
+        searchByQuery("personal", source, refreshRate, withUserChanges, new SearchByQuery<SExams>() {
+            @Override
+            public void onWebRequest(String query, String source, RestResponseHandler handler) {
+                switch (source) {
+                    case SOURCE.IFMO: // not available, using isu source
+                    case SOURCE.ISU: isuPrivateRestClient.get().get(context, "exams/personal/student/%apikey%/%isutoken%", null, handler); break;
                 }
-                @Override
-                public SExams onGetScheduleFromJson(String query, String source, JSONObject json) throws Exception {
-                    return makeSchedule(query, source, "personal", json);
-                }
-                @Override
-                public void onFound(String query, SExams schedule, boolean fromCache) {
-                    onScheduleFound(query, schedule, forceToCache, fromCache, withUserChanges);
-                }
-            });
+            }
+            @Override
+            public SExams onGetScheduleFromJson(String query, String source, JSONObject json) throws Exception {
+                return makeSchedule(query, source, "personal", json);
+            }
+            @Override
+            public void onFound(String query, SExams schedule, boolean fromCache) {
+                onScheduleFound(query, schedule, forceToCache, fromCache, withUserChanges);
+            }
         });
     }
 
     @Override
-    protected void searchGroup(String group, int refreshRate, boolean forceToCache, boolean withUserChanges) {
-        thread.run(() -> {
-            @Source String source = getSource();
-            log.v(TAG, "searchGroup | group=", group, " | refreshRate=", refreshRate, " | forceToCache=", forceToCache, " | withUserChanges=", withUserChanges, " | source=", source);
-            searchByQuery(group, source, refreshRate, withUserChanges, new SearchByQuery<SExams>() {
-                @Override
-                public void onWebRequest(String query, String source, RestResponseHandler restResponseHandler) {
-                    switch (source) {
-                        case SOURCE.ISU: isuRestClient.get().get(context, "exams/common/group/%apikey%/" + query, null, restResponseHandler); break;
-                        case SOURCE.IFMO: {
-                            ifmoClient.get().get(context, "ru/exam/0/" + group + "/raspisanie_sessii.htm", null, new ResponseHandler() {
-                                @Override
-                                public void onSuccess(final int statusCode, final Client.Headers headers, final String response) {
-                                    thread.run(() -> {
-                                        SExams schedule = new ScheduleExamsGroupParser(response, query).parse();
-                                        if (schedule != null) {
-                                            schedule.setQuery(query);
-                                            schedule.setType("group");
-                                            schedule.setTimestamp(time.getTimeInMillis());
-                                            restResponseHandler.onSuccess(statusCode, headers, schedule.toJson(), null);
-                                        } else {
-                                            restResponseHandler.onFailure(statusCode, headers, FAILED_LOAD);
-                                        }
-                                    }, throwable -> {
-                                        restResponseHandler.onFailure(statusCode, headers, FAILED_LOAD);
-                                    });
+    protected void searchGroup(String group, int refreshRate, boolean forceToCache, boolean withUserChanges) throws Exception {
+        @Source String source = getSource();
+        log.v(TAG, "searchGroup | group=", group, " | refreshRate=", refreshRate,
+                " | forceToCache=", forceToCache, " | withUserChanges=", withUserChanges, " | source=", source);
+        searchByQuery(group, source, refreshRate, withUserChanges, new SearchByQuery<SExams>() {
+            @Override
+            public void onWebRequest(String query, String source, RestResponseHandler handler) {
+                switch (source) {
+                    case SOURCE.ISU: isuRestClient.get().get(context, "exams/common/group/%apikey%/" + query, null, handler); break;
+                    case SOURCE.IFMO: {
+                        ifmoClient.get().get(context, "ru/exam/0/" + group + "/raspisanie_sessii.htm", null, new ResponseHandler() {
+                            @Override
+                            public void onSuccess(int code, Client.Headers headers, String response) {
+                                try {
+                                    SExams schedule = new ScheduleExamsGroupParser(response, query).parse();
+                                    if (schedule != null) {
+                                        schedule.setQuery(query);
+                                        schedule.setType("group");
+                                        schedule.setTimestamp(time.getTimeInMillis());
+                                        handler.onSuccess(code, headers, schedule.toJson(), null);
+                                    } else {
+                                        handler.onFailure(code, headers, FAILED_LOAD);
+                                    }
+                                } catch (Throwable throwable) {
+                                    handler.onFailure(code, headers, FAILED_LOAD);
                                 }
-                                @Override
-                                public void onFailure(int statusCode, Client.Headers headers, int state) {
-                                    restResponseHandler.onFailure(statusCode, headers, state);
-                                }
-                                @Override
-                                public void onProgress(int state) {
-                                    restResponseHandler.onProgress(state);
-                                }
-                                @Override
-                                public void onNewRequest(Client.Request request) {
-                                    restResponseHandler.onNewRequest(request);
-                                }
-                            });
-                            break;
-                        }
+                            }
+                            @Override
+                            public void onFailure(int code, Client.Headers headers, int state) {
+                                handler.onFailure(code, headers, state);
+                            }
+                            @Override
+                            public void onProgress(int state) {
+                                handler.onProgress(state);
+                            }
+                            @Override
+                            public void onNewRequest(Client.Request request) {
+                                handler.onNewRequest(request);
+                            }
+                        });
+                        break;
                     }
                 }
-                @Override
-                public SExams onGetScheduleFromJson(String query, String source, JSONObject json) throws Exception {
-                    return makeSchedule(query, source, "group", json);
-                }
-                @Override
-                public void onFound(String query, SExams schedule, boolean fromCache) {
-                    onScheduleFound(query, schedule, forceToCache, fromCache, withUserChanges);
-                }
-            });
+            }
+            @Override
+            public SExams onGetScheduleFromJson(String query, String source, JSONObject json) throws Exception {
+                return makeSchedule(query, source, "group", json);
+            }
+            @Override
+            public void onFound(String query, SExams schedule, boolean fromCache) {
+                onScheduleFound(query, schedule, forceToCache, fromCache, withUserChanges);
+            }
         });
     }
 
     @Override
-    protected void searchRoom(String room, int refreshRate, boolean forceToCache, boolean withUserChanges) {
-        thread.run(() -> {
-            log.v(TAG, "searchRoom | rooms schedule is unavailable");
-            invokePendingAndClose(room, withUserChanges, handler -> handler.onFailure(FAILED_INVALID_QUERY));
+    protected void searchRoom(String room, int refreshRate, boolean forceToCache, boolean withUserChanges) throws Exception {
+        log.v(TAG, "searchRoom | rooms schedule is unavailable");
+        invokePendingAndClose(room, withUserChanges, handler -> handler.onFailure(FAILED_INVALID_QUERY));
+    }
+
+    @Override
+    protected void searchTeacher(String teacherId, int refreshRate, boolean forceToCache, boolean withUserChanges) throws Exception {
+        @Source String source = getSource();
+        log.v(TAG, "searchTeacher | teacherId=", teacherId, " | refreshRate=", refreshRate,
+                " | forceToCache=", forceToCache, " | withUserChanges=", withUserChanges, " | source=", source);
+        searchByQuery(teacherId, source, refreshRate, withUserChanges, new SearchByQuery<SExams>() {
+            @Override
+            public void onWebRequest(String query, String source, RestResponseHandler handler) {
+                switch (source) {
+                    case SOURCE.ISU: isuRestClient.get().get(context, "exams/common/teacher/%apikey%/" + query, null, handler); break;
+                    case SOURCE.IFMO: {
+                        ifmoClient.get().get(context, "ru/exam/3/" + query + "/raspisanie_sessii.htm", null, new ResponseHandler() {
+                            @Override
+                            public void onSuccess(int code, Client.Headers headers, String response) {
+                                try {
+                                    SExams schedule = new ScheduleExamsTeacherParser(response, query).parse();
+                                    if (schedule != null) {
+                                        schedule.setQuery(query);
+                                        schedule.setType("teacher");
+                                        schedule.setTimestamp(time.getTimeInMillis());
+                                        handler.onSuccess(code, headers, schedule.toJson(), null);
+                                    } else {
+                                        handler.onFailure(code, headers, FAILED_LOAD);
+                                    }
+                                } catch (Throwable throwable) {
+                                    handler.onFailure(code, headers, FAILED_LOAD);
+                                }
+                            }
+                            @Override
+                            public void onFailure(int code, Client.Headers headers, int state) {
+                                handler.onFailure(code, headers, state);
+                            }
+                            @Override
+                            public void onProgress(int state) {
+                                handler.onProgress(state);
+                            }
+                            @Override
+                            public void onNewRequest(Client.Request request) {
+                                handler.onNewRequest(request);
+                            }
+                        });
+                        break;
+                    }
+                }
+            }
+            @Override
+            public SExams onGetScheduleFromJson(String query, String source, JSONObject json) throws Exception {
+                return makeSchedule(query, source, "teacher", json);
+            }
+            @Override
+            public void onFound(String query, SExams schedule, boolean fromCache) {
+                onScheduleFound(query, schedule, forceToCache, fromCache, withUserChanges);
+            }
         });
     }
 
     @Override
-    protected void searchTeacher(String teacherId, int refreshRate, boolean forceToCache, boolean withUserChanges) {
-        thread.run(() -> {
-            @Source String source = getSource();
-            log.v(TAG, "searchTeacher | teacherId=", teacherId, " | refreshRate=", refreshRate, " | forceToCache=", forceToCache, " | withUserChanges=", withUserChanges, " | source=", source);
-            searchByQuery(teacherId, source, refreshRate, withUserChanges, new SearchByQuery<SExams>() {
-                @Override
-                public void onWebRequest(String query, String source, RestResponseHandler restResponseHandler) {
-                    switch (source) {
-                        case SOURCE.ISU: isuRestClient.get().get(context, "exams/common/teacher/%apikey%/" + query, null, restResponseHandler); break;
-                        case SOURCE.IFMO: {
-                            ifmoClient.get().get(context, "ru/exam/3/" + query + "/raspisanie_sessii.htm", null, new ResponseHandler() {
-                                @Override
-                                public void onSuccess(final int statusCode, final Client.Headers headers, final String response) {
-                                    thread.run(() -> {
-                                        SExams schedule = new ScheduleExamsTeacherParser(response, query).parse();
-                                        if (schedule != null) {
-                                            schedule.setQuery(query);
-                                            schedule.setType("teacher");
-                                            schedule.setTimestamp(time.getTimeInMillis());
-                                            restResponseHandler.onSuccess(statusCode, headers, schedule.toJson(), null);
-                                        } else {
-                                            restResponseHandler.onFailure(statusCode, headers, FAILED_LOAD);
-                                        }
-                                    }, throwable -> {
-                                        restResponseHandler.onFailure(statusCode, headers, FAILED_LOAD);
-                                    });
-                                }
-                                @Override
-                                public void onFailure(int statusCode, Client.Headers headers, int state) {
-                                    restResponseHandler.onFailure(statusCode, headers, state);
-                                }
-                                @Override
-                                public void onProgress(int state) {
-                                    restResponseHandler.onProgress(state);
-                                }
-                                @Override
-                                public void onNewRequest(Client.Request request) {
-                                    restResponseHandler.onNewRequest(request);
-                                }
-                            });
-                            break;
-                        }
-                    }
+    protected void searchTeachers(String lastname, boolean withUserChanges) throws Exception {
+        @Source String source = SOURCE.IFMO/*getSource()*/;
+        log.v(TAG, "searchTeachers | lastname=", lastname);
+        searchByQuery(lastname, source, 0, withUserChanges, new SearchByQuery<SExams>() {
+            @Override
+            public void onWebRequest(String query, String source, RestResponseHandler handler) {
+                switch (source) {
+                    case SOURCE.ISU: // not available, using ifmo source
+                    case SOURCE.IFMO: ifmoRestClient.get().get(context, "schedule_person?lastname=" + lastname, null, handler); break;
                 }
-                @Override
-                public SExams onGetScheduleFromJson(String query, String source, JSONObject json) throws Exception {
-                    return makeSchedule(query, source, "teacher", json);
+            }
+            @Override
+            public SExams onGetScheduleFromJson(String query, String source, JSONObject json) throws Exception {
+                STeachers teachers = new STeachers().fromJson(json);
+                if (teachers == null) {
+                    return null;
                 }
-                @Override
-                public void onFound(String query, SExams schedule, boolean fromCache) {
-                    onScheduleFound(query, schedule, forceToCache, fromCache, withUserChanges);
-                }
-            });
-        });
-    }
-
-    @Override
-    protected void searchTeachers(String lastname, boolean withUserChanges) {
-        thread.run(() -> {
-            @Source String source = SOURCE.IFMO/*getSource()*/;
-            log.v(TAG, "searchTeachers | lastname=", lastname);
-            searchByQuery(lastname, source, 0, withUserChanges, new SearchByQuery<SExams>() {
-                @Override
-                public void onWebRequest(String query, String source, RestResponseHandler restResponseHandler) {
-                    switch (source) {
-                        case SOURCE.ISU: // not available, using ifmo source
-                        case SOURCE.IFMO: ifmoRestClient.get().get(context, "schedule_person?lastname=" + lastname, null, restResponseHandler); break;
-                    }
-                }
-                @Override
-                public SExams onGetScheduleFromJson(String query, String source, JSONObject json) throws Exception {
-                    STeachers teachers = new STeachers().fromJson(json);
-                    if (teachers == null) {
-                        return null;
-                    }
-                    SExams schedule = new SExams();
-                    schedule.setQuery(query);
-                    schedule.setType("teachers");
-                    schedule.setTimestamp(time.getTimeInMillis());
-                    schedule.setTeachers(teachers);
-                    return schedule;
-                }
-                @Override
-                public void onFound(String query, SExams schedule, boolean fromCache) {
-                    onScheduleFound(query, schedule, false, false, withUserChanges);
-                }
-            });
+                SExams schedule = new SExams();
+                schedule.setQuery(query);
+                schedule.setType("teachers");
+                schedule.setTimestamp(time.getTimeInMillis());
+                schedule.setTeachers(teachers);
+                return schedule;
+            }
+            @Override
+            public void onFound(String query, SExams schedule, boolean fromCache) {
+                onScheduleFound(query, schedule, false, false, withUserChanges);
+            }
         });
     }
 
@@ -265,7 +258,7 @@ public class ScheduleExamsImpl extends ScheduleImpl<SExams> implements ScheduleE
     }
 
     private void onScheduleFound(String query, SExams schedule, boolean forceToCache, boolean fromCache, boolean withUserChanges) {
-        thread.run(() -> {
+        try {
             if (context == null || query == null || schedule == null) {
                 log.w(TAG, "onFound | some values are null | context=", context, " | query=", query, " | data=", schedule);
                 if (query == null) {
@@ -290,9 +283,9 @@ public class ScheduleExamsImpl extends ScheduleImpl<SExams> implements ScheduleE
                 return;
             }
             invokePendingAndClose(query, withUserChanges, handler -> handler.onFailure(FAILED_NOT_FOUND));
-        }, throwable -> {
+        } catch (Throwable throwable) {
             log.exception(throwable);
             invokePendingAndClose(query, withUserChanges, handler -> handler.onFailure(FAILED_LOAD));
-        });
+        }
     }
 }

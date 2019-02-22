@@ -37,6 +37,8 @@ import org.json.JSONObject;
 
 import javax.inject.Inject;
 
+import static com.bukhmastov.cdoitmo.util.Thread.UPC;
+
 public class UniversityPersonCardActivityPresenterImpl implements UniversityPersonCardActivityPresenter, SwipeRefreshLayout.OnRefreshListener {
 
     private static final String TAG = "UniversityPersonCard";
@@ -73,7 +75,8 @@ public class UniversityPersonCardActivityPresenterImpl implements UniversityPers
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
-        thread.runOnUI(() -> {
+        thread.initialize(UPC);
+        thread.runOnUI(UPC, () -> {
             log.i(TAG, "Activity created");
             Intent intent = activity.getIntent();
             if (intent == null) {
@@ -116,7 +119,7 @@ public class UniversityPersonCardActivityPresenterImpl implements UniversityPers
 
     @Override
     public void onResume() {
-        thread.runOnUI(() -> {
+        thread.run(UPC, () -> {
             log.v(TAG, "resumed");
             firebaseAnalyticsProvider.setCurrentScreen(activity);
             if (!loaded) {
@@ -128,8 +131,8 @@ public class UniversityPersonCardActivityPresenterImpl implements UniversityPers
 
     @Override
     public void onPause() {
-        thread.runOnUI(() -> {
-            log.v(TAG, "paused");
+        log.v(TAG, "paused");
+        thread.standalone(() -> {
             if (requestHandle != null && requestHandle.cancel()) {
                 loaded = false;
             }
@@ -138,15 +141,14 @@ public class UniversityPersonCardActivityPresenterImpl implements UniversityPers
 
     @Override
     public void onDestroy() {
-        thread.runOnUI(() -> {
-            log.v(TAG, "Fragment destroyed");
-            loaded = false;
-        });
+        log.v(TAG, "Fragment destroyed");
+        loaded = false;
+        thread.interrupt(UPC);
     }
 
     @Override
     public void onRefresh() {
-        thread.runOnUI(() -> {
+        thread.run(UPC, () -> {
             log.v(TAG, "refreshing");
             person = null;
             load();
@@ -154,22 +156,22 @@ public class UniversityPersonCardActivityPresenterImpl implements UniversityPers
     }
 
     private void load() {
-        thread.run(() -> {
+        thread.run(UPC, () -> {
             if (person != null) {
                 display();
                 return;
             }
             loadProvider(new RestResponseHandler() {
                 @Override
-                public void onSuccess(final int statusCode, final Client.Headers headers, final JSONObject obj, final JSONArray arr) {
-                    thread.runOnUI(() -> {
+                public void onSuccess(int code, Client.Headers headers, JSONObject obj, JSONArray arr) {
+                    thread.runOnUI(UPC, () -> {
                         SwipeRefreshLayout swipe = activity.findViewById(R.id.person_swipe);
                         if (swipe != null) {
                             swipe.setRefreshing(false);
                         }
                     });
-                    thread.run(() -> {
-                        if (statusCode == 200 && obj != null) {
+                    thread.run(UPC, () -> {
+                        if (code == 200 && obj != null) {
                             UPerson data = new UPerson().fromJson(obj);
                             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
                                 data.setPost(android.text.Html.fromHtml(data.getPost(), android.text.Html.FROM_HTML_MODE_LEGACY).toString());
@@ -187,14 +189,14 @@ public class UniversityPersonCardActivityPresenterImpl implements UniversityPers
                     });
                 }
                 @Override
-                public void onFailure(final int statusCode, final Client.Headers headers, final int state) {
-                    thread.runOnUI(() -> {
-                        log.v(TAG, "load | statusCode = ", statusCode, " | failure ", state);
+                public void onFailure(int code, Client.Headers headers, int state) {
+                    thread.runOnUI(UPC, () -> {
+                        log.v(TAG, "load | code = ", code, " | failure ", state);
                         SwipeRefreshLayout swipe = activity.findViewById(R.id.person_swipe);
                         if (swipe != null) {
                             swipe.setRefreshing(false);
                         }
-                        if (statusCode == 404) {
+                        if (code == 404) {
                             loadNotFound();
                             return;
                         }
@@ -214,7 +216,7 @@ public class UniversityPersonCardActivityPresenterImpl implements UniversityPers
                                 TextView message = activity.findViewById(R.id.try_again_message);
                                 if (message != null) {
                                     switch (state) {
-                                        case IfmoRestClient.FAILED_SERVER_ERROR:   message.setText(IfmoRestClient.getFailureMessage(activity, statusCode)); break;
+                                        case IfmoRestClient.FAILED_SERVER_ERROR:   message.setText(IfmoRestClient.getFailureMessage(activity, code)); break;
                                         case IfmoRestClient.FAILED_CORRUPTED_JSON: message.setText(R.string.server_provided_corrupted_json); break;
                                     }
                                 }
@@ -230,17 +232,19 @@ public class UniversityPersonCardActivityPresenterImpl implements UniversityPers
                     });
                 }
                 @Override
-                public void onProgress(final int state) {
-                    thread.runOnUI(() -> {
+                public void onProgress(int state) {
+                    thread.runOnUI(UPC, () -> {
                         log.v(TAG, "load | progress ", state);
-                        if (firstLoad) {
-                            activity.draw(R.layout.state_loading_text);
-                            TextView message = activity.findViewById(R.id.loading_message);
-                            if (message != null) {
-                                switch (state) {
-                                    case IfmoRestClient.STATE_HANDLING: message.setText(R.string.loading); break;
-                                }
-                            }
+                        if (!firstLoad) {
+                            return;
+                        }
+                        activity.draw(R.layout.state_loading_text);
+                        TextView message = activity.findViewById(R.id.loading_message);
+                        if (message == null) {
+                            return;
+                        }
+                        switch (state) {
+                            case IfmoRestClient.STATE_HANDLING: message.setText(R.string.loading); break;
                         }
                     });
                 }
@@ -260,7 +264,7 @@ public class UniversityPersonCardActivityPresenterImpl implements UniversityPers
     }
 
     private void loadFailed() {
-        thread.runOnUI(() -> {
+        thread.runOnUI(UPC, () -> {
             log.v(TAG, "loadFailed");
             activity.draw(R.layout.state_failed_button);
             TextView message = activity.findViewById(R.id.try_again_message);
@@ -277,10 +281,10 @@ public class UniversityPersonCardActivityPresenterImpl implements UniversityPers
     }
 
     private void loadNotFound() {
-        thread.runOnUI(() -> {
+        thread.runOnUI(UPC, () -> {
             log.v(TAG, "loadNotFound");
             activity.draw(R.layout.state_nothing_to_display_person);
-            activity.findViewById(R.id.web).setOnClickListener(view -> thread.run(() -> {
+            activity.findViewById(R.id.web).setOnClickListener(view -> thread.run(UPC, () -> {
                 Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("http://www.ifmo.ru/ru/viewperson/" + pid + "/"));
                 eventBus.fire(new OpenIntentEvent(intent));
             }));
@@ -290,7 +294,7 @@ public class UniversityPersonCardActivityPresenterImpl implements UniversityPers
     }
 
     private void display() {
-        thread.runOnUI(() -> {
+        thread.runOnUI(UPC, () -> {
             if (person == null) {
                 loadFailed();
                 return;
@@ -301,7 +305,7 @@ public class UniversityPersonCardActivityPresenterImpl implements UniversityPers
             // кнопка назад
             activity.findViewById(R.id.back).setOnClickListener(v -> activity.finish());
             // кнопка сайта
-            activity.findViewById(R.id.web).setOnClickListener(view -> thread.run(() -> {
+            activity.findViewById(R.id.web).setOnClickListener(view -> thread.run(UPC, () -> {
                 if (person == null) {
                     return;
                 }
@@ -329,7 +333,7 @@ public class UniversityPersonCardActivityPresenterImpl implements UniversityPers
                     String[] phones = person.getPhone().trim().split("[;,]");
                     for (String phone : phones) {
                         if (StringUtils.isNotBlank(phone)) {
-                            infoConnectContainer.addView(getConnectContainer(R.drawable.ic_phone, phone.trim(), exists, v -> thread.run(() -> {
+                            infoConnectContainer.addView(getConnectContainer(R.drawable.ic_phone, phone.trim(), exists, v -> thread.run(UPC, () -> {
                                 Intent intent = new Intent(Intent.ACTION_DIAL, Uri.parse("tel:" + phone.trim()));
                                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                                 eventBus.fire(new OpenIntentEvent(intent));
@@ -342,7 +346,7 @@ public class UniversityPersonCardActivityPresenterImpl implements UniversityPers
                     String[] emails = person.getEmail().trim().split("[;,]");
                     for (String email : emails) {
                         if (StringUtils.isNotBlank(email)) {
-                            infoConnectContainer.addView(getConnectContainer(R.drawable.ic_email, email.trim(), exists, v -> thread.run(() -> {
+                            infoConnectContainer.addView(getConnectContainer(R.drawable.ic_email, email.trim(), exists, v -> thread.run(UPC, () -> {
                                 Intent intent = new Intent(Intent.ACTION_SEND);
                                 intent.setType("message/rfc822");
                                 intent.putExtra(Intent.EXTRA_EMAIL, new String[]{email.trim()});
@@ -357,7 +361,7 @@ public class UniversityPersonCardActivityPresenterImpl implements UniversityPers
                     String[] webs = person.getWww().trim().split("[;,]");
                     for (String web : webs) {
                         if (StringUtils.isNotBlank(web)) {
-                            infoConnectContainer.addView(getConnectContainer(R.drawable.ic_web, web.trim(), exists, v -> thread.run(() -> {
+                            infoConnectContainer.addView(getConnectContainer(R.drawable.ic_web, web.trim(), exists, v -> thread.run(UPC, () -> {
                                 Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(web.trim()));
                                 eventBus.fire(new OpenIntentEvent(intent));
                             })));

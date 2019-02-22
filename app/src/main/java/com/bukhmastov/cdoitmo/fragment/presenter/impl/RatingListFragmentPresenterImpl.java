@@ -45,6 +45,8 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
+import static com.bukhmastov.cdoitmo.util.Thread.RAL;
+
 public class RatingListFragmentPresenterImpl extends ConnectedFragmentWithDataPresenterImpl<RatingTopList>
         implements RatingListFragmentPresenter, SwipeRefreshLayout.OnRefreshListener {
 
@@ -98,7 +100,7 @@ public class RatingListFragmentPresenterImpl extends ConnectedFragmentWithDataPr
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
-        thread.run(() -> {
+        thread.run(RAL, () -> {
             log.v(TAG, "Fragment created");
             firebaseAnalyticsProvider.logCurrentScreen(activity, fragment);
             fragment.setHasOptionsMenu(true);
@@ -107,11 +109,10 @@ public class RatingListFragmentPresenterImpl extends ConnectedFragmentWithDataPr
 
     @Override
     public void onDestroy() {
-        thread.run(() -> {
-            log.v(TAG, "Fragment destroyed");
-            loaded = false;
-            fragment.clearData();
-        });
+        log.v(TAG, "Fragment destroyed");
+        loaded = false;
+        fragment.clearData();
+        thread.interrupt(RAL);
     }
 
     @Override
@@ -128,7 +129,7 @@ public class RatingListFragmentPresenterImpl extends ConnectedFragmentWithDataPr
                 case "beer": crown.setVisible(true); break;
             }
             crown.setOnMenuItemClickListener(item -> {
-                thread.runOnUI(() -> {
+                thread.runOnUI(RAL, () -> {
                     storagePref.put(activity, "pref_rating_list_icon", "crown");
                     crown.setVisible(false);
                     beer.setVisible(true);
@@ -137,7 +138,7 @@ public class RatingListFragmentPresenterImpl extends ConnectedFragmentWithDataPr
                 return false;
             });
             beer.setOnMenuItemClickListener(item -> {
-                thread.runOnUI(() -> {
+                thread.runOnUI(RAL, () -> {
                     storagePref.put(activity, "pref_rating_list_icon", "beer");
                     beer.setVisible(false);
                     crown.setVisible(true);
@@ -150,8 +151,8 @@ public class RatingListFragmentPresenterImpl extends ConnectedFragmentWithDataPr
 
     @Override
     public void onPause() {
-        thread.run(() -> {
-            log.v(TAG, "Fragment paused");
+        log.v(TAG, "Fragment paused");
+        thread.standalone(() -> {
             if (requestHandle != null && requestHandle.cancel()) {
                 loaded = false;
             }
@@ -160,7 +161,7 @@ public class RatingListFragmentPresenterImpl extends ConnectedFragmentWithDataPr
 
     @Override
     public void onViewCreated() {
-        thread.runOnUI(() -> {
+        thread.runOnUI(RAL, () -> {
             activity.updateToolbar(activity, activity.getString(R.string.top_rating), R.drawable.ic_rating);
             Bundle extras = fragment.getArguments();
             if (extras == null) {
@@ -195,14 +196,14 @@ public class RatingListFragmentPresenterImpl extends ConnectedFragmentWithDataPr
     }
 
     protected void load() {
-        thread.run(() -> {
+        thread.run(RAL, () -> {
             log.v(TAG, "load");
             activity.updateToolbar(activity, activity.getString(R.string.top_rating), R.drawable.ic_rating);
             minePosition = -1;
             mineFaculty = "";
-            thread.runOnUI(() -> hideShareButton(fragment.toolbar()));
+            thread.runOnUI(RAL, () -> hideShareButton(fragment.toolbar()));
             if (App.OFFLINE_MODE) {
-                thread.runOnUI(() -> {
+                thread.runOnUI(RAL, () -> {
                     notificationMessage.snackBar(activity, activity.getString(R.string.offline_mode_on));
                     fragment.draw(R.layout.state_offline_text);
                     View reload = fragment.container().findViewById(R.id.offline_reload);
@@ -221,23 +222,19 @@ public class RatingListFragmentPresenterImpl extends ConnectedFragmentWithDataPr
             }
             deIfmoClient.get(activity, "index.php?node=rating&std&depId=" + faculty + "&year=" + course + "&app=" + years, null, new ResponseHandler() {
                 @Override
-                public void onSuccess(final int statusCode, final Client.Headers headers, final String response) {
-                    thread.run(() -> {
-                        log.v(TAG, "load | success | statusCode=", statusCode);
-                        if (statusCode == 200) {
-                            RatingTopList ratingTopList = new RatingTopListParser(response, storage.get(activity, Storage.PERMANENT, Storage.USER, "user#name")).parse();
-                            setData(ratingTopList);
-                            display(ratingTopList);
-                            return;
-                        }
-                        loadFailed();
-                    }, throwable -> {
-                        loadFailed();
-                    });
+                public void onSuccess(int code, Client.Headers headers, String response) {
+                    log.v(TAG, "load | success | code=", code);
+                    if (code == 200) {
+                        RatingTopList ratingTopList = new RatingTopListParser(response, storage.get(activity, Storage.PERMANENT, Storage.USER, "user#name")).parse();
+                        setData(ratingTopList);
+                        display(ratingTopList);
+                        return;
+                    }
+                    loadFailed();
                 }
                 @Override
-                public void onFailure(final int statusCode, final Client.Headers headers, final int state) {
-                    thread.runOnUI(() -> {
+                public void onFailure(int code, Client.Headers headers, int state) {
+                    thread.runOnUI(RAL, () -> {
                         log.v(TAG, "load | failure ", state);
                         switch (state) {
                             case DeIfmoClient.FAILED_OFFLINE: {
@@ -255,9 +252,9 @@ public class RatingListFragmentPresenterImpl extends ConnectedFragmentWithDataPr
                                     TextView message = fragment.container().findViewById(R.id.try_again_message);
                                     if (message != null) {
                                         if (activity != null) {
-                                            message.setText(DeIfmoClient.getFailureMessage(activity, statusCode));
+                                            message.setText(DeIfmoClient.getFailureMessage(activity, code));
                                         } else {
-                                            message.setText(DeIfmoClient.getFailureMessage(statusCode));
+                                            message.setText(DeIfmoClient.getFailureMessage(code));
                                         }
                                     }
                                 }
@@ -273,8 +270,8 @@ public class RatingListFragmentPresenterImpl extends ConnectedFragmentWithDataPr
                     });
                 }
                 @Override
-                public void onProgress(final int state) {
-                    thread.runOnUI(() -> {
+                public void onProgress(int state) {
+                    thread.runOnUI(RAL, () -> {
                         log.v(TAG, "load | progress ", state);
                         fragment.draw(R.layout.state_loading_text);
                         TextView message = fragment.container().findViewById(R.id.loading_message);
@@ -298,7 +295,7 @@ public class RatingListFragmentPresenterImpl extends ConnectedFragmentWithDataPr
     }
 
     private void loadFailed() {
-        thread.runOnUI(() -> {
+        thread.runOnUI(RAL, () -> {
             log.v(TAG, "loadFailed");
             fragment.draw(R.layout.state_failed_button);
             View reload = fragment.container().findViewById(R.id.try_again_reload);
@@ -316,7 +313,7 @@ public class RatingListFragmentPresenterImpl extends ConnectedFragmentWithDataPr
     }
 
     private void display(RatingTopList data) {
-        thread.run(() -> {
+        thread.run(RAL, () -> {
             log.v(TAG, "display");
             if (data == null) {
                 loadFailed();
@@ -326,7 +323,7 @@ public class RatingListFragmentPresenterImpl extends ConnectedFragmentWithDataPr
             activity.updateToolbar(activity, title, R.drawable.ic_rating);
             minePosition = -1;
             mineFaculty = "";
-            thread.runOnUI(() -> hideShareButton(fragment.toolbar()));
+            thread.runOnUI(RAL, () -> hideShareButton(fragment.toolbar()));
             // получаем список для отображения рейтинга
             if (CollectionUtils.isNotEmpty(data.getStudents())) {
                 for (RStudent student : data.getStudents()) {
@@ -346,10 +343,10 @@ public class RatingListFragmentPresenterImpl extends ConnectedFragmentWithDataPr
                 }
             }
             if (minePosition != -1) {
-                thread.runOnUI(() -> showShareButton(fragment.toolbar()));
+                thread.runOnUI(RAL, () -> showShareButton(fragment.toolbar()));
             }
             RatingListRVA adapter = new RatingListRVA(activity, data, "beer".equals(storagePref.get(activity, "pref_rating_list_icon", "crown")));
-            thread.runOnUI(() -> {
+            thread.runOnUI(RAL, () -> {
                 fragment.draw(R.layout.layout_rating_list);
                 // set adapter to recycler view
                 final LinearLayoutManager layoutManager = new LinearLayoutManager(activity, RecyclerView.VERTICAL, false);
@@ -381,26 +378,27 @@ public class RatingListFragmentPresenterImpl extends ConnectedFragmentWithDataPr
             return;
         }
         MenuItem share = menu.findItem(R.id.action_share);
-        if (share != null) {
-            if (minePosition != -1) {
-                share.setVisible(true);
-                share.setOnMenuItemClickListener(menuItem -> {
-                    try {
-                        eventBus.fire(new ShareTextEvent("Я на %position% позиции в рейтинге %faculty%!"
-                                .replace("%position%", String.valueOf(minePosition))
-                                .replace("%faculty%", mineFaculty.isEmpty() ? "факультета" : mineFaculty)
-                                , "txt_rating_certain")
-                        );
-                    } catch (Exception e) {
-                        log.exception(e);
-                        notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
-                    }
-                    return false;
-                });
-            } else {
-                share.setVisible(false);
-            }
+        if (share == null) {
+            return;
         }
+        if (minePosition == -1) {
+            share.setVisible(false);
+            return;
+        }
+        share.setVisible(true);
+        share.setOnMenuItemClickListener(menuItem -> {
+            thread.standalone(() -> {
+                eventBus.fire(new ShareTextEvent("Я на %position% позиции в рейтинге %faculty%!"
+                        .replace("%position%", String.valueOf(minePosition))
+                        .replace("%faculty%", mineFaculty.isEmpty() ? "факультета" : mineFaculty)
+                        , "txt_rating_certain")
+                );
+            }, throwable -> {
+                log.exception(throwable);
+                notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
+            });
+            return false;
+        });
     }
 
     private void hideShareButton(Menu menu) {
@@ -426,5 +424,10 @@ public class RatingListFragmentPresenterImpl extends ConnectedFragmentWithDataPr
     @Override
     protected String getCachePath() {
         return null;
+    }
+
+    @Override
+    protected String getThreadToken() {
+        return RAL;
     }
 }

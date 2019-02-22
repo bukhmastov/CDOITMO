@@ -111,15 +111,17 @@ public class FragmentActivityPresenterImpl implements FragmentActivityPresenter,
 
     @Override
     public void onResume() {
-        thread.runOnUI(() -> {
-            if (activity.layoutWithMenu) {
-                NavigationView navigationView = activity.findViewById(R.id.nav_view);
-                navigationMenu.displayEnableDisableOfflineButton(navigationView);
-                navigationMenu.hideIfUnauthorizedMode(navigationView);
+        if (activity.layoutWithMenu) {
+            NavigationView navigationView = activity.findViewById(R.id.nav_view);
+            thread.standalone(() -> {
                 navigationMenu.displayUserData(activity, storage, navigationView);
                 navigationMenu.displayRemoteMessage(activity, firebaseConfigProvider, storage);
-            }
-        });
+            });
+            thread.runOnUI(() -> {
+                navigationMenu.displayEnableDisableOfflineButton(navigationView);
+                navigationMenu.hideIfUnauthorizedMode(navigationView);
+            });
+        }
     }
 
     @Override

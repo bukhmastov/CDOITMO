@@ -43,10 +43,11 @@ public class AccountsImpl implements Accounts {
 
     @Override
     public void add(@NonNull Context context, @NonNull String login) {
+        thread.assertNotUI();
         if (Account.USER_UNAUTHORIZED.equals(login)) {
             return;
         }
-        thread.run(() -> {
+        try {
             log.v(TAG, "add | login=", login);
             boolean isNewAuthorization = true;
             // save login on top of the list of authorized users
@@ -73,17 +74,18 @@ public class AccountsImpl implements Accounts {
                     FirebaseAnalyticsProvider.Event.LOGIN,
                     bundle
             );
-        }, throwable -> {
+        } catch (Throwable throwable) {
             log.exception(throwable);
-        });
+        }
     }
 
     @Override
     public void remove(@NonNull Context context, @NonNull String login) {
+        thread.assertNotUI();
         if (Account.USER_UNAUTHORIZED.equals(login)) {
             return;
         }
-        thread.run(() -> {
+        try {
             log.v(TAG, "remove | login=", login);
             // remove login from the list of authorized users
             UsersList list = get(context);
@@ -103,9 +105,9 @@ public class AccountsImpl implements Accounts {
                     FirebaseAnalyticsProvider.Event.LOGOUT,
                     firebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.LOGIN_COUNT, list.getLogins().size())
             );
-        }, throwable -> {
+        } catch (Throwable throwable) {
             log.exception(throwable);
-        });
+        }
     }
 
     @Override

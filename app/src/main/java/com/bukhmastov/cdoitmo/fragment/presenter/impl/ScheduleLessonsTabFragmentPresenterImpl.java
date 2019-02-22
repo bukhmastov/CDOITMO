@@ -26,6 +26,7 @@ import com.bukhmastov.cdoitmo.event.events.OpenIntentEvent;
 import com.bukhmastov.cdoitmo.event.events.ShareTextEvent;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.fragment.LinkedAccountsFragment;
+import com.bukhmastov.cdoitmo.fragment.ScheduleLessonsModifyFragment;
 import com.bukhmastov.cdoitmo.fragment.ScheduleLessonsShareFragment;
 import com.bukhmastov.cdoitmo.fragment.presenter.ScheduleLessonsTabFragmentPresenter;
 import com.bukhmastov.cdoitmo.fragment.presenter.ScheduleLessonsTabHostFragmentPresenter;
@@ -61,6 +62,8 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
+
+import static com.bukhmastov.cdoitmo.util.Thread.SL;
 
 public class ScheduleLessonsTabFragmentPresenterImpl implements ScheduleLessonsTabFragmentPresenter {
 
@@ -107,7 +110,7 @@ public class ScheduleLessonsTabFragmentPresenterImpl implements ScheduleLessonsT
         scheduleHandler = new Schedule.Handler<SLessons>() {
             @Override
             public void onSuccess(SLessons schedule, boolean fromCache) {
-                thread.run(() -> {
+                thread.run(SL, () -> {
                     ScheduleLessonsTabFragmentPresenterImpl.this.schedule = schedule;
                     if ("teachers".equals(schedule.getType()) && schedule.getTeachers() != null &&
                         CollectionUtils.isNotEmpty(schedule.getTeachers().getTeachers()) &&
@@ -125,7 +128,7 @@ public class ScheduleLessonsTabFragmentPresenterImpl implements ScheduleLessonsT
                     adapter.setClickListener(R.id.schedule_lessons_create, ScheduleLessonsTabFragmentPresenterImpl.this::lessonsMenuCreate);
                     adapter.setClickListener(R.id.lesson_touch_icon, ScheduleLessonsTabFragmentPresenterImpl.this::lessonMenu);
                     adapter.setClickListener(R.id.teacher_picker_item, ScheduleLessonsTabFragmentPresenterImpl.this::teacherSelected);
-                    thread.runOnUI(() -> {
+                    thread.runOnUI(SL, () -> {
                         draw(activity, R.layout.layout_schedule_both_recycle_list);
                         // prepare
                         SwipeRefreshLayout swipe = container.findViewById(R.id.schedule_swipe);
@@ -190,7 +193,7 @@ public class ScheduleLessonsTabFragmentPresenterImpl implements ScheduleLessonsT
             }
             @Override
             public void onFailure(int statusCode, Client.Headers headers, int state) {
-                thread.runOnUI(() -> {
+                thread.runOnUI(SL, () -> {
                     ScheduleLessonsTabFragmentPresenterImpl.this.schedule = null;
                     log.v(TAG, "onFailure | statusCode=", statusCode, " | state=", state);
                     switch (state) {
@@ -265,7 +268,7 @@ public class ScheduleLessonsTabFragmentPresenterImpl implements ScheduleLessonsT
             }
             @Override
             public void onProgress(int state) {
-                thread.runOnUI(() -> {
+                thread.runOnUI(SL, () -> {
                     log.v(TAG, "onProgress | state=", state);
                     ViewGroup view = (ViewGroup) inflate(activity, R.layout.state_loading_text);
                     if (view != null) {
@@ -299,7 +302,7 @@ public class ScheduleLessonsTabFragmentPresenterImpl implements ScheduleLessonsT
 
     @Override
     public void onCreate(Bundle savedInstanceState, ConnectedActivity activity, Fragment fragment) {
-        thread.run(() -> {
+        thread.run(SL, () -> {
             this.activity = activity;
             Bundle bundle = fragment.getArguments();
             if (bundle != null && bundle.containsKey("type")) {
@@ -309,7 +312,7 @@ public class ScheduleLessonsTabFragmentPresenterImpl implements ScheduleLessonsT
                 type = ScheduleLessonsTabHostFragmentPresenter.DEFAULT_TYPE;
             }
             log.v(TAG, "Fragment created | type=", type);
-            tabHostPresenter.tabs().put(type, refresh -> thread.run(() -> {
+            tabHostPresenter.tabs().put(type, refresh -> thread.run(SL, () -> {
                 log.v(TAG, "onInvalidate | type=", type, " | refresh=", refresh);
                 if (fragment.isResumed()) {
                     invalidate = false;
@@ -325,7 +328,7 @@ public class ScheduleLessonsTabFragmentPresenterImpl implements ScheduleLessonsT
 
     @Override
     public void onDestroy() {
-        thread.run(() -> {
+        thread.run(SL, () -> {
             log.v(TAG, "Fragment destroyed | type=", type);
             tabHostPresenter.tabs().remove(type);
             tabHostPresenter.scroll().remove(type);
@@ -344,7 +347,7 @@ public class ScheduleLessonsTabFragmentPresenterImpl implements ScheduleLessonsT
 
     @Override
     public void onResume() {
-        thread.run(() -> {
+        thread.run(SL, () -> {
             log.v(TAG, "Fragment resumed | type=", type, " | loaded=", loaded, " | invalidate=", invalidate, " | invalidateRefresh=", invalidateRefresh);
             if (invalidate) {
                 invalidate = false;
@@ -360,24 +363,26 @@ public class ScheduleLessonsTabFragmentPresenterImpl implements ScheduleLessonsT
 
     @Override
     public void onPause() {
-        thread.run(() -> {
-            log.v(TAG, "Fragment paused | type=", type);
-            if (requestHandle != null && requestHandle.cancel()) {
-                log.v(TAG, "Fragment paused | type=", type, " | paused and requested reload");
-                loaded = false;
-            }
-        });
+        log.v(TAG, "Fragment paused | type=", type);
+        if (requestHandle != null) {
+            thread.standalone(() -> {
+                if (requestHandle != null && requestHandle.cancel()) {
+                    log.v(TAG, "Fragment paused | type=", type, " | paused and requested reload");
+                    loaded = false;
+                }
+            });
+        }
     }
 
-    private void load(final boolean refresh) {
-        thread.runOnUI(() -> {
+    private void load(boolean refresh) {
+        thread.runOnUI(SL, () -> {
             if (activity == null) {
                 log.w(TAG, "load | activity is null");
                 failed(activity);
                 return;
             }
             draw(activity, R.layout.state_loading_text);
-            thread.run(() -> {
+            thread.run(SL, () -> {
                 if (activity == null || tabHostPresenter.getQuery() == null) {
                     log.w(TAG, "load | some values are null | activity=", activity, " | getQuery()=", tabHostPresenter.getQuery());
                     failed(activity);
@@ -418,7 +423,7 @@ public class ScheduleLessonsTabFragmentPresenterImpl implements ScheduleLessonsT
     }
 
     private void draw(View view) {
-        thread.runOnUI(() -> {
+        thread.runOnUI(SL, () -> {
             ViewGroup vg = container.findViewById(R.id.container);
             if (vg != null) {
                 vg.removeAllViews();
@@ -453,7 +458,7 @@ public class ScheduleLessonsTabFragmentPresenterImpl implements ScheduleLessonsT
     // -->- Lessons global menu ->--
 
     private void lessonsMenuCreate(View view, RVALessons entity) {
-        thread.runOnUI(() -> {
+        thread.runOnUI(SL, () -> {
             if (schedule == null) {
                 notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
                 return;
@@ -461,7 +466,7 @@ public class ScheduleLessonsTabFragmentPresenterImpl implements ScheduleLessonsT
             PopupMenu popup = new PopupMenu(activity, view);
             popup.inflate(R.menu.schedule_lessons_common_create);
             popup.setOnMenuItemClickListener(menuItem -> {
-                thread.run(() -> {
+                thread.run(SL, () -> {
                     switch (menuItem.getItemId()) {
                         case R.id.add_lesson: addLesson(entity.getParity()); break;
                         case R.id.add_military_day_monday: addMilitaryDay(0); break;
@@ -487,7 +492,7 @@ public class ScheduleLessonsTabFragmentPresenterImpl implements ScheduleLessonsT
     }
 
     private void lessonsMenuShare(View view, RVALessons entity) {
-        thread.runOnUI(() -> {
+        thread.runOnUI(SL, () -> {
             if (schedule == null) {
                 notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
                 return;
@@ -503,7 +508,7 @@ public class ScheduleLessonsTabFragmentPresenterImpl implements ScheduleLessonsT
                 }
             }
             popup.setOnMenuItemClickListener(menuItem -> {
-                thread.run(() -> {
+                thread.standalone(() -> {
                     switch (menuItem.getItemId()) {
                         case R.id.share_all_schedule: shareSchedule(entity.getDays()); break;
                         case R.id.monday: shareSchedule(entity.getDays(), 0); break;
@@ -530,27 +535,31 @@ public class ScheduleLessonsTabFragmentPresenterImpl implements ScheduleLessonsT
     }
 
     private void lessonsMenuMore(View view, RVALessons entity) {
-        thread.run(() -> {
+        thread.run(SL, () -> {
             if (schedule == null) {
                 notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
                 return;
             }
             String cacheToken = schedule.getQuery() == null ? null : schedule.getQuery().toLowerCase();
             boolean isCached = cacheToken != null && StringUtils.isNotBlank(storage.get(activity, Storage.CACHE, Storage.GLOBAL, "schedule_lessons#lessons#" + cacheToken, ""));
-            thread.runOnUI(() -> {
+            thread.runOnUI(SL, () -> {
                 PopupMenu popup = new PopupMenu(activity, view);
                 popup.inflate(R.menu.schedule_lessons_common_more);
                 popup.getMenu().findItem(R.id.toggle_cache).setChecked(isCached);
                 popup.setOnMenuItemClickListener(menuItem -> {
-                    thread.run(() -> {
+                    thread.run(SL, () -> {
                         switch (menuItem.getItemId()) {
                             case R.id.toggle_cache:
                                 if (toggleCache()) {
-                                    thread.runOnUI(() -> menuItem.setChecked(!isCached));
+                                    thread.runOnUI(SL, () -> menuItem.setChecked(!isCached));
                                 }
                                 break;
                             case R.id.remove_changes: clearChanges(); break;
-                            case R.id.open_settings: activity.openActivityOrFragment(ConnectedActivity.TYPE.STACKABLE, SettingsScheduleLessonsFragment.class, null); break;
+                            case R.id.open_settings:
+                                thread.runOnUI(SL, () -> {
+                                    activity.openActivityOrFragment(ConnectedActivity.TYPE.STACKABLE, SettingsScheduleLessonsFragment.class, null);
+                                });
+                                break;
                         }
                     }, throwable -> {
                         log.exception(throwable);
@@ -607,7 +616,11 @@ public class ScheduleLessonsTabFragmentPresenterImpl implements ScheduleLessonsT
         }
         SLesson lesson = new SLesson();
         lesson.setParity(parity);
-        if (!scheduleLessonsHelper.createLesson(activity, schedule.getQuery(), schedule.getTitle(), schedule.getType(), time.getWeekDay(), lesson, null)) {
+        if (!scheduleLessonsHelper.createLesson(schedule.getQuery(), schedule.getTitle(), schedule.getType(), time.getWeekDay(), lesson, extras -> {
+            thread.runOnUI(SL, () -> {
+                activity.openActivityOrFragment(ScheduleLessonsModifyFragment.class, extras);
+            });
+        })) {
             notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
         }
     }
@@ -781,7 +794,7 @@ public class ScheduleLessonsTabFragmentPresenterImpl implements ScheduleLessonsT
         extras.putString("query", schedule.getQuery());
         extras.putString("type", schedule.getType());
         extras.putString("title", schedule.getTitle());
-        thread.runOnUI(() -> activity.openActivityOrFragment(ScheduleLessonsShareFragment.class, extras));
+        thread.runOnUI(SL, () -> activity.openActivityOrFragment(ScheduleLessonsShareFragment.class, extras));
     }
 
     private void clearChanges() {
@@ -794,7 +807,7 @@ public class ScheduleLessonsTabFragmentPresenterImpl implements ScheduleLessonsT
                 .setTitle(R.string.pref_schedule_lessons_clear_additional_title)
                 .setMessage(R.string.pref_schedule_lessons_clear_direct_additional_warning)
                 .setIcon(R.drawable.ic_warning)
-                .setPositiveButton(R.string.proceed, (dialog, which) -> thread.run(() -> {
+                .setPositiveButton(R.string.proceed, (dialog, which) -> thread.standalone(() -> {
                     if (!scheduleLessonsHelper.clearChanges(schedule.getQuery(), () -> tabHostPresenter.invalidateOnDemand())) {
                         notificationMessage.snackBar(activity, activity.getString(R.string.no_changes));
                     }
@@ -806,7 +819,7 @@ public class ScheduleLessonsTabFragmentPresenterImpl implements ScheduleLessonsT
     // -<-- Lessons global menu --<- || -->- Lesson menu ->--
 
     private void lessonMenu(View view, RVALessons entity) {
-        thread.runOnUI(() -> {
+        thread.runOnUI(SL, () -> {
             if (schedule == null || entity.getLesson() == null) {
                 notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
                 return;
@@ -824,7 +837,7 @@ public class ScheduleLessonsTabFragmentPresenterImpl implements ScheduleLessonsT
             bindMenuItem(popup, R.id.delete_lesson, "synthetic".equals(lesson.getCdoitmoType()) ? activity.getString(R.string.delete_lesson) : null);
             bindMenuItem(popup, R.id.edit_lesson, "synthetic".equals(lesson.getCdoitmoType()) ? activity.getString(R.string.edit_lesson) : null);
             popup.setOnMenuItemClickListener(item -> {
-                thread.runOnUI(() -> {
+                thread.runOnUI(SL, () -> {
                     lessonMenuSelected(item, schedule, lesson, weekday);
                     popup.dismiss();
                 });
@@ -838,7 +851,7 @@ public class ScheduleLessonsTabFragmentPresenterImpl implements ScheduleLessonsT
     }
 
     private void lessonMenuSelected(MenuItem item, SLessons schedule, SLesson lesson, int weekday) {
-        thread.run(() -> {
+        thread.run(SL, () -> {
             log.v(TAG, "Lesson menu | popup item | clicked | " + item.getTitle().toString());
             switch (item.getItemId()) {
                 case R.id.open_group: {
@@ -880,13 +893,21 @@ public class ScheduleLessonsTabFragmentPresenterImpl implements ScheduleLessonsT
                     break;
                 }
                 case R.id.copy_lesson: {
-                    if (!scheduleLessonsHelper.createLesson(activity, schedule.getQuery(), schedule.getTitle(), schedule.getType(), weekday, lesson, null)) {
+                    if (!scheduleLessonsHelper.createLesson(schedule.getQuery(), schedule.getTitle(), schedule.getType(), weekday, lesson, extras -> {
+                        thread.runOnUI(SL, () -> {
+                            activity.openActivityOrFragment(ScheduleLessonsModifyFragment.class, extras);
+                        });
+                    })) {
                         notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
                     }
                     break;
                 }
                 case R.id.edit_lesson: {
-                    if (!scheduleLessonsHelper.editLesson(activity, schedule.getQuery(), schedule.getTitle(), schedule.getType(), weekday, lesson, null)) {
+                    if (!scheduleLessonsHelper.editLesson(schedule.getQuery(), schedule.getTitle(), schedule.getType(), weekday, lesson, extras -> {
+                        thread.runOnUI(SL, () -> {
+                            activity.openActivityOrFragment(ScheduleLessonsModifyFragment.class, extras);
+                        });
+                    })) {
                         notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
                     }
                     break;
@@ -909,7 +930,7 @@ public class ScheduleLessonsTabFragmentPresenterImpl implements ScheduleLessonsT
     // -<-- Lesson menu --<- || -->- Teacher selection ->--
 
     private void teacherSelected(View view, RVALessons entity) {
-        thread.run(() -> {
+        thread.run(SL, () -> {
             if (entity.getTeacher() == null) {
                 return;
             }

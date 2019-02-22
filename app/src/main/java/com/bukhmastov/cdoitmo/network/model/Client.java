@@ -384,7 +384,11 @@ public abstract class Client {
     }
 
     protected boolean isInterrupted(@Nullable Throwable throwable) {
-        return throwable != null && throwable.getMessage() != null && "socket closed".equalsIgnoreCase(throwable.getMessage());
+        return throwable != null && throwable.getMessage() != null && (
+                "socket closed".equalsIgnoreCase(throwable.getMessage()) ||
+                "canceled".equalsIgnoreCase(throwable.getMessage()) ||
+                "thread interrupted".equalsIgnoreCase(throwable.getMessage())
+        );
     }
 
     protected boolean isCorruptedJson(@Nullable Throwable throwable) {
@@ -509,7 +513,7 @@ public abstract class Client {
         }
         public boolean cancel() {
             if (call != null && !call.isCanceled()) {
-                log.v(TAG, "request cancelled | url=" + call.request().url());
+                log.v(TAG, "request cancelled | url=", getUrl(call.request().url()));
                 call.cancel();
                 return true;
             } else {

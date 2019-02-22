@@ -44,97 +44,103 @@ public class DeIfmoClientImpl extends DeIfmoClient {
 
     @Override
     public void authorize(@NonNull Context context, @NonNull ResponseHandler handler) {
-        log.v(TAG, "authorize");
-        thread.assertNotUI();
-        if (!Client.isOnline(context)) {
-            handler.onFailure(STATUS_CODE_EMPTY, new Headers(null), FAILED_OFFLINE);
-            return;
-        }
-        handler.onProgress(STATE_AUTHORIZATION);
-        if (App.UNAUTHORIZED_MODE) {
-            log.v(TAG, "authorize | UNAUTHORIZED_MODE | authorized");
-            handler.onProgress(STATE_AUTHORIZED);
-            handler.onSuccess(STATUS_CODE_EMPTY, new Headers(null), "authorized");
-            return;
-        }
-        String login = storage.get().get(context, Storage.PERMANENT, Storage.USER, "user#deifmo#login", "").trim();
-        String password = storage.get().get(context, Storage.PERMANENT, Storage.USER, "user#deifmo#password", "").trim();
-        if (StringUtils.isBlank(login) || StringUtils.isBlank(password)) {
-            log.v(TAG, "authorize | FAILED_AUTH_CREDENTIALS_REQUIRED");
-            handler.onFailure(STATUS_CODE_EMPTY, new Headers(null), FAILED_AUTH_CREDENTIALS_REQUIRED);
-            return;
-        }
-        HashMap<String, String> params = new HashMap<>();
-        params.put("Rule", "LOGON");
-        params.put("LOGIN", login);
-        params.put("PASSWD", password);
-        doPost(context, getAbsoluteUrl(DEFAULT_PROTOCOL, "servlet"), params, new RawHandler() {
-            @Override
-            public void onDone(int code, okhttp3.Headers headers, String response) {
-                log.v(TAG, "authorize | success | code=", code);
-                storeCookies(context, headers);
-                if (code >= 400) {
-                    handler.onFailure(code, new Headers(headers), FAILED_SERVER_ERROR);
-                    return;
-                }
-                if (response == null) {
-                    log.v(TAG, "authorize | success | code=", code, " | response is null");
-                    handler.onFailure(code, new Headers(headers), FAILED_AUTH_TRY_AGAIN);
-                    return;
-                }
-                if (response.contains("Access is forbidden") && response.contains("Invalid login/password")) {
-                    log.v(TAG, "authorize | success | FAILED_AUTH_CREDENTIALS_FAILED");
-                    handler.onFailure(code, new Headers(headers), FAILED_AUTH_CREDENTIALS_FAILED);
-                    return;
-                }
-                if (response.contains("Выбор группы безопасности") && response.contains("OPTION VALUE=8")) {
-                    log.v(TAG, "authorize | success | going to select security group");
-                    String url = "servlet/distributedCDE?Rule=APPLYSECURITYGROUP&PERSON=" +
-                            storage.get().get(context, Storage.PERMANENT, Storage.USER, "user#deifmo#login") +
-                            "&SECURITYGROUP=8&COMPNAME=";
-                    doGet(context, getAbsoluteUrl(DEFAULT_PROTOCOL, url), null, new RawHandler() {
-                        @Override
-                        public void onDone(int code, okhttp3.Headers headers, String response) {
-                            if (code == 200) {
-                                log.v(TAG, "authorize | success | security group | authorized | code=" + code);
-                                handler.onProgress(STATE_AUTHORIZED);
-                                handler.onSuccess(code, new Headers(headers), "authorized");
-                                return;
+        try {
+            log.v(TAG, "authorize");
+            thread.assertNotUI();
+            if (!Client.isOnline(context)) {
+                handler.onFailure(STATUS_CODE_EMPTY, new Headers(null), FAILED_OFFLINE);
+                return;
+            }
+            handler.onProgress(STATE_AUTHORIZATION);
+            if (App.UNAUTHORIZED_MODE) {
+                log.v(TAG, "authorize | UNAUTHORIZED_MODE | authorized");
+                handler.onProgress(STATE_AUTHORIZED);
+                handler.onSuccess(STATUS_CODE_EMPTY, new Headers(null), "authorized");
+                return;
+            }
+            String login = storage.get().get(context, Storage.PERMANENT, Storage.USER, "user#deifmo#login", "").trim();
+            String password = storage.get().get(context, Storage.PERMANENT, Storage.USER, "user#deifmo#password", "").trim();
+            if (StringUtils.isBlank(login) || StringUtils.isBlank(password)) {
+                log.v(TAG, "authorize | FAILED_AUTH_CREDENTIALS_REQUIRED");
+                handler.onFailure(STATUS_CODE_EMPTY, new Headers(null), FAILED_AUTH_CREDENTIALS_REQUIRED);
+                return;
+            }
+            HashMap<String, String> params = new HashMap<>();
+            params.put("Rule", "LOGON");
+            params.put("LOGIN", login);
+            params.put("PASSWD", password);
+            doPost(context, getAbsoluteUrl(DEFAULT_PROTOCOL, "servlet"), params, new RawHandler() {
+                @Override
+                public void onDone(int code, okhttp3.Headers headers, String response) throws Exception {
+                    log.v(TAG, "authorize | success | code=", code);
+                    storeCookies(context, headers);
+                    if (code >= 400) {
+                        handler.onFailure(code, new Headers(headers), FAILED_SERVER_ERROR);
+                        return;
+                    }
+                    if (response == null) {
+                        log.v(TAG, "authorize | success | code=", code, " | response is null");
+                        handler.onFailure(code, new Headers(headers), FAILED_AUTH_TRY_AGAIN);
+                        return;
+                    }
+                    if (response.contains("Access is forbidden") && response.contains("Invalid login/password")) {
+                        log.v(TAG, "authorize | success | FAILED_AUTH_CREDENTIALS_FAILED");
+                        handler.onFailure(code, new Headers(headers), FAILED_AUTH_CREDENTIALS_FAILED);
+                        return;
+                    }
+                    if (response.contains("Выбор группы безопасности") && response.contains("OPTION VALUE=8")) {
+                        log.v(TAG, "authorize | success | going to select security group");
+                        String url = "servlet/distributedCDE?Rule=APPLYSECURITYGROUP&PERSON=" +
+                                storage.get().get(context, Storage.PERMANENT, Storage.USER, "user#deifmo#login") +
+                                "&SECURITYGROUP=8&COMPNAME=";
+                        doGet(context, getAbsoluteUrl(DEFAULT_PROTOCOL, url), null, new RawHandler() {
+                            @Override
+                            public void onDone(int code, okhttp3.Headers headers, String response) throws Exception {
+                                if (code == 200) {
+                                    log.v(TAG, "authorize | success | security group | authorized | code=" + code);
+                                    handler.onProgress(STATE_AUTHORIZED);
+                                    handler.onSuccess(code, new Headers(headers), "authorized");
+                                    return;
+                                }
+                                log.v(TAG, "authorize | success | security group | FAILED | code=", code, response != null ? " | response=" + response : "");
+                                invokeOnFailed(handler, code, headers, FAILED_AUTH_TRY_AGAIN);
                             }
-                            log.v(TAG, "authorize | success | security group | FAILED | code=", code, response != null ? " | response=" + response : "");
-                            invokeOnFailed(handler, code, headers, FAILED_AUTH_TRY_AGAIN);
-                        }
-                        @Override
-                        public void onError(int code, okhttp3.Headers headers, Throwable throwable) {
-                            log.v(TAG, "authorize | success | security group | FAILED | code=", code, " | throwable=", throwable);
-                            invokeOnFailed(handler, code, headers, throwable, FAILED_AUTH_TRY_AGAIN);
-                        }
-                        @Override
-                        public void onNewRequest(Request request) {
-                            handler.onNewRequest(request);
-                        }
-                    });
-                    return;
+
+                            @Override
+                            public void onError(int code, okhttp3.Headers headers, Throwable throwable) {
+                                log.v(TAG, "authorize | success | security group | FAILED | code=", code, " | throwable=", throwable);
+                                invokeOnFailed(handler, code, headers, throwable, FAILED_AUTH_TRY_AGAIN);
+                            }
+
+                            @Override
+                            public void onNewRequest(Request request) {
+                                handler.onNewRequest(request);
+                            }
+                        });
+                        return;
+                    }
+                    if (response.contains("Обучение и аттестация")) {
+                        log.v(TAG, "authorize | success | authorized");
+                        handler.onProgress(STATE_AUTHORIZED);
+                        handler.onSuccess(code, new Headers(headers), "authorized");
+                        return;
+                    }
+                    log.v(TAG, "authorize | success | FAILED_AUTH_TRY_AGAIN");
+                    invokeOnFailed(handler, code, headers, FAILED_AUTH_TRY_AGAIN);
                 }
-                if (response.contains("Обучение и аттестация")) {
-                    log.v(TAG, "authorize | success | authorized");
-                    handler.onProgress(STATE_AUTHORIZED);
-                    handler.onSuccess(code, new Headers(headers), "authorized");
-                    return;
+                @Override
+                public void onError(int code, okhttp3.Headers headers, Throwable throwable) {
+                    log.v(TAG, "authorize | failure | code=", code, " | throwable=", throwable);
+                    invokeOnFailed(handler, code, headers, throwable, FAILED_AUTH_TRY_AGAIN);
                 }
-                log.v(TAG, "authorize | success | FAILED_AUTH_TRY_AGAIN");
-                invokeOnFailed(handler, code, headers, FAILED_AUTH_TRY_AGAIN);
-            }
-            @Override
-            public void onError(int code, okhttp3.Headers headers, Throwable throwable) {
-                log.v(TAG, "authorize | failure | code=", code, " | throwable=", throwable);
-                invokeOnFailed(handler, code, headers, throwable, FAILED_AUTH_TRY_AGAIN);
-            }
-            @Override
-            public void onNewRequest(Request request) {
-                handler.onNewRequest(request);
-            }
-        });
+                @Override
+                public void onNewRequest(Request request) {
+                    handler.onNewRequest(request);
+                }
+            });
+        } catch (Throwable throwable) {
+            invokeOnFailed(handler, STATUS_CODE_EMPTY, null, throwable, FAILED_TRY_AGAIN);
+        }
     }
 
     @Override

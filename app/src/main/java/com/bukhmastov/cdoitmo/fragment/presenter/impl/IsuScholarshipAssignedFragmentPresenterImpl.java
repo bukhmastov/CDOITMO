@@ -41,6 +41,8 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
+import static com.bukhmastov.cdoitmo.util.Thread.ISSA;
+
 public class IsuScholarshipAssignedFragmentPresenterImpl extends ConnectedFragmentWithDataPresenterImpl<SSAssignedList>
         implements IsuScholarshipAssignedFragmentPresenter, SwipeRefreshLayout.OnRefreshListener {
 
@@ -85,16 +87,16 @@ public class IsuScholarshipAssignedFragmentPresenterImpl extends ConnectedFragme
                 return;
             }
             MenuItem share = menu.findItem(R.id.action_share);
-            thread.run(() -> {
+            thread.run(ISSA, () -> {
                 if (share == null) {
                     return;
                 }
                 SSAssignedList data = getData();
                 if (data == null || CollectionUtils.isEmpty(data.getList())) {
-                    thread.runOnUI(() -> share.setVisible(false));
+                    thread.runOnUI(ISSA, () -> share.setVisible(false));
                     return;
                 }
-                thread.runOnUI(() -> {
+                thread.runOnUI(ISSA, () -> {
                     share.setVisible(true);
                     share.setOnMenuItemClickListener(menuItem -> {
                         share();
@@ -109,18 +111,22 @@ public class IsuScholarshipAssignedFragmentPresenterImpl extends ConnectedFragme
 
     @Override
     public void onRefresh() {
-        thread.run(() -> {
+        thread.run(ISSA, () -> {
             log.v(TAG, "refreshing");
             load(true);
         });
     }
 
     protected void load() {
-        thread.run(() -> load(storagePref.get(activity, "pref_use_cache", true) ? Integer.parseInt(storagePref.get(activity, "pref_dynamic_refresh", "0")) : 0));
+        thread.run(ISSA, () -> {
+            load(storagePref.get(activity, "pref_use_cache", true) ?
+                    Integer.parseInt(storagePref.get(activity, "pref_dynamic_refresh", "0")) :
+                    0);
+        });
     }
 
     private void load(int refresh_rate) {
-        thread.run(() -> {
+        thread.run(ISSA, () -> {
             log.v(TAG, "load | refresh_rate=", refresh_rate);
             if (!storagePref.get(activity, "pref_use_cache", true)) {
                 load(false);
@@ -141,11 +147,11 @@ public class IsuScholarshipAssignedFragmentPresenterImpl extends ConnectedFragme
     }
 
     private void load(boolean force) {
-        thread.run(() -> load(force, null));
+        thread.run(ISSA, () -> load(force, null));
     }
 
     private void load(boolean force, SSAssignedList cached) {
-        thread.run(() -> {
+        thread.run(ISSA, () -> {
             log.v(TAG, "load | force=", force);
             if ((!force || !Client.isOnline(activity)) && storagePref.get(activity, "pref_use_cache", true)) {
                 try {
@@ -165,7 +171,7 @@ public class IsuScholarshipAssignedFragmentPresenterImpl extends ConnectedFragme
                     display();
                     return;
                 }
-                thread.runOnUI(() -> {
+                thread.runOnUI(ISSA, () -> {
                     fragment.draw(R.layout.state_offline_text);
                     View reload = fragment.container().findViewById(R.id.offline_reload);
                     if (reload != null) {
@@ -175,7 +181,7 @@ public class IsuScholarshipAssignedFragmentPresenterImpl extends ConnectedFragme
                 return;
             }
             if (StringUtils.isBlank(storage.get(activity, Storage.PERMANENT, Storage.USER, "user#isu#access_token", ""))) {
-                thread.runOnUI(() -> {
+                thread.runOnUI(ISSA, () -> {
                     fragment.draw(R.layout.layout_isu_required);
                     View openIsuAuth = fragment.container().findViewById(R.id.open_isu_auth);
                     if (openIsuAuth != null) {
@@ -186,29 +192,25 @@ public class IsuScholarshipAssignedFragmentPresenterImpl extends ConnectedFragme
             }
             isuPrivateRestClient.get(activity, "scholarship/active/%apikey%/%isutoken%", null, new RestResponseHandler() {
                 @Override
-                public void onSuccess(int statusCode, Client.Headers headers, JSONObject obj, JSONArray arr) {
-                    thread.run(() -> {
-                        log.v(TAG, "load | success | statusCode=", statusCode, " | obj=", obj);
-                        if (statusCode == 200 && obj != null) {
-                            SSAssignedList data = new SSAssignedList().fromJson(obj);
-                            data.setTimestamp(time.getTimeInMillis());
-                            putToCache(data);
-                            setData(data);
-                            display();
-                            return;
-                        }
-                        if (getData() != null) {
-                            display();
-                            return;
-                        }
-                        loadFailed();
-                    }, throwable -> {
-                        loadFailed();
-                    });
+                public void onSuccess(int statusCode, Client.Headers headers, JSONObject obj, JSONArray arr) throws Exception {
+                    log.v(TAG, "load | success | statusCode=", statusCode, " | obj=", obj);
+                    if (statusCode == 200 && obj != null) {
+                        SSAssignedList data = new SSAssignedList().fromJson(obj);
+                        data.setTimestamp(time.getTimeInMillis());
+                        putToCache(data);
+                        setData(data);
+                        display();
+                        return;
+                    }
+                    if (getData() != null) {
+                        display();
+                        return;
+                    }
+                    loadFailed();
                 }
                 @Override
                 public void onFailure(int statusCode, Client.Headers headers, int state) {
-                    thread.run(() -> {
+                    thread.run(ISSA, () -> {
                         log.v(TAG, "load | failure ", state);
                         switch (state) {
                             case IsuPrivateRestClient.FAILED_OFFLINE:
@@ -216,7 +218,7 @@ public class IsuScholarshipAssignedFragmentPresenterImpl extends ConnectedFragme
                                     display();
                                     return;
                                 }
-                                thread.runOnUI(() -> {
+                                thread.runOnUI(ISSA, () -> {
                                     fragment.draw(R.layout.state_offline_text);
                                     View reload = fragment.container().findViewById(R.id.offline_reload);
                                     if (reload != null) {
@@ -230,7 +232,7 @@ public class IsuScholarshipAssignedFragmentPresenterImpl extends ConnectedFragme
                             case IsuPrivateRestClient.FAILED_SERVER_ERROR:
                             case IsuPrivateRestClient.FAILED_CORRUPTED_JSON:
                             case IsuPrivateRestClient.FAILED_AUTH_TRY_AGAIN:
-                                thread.runOnUI(() -> {
+                                thread.runOnUI(ISSA, () -> {
                                     fragment.draw(R.layout.state_failed_button);
                                     TextView message = fragment.container().findViewById(R.id.try_again_message);
                                     if (message != null) {
@@ -257,7 +259,7 @@ public class IsuScholarshipAssignedFragmentPresenterImpl extends ConnectedFragme
                                 break;
                             case IsuPrivateRestClient.FAILED_AUTH_CREDENTIALS_REQUIRED:
                             case IsuPrivateRestClient.FAILED_AUTH_CREDENTIALS_FAILED:
-                                thread.runOnUI(() -> {
+                                thread.runOnUI(ISSA, () -> {
                                     fragment.draw(R.layout.layout_isu_required);
                                     View openIsuAuth = fragment.container().findViewById(R.id.open_isu_auth);
                                     if (openIsuAuth != null) {
@@ -274,7 +276,7 @@ public class IsuScholarshipAssignedFragmentPresenterImpl extends ConnectedFragme
                 }
                 @Override
                 public void onProgress(int state) {
-                    thread.runOnUI(() -> {
+                    thread.runOnUI(ISSA, () -> {
                         log.v(TAG, "load | progress ", state);
                         fragment.draw(R.layout.state_loading_text);
                         TextView message = fragment.container().findViewById(R.id.loading_message);
@@ -299,7 +301,7 @@ public class IsuScholarshipAssignedFragmentPresenterImpl extends ConnectedFragme
     }
 
     private void loadFailed() {
-        thread.runOnUI(() -> {
+        thread.runOnUI(ISSA, () -> {
             log.v(TAG, "loadFailed");
             fragment.draw(R.layout.state_failed_button);
             TextView message = fragment.container().findViewById(R.id.try_again_message);
@@ -314,7 +316,7 @@ public class IsuScholarshipAssignedFragmentPresenterImpl extends ConnectedFragme
     }
 
     protected void display() {
-        thread.run(() -> {
+        thread.run(ISSA, () -> {
             log.v(TAG, "display");
             SSAssignedList data = getData();
             if (data == null) {
@@ -322,7 +324,7 @@ public class IsuScholarshipAssignedFragmentPresenterImpl extends ConnectedFragme
                 return;
             }
             ScholarshipAssignedRVA adapter = new ScholarshipAssignedRVA(activity, data);
-            thread.runOnUI(() -> {
+            thread.runOnUI(ISSA, () -> {
                 onToolbarSetup(fragment.toolbar());
                 fragment.draw(R.layout.layout_rva);
                 // set adapter to recycler view
@@ -351,7 +353,7 @@ public class IsuScholarshipAssignedFragmentPresenterImpl extends ConnectedFragme
     }
 
     private void share() {
-        thread.run(() -> {
+        thread.standalone(() -> {
             SSAssignedList data = getData();
             if (data == null || CollectionUtils.isEmpty(data.getList())) {
                 return;
@@ -412,5 +414,10 @@ public class IsuScholarshipAssignedFragmentPresenterImpl extends ConnectedFragme
     @Override
     protected String getCachePath() {
         return "scholarship#assigned";
+    }
+
+    @Override
+    protected String getThreadToken() {
+        return ISSA;
     }
 }

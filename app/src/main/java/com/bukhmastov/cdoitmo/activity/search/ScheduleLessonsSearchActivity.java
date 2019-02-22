@@ -11,6 +11,8 @@ import com.bukhmastov.cdoitmo.util.Thread;
 
 import javax.inject.Inject;
 
+import static com.bukhmastov.cdoitmo.util.Thread.AS;
+
 public class ScheduleLessonsSearchActivity extends SearchActivity {
 
     private static final String TAG = "SLSearchActivity";
@@ -47,7 +49,7 @@ public class ScheduleLessonsSearchActivity extends SearchActivity {
 
     @Override
     protected void onDone(final String query) {
-        thread.run(() -> {
+        thread.run(AS, () -> {
             log.v(TAG, "onDone | query=", query);
             tabHostPresenter.setQuery(query);
             tabHostPresenter.invalidate();

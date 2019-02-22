@@ -50,6 +50,8 @@ import java.util.ArrayList;
 
 import javax.inject.Inject;
 
+import static com.bukhmastov.cdoitmo.util.Thread.RA;
+
 public class RatingFragmentPresenterImpl implements RatingFragmentPresenter, SwipeRefreshLayout.OnRefreshListener {
 
     private static final String TAG = "RatingFragment";
@@ -101,7 +103,8 @@ public class RatingFragmentPresenterImpl implements RatingFragmentPresenter, Swi
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
-        thread.run(() -> {
+        thread.initialize(RA);
+        thread.run(RA, () -> {
             log.v(TAG, "Fragment created");
             firebaseAnalyticsProvider.logCurrentScreen(activity, fragment);
             data.put(COMMON, new Info(EMPTY));
@@ -111,10 +114,9 @@ public class RatingFragmentPresenterImpl implements RatingFragmentPresenter, Swi
 
     @Override
     public void onDestroy() {
-        thread.run(() -> {
-            log.v(TAG, "Fragment destroyed");
-            loaded = false;
-        });
+        log.v(TAG, "Fragment destroyed");
+        thread.interrupt(RA);
+        loaded = false;
     }
 
     @Override
@@ -143,7 +145,7 @@ public class RatingFragmentPresenterImpl implements RatingFragmentPresenter, Swi
 
     @Override
     public void onResume() {
-        thread.run(() -> {
+        thread.run(RA, () -> {
             log.v(TAG, "Fragment resumed");
             firebaseAnalyticsProvider.setCurrentScreen(activity, fragment);
             if (loaded) {
@@ -173,8 +175,8 @@ public class RatingFragmentPresenterImpl implements RatingFragmentPresenter, Swi
 
     @Override
     public void onPause() {
-        thread.run(() -> {
-            log.v(TAG, "Fragment paused");
+        log.v(TAG, "Fragment paused");
+        thread.standalone(() -> {
             if (requestHandle != null && requestHandle.cancel()) {
                 loaded = false;
             }
@@ -183,18 +185,18 @@ public class RatingFragmentPresenterImpl implements RatingFragmentPresenter, Swi
 
     @Override
     public void onRefresh() {
-        thread.run(() -> {
+        thread.run(RA, () -> {
             log.v(TAG, "refreshing");
             load(COMMON, true);
         });
     }
 
     private void load() {
-        thread.run(() -> load(COMMON));
+        thread.run(RA, () -> load(COMMON));
     }
 
     private void load(@TYPE String type) {
-        thread.run(() -> {
+        thread.run(RA, () -> {
             switch (type) {
                 case COMMON: {
                     load(type, storagePref.get(activity, "pref_use_cache", true) ? Integer.parseInt(storagePref.get(activity, "pref_static_refresh", "168")) : 0);
@@ -211,7 +213,7 @@ public class RatingFragmentPresenterImpl implements RatingFragmentPresenter, Swi
     }
 
     private void load(@TYPE String type, int refresh_rate) {
-        thread.run(() -> {
+        thread.run(RA, () -> {
             log.v(TAG, "load | type=", type, " | refresh_rate=", refresh_rate);
             if (!storagePref.get(activity, "pref_use_cache", true)) {
                 load(type, false);
@@ -242,18 +244,18 @@ public class RatingFragmentPresenterImpl implements RatingFragmentPresenter, Swi
     }
 
     private void load(@TYPE String type, boolean force) {
-        thread.run(() -> load(type, force, null));
+        thread.run(RA, () -> load(type, force, null));
     }
 
     private <T extends JsonEntity> void load(@TYPE String type, boolean force, T cached) {
-        thread.runOnUI(() -> {
+        thread.runOnUI(RA, () -> {
             fragment.draw(R.layout.state_loading_text);
             TextView message = fragment.container().findViewById(R.id.loading_message);
             if (message != null) {
                 message.setText(R.string.loading);
             }
         });
-        thread.run(() -> {
+        thread.run(RA, () -> {
             if (App.UNAUTHORIZED_MODE && OWN.equals(type)) {
                 loaded(type);
                 return;
@@ -284,52 +286,48 @@ public class RatingFragmentPresenterImpl implements RatingFragmentPresenter, Swi
             String url = COMMON.equals(type) ? "index.php?node=rating" : "servlet/distributedCDE?Rule=REP_EXECUTE_PRINT&REP_ID=1441";
             deIfmoClient.get(activity, url, null, new ResponseHandler() {
                 @Override
-                public void onSuccess(final int statusCode, final Client.Headers headers, final String response) {
-                    thread.run(() -> {
-                        log.v(TAG, "load | type=", type, " | success | statusCode=", statusCode, " | response=", (response == null ? "null" : "notnull"));
-                        if (statusCode == 200 && response != null) {
-                            switch (type) {
-                                case COMMON: {
-                                    RatingPickerAll ratingPickerAll = new RatingPickerAllParser(response).parse();
-                                    if (ratingPickerAll != null) {
-                                        ratingPickerAll.setTimestamp(time.getTimeInMillis());
-                                        if (storagePref.get(activity, "pref_use_cache", true)) {
-                                            storage.put(activity, Storage.CACHE, Storage.USER, "rating#list", ratingPickerAll.toJsonString());
-                                        }
-                                        data.put(type, new Info<>(LOADED, ratingPickerAll));
-                                        loaded(type);
-                                        return;
+                public void onSuccess(int code, Client.Headers headers, String response) throws Exception {
+                    log.v(TAG, "load | type=", type, " | success | code=", code, " | response=", (response == null ? "null" : "notnull"));
+                    if (code == 200 && response != null) {
+                        switch (type) {
+                            case COMMON: {
+                                RatingPickerAll ratingPickerAll = new RatingPickerAllParser(response).parse();
+                                if (ratingPickerAll != null) {
+                                    ratingPickerAll.setTimestamp(time.getTimeInMillis());
+                                    if (storagePref.get(activity, "pref_use_cache", true)) {
+                                        storage.put(activity, Storage.CACHE, Storage.USER, "rating#list", ratingPickerAll.toJsonString());
                                     }
-                                    break;
+                                    data.put(type, new Info<>(LOADED, ratingPickerAll));
+                                    loaded(type);
+                                    return;
                                 }
-                                case OWN: {
-                                    RatingPickerOwn ratingPickerOwn = new RatingPickerOwnParser(response).parse();
-                                    if (ratingPickerOwn != null) {
-                                        ratingPickerOwn.setTimestamp(time.getTimeInMillis());
-                                        if (storagePref.get(activity, "pref_use_cache", true)) {
-                                            storage.put(activity, Storage.CACHE, Storage.USER, "rating#core", ratingPickerOwn.toJsonString());
-                                        }
-                                        data.put(type, new Info<>(LOADED, ratingPickerOwn));
-                                        loaded(type);
-                                        return;
+                                break;
+                            }
+                            case OWN: {
+                                RatingPickerOwn ratingPickerOwn = new RatingPickerOwnParser(response).parse();
+                                if (ratingPickerOwn != null) {
+                                    ratingPickerOwn.setTimestamp(time.getTimeInMillis());
+                                    if (storagePref.get(activity, "pref_use_cache", true)) {
+                                        storage.put(activity, Storage.CACHE, Storage.USER, "rating#core", ratingPickerOwn.toJsonString());
                                     }
-                                    break;
+                                    data.put(type, new Info<>(LOADED, ratingPickerOwn));
+                                    loaded(type);
+                                    return;
                                 }
+                                break;
                             }
                         }
-                        if (data.get(type).data != null) {
-                            data.get(type).status = LOADED;
-                        } else {
-                            data.put(type, new Info(FAILED));
-                        }
-                        loaded(type);
-                    }, throwable -> {
-                        loadFailed();
-                    });
+                    }
+                    if (data.get(type).data != null) {
+                        data.get(type).status = LOADED;
+                    } else {
+                        data.put(type, new Info(FAILED));
+                    }
+                    loaded(type);
                 }
                 @Override
-                public void onFailure(final int statusCode, final Client.Headers headers, final int state) {
-                    thread.run(() -> {
+                public void onFailure(int code, Client.Headers headers, int state) {
+                    thread.run(RA, () -> {
                         log.v(TAG, "load | type=", type, " | failure ", state);
                         switch (state) {
                             case DeIfmoClient.FAILED_AUTH_CREDENTIALS_REQUIRED: {
@@ -375,7 +373,7 @@ public class RatingFragmentPresenterImpl implements RatingFragmentPresenter, Swi
     }
 
     private void loaded(@TYPE String type) {
-        thread.run(() -> {
+        thread.run(RA, () -> {
             switch (type) {
                 case COMMON: {
                     if (App.UNAUTHORIZED_MODE) {
@@ -396,7 +394,7 @@ public class RatingFragmentPresenterImpl implements RatingFragmentPresenter, Swi
     }
 
     private void loadFailed() {
-        thread.runOnUI(() -> {
+        thread.runOnUI(RA, () -> {
             log.v(TAG, "loadFailed");
             fragment.draw(R.layout.state_failed_button);
             View reload = fragment.container().findViewById(R.id.try_again_reload);
@@ -407,7 +405,7 @@ public class RatingFragmentPresenterImpl implements RatingFragmentPresenter, Swi
     }
 
     private void display() {
-        thread.run(() -> {
+        thread.run(RA, () -> {
             log.v(TAG, "display");
             fragment.storeData(
                     data.containsKey(COMMON) ? (data.get(COMMON).data != null ? data.get(COMMON).data.toJsonString() : null) : null,
@@ -415,7 +413,7 @@ public class RatingFragmentPresenterImpl implements RatingFragmentPresenter, Swi
             );
             RatingRVA adapter = new RatingRVA(activity, data);
             adapter.setClickListener(R.id.common_apply, (v, data) -> {
-                thread.runOnUI(() -> {
+                thread.runOnUI(RA, () -> {
                     firebaseAnalyticsProvider.logBasicEvent(activity, "Detailed rating used");
                     log.v(TAG, "detailed rating used | faculty=" + data.getTitle() + " | course=" + data.getDesc());
                     Bundle extras = new Bundle();
@@ -428,7 +426,7 @@ public class RatingFragmentPresenterImpl implements RatingFragmentPresenter, Swi
                 });
             });
             adapter.setClickListener(R.id.own_apply, (v, data) -> {
-                thread.runOnUI(() -> {
+                thread.runOnUI(RA, () -> {
                     firebaseAnalyticsProvider.logBasicEvent(activity, "Own rating used");
                     log.v(TAG, "own rating used | faculty=" + data.getDesc() + " | course=" + data.getMeta() + " | years=" + data.getExtra());
                     Bundle extras = new Bundle();
@@ -441,7 +439,21 @@ public class RatingFragmentPresenterImpl implements RatingFragmentPresenter, Swi
                     notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
                 });
             });
-            thread.runOnUI(() -> {
+            adapter.setClickListener(R.id.faculty, (v, data) -> {
+                thread.run(RA, () -> {
+                    storage.put(activity, Storage.CACHE, Storage.USER, "rating#choose#faculty", data.getExtra());
+                }, throwable -> {
+                    log.exception(throwable);
+                });
+            });
+            adapter.setClickListener(R.id.course, (v, data) -> {
+                thread.run(RA, () -> {
+                    storage.put(activity, Storage.CACHE, Storage.USER, "rating#choose#course", data.getExtra());
+                }, throwable -> {
+                    log.exception(throwable);
+                });
+            });
+            thread.runOnUI(RA, () -> {
                 onToolbarSetup(fragment.toolbar());
                 fragment.draw(R.layout.layout_rating_list);
                 // set adapter to recycler view
@@ -470,7 +482,7 @@ public class RatingFragmentPresenterImpl implements RatingFragmentPresenter, Swi
     }
 
     private void share() {
-        thread.run(() -> {
+        thread.standalone(() -> {
             if (data.get(OWN) == null || !(data.get(OWN).data instanceof RatingPickerOwn) || CollectionUtils.isEmpty(((RatingPickerOwn) data.get(OWN).data).getCourses())) {
                 return;
             }
@@ -513,7 +525,7 @@ public class RatingFragmentPresenterImpl implements RatingFragmentPresenter, Swi
     }
 
     private void gotoLogin(int state) {
-        thread.run(() -> {
+        thread.run(RA, () -> {
             log.v(TAG, "gotoLogin | state=", state);
             Bundle extras = new Bundle();
             extras.putInt("state", state);

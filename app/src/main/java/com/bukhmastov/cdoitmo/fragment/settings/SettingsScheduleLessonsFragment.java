@@ -26,7 +26,7 @@ public class SettingsScheduleLessonsFragment extends SettingsTemplatePreferences
         preferences.add(new PreferenceBasic("pref_schedule_lessons_default", "{\"query\":\"auto\",\"title\":\"\"}", R.string.default_schedule, true, new PreferenceBasic.Callback() {
             @Override
             public void onPreferenceClicked(final ConnectedActivity activity, final Preference preference, final InjectProvider injectProvider, final PreferenceBasic.OnPreferenceClickedCallback callback) {
-                injectProvider.getSettingsScheduleLessons().show(activity, preference, value -> injectProvider.getThread().run(() -> {
+                injectProvider.getSettingsScheduleLessons().show(activity, preference, value -> injectProvider.getThread().standalone(() -> {
                     injectProvider.getStoragePref().put(activity, "pref_schedule_lessons_default", value);
                     callback.onSetSummary(activity, value);
                 }));
@@ -53,7 +53,7 @@ public class SettingsScheduleLessonsFragment extends SettingsTemplatePreferences
         preferences.add(new PreferenceBasic("pref_schedule_lessons_clear_cache", null, R.string.clear_schedule_cache, false, new PreferenceBasic.Callback() {
             @Override
             public void onPreferenceClicked(final ConnectedActivity activity, final Preference preference, final InjectProvider injectProvider, final PreferenceBasic.OnPreferenceClickedCallback callback) {
-                injectProvider.getThread().run(() -> {
+                injectProvider.getThread().standalone(() -> {
                     if (activity != null) {
                         boolean success = injectProvider.getStorage().clear(activity, Storage.CACHE, Storage.GLOBAL, "schedule_lessons");
                         injectProvider.getNotificationMessage().snackBar(activity, activity.getString(success ? R.string.cache_cleared : R.string.something_went_wrong));
@@ -76,7 +76,7 @@ public class SettingsScheduleLessonsFragment extends SettingsTemplatePreferences
                             .setTitle(R.string.pref_schedule_lessons_clear_additional_title)
                             .setMessage(R.string.pref_schedule_lessons_clear_additional_warning)
                             .setIcon(R.drawable.ic_warning)
-                            .setPositiveButton(R.string.proceed, (dialog, which) -> injectProvider.getThread().run(() -> {
+                            .setPositiveButton(R.string.proceed, (dialog, which) -> injectProvider.getThread().standalone(() -> {
                                 boolean success = injectProvider.getStorage().clear(activity, Storage.PERMANENT, Storage.USER, "schedule_lessons");
                                 injectProvider.getNotificationMessage().snackBar(activity, activity.getString(success ? R.string.changes_cleared : R.string.something_went_wrong));
                             }))

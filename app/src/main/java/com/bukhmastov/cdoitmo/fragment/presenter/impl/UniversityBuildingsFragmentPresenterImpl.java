@@ -71,6 +71,8 @@ import java.util.Objects;
 
 import javax.inject.Inject;
 
+import static com.bukhmastov.cdoitmo.util.Thread.UB;
+
 public class UniversityBuildingsFragmentPresenterImpl implements UniversityBuildingsFragmentPresenter, OnMapReadyCallback, GoogleMap.OnMarkerClickListener {
 
     private static final String TAG = "UniversityBuildingsFragment";
@@ -126,7 +128,8 @@ public class UniversityBuildingsFragmentPresenterImpl implements UniversityBuild
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
-        thread.run(() -> {
+        thread.initialize(UB);
+        thread.run(UB, () -> {
             log.v(TAG, "Fragment created");
             firebaseAnalyticsProvider.logCurrentScreen(activity, fragment);
             markersCampusEnabled = storagePref.get(activity, "pref_university_buildings_campus", true);
@@ -137,6 +140,7 @@ public class UniversityBuildingsFragmentPresenterImpl implements UniversityBuild
     @Override
     public void onDestroy() {
         log.v(TAG, "Fragment destroyed");
+        thread.interrupt(UB);
     }
 
     @Override
@@ -147,8 +151,8 @@ public class UniversityBuildingsFragmentPresenterImpl implements UniversityBuild
 
     @Override
     public void onPause() {
-        thread.run(() -> {
-            log.v(TAG, "Fragment paused");
+        log.v(TAG, "Fragment paused");
+        thread.standalone(() -> {
             if (requestHandle != null) {
                 requestHandle.cancel();
             }
@@ -157,7 +161,7 @@ public class UniversityBuildingsFragmentPresenterImpl implements UniversityBuild
 
     @Override
     public void onCreateView(View container) {
-        thread.runOnUI(() -> {
+        thread.runOnUI(UB, () -> {
             this.container = container;
             if (isNotAddedToActivity()) {
                 log.w(TAG, "onCreateView | fragment not added to activity");
@@ -166,7 +170,7 @@ public class UniversityBuildingsFragmentPresenterImpl implements UniversityBuild
             Switch dormitorySwitch = container.findViewById(R.id.dormitory_switch);
             if (dormitorySwitch != null) {
                 dormitorySwitch.setChecked(markersDormitoryEnabled);
-                dormitorySwitch.setOnCheckedChangeListener((buttonView, isChecked) -> thread.run(() -> {
+                dormitorySwitch.setOnCheckedChangeListener((buttonView, isChecked) -> thread.run(UB, () -> {
                     markersDormitoryEnabled = isChecked;
                     storagePref.put(activity, "pref_university_buildings_dormitory", markersDormitoryEnabled);
                     displayMarkers();
@@ -175,7 +179,7 @@ public class UniversityBuildingsFragmentPresenterImpl implements UniversityBuild
             Switch campusSwitch = container.findViewById(R.id.campus_switch);
             if (campusSwitch != null) {
                 campusSwitch.setChecked(markersCampusEnabled);
-                campusSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> thread.run(() -> {
+                campusSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> thread.run(UB, () -> {
                     markersCampusEnabled = isChecked;
                     storagePref.put(activity, "pref_university_buildings_campus", markersCampusEnabled);
                     displayMarkers();
@@ -199,13 +203,15 @@ public class UniversityBuildingsFragmentPresenterImpl implements UniversityBuild
 
 
     private void load() {
-        thread.run(() -> load(storagePref.get(activity, "pref_use_cache", true) && storagePref.get(activity, "pref_use_university_cache", false)
-                ? Integer.parseInt(storagePref.get(activity, "pref_static_refresh", "168"))
-                : 0));
+        thread.run(UB, () -> {
+            load(storagePref.get(activity, "pref_use_cache", true) && storagePref.get(activity, "pref_use_university_cache", false)
+                    ? Integer.parseInt(storagePref.get(activity, "pref_static_refresh", "168"))
+                    : 0);
+        });
     }
 
-    private void load(final int refresh_rate) {
-        thread.run(() -> {
+    private void load(int refresh_rate) {
+        thread.run(UB, () -> {
             log.v(TAG, "load | refresh_rate=", refresh_rate);
             if (!(storagePref.get(activity, "pref_use_cache", true) && storagePref.get(activity, "pref_use_university_cache", false))) {
                 load(false);
@@ -227,8 +233,8 @@ public class UniversityBuildingsFragmentPresenterImpl implements UniversityBuild
         });
     }
 
-    private void load(final boolean force) {
-        thread.run(() -> {
+    private void load(boolean force) {
+        thread.run(UB, () -> {
             log.v(TAG, "load | force=", force);
             if ((!force || !Client.isOnline(activity)) && uBuildings != null) {
                 display();
@@ -240,25 +246,21 @@ public class UniversityBuildingsFragmentPresenterImpl implements UniversityBuild
             }
             loadProvider(new RestResponseHandler() {
                 @Override
-                public void onSuccess(final int statusCode, final Client.Headers headers, final JSONObject obj, final JSONArray arr) {
-                    thread.run(() -> {
-                        if (statusCode == 200 && obj != null) {
-                            UBuildings data = new UBuildings().fromJson(obj);
-                            data.setTimestamp(time.getTimeInMillis());
-                            if (storagePref.get(activity, "pref_use_cache", true) && storagePref.get(activity, "pref_use_university_cache", false)) {
-                                storage.put(activity, Storage.CACHE, Storage.GLOBAL, "university#buildings", data.toJsonString());
-                            }
-                            uBuildings = data;
-                            display();
-                            return;
+                public void onSuccess(int code, Client.Headers headers, JSONObject obj, JSONArray arr) throws Exception {
+                    if (code == 200 && obj != null) {
+                        UBuildings data = new UBuildings().fromJson(obj);
+                        data.setTimestamp(time.getTimeInMillis());
+                        if (storagePref.get(activity, "pref_use_cache", true) && storagePref.get(activity, "pref_use_university_cache", false)) {
+                            storage.put(activity, Storage.CACHE, Storage.GLOBAL, "university#buildings", data.toJsonString());
                         }
-                        indicatorLoadFailed();
-                    }, throwable -> {
-                        indicatorLoadFailed();
-                    });
+                        uBuildings = data;
+                        display();
+                        return;
+                    }
+                    indicatorLoadFailed();
                 }
                 @Override
-                public void onFailure(final int statusCode, final Client.Headers headers, final int state) {
+                public void onFailure(int code, Client.Headers headers, int state) {
                     log.v(TAG, "forceLoad | failure ", state);
                     switch (state) {
                         case IfmoRestClient.FAILED_OFFLINE:
@@ -272,7 +274,7 @@ public class UniversityBuildingsFragmentPresenterImpl implements UniversityBuild
                     }
                 }
                 @Override
-                public void onProgress(final int state) {
+                public void onProgress(int state) {
                     log.v(TAG, "forceLoad | progress ", state);
                     indicatorLoading();
                 }
@@ -301,7 +303,7 @@ public class UniversityBuildingsFragmentPresenterImpl implements UniversityBuild
     }
 
     private void displayMarkers() {
-        thread.run(() -> {
+        thread.run(UB, () -> {
             if (uBuildings == null || googleMap == null) {
                 return;
             }
@@ -342,7 +344,7 @@ public class UniversityBuildingsFragmentPresenterImpl implements UniversityBuild
                     if (icon != -1) {
                         markerOptions.icon(tintMarker(activity, icon));
                     }
-                    thread.runOnUI(() -> {
+                    thread.runOnUI(UB, () -> {
                         Marker marker = googleMap.addMarker(markerOptions);
                         marker.setTag(building);
                         markers.add(marker);
@@ -374,8 +376,8 @@ public class UniversityBuildingsFragmentPresenterImpl implements UniversityBuild
 
 
     @Override
-    public void onMapReady(final GoogleMap gMap) {
-        thread.run(() -> {
+    public void onMapReady(GoogleMap gMap) {
+        thread.run(UB, () -> {
             MapStyleOptions mapStyleOptions;
             switch (theme.getAppTheme(activity)) {
                 case "light":
@@ -384,7 +386,7 @@ public class UniversityBuildingsFragmentPresenterImpl implements UniversityBuild
                 case "black": mapStyleOptions = MapStyleOptions.loadRawResourceStyle(activity, R.raw.google_map_black); break;
                 case "white": mapStyleOptions = MapStyleOptions.loadRawResourceStyle(activity, R.raw.google_map_white); break;
             }
-            thread.runOnUI(() -> {
+            thread.runOnUI(UB, () -> {
                 googleMap = gMap;
                 googleMap.setMapStyle(mapStyleOptions);
                 googleMap.setOnMarkerClickListener(this);
@@ -418,7 +420,7 @@ public class UniversityBuildingsFragmentPresenterImpl implements UniversityBuild
     }
 
     private void removeAllMarkers() {
-        thread.runOnUI(() -> {
+        thread.runOnUI(UB, () -> {
             for (Marker marker : markers) {
                 marker.remove();
             }
@@ -434,8 +436,9 @@ public class UniversityBuildingsFragmentPresenterImpl implements UniversityBuild
             if (markerContainer != null) {
                 View marker = inflate(R.layout.layout_university_buildings_marker_info);
                 ((TextView) marker.findViewById(R.id.marker_text)).setText(escapeText(building.getTitle()));
-                marker.findViewById(R.id.web).setOnClickListener(view -> thread.run(() -> {
-                    eventBus.fire(new OpenIntentEvent(new Intent(Intent.ACTION_VIEW, Uri.parse("http://www.ifmo.ru/ru/map/" + building.getId() + "/"))));
+                marker.findViewById(R.id.web).setOnClickListener(view -> thread.run(UB, () -> {
+                    Uri uri = Uri.parse("http://www.ifmo.ru/ru/map/" + building.getId() + "/");
+                    eventBus.fire(new OpenIntentEvent(new Intent(Intent.ACTION_VIEW, uri)));
                 }));
                 Picasso.with(activity)
                         .load(building.getImage())
@@ -453,7 +456,7 @@ public class UniversityBuildingsFragmentPresenterImpl implements UniversityBuild
     }
 
     private void closeMarkerInfo() {
-        thread.runOnUI(() -> {
+        thread.runOnUI(UB, () -> {
             View markerContainer = container.findViewById(R.id.marker_info_container);
             if (markerContainer != null) {
                 View marker = markerContainer.findViewById(R.id.marker_info);
@@ -467,7 +470,7 @@ public class UniversityBuildingsFragmentPresenterImpl implements UniversityBuild
     }
 
     private void openList() {
-        thread.runOnUI(() -> {
+        thread.runOnUI(UB, () -> {
             closeMarkerInfo();
             closeList();
             if (uBuildings == null) {
@@ -488,13 +491,13 @@ public class UniversityBuildingsFragmentPresenterImpl implements UniversityBuild
                     View item = inflate(R.layout.layout_university_faculties_divisions_list_item);
                     ((TextView) item.findViewById(R.id.title)).setText(building.getTitle());
                     item.setOnClickListener(v -> {
-                        thread.runOnUI(() -> {
+                        thread.runOnUI(UB, () -> {
                             for (Marker marker : markers) {
-                                UBuilding building1 = (UBuilding) marker.getTag();
-                                if (building1 == null) {
+                                UBuilding b = (UBuilding) marker.getTag();
+                                if (b == null) {
                                     continue;
                                 }
-                                if (Objects.equals(building.getTitle(), building1.getTitle())) {
+                                if (Objects.equals(building.getTitle(), b.getTitle())) {
                                     closeList();
                                     onMarkerClick(marker);
                                     break;
@@ -514,7 +517,7 @@ public class UniversityBuildingsFragmentPresenterImpl implements UniversityBuild
     }
 
     private void closeList() {
-        thread.runOnUI(() -> {
+        thread.runOnUI(UB, () -> {
             View markerContainer = container.findViewById(R.id.marker_info_container);
             if (markerContainer != null) {
                 View list = markerContainer.findViewById(R.id.list);
@@ -528,7 +531,7 @@ public class UniversityBuildingsFragmentPresenterImpl implements UniversityBuild
     }
 
     private void zoomToMarker(Marker marker) {
-        thread.runOnUI(() -> {
+        thread.runOnUI(UB, () -> {
             CameraPosition cameraPosition = new CameraPosition.Builder().target(marker.getPosition()).zoom(15).build();
             googleMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition), 1000, null);
         });
@@ -550,7 +553,7 @@ public class UniversityBuildingsFragmentPresenterImpl implements UniversityBuild
 
 
     private void indicatorLoading() {
-        thread.runOnUI(() -> {
+        thread.runOnUI(UB, () -> {
             ViewGroup vg = container.findViewById(R.id.status);
             if (vg != null) {
                 vg.removeAllViews();
@@ -562,7 +565,7 @@ public class UniversityBuildingsFragmentPresenterImpl implements UniversityBuild
     }
 
     private void indicatorLoadFailed() {
-        thread.runOnUI(() -> {
+        thread.runOnUI(UB, () -> {
             View view = inflate(R.layout.layout_university_buildings_status_image);
             view.setOnClickListener(v -> load());
             ImageView image = view.findViewById(R.id.image);
@@ -578,7 +581,7 @@ public class UniversityBuildingsFragmentPresenterImpl implements UniversityBuild
     }
 
     private void indicatorLoadOffline() {
-        thread.runOnUI(() -> {
+        thread.runOnUI(UB, () -> {
             View view = inflate(R.layout.layout_university_buildings_status_image);
             ImageView image = view.findViewById(R.id.image);
             image.setImageResource(R.drawable.ic_disconnected);
@@ -593,7 +596,7 @@ public class UniversityBuildingsFragmentPresenterImpl implements UniversityBuild
     }
 
     private void indicatorFailed() {
-        thread.runOnUI(() -> {
+        thread.runOnUI(UB, () -> {
             View view = inflate(R.layout.layout_university_buildings_status_image);
             ImageView image = view.findViewById(R.id.image);
             image.setImageResource(R.drawable.ic_warning);
@@ -608,7 +611,7 @@ public class UniversityBuildingsFragmentPresenterImpl implements UniversityBuild
     }
 
     private void indicatorLoaded() {
-        thread.runOnUI(() -> {
+        thread.runOnUI(UB, () -> {
             ViewGroup vg = container.findViewById(R.id.status);
             if (vg != null) {
                 vg.removeAllViews();

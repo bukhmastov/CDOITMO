@@ -59,6 +59,8 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
+import static com.bukhmastov.cdoitmo.util.Thread.ER;
+
 public class ERegisterFragmentPresenterImpl extends ConnectedFragmentWithDataPresenterImpl<ERegister>
         implements ERegisterFragmentPresenter, SwipeRefreshLayout.OnRefreshListener {
 
@@ -103,12 +105,12 @@ public class ERegisterFragmentPresenterImpl extends ConnectedFragmentWithDataPre
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
-        thread.run(() -> {
+        thread.run(ER, () -> {
             log.v(TAG, "Fragment created");
             if (App.UNAUTHORIZED_MODE) {
                 forbidden = true;
                 log.w(TAG, "Fragment created | UNAUTHORIZED_MODE not allowed, closing fragment...");
-                thread.runOnUI(() -> fragment.close());
+                thread.runOnUI(ER, () -> fragment.close());
                 return;
             }
             firebaseAnalyticsProvider.logCurrentScreen(activity, fragment);
@@ -129,7 +131,7 @@ public class ERegisterFragmentPresenterImpl extends ConnectedFragmentWithDataPre
             if (info != null) {
                 info.setVisible(true);
                 info.setOnMenuItemClickListener(item -> {
-                    thread.runOnUI(() -> {
+                    thread.runOnUI(ER, () -> {
                         if (activity.isFinishing() || activity.isDestroyed()) {
                             return;
                         }
@@ -143,16 +145,16 @@ public class ERegisterFragmentPresenterImpl extends ConnectedFragmentWithDataPre
                     return false;
                 });
             }
-            thread.run(() -> {
+            thread.run(ER, () -> {
                 if (share == null) {
                     return;
                 }
                 TreeSet<ERSubject> subjects = makeSubjectsSet(getData());
                 if (CollectionUtils.isEmpty(subjects)) {
-                    thread.runOnUI(() -> share.setVisible(false));
+                    thread.runOnUI(ER, () -> share.setVisible(false));
                     return;
                 }
-                thread.runOnUI(() -> {
+                thread.runOnUI(ER, () -> {
                     share.setVisible(true);
                     share.setOnMenuItemClickListener(menuItem -> {
                         share();
@@ -167,19 +169,23 @@ public class ERegisterFragmentPresenterImpl extends ConnectedFragmentWithDataPre
 
     @Override
     public void onRefresh() {
-        thread.runOnUI(() -> {
+        thread.run(ER, () -> {
             log.v(TAG, "refreshing");
             load(true);
         });
     }
 
     protected void load() {
-        thread.run(() -> load(storagePref.get(activity, "pref_use_cache", true) ? Integer.parseInt(storagePref.get(activity, "pref_dynamic_refresh", "0")) : 0));
+        thread.run(ER, () -> {
+            load(storagePref.get(activity, "pref_use_cache", true) ?
+                    Integer.parseInt(storagePref.get(activity, "pref_dynamic_refresh", "0")) :
+                    0);
+        });
     }
 
-    private void load(final int refresh_rate) {
-        thread.run(() -> {
-            log.v(TAG, "load | refresh_rate=" + refresh_rate);
+    private void load(int refreshRate) {
+        thread.run(ER, () -> {
+            log.v(TAG, "load | refreshRate=" + refreshRate);
             if (!storagePref.get(activity, "pref_use_cache", true)) {
                 load(false);
                 return;
@@ -190,7 +196,7 @@ public class ERegisterFragmentPresenterImpl extends ConnectedFragmentWithDataPre
                 return;
             }
             setData(cache);
-            if (cache.getTimestamp() + refresh_rate * 3600000L < time.getTimeInMillis()) {
+            if (cache.getTimestamp() + refreshRate * 3600000L < time.getTimeInMillis()) {
                 load(true, cache);
             } else {
                 load(false, cache);
@@ -198,12 +204,12 @@ public class ERegisterFragmentPresenterImpl extends ConnectedFragmentWithDataPre
         });
     }
 
-    private void load(final boolean force) {
-        thread.run(() -> load(force, null));
+    private void load(boolean force) {
+        thread.run(ER, () -> load(force, null));
     }
 
-    private void load(final boolean force, final ERegister cached) {
-        thread.run(() -> {
+    private void load(boolean force, ERegister cached) {
+        thread.run(ER, () -> {
             log.v(TAG, "load | force=" + (force ? "true" : "false"));
             if ((!force || !Client.isOnline(activity)) && storagePref.get(activity, "pref_use_cache", true)) {
                 try {
@@ -223,7 +229,7 @@ public class ERegisterFragmentPresenterImpl extends ConnectedFragmentWithDataPre
                     display();
                     return;
                 }
-                thread.runOnUI(() -> {
+                thread.runOnUI(ER, () -> {
                     fragment.draw(R.layout.state_offline_text);
                     View reload = fragment.container().findViewById(R.id.offline_reload);
                     if (reload != null) {
@@ -234,37 +240,33 @@ public class ERegisterFragmentPresenterImpl extends ConnectedFragmentWithDataPre
             }
             deIfmoRestClient.get(activity, "eregister", null, new RestResponseHandler() {
                 @Override
-                public void onSuccess(final int statusCode, final Client.Headers headers, final JSONObject obj, final JSONArray arr) {
-                    thread.run(() -> {
-                        log.v(TAG, "load | success | statusCode=" + statusCode + " | obj=" + (obj == null ? "null" : "notnull"));
-                        if (statusCode == 200 && obj != null) {
-                            ERegister data = new ERegister().fromJson(obj);
-                            data.setTimestamp(time.getTimeInMillis());
-                            putToCache(data);
-                            setData(data);
-                            display();
-                            return;
-                        }
-                        if (getData() != null) {
-                            display();
-                            return;
-                        }
-                        loadFailed();
-                    }, throwable -> {
-                        loadFailed();
-                    });
+                public void onSuccess(int code, Client.Headers headers, JSONObject obj, JSONArray arr) throws Exception {
+                    log.v(TAG, "load | success | code=", code, " | obj=", obj);
+                    if (code == 200 && obj != null) {
+                        ERegister data = new ERegister().fromJson(obj);
+                        data.setTimestamp(time.getTimeInMillis());
+                        putToCache(data);
+                        setData(data);
+                        display();
+                        return;
+                    }
+                    if (getData() != null) {
+                        display();
+                        return;
+                    }
+                    loadFailed();
                 }
                 @Override
-                public void onFailure(final int statusCode, final Client.Headers headers, final int state) {
-                    thread.run(() -> {
-                        log.v(TAG, "load | failure " + state);
+                public void onFailure(int statusCode, Client.Headers headers, int state) {
+                    try {
+                        log.v(TAG, "load | failure ", state);
                         switch (state) {
                             case DeIfmoRestClient.FAILED_OFFLINE:
                                 if (getData() != null) {
                                     display();
                                     return;
                                 }
-                                thread.runOnUI(() -> {
+                                thread.runOnUI(ER, () -> {
                                     fragment.draw(R.layout.state_offline_text);
                                     View reload = fragment.container().findViewById(R.id.offline_reload);
                                     if (reload != null) {
@@ -277,7 +279,7 @@ public class ERegisterFragmentPresenterImpl extends ConnectedFragmentWithDataPre
                             case DeIfmoRestClient.FAILED_TRY_AGAIN:
                             case DeIfmoRestClient.FAILED_SERVER_ERROR:
                             case DeIfmoRestClient.FAILED_CORRUPTED_JSON:
-                                thread.runOnUI(() -> {
+                                thread.runOnUI(ER, () -> {
                                     fragment.draw(R.layout.state_failed_button);
                                     TextView message = fragment.container().findViewById(R.id.try_again_message);
                                     if (message != null) {
@@ -303,19 +305,19 @@ public class ERegisterFragmentPresenterImpl extends ConnectedFragmentWithDataPre
                                 });
                                 break;
                         }
-                    }, throwable -> {
+                    } catch (Throwable throwable) {
                         loadFailed();
-                    });
+                    }
                 }
                 @Override
                 public void onProgress(final int state) {
-                    thread.runOnUI(() -> {
-                        log.v(TAG, "load | progress " + state);
+                    thread.runOnUI(ER, () -> {
+                        log.v(TAG, "load | progress ", state);
                         fragment.draw(R.layout.state_loading_text);
-                        TextView loading_message = fragment.container().findViewById(R.id.loading_message);
-                        if (loading_message != null) {
+                        TextView loadingMessage = fragment.container().findViewById(R.id.loading_message);
+                        if (loadingMessage != null) {
                             switch (state) {
-                                case DeIfmoRestClient.STATE_HANDLING: loading_message.setText(R.string.loading); break;
+                                case DeIfmoRestClient.STATE_HANDLING: loadingMessage.setText(R.string.loading); break;
                             }
                         }
                     });
@@ -331,7 +333,7 @@ public class ERegisterFragmentPresenterImpl extends ConnectedFragmentWithDataPre
     }
 
     private void loadFailed() {
-        thread.runOnUI(() -> {
+        thread.runOnUI(ER, () -> {
             log.v(TAG, "loadFailed");
             fragment.draw(R.layout.state_failed_button);
             TextView message = fragment.container().findViewById(R.id.try_again_message);
@@ -346,7 +348,7 @@ public class ERegisterFragmentPresenterImpl extends ConnectedFragmentWithDataPre
     }
 
     protected void display() {
-        thread.run(() -> {
+        thread.run(ER, () -> {
             log.v(TAG, "display");
             ERegister data = getData();
             if (data == null) {
@@ -356,15 +358,15 @@ public class ERegisterFragmentPresenterImpl extends ConnectedFragmentWithDataPre
             applySelectedTermAndGroup(data);
             ERegisterSubjectsRVA adapter = new ERegisterSubjectsRVA(activity, makeSubjectsSet(data));
             adapter.setClickListener(R.id.subject, (v, subject) -> {
-                thread.run(() -> {
+                thread.standalone(() -> {
                     Bundle extras = new Bundle();
                     extras.putSerializable("subject", subject);
-                    thread.runOnUI(() -> activity.openActivityOrFragment(ERegisterSubjectFragment.class, extras));
+                    thread.runOnUI(ER, () -> activity.openActivityOrFragment(ERegisterSubjectFragment.class, extras));
                 }, throwable -> {
                     notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
                 });
             });
-            thread.runOnUI(() -> {
+            thread.runOnUI(ER, () -> {
                 onToolbarSetup(fragment.toolbar());
                 fragment.draw(R.layout.layout_eregister);
                 // set adapter to recycler view
@@ -402,7 +404,7 @@ public class ERegisterFragmentPresenterImpl extends ConnectedFragmentWithDataPre
                     spinnerGroupBlocker = true;
                     spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
                         public void onItemSelected(final AdapterView<?> parent, final View item, final int position, final long selectedId) {
-                            thread.run(() -> {
+                            thread.run(ER, () -> {
                                 if (spinnerGroupBlocker) {
                                     spinnerGroupBlocker = false;
                                     return;
@@ -449,7 +451,7 @@ public class ERegisterFragmentPresenterImpl extends ConnectedFragmentWithDataPre
                     spinnerPeriodBlocker = true;
                     spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
                         public void onItemSelected(final AdapterView<?> parent, final View item, final int position, final long selectedId) {
-                            thread.run(() -> {
+                            thread.run(ER, () -> {
                                 if (spinnerPeriodBlocker) {
                                     spinnerPeriodBlocker = false;
                                     return;
@@ -473,7 +475,7 @@ public class ERegisterFragmentPresenterImpl extends ConnectedFragmentWithDataPre
     }
 
     private void share() {
-        thread.run(() -> {
+        thread.standalone(() -> {
             TreeSet<ERSubject> subjects = makeSubjectsSet(getData());
             if (CollectionUtils.isEmpty(subjects)) {
                 return;
@@ -690,5 +692,10 @@ public class ERegisterFragmentPresenterImpl extends ConnectedFragmentWithDataPre
     @Override
     protected String getCachePath() {
         return "eregister#core";
+    }
+
+    @Override
+    protected String getThreadToken() {
+        return ER;
     }
 }

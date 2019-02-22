@@ -49,6 +49,8 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
+import static com.bukhmastov.cdoitmo.util.Thread.SA;
+
 public class ScheduleAttestationsFragmentPresenterImpl extends ConnectedFragmentPresenterImpl
         implements ScheduleAttestationsFragmentPresenter {
 
@@ -93,14 +95,14 @@ public class ScheduleAttestationsFragmentPresenterImpl extends ConnectedFragment
         AppComponentProvider.getComponent().inject(this);
         scheduleHandler = new Schedule.Handler<SAttestations>() {
             @Override
-            public void onSuccess(final SAttestations schedule, final boolean fromCache) {
-                thread.run(() -> {
+            public void onSuccess(SAttestations schedule, boolean fromCache) {
+                thread.run(SA, () -> {
                     ScheduleAttestationsFragmentPresenterImpl.this.schedule = schedule;
                     int week = time.getWeek(activity);
                     ScheduleAttestationsRVA adapter = new ScheduleAttestationsRVA(schedule, week);
                     adapter.setClickListener(R.id.schedule_lessons_menu, ScheduleAttestationsFragmentPresenterImpl.this::attestationsMenuMore);
                     adapter.setClickListener(R.id.schedule_lessons_share, ScheduleAttestationsFragmentPresenterImpl.this::attestationsMenuShare);
-                    thread.runOnUI(() -> {
+                    thread.runOnUI(SA, () -> {
                         fragment.draw(R.layout.layout_schedule_both_recycle_list);
                         // prepare
                         SwipeRefreshLayout swipe = fragment.container().findViewById(R.id.schedule_swipe);
@@ -147,8 +149,8 @@ public class ScheduleAttestationsFragmentPresenterImpl extends ConnectedFragment
                 });
             }
             @Override
-            public void onFailure(final int statusCode, final Client.Headers headers, final int state) {
-                thread.runOnUI(() -> {
+            public void onFailure(int statusCode, Client.Headers headers, int state) {
+                thread.runOnUI(SA, () -> {
                     ScheduleAttestationsFragmentPresenterImpl.this.schedule = null;
                     log.v(TAG, "onFailure | statusCode=", statusCode, " | state=", state);
                     switch (state) {
@@ -203,8 +205,8 @@ public class ScheduleAttestationsFragmentPresenterImpl extends ConnectedFragment
                 });
             }
             @Override
-            public void onProgress(final int state) {
-                thread.runOnUI(() -> {
+            public void onProgress(int state) {
+                thread.runOnUI(SA, () -> {
                     log.v(TAG, "onProgress | state=", state);
                     ViewGroup view = (ViewGroup) fragment.inflate(R.layout.state_loading_text);
                     if (view != null) {
@@ -230,7 +232,7 @@ public class ScheduleAttestationsFragmentPresenterImpl extends ConnectedFragment
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
-        thread.run(() -> {
+        thread.run(SA, () -> {
             log.v(TAG, "Fragment created");
             firebaseAnalyticsProvider.logCurrentScreen(activity, fragment);
             // define query
@@ -253,7 +255,7 @@ public class ScheduleAttestationsFragmentPresenterImpl extends ConnectedFragment
 
     @Override
     public void onDestroy() {
-        thread.runOnUI(() -> {
+        thread.runOnUI(SA, () -> {
             log.v(TAG, "Fragment destroyed");
             loaded = false;
             tab = null;
@@ -266,22 +268,25 @@ public class ScheduleAttestationsFragmentPresenterImpl extends ConnectedFragment
                     action_search.setOnMenuItemClickListener(null);
                 }
             }
+            thread.standalone(() -> {
+                thread.interrupt(SA);
+            });
         });
     }
 
     @Override
     public void onResume() {
-        thread.run(() -> {
+        thread.run(SA, () -> {
             log.v(TAG, "resumed");
             firebaseAnalyticsProvider.setCurrentScreen(activity, fragment);
-            thread.runOnUI(() -> {
+            thread.runOnUI(SA, () -> {
                 if (fragment != null && fragment.toolbar() != null) {
                     MenuItem action_search = fragment.toolbar().findItem(R.id.action_search);
                     if (action_search != null && !action_search.isVisible()) {
                         log.v(TAG, "Revealing action_search");
                         action_search.setVisible(true);
                         action_search.setOnMenuItemClickListener(item -> {
-                            thread.run(() -> {
+                            thread.run(SA, () -> {
                                 log.v(TAG, "action_search clicked");
                                 eventBus.fire(new OpenActivityEvent(ScheduleAttestationsSearchActivity.class));
                             });
@@ -291,7 +296,7 @@ public class ScheduleAttestationsFragmentPresenterImpl extends ConnectedFragment
                 }
             });
             if (tab == null) {
-                tab = refresh -> thread.run(() -> {
+                tab = refresh -> thread.run(SA, () -> {
                     log.v(TAG, "onInvalidate | refresh=", refresh);
                     fragment.storeData(getQuery());
                     if (fragment.isResumed()) {
@@ -317,14 +322,14 @@ public class ScheduleAttestationsFragmentPresenterImpl extends ConnectedFragment
     }
 
     private void load(boolean refresh) {
-        thread.runOnUI(() -> {
+        thread.runOnUI(SA, () -> {
             if (activity == null) {
                 log.w(TAG, "load | activity is null");
                 failed(activity);
                 return;
             }
             fragment.draw(R.layout.state_loading_text);
-            thread.run(() -> {
+            thread.run(SA, () -> {
                 if (activity == null || getQuery() == null) {
                     log.w(TAG, "load | some values are null | activity=", activity, " | getQuery()=", getQuery());
                     failed(activity);
@@ -392,7 +397,7 @@ public class ScheduleAttestationsFragmentPresenterImpl extends ConnectedFragment
     // -->- Attestations global menu ->--
 
     private void attestationsMenuShare(View view, RVAAttestations entity) {
-        thread.runOnUI(() -> {
+        thread.runOnUI(SA, () -> {
             if (schedule == null) {
                 notificationMessage.snackBar(activity, activity.getString(R.string.cache_failed));
                 return;
@@ -411,7 +416,7 @@ public class ScheduleAttestationsFragmentPresenterImpl extends ConnectedFragment
                 }
             }
             popup.setOnMenuItemClickListener(menuItem -> {
-                thread.run(() -> {
+                thread.run(SA, () -> {
                     switch (menuItem.getItemId()) {
                         case R.id.share_all_schedule: shareSchedule(entity.getSubjects()); break;
                         default:
@@ -436,23 +441,23 @@ public class ScheduleAttestationsFragmentPresenterImpl extends ConnectedFragment
     }
 
     private void attestationsMenuMore(View view, RVAAttestations entity) {
-        thread.run(() -> {
+        thread.run(SA, () -> {
             if (schedule == null) {
                 notificationMessage.snackBar(activity, activity.getString(R.string.cache_failed));
                 return;
             }
             String cacheToken = schedule.getQuery() == null ? null : schedule.getQuery().toLowerCase();
             boolean isCached = cacheToken != null && StringUtils.isNotBlank(storage.get(activity, Storage.CACHE, Storage.GLOBAL, "schedule_attestations#lessons#" + cacheToken, ""));
-            thread.runOnUI(() -> {
+            thread.runOnUI(SA, () -> {
                 PopupMenu popup = new PopupMenu(activity, view);
                 popup.inflate(R.menu.schedule_attestations_common_more);
                 popup.getMenu().findItem(R.id.toggle_cache).setChecked(isCached);
                 popup.setOnMenuItemClickListener(menuItem -> {
-                    thread.run(() -> {
+                    thread.run(SA, () -> {
                         switch (menuItem.getItemId()) {
                             case R.id.toggle_cache:
                                 if (toggleCache()) {
-                                    thread.runOnUI(() -> menuItem.setChecked(!isCached));
+                                    thread.runOnUI(SA, () -> menuItem.setChecked(!isCached));
                                 }
                                 break;
                             case R.id.open_settings: activity.openActivityOrFragment(ConnectedActivity.TYPE.STACKABLE, SettingsScheduleAttestationsFragment.class, null); break;
@@ -566,5 +571,10 @@ public class ScheduleAttestationsFragmentPresenterImpl extends ConnectedFragment
     @Override
     protected String getLogTag() {
         return TAG;
+    }
+
+    @Override
+    protected String getThreadToken() {
+        return SA;
     }
 }

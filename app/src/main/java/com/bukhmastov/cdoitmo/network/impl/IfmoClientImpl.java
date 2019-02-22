@@ -53,7 +53,7 @@ public class IfmoClientImpl extends IfmoClient {
         handler.onProgress(STATE_HANDLING);
         doGet(context, getAbsoluteUrl(protocol, url), query, new RawHandler() {
             @Override
-            public void onDone(int code, okhttp3.Headers headers, String response) {
+            public void onDone(int code, okhttp3.Headers headers, String response) throws Exception {
                 log.v(TAG, "get | url=", url, " | success | statusCode=", code);
                 if (code >= 400) {
                     handler.onFailure(code, new Headers(headers), FAILED_SERVER_ERROR);

@@ -45,6 +45,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import static com.bukhmastov.cdoitmo.util.Thread.AS;
+
 public abstract class SearchActivity extends AppCompatActivity {
 
     private static final String TAG = "SearchActivity";
@@ -96,6 +98,7 @@ public abstract class SearchActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         inject();
+        thread.initialize(AS);
         switch (theme.getAppTheme(this)) {
             case "light":
             default: setTheme(R.style.AppTheme_Search); break;
@@ -128,6 +131,7 @@ public abstract class SearchActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
         log.i(TAG, "Activity destroyed | type=", getType());
+        thread.interrupt(AS);
     }
 
     @Override
@@ -136,8 +140,8 @@ public abstract class SearchActivity extends AppCompatActivity {
         super.attachBaseContext(CtxWrapper.wrap(context, storagePref, log, textUtils));
     }
 
-    private void setMode(final @EXTRA_ACTION_MODE String mode) {
-        thread.runOnUI(() -> {
+    private void setMode(@EXTRA_ACTION_MODE String mode) {
+        thread.runOnUI(AS, () -> {
             log.v(TAG, "setMode | type=", getType(), " | mode=", mode);
             final ViewGroup searchExtraAction = findViewById(R.id.search_extra_action);
             final ImageView searchExtraActionImage = findViewById(R.id.search_extra_action_image);
@@ -182,13 +186,13 @@ public abstract class SearchActivity extends AppCompatActivity {
         });
     }
 
-    private void setSuggestions(final List<Suggestion> suggestions) {
-        thread.run(() -> {
+    private void setSuggestions(List<Suggestion> suggestions) {
+        thread.run(AS, () -> {
             SearchSuggestionsRVA adapter = new SearchSuggestionsRVA(context, suggestions);
             adapter.setClickListener(R.id.click, (v, suggestion) -> {
                 done(suggestion.query, suggestion.title);
             });
-            adapter.setClickListener(R.id.remove, (v, suggestion) -> thread.run(() -> {
+            adapter.setClickListener(R.id.remove, (v, suggestion) -> thread.run(AS, () -> {
                 if (!suggestion.removable) {
                     return;
                 }
@@ -210,7 +214,7 @@ public abstract class SearchActivity extends AppCompatActivity {
                     }
                 }
             }, throwable -> {}));
-            thread.runOnUI(() -> {
+            thread.runOnUI(AS, () -> {
                 RecyclerView recyclerView = findViewById(R.id.search_suggestions);
                 if (recyclerView != null) {
                     recyclerView.setLayoutManager(new LinearLayoutManager(context, RecyclerView.VERTICAL, false));
@@ -251,7 +255,7 @@ public abstract class SearchActivity extends AppCompatActivity {
     }
 
     private void done(String query, String title) {
-        thread.run(() -> {
+        thread.run(AS, () -> {
             log.v(TAG, "done | type=", getType(), " | query=", query, " | title=", title);
             try {
                 String recentString = storage.get(context, Storage.PERMANENT, Storage.USER, "schedule_" + getType() + "#recent", "");
@@ -293,7 +297,7 @@ public abstract class SearchActivity extends AppCompatActivity {
                 storage.delete(context, Storage.PERMANENT, Storage.USER, "schedule_" + getType() + "#recent");
             }
             onDone(query);
-            thread.runOnUI(this::finish);
+            thread.runOnUI(AS, this::finish);
         });
     }
 
@@ -329,9 +333,9 @@ public abstract class SearchActivity extends AppCompatActivity {
     }
 
     @Override
-    protected void onActivityResult(final int requestCode, final int resultCode, final Intent data) {
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        thread.runOnUI(() -> {
+        thread.runOnUI(AS, () -> {
             switch (requestCode) {
                 case REQ_CODE_SPEECH_INPUT: {
                     log.v(TAG, "doneRecognition");
@@ -396,7 +400,7 @@ public abstract class SearchActivity extends AppCompatActivity {
         public void onTextChanged(CharSequence s, int start, int before, int count) {}
         @Override
         public void afterTextChanged(final Editable s) {
-            thread.run(() -> {
+            thread.run(AS, () -> {
                 String query = s.toString().trim();
                 if (query.isEmpty()) {
                     setMode(SPEECH_RECOGNITION);

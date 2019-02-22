@@ -9,7 +9,7 @@ import com.bukhmastov.cdoitmo.model.schedule.teachers.STeachers;
 
 public interface TeacherSearch {
 
-    void search(final String query, final TeacherSearchCallback callback);
+    void search(String query, TeacherSearchCallback callback);
 
     //void setQuery(String query);
 

@@ -116,7 +116,7 @@ public class SettingsFragment extends SettingsTemplateHeadersFragment {
     }
 
     private void resetPreferences() {
-        thread.get().run(() -> {
+        thread.get().standalone(() -> {
             if (activity() == null) {
                 return;
             }

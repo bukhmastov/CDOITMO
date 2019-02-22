@@ -35,83 +35,83 @@ public class TeacherSearchImpl implements TeacherSearch {
     }
 
     @Override
-    public void search(final String query, final TeacherSearchCallback callback) {
-        thread.run(() -> {
-            if (callback == null) {
-                return;
-            }
+    public void search(String query, TeacherSearchCallback callback) {
+        thread.assertNotUI();
 
-            log.v(TAG, "search | query = ", query);
+        if (callback == null) {
+            return;
+        }
 
-            if (requestHandle != null) {
-                requestHandle.cancel();
-            }
-            handler.removeCallbacksAndMessages(null);
+        log.v(TAG, "search | query = ", query);
 
-            boolean isEmptyQuery = query == null || query.isEmpty();
-            if (isEmptyQuery) {
-                log.v(TAG, "search | query = ", query, " | empty");
-                callback.onState(REJECTED_EMPTY);
-                return;
-            }
+        if (requestHandle != null) {
+            requestHandle.cancel();
+        }
+        handler.removeCallbacksAndMessages(null);
 
-            //boolean isInvalidQuery = this.query.equals(query); // should be different
-            //if (!isInvalidQuery) {
-            boolean isInvalidQuery = false;
-            try {
-                new JSONObject(query);
-                isInvalidQuery = true; // should not be json
-            } catch (Exception ignore) {
-                // ignore
-            }
-            //}
-            if (isInvalidQuery) {
-                log.v(TAG, "search | query = ", query, " | rejected");
-                callback.onState(REJECTED);
-                return;
-            }
+        boolean isEmptyQuery = query == null || query.isEmpty();
+        if (isEmptyQuery) {
+            log.v(TAG, "search | query = ", query, " | empty");
+            callback.onState(REJECTED_EMPTY);
+            return;
+        }
 
-            //this.query = query;
-            callback.onState(ACCEPTED);
+        //boolean isInvalidQuery = this.query.equals(query); // should be different
+        //if (!isInvalidQuery) {
+        boolean isInvalidQuery = false;
+        try {
+            new JSONObject(query);
+            isInvalidQuery = true; // should not be json
+        } catch (Exception ignore) {
+            // ignore
+        }
+        //}
+        if (isInvalidQuery) {
+            log.v(TAG, "search | query = ", query, " | rejected");
+            callback.onState(REJECTED);
+            return;
+        }
 
-            handler.postDelayed(() -> {
-                log.v(TAG, "search | query = ", query, " | searching");
-                callback.onState(SEARCHING);
-                scheduleLessons.search(query, new Schedule.Handler<SLessons>() {
-                    @Override
-                    public void onSuccess(SLessons schedule, boolean fromCache) {
-                        log.v(TAG, "search | query = ", query, " | found");
-                        if (schedule == null || schedule.getTeachers() == null) {
-                            callback.onState(NOT_FOUND);
-                            return;
-                        }
-                        callback.onState(FOUND);
-                        callback.onSuccess(schedule.getTeachers());
-                    }
-                    @Override
-                    public void onFailure(int state) {
-                        this.onFailure(0, null, state);
-                    }
-                    @Override
-                    public void onFailure(int statusCode, Client.Headers headers, int state) {
-                        log.v(TAG, "search | query = ", query, " | not found");
+        //this.query = query;
+        callback.onState(ACCEPTED);
+
+        handler.postDelayed(() -> {
+            log.v(TAG, "search | query = ", query, " | searching");
+            callback.onState(SEARCHING);
+            scheduleLessons.search(query, new Schedule.Handler<SLessons>() {
+                @Override
+                public void onSuccess(SLessons schedule, boolean fromCache) {
+                    log.v(TAG, "search | query = ", query, " | found");
+                    if (schedule == null || schedule.getTeachers() == null) {
                         callback.onState(NOT_FOUND);
+                        return;
                     }
-                    @Override
-                    public void onProgress(int state) {}
-                    @Override
-                    public void onNewRequest(Client.Request request) {
-                        requestHandle = request;
+                    callback.onState(FOUND);
+                    callback.onSuccess(schedule.getTeachers());
+                }
+                @Override
+                public void onFailure(int state) {
+                    this.onFailure(0, null, state);
+                }
+                @Override
+                public void onFailure(int statusCode, Client.Headers headers, int state) {
+                    log.v(TAG, "search | query = ", query, " | not found");
+                    callback.onState(NOT_FOUND);
+                }
+                @Override
+                public void onProgress(int state) {}
+                @Override
+                public void onNewRequest(Client.Request request) {
+                    requestHandle = request;
+                }
+                @Override
+                public void onCancelRequest() {
+                    if (requestHandle != null) {
+                        requestHandle.cancel();
                     }
-                    @Override
-                    public void onCancelRequest() {
-                        if (requestHandle != null) {
-                            requestHandle.cancel();
-                        }
-                    }
-                });
-            }, SEARCH_DELAY_MS);
-        });
+                }
+            });
+        }, SEARCH_DELAY_MS);
     }
 
     //@Override

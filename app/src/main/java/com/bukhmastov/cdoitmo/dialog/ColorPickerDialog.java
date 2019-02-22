@@ -64,7 +64,7 @@ public class ColorPickerDialog extends Dialog {
     @Inject
     Thread thread;
 
-    public ColorPickerDialog(final Context context, final ColorPickerCallback callback) {
+    public ColorPickerDialog(Context context, ColorPickerCallback callback) {
         super(context);
         AppComponentProvider.getComponent().inject(this);
         this.callback = callback;
@@ -77,47 +77,47 @@ public class ColorPickerDialog extends Dialog {
     public void show(String colorHex) {
         log.v(TAG, "show");
         thread.runOnUI(() -> {
-            try {
-                ViewGroup layout = (ViewGroup) inflate(R.layout.dialog_color_picker);
-                if (layout == null) {
-                    return;
+            ViewGroup layout = (ViewGroup) inflate(R.layout.dialog_color_picker);
+            if (layout == null) {
+                return;
+            }
+            container = layout.findViewById(R.id.colorPickerContainer);
+            selectedColorInput = layout.findViewById(R.id.selectedColorInput);
+            alertDialog = new AlertDialog.Builder(context)
+                    .setTitle(R.string.choose_color)
+                    .setView(layout)
+                    .setPositiveButton(R.string.apply, (dialogInterface, i) -> {
+                        try {
+                            if (selectedColorInput == null) {
+                                return;
+                            }
+                            String selected = selectedColorInput.getText().toString().trim();
+                            log.v(TAG, "apply | selected=" + selected);
+                            if (selected.isEmpty() || selected.charAt(0) != '#') {
+                                return;
+                            }
+                            Color.parseColor(selected);
+                            callback.result(selected);
+                        } catch (Exception ignore) {/* ignore */}
+                    })
+                    .setNegativeButton(R.string.do_cancel, null)
+                    .create();
+            selectedColorInput.addTextChangedListener(new TextWatcher() {
+                @Override
+                public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+                @Override
+                public void onTextChanged(CharSequence s, int start, int before, int count) {}
+                @Override
+                public void afterTextChanged(Editable s) {
+                    gridAdapter.notifyDataSetChanged();
                 }
-                container = layout.findViewById(R.id.colorPickerContainer);
-                selectedColorInput = layout.findViewById(R.id.selectedColorInput);
-                alertDialog = new AlertDialog.Builder(context)
-                        .setTitle(R.string.choose_color)
-                        .setView(layout)
-                        .setPositiveButton(R.string.apply, (dialogInterface, i) -> {
-                            try {
-                                if (selectedColorInput == null) {
-                                    return;
-                                }
-                                String selected = selectedColorInput.getText().toString().trim();
-                                log.v(TAG, "apply | selected=" + selected);
-                                if (selected.isEmpty() || selected.charAt(0) != '#') {
-                                    return;
-                                }
-                                Color.parseColor(selected);
-                                callback.result(selected);
-                            } catch (Exception ignore) {/* ignore */}
-                        })
-                        .setNegativeButton(R.string.do_cancel, null)
-                        .create();
-                selectedColorInput.addTextChangedListener(new TextWatcher() {
-                    @Override
-                    public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
-                    @Override
-                    public void onTextChanged(CharSequence s, int start, int before, int count) {}
-                    @Override
-                    public void afterTextChanged(Editable s) {
-                        gridAdapter.notifyDataSetChanged();
-                    }
-                });
-                if (colorHex != null) {
-                    select(colorHex);
-                }
-            } catch (Exception e) {
-                callback.exception(e);
+            });
+            if (colorHex != null) {
+                select(colorHex);
+            }
+        }, throwable -> {
+            if (throwable instanceof Exception) {
+                callback.exception((Exception) throwable);
             }
         });
     }
@@ -126,19 +126,19 @@ public class ColorPickerDialog extends Dialog {
         log.v(TAG, "select | colorHex=", colorHex);
         thread.runOnUI(() -> {
             try {
-                try {
-                    if (selectedColorInput == null || colorHex.isEmpty() || colorHex.charAt(0) != '#') {
-                        throw new Exception();
-                    }
-                    Color.parseColor(colorHex);
-                    selectedColorInput.setText(colorHex);
-                } catch (Exception ignore) {/* ignore */}
-                if (alertDialog != null && !alertDialog.isShowing()) {
-                    alertDialog.show();
-                    displayColors(-1);
+                if (selectedColorInput == null || colorHex.isEmpty() || colorHex.charAt(0) != '#') {
+                    throw new Exception();
                 }
-            } catch (Exception e) {
-                callback.exception(e);
+                Color.parseColor(colorHex);
+                selectedColorInput.setText(colorHex);
+            } catch (Exception ignore) {/* ignore */}
+            if (alertDialog != null && !alertDialog.isShowing()) {
+                alertDialog.show();
+                displayColors(-1);
+            }
+        }, throwable -> {
+            if (throwable instanceof Exception) {
+                callback.exception((Exception) throwable);
             }
         });
     }
@@ -146,72 +146,70 @@ public class ColorPickerDialog extends Dialog {
     public void close() {
         log.v(TAG, "close");
         thread.runOnUI(() -> {
-            try {
-                if (alertDialog != null && alertDialog.isShowing()) {
-                    alertDialog.dismiss();
-                }
-            } catch (Exception e) {
-                callback.exception(e);
+            if (alertDialog != null && alertDialog.isShowing()) {
+                alertDialog.dismiss();
+            }
+        }, throwable -> {
+            if (throwable instanceof Exception) {
+                callback.exception((Exception) throwable);
             }
         });
     }
 
-    private void displayColors(final int index) {
-        log.v(TAG, "displayColors | index=" + index);
-        thread.run(() -> {
-            try {
-                final boolean modeAllColors = index < 0 || index > COLORS.length;
-                final String[] colors;
-                if (modeAllColors) { // display all colors
-                    colors = new String[COLORS.length];
-                    for (int i = 0; i < COLORS.length; i++) {
-                        colors[i] = COLORS[i][0];
-                    }
-                } else { // display certain colors
-                    colors = new String[COLORS[index].length];
-                    System.arraycopy(COLORS[index], 1, colors, 0, COLORS[index].length - 1);
-                    colors[COLORS[index].length - 1] = "back";
+    private void displayColors(int index) {
+        log.v(TAG, "displayColors | index=", index);
+        thread.standalone(() -> {
+            boolean modeAllColors = index < 0 || index > COLORS.length;
+            String[] colors;
+            if (modeAllColors) { // display all colors
+                colors = new String[COLORS.length];
+                for (int i = 0; i < COLORS.length; i++) {
+                    colors[i] = COLORS[i][0];
                 }
-                thread.runOnUI(() -> {
+            } else { // display certain colors
+                colors = new String[COLORS[index].length];
+                System.arraycopy(COLORS[index], 1, colors, 0, COLORS[index].length - 1);
+                colors[COLORS[index].length - 1] = "back";
+            }
+            thread.runOnUI(() -> {
+                if (gridAdapter == null) {
+                    gridAdapter = new GridAdapter(context);
+                    container.setAdapter(gridAdapter);
+                }
+                container.setOnItemClickListener((adapterView, view, i, l) -> {
                     try {
-                        if (gridAdapter == null) {
-                            gridAdapter = new GridAdapter(context);
-                            container.setAdapter(gridAdapter);
-                        }
-                        container.setOnItemClickListener((adapterView, view, i, l) -> {
-                            log.v(TAG, "color clicked | i=" + i);
-                            thread.run(() -> {
-                                try {
-                                    String color = gridAdapter.getItem(i);
-                                    if ("back".equals(color)) {
-                                        log.v(TAG, "back clicked");
-                                        displayColors(-1);
-                                    } else {
-                                        log.v(TAG, "color selected | color=" + color);
-                                        thread.runOnUI(() -> {
-                                            if (selectedColorInput != null) {
-                                                selectedColorInput.setText(color);
-                                            }
-                                            if (modeAllColors && COLORS[i].length > 1) {
-                                                displayColors(i);
-                                            } else {
-                                                gridAdapter.notifyDataSetChanged();
-                                            }
-                                        });
-                                    }
-                                } catch (Exception e) {
-                                    callback.exception(e);
+                        log.v(TAG, "color clicked | i=", i);
+                        String color = gridAdapter.getItem(i);
+                        if ("back".equals(color)) {
+                            log.v(TAG, "back clicked");
+                            displayColors(-1);
+                        } else {
+                            log.v(TAG, "color selected | color=" + color);
+                            thread.runOnUI(() -> {
+                                if (selectedColorInput != null) {
+                                    selectedColorInput.setText(color);
+                                }
+                                if (modeAllColors && COLORS[i].length > 1) {
+                                    displayColors(i);
+                                } else {
+                                    gridAdapter.notifyDataSetChanged();
                                 }
                             });
-                        });
-                        gridAdapter.updateColors(colors);
-                        gridAdapter.notifyDataSetChanged();
+                        }
                     } catch (Exception e) {
                         callback.exception(e);
                     }
                 });
-            } catch (Exception e) {
-                callback.exception(e);
+                gridAdapter.updateColors(colors);
+                gridAdapter.notifyDataSetChanged();
+            }, throwable -> {
+                if (throwable instanceof Exception) {
+                    callback.exception((Exception) throwable);
+                }
+            });
+        }, throwable -> {
+            if (throwable instanceof Exception) {
+                callback.exception((Exception) throwable);
             }
         });
     }

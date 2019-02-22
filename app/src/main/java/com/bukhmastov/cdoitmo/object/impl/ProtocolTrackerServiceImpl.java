@@ -301,9 +301,11 @@ public class ProtocolTrackerServiceImpl implements ProtocolTrackerService {
         try {
             firebasePerformanceProvider.stopTrace(trace);
             log.i(TAG, "Executed");
-            if (requestHandle != null) {
-                requestHandle.cancel();
-            }
+            thread.standalone(() -> {
+                if (requestHandle != null) {
+                    requestHandle.cancel();
+                }
+            });
         } catch (Exception e) {
             log.w(TAG, "finish | catch | ", e.getMessage());
         } finally {

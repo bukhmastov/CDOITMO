@@ -61,14 +61,14 @@ public class AboutFragmentPresenterImpl extends ConnectedFragmentPresenterImpl
     public void onViewCreated() {
         thread.runOnUI(() -> {
 
-            TextView app_version = fragment.container().findViewById(R.id.app_version);
-            if (app_version != null) {
-                app_version.setText(activity.getString(R.string.version) + " " + App.versionName + " (" + App.versionCode + " " + activity.getString(R.string.build) + (App.DEBUG ? ", debug mode" : "") + ")");
+            TextView appVersion = fragment.container().findViewById(R.id.app_version);
+            if (appVersion != null) {
+                appVersion.setText(activity.getString(R.string.version) + " " + App.versionName + " (" + App.versionCode + " " + activity.getString(R.string.build) + (App.DEBUG ? ", debug mode" : "") + ")");
             }
 
-            View block_pika = fragment.container().findViewById(R.id.block_pika);
-            if (block_pika != null) {
-                block_pika.setOnClickListener(v -> thread.run(() -> {
+            View blockPika = fragment.container().findViewById(R.id.block_pika);
+            if (blockPika != null) {
+                blockPika.setOnClickListener(v -> {
                     if (counterToPika >= tapsToPika) {
                         if (random.nextInt(200) % 10 == 0) {
                             eventBus.fire(new OpenActivityEvent(PikaActivity.class));
@@ -76,19 +76,19 @@ public class AboutFragmentPresenterImpl extends ConnectedFragmentPresenterImpl
                     } else {
                         counterToPika++;
                     }
-                }));
+                });
             }
 
-            View open_log = fragment.container().findViewById(R.id.open_log);
-            if (open_log != null) {
-                open_log.setOnClickListener(v -> thread.runOnUI(() -> {
+            View openLog = fragment.container().findViewById(R.id.open_log);
+            if (openLog != null) {
+                openLog.setOnClickListener(v -> thread.runOnUI(() -> {
                     activity.openFragment(ConnectedActivity.TYPE.STACKABLE, LogFragment.class, null);
                 }));
             }
 
-            View block_send_mail = fragment.container().findViewById(R.id.block_send_mail);
-            if (block_send_mail != null) {
-                block_send_mail.setOnClickListener(v -> thread.run(() -> {
+            View blockSendMail = fragment.container().findViewById(R.id.block_send_mail);
+            if (blockSendMail != null) {
+                blockSendMail.setOnClickListener(v -> thread.standalone(() -> {
                     log.v(TAG, "send_mail clicked");
                     firebaseAnalyticsProvider.logBasicEvent(activity, "send mail clicked");
                     Intent emailIntent = new Intent(Intent.ACTION_SEND);
@@ -98,45 +98,45 @@ public class AboutFragmentPresenterImpl extends ConnectedFragmentPresenterImpl
                 }));
             }
 
-            View block_send_vk = fragment.container().findViewById(R.id.block_send_vk);
-            if (block_send_vk != null) {
-                block_send_vk.setOnClickListener(v -> thread.run(() -> {
+            View blockSendVk = fragment.container().findViewById(R.id.block_send_vk);
+            if (blockSendVk != null) {
+                blockSendVk.setOnClickListener(v -> thread.standalone(() -> {
                     log.v(TAG, "send_vk clicked");
                     firebaseAnalyticsProvider.logBasicEvent(activity, "send vk clicked");
                     eventBus.fire(new OpenIntentEvent(new Intent(Intent.ACTION_VIEW, Uri.parse("https://vk.com/write9780714"))));
                 }));
             }
 
-            View block_rate = fragment.container().findViewById(R.id.block_rate);
-            if (block_rate != null) {
-                block_rate.setOnClickListener(v -> thread.run(() -> {
+            View blockRate = fragment.container().findViewById(R.id.block_rate);
+            if (blockRate != null) {
+                blockRate.setOnClickListener(v -> thread.standalone(() -> {
                     log.v(TAG, "block_rate clicked");
                     firebaseAnalyticsProvider.logBasicEvent(activity, "app rate clicked");
                     eventBus.fire(new OpenIntentEvent(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=com.bukhmastov.cdoitmo"))).withIdentity(MARKET_IDENTITY));
                 }));
             }
 
-            View block_github = fragment.container().findViewById(R.id.block_github);
-            if (block_github != null) {
-                block_github.setOnClickListener(v -> thread.run(() -> {
+            View blockGithub = fragment.container().findViewById(R.id.block_github);
+            if (blockGithub != null) {
+                blockGithub.setOnClickListener(v -> thread.standalone(() -> {
                     log.v(TAG, "block_github clicked");
                     firebaseAnalyticsProvider.logBasicEvent(activity, "view github clicked");
                     eventBus.fire(new OpenIntentEvent(new Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/bukhmastov/cdoitmo"))));
                 }));
             }
 
-            View block_donate = fragment.container().findViewById(R.id.block_donate);
-            if (block_donate != null) {
-                block_donate.setOnClickListener(v -> thread.run(() -> {
+            View blockDonate = fragment.container().findViewById(R.id.block_donate);
+            if (blockDonate != null) {
+                blockDonate.setOnClickListener(v -> thread.standalone(() -> {
                     log.v(TAG, "block_donate clicked  ┬─┬ ノ( ゜-゜ノ)");
                     firebaseAnalyticsProvider.logBasicEvent(activity, "donate clicked");
                     eventBus.fire(new OpenIntentEvent(new Intent(Intent.ACTION_VIEW, Uri.parse("http://yasobe.ru/na/cdoifmo"))));
                 }));
             }
 
-            TextView text_disclaimer = fragment.container().findViewById(R.id.text_disclaimer);
-            if (text_disclaimer != null) {
-                text_disclaimer.setMovementMethod(LinkMovementMethod.getInstance());
+            TextView textDisclaimer = fragment.container().findViewById(R.id.text_disclaimer);
+            if (textDisclaimer != null) {
+                textDisclaimer.setMovementMethod(LinkMovementMethod.getInstance());
             }
         });
     }

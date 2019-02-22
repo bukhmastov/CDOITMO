@@ -25,8 +25,7 @@ import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.fragment.ConnectedFragment;
 import com.bukhmastov.cdoitmo.fragment.presenter.HomeScreenInteractionFragmentPresenter;
 import com.bukhmastov.cdoitmo.function.BiConsumer;
-import com.bukhmastov.cdoitmo.function.ThrowingConsumer;
-import com.bukhmastov.cdoitmo.function.ThrowingRunnable;
+import com.bukhmastov.cdoitmo.function.Consumer;
 import com.bukhmastov.cdoitmo.model.entity.ShortcutQuery;
 import com.bukhmastov.cdoitmo.model.schedule.ScheduleJsonEntity;
 import com.bukhmastov.cdoitmo.model.schedule.attestations.SAttestations;
@@ -56,6 +55,8 @@ import javax.inject.Inject;
 import androidx.annotation.DrawableRes;
 import androidx.annotation.Nullable;
 import androidx.annotation.StringDef;
+
+import static com.bukhmastov.cdoitmo.util.Thread.AHS;
 
 public class HomeScreenInteractionFragmentPresenterImpl extends ConnectedFragmentPresenterImpl
         implements HomeScreenInteractionFragmentPresenter {
@@ -131,7 +132,8 @@ public class HomeScreenInteractionFragmentPresenterImpl extends ConnectedFragmen
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
-        thread.runOnUI(() -> {
+        thread.initialize(AHS);
+        thread.runOnUI(AHS, () -> {
             log.v(TAG, "Fragment created");
             firebaseAnalyticsProvider.logCurrentScreen(activity, fragment);
             ConnectedFragment.Data data = ConnectedFragment.getData(activity, fragment.getClass());
@@ -159,7 +161,7 @@ public class HomeScreenInteractionFragmentPresenterImpl extends ConnectedFragmen
 
     @Override
     public void onResume() {
-        thread.runOnUI(() -> {
+        thread.runOnUI(AHS, () -> {
             log.v(TAG, "Fragment resumed");
             firebaseAnalyticsProvider.setCurrentScreen(activity, fragment);
             IntentFilter filter = new IntentFilter();
@@ -172,7 +174,7 @@ public class HomeScreenInteractionFragmentPresenterImpl extends ConnectedFragmen
 
     @Override
     public void onPause() {
-        thread.runOnUI(() -> {
+        thread.runOnUI(AHS, () -> {
             log.v(TAG, "Fragment paused");
             activity.unregisterReceiver(receiver);
         });
@@ -184,7 +186,7 @@ public class HomeScreenInteractionFragmentPresenterImpl extends ConnectedFragmen
     }
 
     private void route(@MODE String mode) {
-        thread.run(() -> {
+        thread.run(AHS, () -> {
             log.v(TAG, "route | mode=", mode);
             switch (mode) {
                 case PICK: initPicker(false); break;
@@ -196,7 +198,7 @@ public class HomeScreenInteractionFragmentPresenterImpl extends ConnectedFragmen
     }
 
     private void initPicker(boolean isFirstLaunch) {
-        thread.runOnUI(() -> {
+        thread.runOnUI(AHS, () -> {
             log.v(TAG, "initPicker | isFirstLaunch=", isFirstLaunch);
             // Переключаем режим отображения
             toggleMode(false, !isFirstLaunch);
@@ -220,7 +222,7 @@ public class HomeScreenInteractionFragmentPresenterImpl extends ConnectedFragmen
     }
     
     private void initWidgets() {
-        thread.run(() -> {
+        thread.run(AHS, () -> {
             log.v(TAG, "initWidgets");
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
                 AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(activity);
@@ -243,7 +245,7 @@ public class HomeScreenInteractionFragmentPresenterImpl extends ConnectedFragmen
     }
     
     private void initApps() {
-        thread.runOnUI(() -> {
+        thread.runOnUI(AHS, () -> {
             log.v(TAG, "initApps");
             // Переключаем режим отображения
             toggleMode(true);
@@ -272,12 +274,12 @@ public class HomeScreenInteractionFragmentPresenterImpl extends ConnectedFragmen
                 ((TextView) item.findViewById(R.id.title)).setText(app.title);
                 ((TextView) item.findViewById(R.id.desc)).setText(app.desc);
                 ((TextView) item.findViewById(R.id.desc_extra)).setText(app.desc_extra);
-                item.setOnClickListener(view -> thread.run(() -> {
+                item.setOnClickListener(view -> thread.run(AHS, () -> {
                     String group = storage.get(activity, Storage.PERMANENT, Storage.USER, "user#group", "");
                     switch (app.id) {
                         case "time_remaining_widget": {
                             getScheduleLessons(group.isEmpty() ? null : group, (title, query) -> {
-                                thread.run(() -> {
+                                thread.standalone(() -> {
                                     addShortcut(
                                             app.id, "regular",
                                             new ShortcutQuery(query, title).toJsonString()
@@ -291,7 +293,7 @@ public class HomeScreenInteractionFragmentPresenterImpl extends ConnectedFragmen
                         }
                         case "days_remaining_widget": {
                             getScheduleExams(group.isEmpty() ? null : group, (title, query) -> {
-                                thread.run(() -> {
+                                thread.standalone(() -> {
                                     addShortcut(
                                             app.id, "regular",
                                             new ShortcutQuery(query, title).toJsonString()
@@ -314,7 +316,7 @@ public class HomeScreenInteractionFragmentPresenterImpl extends ConnectedFragmen
     }
     
     private void initShortcuts() {
-        thread.runOnUI(() -> {
+        thread.runOnUI(AHS, () -> {
             log.v(TAG, "initShortcuts");
             // Переключаем режим отображения
             toggleMode(true);
@@ -367,20 +369,22 @@ public class HomeScreenInteractionFragmentPresenterImpl extends ConnectedFragmen
     }
 
     private void shortcutClicked(Shortcut shortcut, String mode) {
-        thread.run(() -> {
+        thread.run(AHS, () -> {
             if (activity.isFinishing() || activity.isDestroyed()) {
                 return;
             }
             switch (shortcut.id) {
                 case "offline": case "tab": case "room101": {
-                    addShortcut(shortcut.id, mode, shortcut.meta);
+                    thread.standalone(() -> {
+                        addShortcut(shortcut.id, mode, shortcut.meta);
+                    });
                     break;
                 }
                 case "schedule_lessons":
                 case "schedule_lessons_offline": {
                     String group = storage.get(activity, Storage.PERMANENT, Storage.USER, "user#group", "");
                     getScheduleLessons(group.isEmpty() ? null : group, (title, query) -> {
-                        thread.run(() -> {
+                        thread.standalone(() -> {
                             addShortcut(
                                     shortcut.id, mode,
                                     new ShortcutQuery(query, title).toJsonString()
@@ -395,7 +399,7 @@ public class HomeScreenInteractionFragmentPresenterImpl extends ConnectedFragmen
                 case "schedule_exams": {
                     String group = storage.get(activity, Storage.PERMANENT, Storage.USER, "user#group", "");
                     getScheduleExams(group.isEmpty() ? null : group, (title, query) -> {
-                        thread.run(() -> {
+                        thread.standalone(() -> {
                             addShortcut(
                                     shortcut.id, mode,
                                     new ShortcutQuery(query, title).toJsonString()
@@ -410,7 +414,7 @@ public class HomeScreenInteractionFragmentPresenterImpl extends ConnectedFragmen
                 case "schedule_attestations": {
                     String group = storage.get(activity, Storage.PERMANENT, Storage.USER, "user#group", "");
                     getScheduleAttestations(group.isEmpty() ? null : group, (title, query) -> {
-                        thread.run(() -> {
+                        thread.standalone(() -> {
                             addShortcut(
                                     shortcut.id, mode,
                                     new ShortcutQuery(query, title).toJsonString()
@@ -439,7 +443,7 @@ public class HomeScreenInteractionFragmentPresenterImpl extends ConnectedFragmen
                     arrayAdapter.addAll(labels);
                     new AlertDialog.Builder(activity)
                             .setAdapter(arrayAdapter, (dialogInterface, position) -> {
-                                thread.run(() -> {
+                                thread.standalone(() -> {
                                     String label = labels.get(position);
                                     String query = values.get(position);
                                     addShortcut(
@@ -459,102 +463,97 @@ public class HomeScreenInteractionFragmentPresenterImpl extends ConnectedFragmen
         });
     }
 
-    private void toggleMode(final boolean hide) {
+    private void toggleMode(boolean hide) {
         toggleMode(hide, true);
     }
     
-    private void toggleMode(final boolean hide, final boolean animate) {
-        thread.runOnUI(new ThrowingRunnable() {
-            @Override
-            public void run() {
-                log.v(TAG, "toggleMode | hide=" + (hide ? "true" : "false") + " | animate=" + (animate ? "true" : "false"));
-                try {
-                    final ViewGroup initial_picker = fragment.container().findViewById(R.id.initial_picker);
-                    final ViewGroup content_area = fragment.container().findViewById(R.id.content_area);
-                    if (initial_picker != null && content_area != null) {
-                        int height = initial_picker.getHeight();
-                        if (hide) {
-                            if (animate) {
-                                initial_picker.setVisibility(View.VISIBLE);
-                                initial_picker.setTranslationY(0);
-                                initial_picker.animate()
-                                        .setDuration(400)
-                                        .translationY(-height)
-                                        .setListener(new AnimatorListenerAdapter() {
-                                            @Override
-                                            public void onAnimationEnd(Animator animation) {
-                                                super.onAnimationEnd(animation);
-                                                initial_picker.setTranslationY(0);
-                                                initial_picker.setVisibility(View.GONE);
-                                            }
-                                        });
-                                content_area.setVisibility(View.VISIBLE);
-                                content_area.setTranslationY(0);
-                                content_area.setAlpha(0.0f);
-                                content_area.animate()
-                                        .setDuration(400)
-                                        .translationY(-height)
-                                        .alpha(1.0f)
-                                        .setListener(new AnimatorListenerAdapter() {
-                                            @Override
-                                            public void onAnimationEnd(Animator animation) {
-                                                super.onAnimationEnd(animation);
-                                                content_area.setTranslationY(0);
-                                                content_area.setAlpha(1.0f);
-                                                content_area.setVisibility(View.VISIBLE);
-                                            }
-                                        });
-                            } else {
-                                initial_picker.setVisibility(View.GONE);
-                                content_area.setVisibility(View.VISIBLE);
-                            }
-                        } else {
-                            if (animate) {
-                                initial_picker.setVisibility(View.VISIBLE);
-                                initial_picker.setTranslationY(-height);
-                                initial_picker.animate()
-                                        .setDuration(400)
-                                        .translationY(0)
-                                        .setListener(new AnimatorListenerAdapter() {
-                                            @Override
-                                            public void onAnimationEnd(Animator animation) {
-                                                super.onAnimationEnd(animation);
-                                                initial_picker.setTranslationY(0);
-                                                initial_picker.setVisibility(View.VISIBLE);
-                                            }
-                                        });
-                                content_area.setVisibility(View.VISIBLE);
-                                content_area.setTranslationY(-height);
-                                content_area.setAlpha(1.0f);
-                                content_area.animate()
-                                        .setDuration(400)
-                                        .translationY(0)
-                                        .alpha(0.0f)
-                                        .setListener(new AnimatorListenerAdapter() {
-                                            @Override
-                                            public void onAnimationEnd(Animator animation) {
-                                                super.onAnimationEnd(animation);
-                                                content_area.setVisibility(View.GONE);
-                                                content_area.setAlpha(1.0f);
-                                                content_area.setTranslationY(0);
-                                            }
-                                        });
-                            } else {
-                                initial_picker.setVisibility(View.VISIBLE);
-                                content_area.setVisibility(View.GONE);
-                            }
-                        }
+    private void toggleMode(boolean hide, boolean animate) {
+        thread.runOnUI(AHS, () -> {
+            log.v(TAG, "toggleMode | hide=", hide, " | animate=", animate);
+            ViewGroup initialPicker = fragment.container().findViewById(R.id.initial_picker);
+            ViewGroup contentArea = fragment.container().findViewById(R.id.content_area);
+            if (initialPicker != null && contentArea != null) {
+                int height = initialPicker.getHeight();
+                if (hide) {
+                    if (animate) {
+                        initialPicker.setVisibility(View.VISIBLE);
+                        initialPicker.setTranslationY(0);
+                        initialPicker.animate()
+                                .setDuration(400)
+                                .translationY(-height)
+                                .setListener(new AnimatorListenerAdapter() {
+                                    @Override
+                                    public void onAnimationEnd(Animator animation) {
+                                        super.onAnimationEnd(animation);
+                                        initialPicker.setTranslationY(0);
+                                        initialPicker.setVisibility(View.GONE);
+                                    }
+                                });
+                        contentArea.setVisibility(View.VISIBLE);
+                        contentArea.setTranslationY(0);
+                        contentArea.setAlpha(0.0f);
+                        contentArea.animate()
+                                .setDuration(400)
+                                .translationY(-height)
+                                .alpha(1.0f)
+                                .setListener(new AnimatorListenerAdapter() {
+                                    @Override
+                                    public void onAnimationEnd(Animator animation) {
+                                        super.onAnimationEnd(animation);
+                                        contentArea.setTranslationY(0);
+                                        contentArea.setAlpha(1.0f);
+                                        contentArea.setVisibility(View.VISIBLE);
+                                    }
+                                });
+                    } else {
+                        initialPicker.setVisibility(View.GONE);
+                        contentArea.setVisibility(View.VISIBLE);
                     }
-                } catch (Exception e) {
-                    log.exception(e);
-                    notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                } else {
+                    if (animate) {
+                        initialPicker.setVisibility(View.VISIBLE);
+                        initialPicker.setTranslationY(-height);
+                        initialPicker.animate()
+                                .setDuration(400)
+                                .translationY(0)
+                                .setListener(new AnimatorListenerAdapter() {
+                                    @Override
+                                    public void onAnimationEnd(Animator animation) {
+                                        super.onAnimationEnd(animation);
+                                        initialPicker.setTranslationY(0);
+                                        initialPicker.setVisibility(View.VISIBLE);
+                                    }
+                                });
+                        contentArea.setVisibility(View.VISIBLE);
+                        contentArea.setTranslationY(-height);
+                        contentArea.setAlpha(1.0f);
+                        contentArea.animate()
+                                .setDuration(400)
+                                .translationY(0)
+                                .alpha(0.0f)
+                                .setListener(new AnimatorListenerAdapter() {
+                                    @Override
+                                    public void onAnimationEnd(Animator animation) {
+                                        super.onAnimationEnd(animation);
+                                        contentArea.setVisibility(View.GONE);
+                                        contentArea.setAlpha(1.0f);
+                                        contentArea.setTranslationY(0);
+                                    }
+                                });
+                    } else {
+                        initialPicker.setVisibility(View.VISIBLE);
+                        contentArea.setVisibility(View.GONE);
+                    }
                 }
             }
+        }, throwable -> {
+            log.exception(throwable);
+            notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
         });
     }
     
     private void showWidgetsHolder() {
-        thread.runOnUI(() -> {
+        thread.runOnUI(AHS, () -> {
             log.v(TAG, "showWidgetsHolder");
             new AlertDialog.Builder(activity)
                     .setMessage(R.string.pin_app_widget_not_supported)
@@ -606,7 +605,7 @@ public class HomeScreenInteractionFragmentPresenterImpl extends ConnectedFragmen
                         callback.accept(title, query);
                         return;
                     }
-                    thread.runOnUI(() -> {
+                    thread.runOnUI(AHS, () -> {
                         teacherPickerAdapter.addAll(teachers);
                         teacherPickerAdapter.addTeachers(teachers);
                         if (teachers.size() > 0) {
@@ -666,7 +665,7 @@ public class HomeScreenInteractionFragmentPresenterImpl extends ConnectedFragmen
                         callback.accept(title, query);
                         return;
                     }
-                    thread.runOnUI(() -> {
+                    thread.runOnUI(AHS, () -> {
                         teacherPickerAdapter.addAll(teachers);
                         teacherPickerAdapter.addTeachers(teachers);
                         if (teachers.size() > 0) {
@@ -714,9 +713,9 @@ public class HomeScreenInteractionFragmentPresenterImpl extends ConnectedFragmen
     private <T extends ScheduleJsonEntity> void getSchedule(
             String scope, BiConsumer<String, String> callback,
             Schedule.ScheduleSearchProvider<T> scheduleSearchProvider,
-            ThrowingConsumer<T, Throwable> onSuccess
+            Consumer<T> onSuccess
     ) {
-        thread.run(() -> {
+        thread.runOnUI(AHS, () -> {
             log.v(TAG, "getSchedule | scope=", scope);
             ViewGroup layout = (ViewGroup) fragment.inflate(R.layout.widget_configure_schedule_lessons_create_search);
             searchTextView = layout.findViewById(R.id.search_text_view);
@@ -739,13 +738,13 @@ public class HomeScreenInteractionFragmentPresenterImpl extends ConnectedFragmen
                 public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {}
                 @Override
                 public void afterTextChanged(Editable editable) {
-                    thread.run(() -> {
+                    thread.runOnUI(AHS, () -> {
                         teacherPickerAdapter.clear();
                         searchTextView.dismissDropDown();
                     });
                 }
             });
-            searchAction.setOnClickListener(view -> thread.run(() -> {
+            searchAction.setOnClickListener(view -> thread.run(AHS, () -> {
                 String query = searchTextView.getText().toString().trim();
                 log.v(TAG, "getSchedule | search action | clicked | query=", query);
                 if (StringUtils.isBlank(query)) {
@@ -753,25 +752,21 @@ public class HomeScreenInteractionFragmentPresenterImpl extends ConnectedFragmen
                 }
                 scheduleSearchProvider.onSearch(query, new Schedule.Handler<T>() {
                     @Override
-                    public void onSuccess(final T schedule, final boolean fromCache) {
-                        thread.run(() -> {
+                    public void onSuccess(T schedule, boolean fromCache) {
+                        thread.runOnUI(AHS, () -> {
                             log.v(TAG, "getSchedule | search action | onSuccess | schedule=", (schedule == null ? "null" : "notnull"));
                             searchLoading.setVisibility(View.GONE);
                             searchAction.setVisibility(View.VISIBLE);
-                            if (schedule == null) {
-                                notificationMessage.toast(activity, activity.getString(R.string.schedule_not_found));
-                                return;
-                            }
-                            onSuccess.accept(schedule);
-                        }, throwable -> {
-                            log.exception(throwable);
-                            notificationMessage.toast(activity, activity.getString(R.string.something_went_wrong));
                         });
+                        if (schedule == null) {
+                            notificationMessage.toast(activity, activity.getString(R.string.schedule_not_found));
+                        }
+                        onSuccess.accept(schedule);
                     }
                     @Override
-                    public void onFailure(final int statusCode, final Client.Headers headers, final int state) {
-                        thread.run(() -> {
-                            log.v(TAG, "getSchedule | search action | onFailure | state=" + state);
+                    public void onFailure(int statusCode, Client.Headers headers, int state) {
+                        thread.runOnUI(AHS, () -> {
+                            log.v(TAG, "getSchedule | search action | onFailure | state=", state);
                             searchLoading.setVisibility(View.GONE);
                             searchAction.setVisibility(View.VISIBLE);
                             notificationMessage.toast(activity, state == Client.FAILED_SERVER_ERROR ? Client.getFailureMessage(activity, statusCode) : activity.getString(R.string.schedule_not_found));
@@ -779,7 +774,7 @@ public class HomeScreenInteractionFragmentPresenterImpl extends ConnectedFragmen
                     }
                     @Override
                     public void onProgress(final int state) {
-                        thread.run(() -> {
+                        thread.runOnUI(AHS, () -> {
                             log.v(TAG, "getSchedule | search action | onProgress | state=" + state);
                             searchLoading.setVisibility(View.VISIBLE);
                             searchAction.setVisibility(View.GONE);
@@ -798,7 +793,7 @@ public class HomeScreenInteractionFragmentPresenterImpl extends ConnectedFragmen
                 });
             }));
             searchTextView.setOnItemClickListener((parent, view, position, id) -> {
-                thread.run(() -> {
+                thread.run(AHS, () -> {
                     log.v(TAG, "getSchedule | search list selected");
                     STeacher teacher = teacherPickerAdapter.getItem(position);
                     if (teacher == null) {
@@ -808,9 +803,11 @@ public class HomeScreenInteractionFragmentPresenterImpl extends ConnectedFragmen
                     String query = teacher.getPersonId();
                     String title = teacher.getPerson();
                     log.v(TAG, "getSchedule | search list selected | query=", query, " | title=", title);
-                    if (alertDialog.isShowing()) {
-                        alertDialog.cancel();
-                    }
+                    thread.runOnUI(AHS, () -> {
+                        if (alertDialog.isShowing()) {
+                            alertDialog.cancel();
+                        }
+                    });
                     callback.accept(title, query);
                 }, throwable -> {
                     log.exception(throwable);
@@ -837,5 +834,10 @@ public class HomeScreenInteractionFragmentPresenterImpl extends ConnectedFragmen
     @Override
     protected String getLogTag() {
         return TAG;
+    }
+
+    @Override
+    protected String getThreadToken() {
+        return AHS;
     }
 }

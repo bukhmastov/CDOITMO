@@ -172,7 +172,7 @@ public class StoragePrefImpl implements StoragePref {
     }
 
     @Override
-    public void applyDebug(Context context) {
+    public void applyDebug(@NonNull Context context) {
         if (App.DEBUG) {
             put(context, "pref_allow_collect_analytics", false);
             put(context, "pref_allow_send_reports", false);
@@ -184,7 +184,7 @@ public class StoragePrefImpl implements StoragePref {
     }
 
     @Override
-    public void resetIfNeeded(ConnectedActivity activity) {
+    public void resetIfNeeded(@NonNull ConnectedActivity activity) {
         if (!get(activity, "pref_default_values_applied", false)) {
             put(activity, "pref_default_values_applied", true);
             reset(activity, false);
@@ -192,7 +192,7 @@ public class StoragePrefImpl implements StoragePref {
     }
 
     @Override
-    public void reset(ConnectedActivity activity) {
+    public void reset(@NonNull ConnectedActivity activity) {
         reset(activity, true);
     }
 

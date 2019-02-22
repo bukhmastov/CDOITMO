@@ -48,7 +48,7 @@ public class SettingsCacheFragment extends SettingsTemplatePreferencesFragment {
         preferences.add(new PreferenceBasic("pref_clear_cache", null, R.string.cache_clear, false, new PreferenceBasic.Callback() {
             @Override
             public void onPreferenceClicked(final ConnectedActivity activity, final Preference preference, final InjectProvider injectProvider, final PreferenceBasic.OnPreferenceClickedCallback callback) {
-                injectProvider.getThread().run(() -> new CacheClearDialog(activity).show());
+                injectProvider.getThread().standalone(() -> new CacheClearDialog(activity).show());
             }
             @Override
             public String onGetSummary(ConnectedActivity activity, String value) {

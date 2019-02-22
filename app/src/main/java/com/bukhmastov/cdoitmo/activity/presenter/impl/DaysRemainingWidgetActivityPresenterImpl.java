@@ -36,6 +36,8 @@ import java.util.ArrayList;
 
 import javax.inject.Inject;
 
+import static com.bukhmastov.cdoitmo.util.Thread.WDR;
+
 public class DaysRemainingWidgetActivityPresenterImpl implements DaysRemainingWidgetActivityPresenter, ScheduleExams.Handler<SExams>, DaysRemainingWidget.Delegate {
 
     private static final String TAG = "DRWidgetActivity";
@@ -75,7 +77,8 @@ public class DaysRemainingWidgetActivityPresenterImpl implements DaysRemainingWi
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
-        thread.runOnUI(() -> {
+        thread.initialize(WDR);
+        thread.runOnUI(WDR, () -> {
             log.i(TAG, "Activity created");
             firebaseAnalyticsProvider.logCurrentScreen(activity);
             String shortcutData = activity.getIntent().getStringExtra("shortcut_data");
@@ -116,7 +119,7 @@ public class DaysRemainingWidgetActivityPresenterImpl implements DaysRemainingWi
 
     @Override
     public void onResume() {
-        thread.run(() -> {
+        thread.run(WDR, () -> {
             log.v(TAG, "Activity resumed");
             if (schedule != null) {
                 begin();
@@ -133,7 +136,7 @@ public class DaysRemainingWidgetActivityPresenterImpl implements DaysRemainingWi
 
     @Override
     public void onPause() {
-        thread.run(() -> {
+        thread.run(WDR, () -> {
             log.v(TAG, "Activity paused");
             daysRemainingWidget.stop();
         });
@@ -141,9 +144,8 @@ public class DaysRemainingWidgetActivityPresenterImpl implements DaysRemainingWi
 
     @Override
     public void onDestroy() {
-        thread.runOnUI(() -> {
-            log.i(TAG, "Activity destroyed");
-        });
+        log.i(TAG, "Activity destroyed");
+        thread.interrupt(WDR);
     }
 
     @Override
@@ -154,7 +156,7 @@ public class DaysRemainingWidgetActivityPresenterImpl implements DaysRemainingWi
 
     @Override
     public void onSuccess(SExams data, boolean fromCache) {
-        thread.run(() -> {
+        thread.run(WDR, () -> {
             log.v(TAG, "success");
             if (data == null || StringUtils.isBlank(data.getType())) {
                 log.w(TAG, "onSuccess | schedule cannot be null");
@@ -178,33 +180,31 @@ public class DaysRemainingWidgetActivityPresenterImpl implements DaysRemainingWi
     }
 
     @Override
-    public void onFailure(int statusCode, Client.Headers headers, int state) {
-        thread.run(() -> {
-            log.v(TAG, "failure " + state);
-            switch (state) {
-                case Client.FAILED_OFFLINE:
-                case ScheduleExams.FAILED_OFFLINE:
-                    message(activity.getString(R.string.no_connection));
-                    break;
-                case Client.FAILED_SERVER_ERROR:
-                    message(Client.getFailureMessage(activity, statusCode));
-                    break;
-                case Client.FAILED_TRY_AGAIN:
-                case ScheduleExams.FAILED_LOAD:
-                case ScheduleExams.FAILED_EMPTY_QUERY:
-                    message(activity.getString(R.string.load_failed));
-                    break;
-                case ScheduleExams.FAILED_NOT_FOUND:
-                    message(activity.getString(R.string.no_schedule));
-                    break;
-                case ScheduleExams.FAILED_INVALID_QUERY:
-                    message(activity.getString(R.string.incorrect_query));
-                    break;
-                case ScheduleExams.FAILED_PERSONAL_NEED_ISU:
-                    message(activity.getString(R.string.load_failed_need_isu));
-                    break;
-            }
-        });
+    public void onFailure(int code, Client.Headers headers, int state) {
+        log.v(TAG, "failure " + state);
+        switch (state) {
+            case Client.FAILED_OFFLINE:
+            case ScheduleExams.FAILED_OFFLINE:
+                message(activity.getString(R.string.no_connection));
+                break;
+            case Client.FAILED_SERVER_ERROR:
+                message(Client.getFailureMessage(activity, code));
+                break;
+            case Client.FAILED_TRY_AGAIN:
+            case ScheduleExams.FAILED_LOAD:
+            case ScheduleExams.FAILED_EMPTY_QUERY:
+                message(activity.getString(R.string.load_failed));
+                break;
+            case ScheduleExams.FAILED_NOT_FOUND:
+                message(activity.getString(R.string.no_schedule));
+                break;
+            case ScheduleExams.FAILED_INVALID_QUERY:
+                message(activity.getString(R.string.incorrect_query));
+                break;
+            case ScheduleExams.FAILED_PERSONAL_NEED_ISU:
+                message(activity.getString(R.string.load_failed_need_isu));
+                break;
+        }
     }
 
     @Override
@@ -221,7 +221,7 @@ public class DaysRemainingWidgetActivityPresenterImpl implements DaysRemainingWi
 
     @Override
     public void onAction(ArrayList<DaysRemainingWidget.Data> data) {
-        thread.runOnUI(() -> {
+        thread.runOnUI(WDR, () -> {
             this.data = data;
             if (data.size() == 0) {
                 message(activity.getString(R.string.exams_gone));
@@ -248,7 +248,7 @@ public class DaysRemainingWidgetActivityPresenterImpl implements DaysRemainingWi
     }
 
     private void begin() {
-        thread.run(() -> {
+        thread.run(WDR, () -> {
             log.v(TAG, "begin");
             message(activity.getString(R.string.loaded));
             daysRemainingWidget.stop();
@@ -257,17 +257,17 @@ public class DaysRemainingWidgetActivityPresenterImpl implements DaysRemainingWi
     }
 
     private void close() {
-        thread.run(() -> {
-            log.v(TAG, "close");
+        log.v(TAG, "close");
+        thread.standalone(() -> {
             if (requestHandle != null) {
                 requestHandle.cancel();
             }
-            activity.finish();
         });
+        thread.runOnUI(WDR, () -> activity.finish());
     }
 
     private void message(String text) {
-        thread.runOnUI(() -> {
+        thread.runOnUI(WDR, () -> {
             if (isMessageDisplaying == null || !isMessageDisplaying) {
                 draw(R.layout.widget_remaining_message);
                 isMessageDisplaying = true;
@@ -280,7 +280,7 @@ public class DaysRemainingWidgetActivityPresenterImpl implements DaysRemainingWi
     }
 
     private void share() {
-        thread.run(() -> {
+        thread.standalone(() -> {
             if (data == null) {
                 notificationMessage.snackBar(activity, activity.getString(R.string.share_unable));
                 return;
@@ -290,7 +290,10 @@ public class DaysRemainingWidgetActivityPresenterImpl implements DaysRemainingWi
                 return;
             }
             DaysRemainingWidget.Data currentData = data.get(0);
-            if (currentData.subject == null || currentData.time == null || (currentData.time.day == null && currentData.time.hour == null && currentData.time.min == null && currentData.time.sec == null)) {
+            if (currentData.subject == null || currentData.time == null || (
+                    currentData.time.day == null && currentData.time.hour == null &&
+                    currentData.time.min == null && currentData.time.sec == null
+            )) {
                 notificationMessage.snackBar(activity, activity.getString(R.string.share_unable));
                 return;
             }

@@ -57,6 +57,8 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
+import static com.bukhmastov.cdoitmo.util.Thread.SE;
+
 public class ScheduleExamsTabFragmentPresenterImpl implements ScheduleExamsTabFragmentPresenter {
 
     private static final String TAG = "SETabFragment";
@@ -95,8 +97,8 @@ public class ScheduleExamsTabFragmentPresenterImpl implements ScheduleExamsTabFr
         AppComponentProvider.getComponent().inject(this);
         scheduleHandler = new Schedule.Handler<SExams>() {
             @Override
-            public void onSuccess(final SExams schedule, final boolean fromCache) {
-                thread.run(() -> {
+            public void onSuccess(SExams schedule, boolean fromCache) {
+                thread.run(SE, () -> {
                     ScheduleExamsTabFragmentPresenterImpl.this.schedule = schedule;
                     if ("teachers".equals(schedule.getType()) && schedule.getTeachers() != null &&
                         CollectionUtils.isNotEmpty(schedule.getTeachers().getTeachers()) &&
@@ -121,7 +123,7 @@ public class ScheduleExamsTabFragmentPresenterImpl implements ScheduleExamsTabFr
                     adapter.setClickListener(R.id.schedule_lessons_share, ScheduleExamsTabFragmentPresenterImpl.this::examsMenuShare);
                     adapter.setClickListener(R.id.exam_touch_icon, ScheduleExamsTabFragmentPresenterImpl.this::subjectMenu);
                     adapter.setClickListener(R.id.teacher_picker_item, ScheduleExamsTabFragmentPresenterImpl.this::teacherSelected);
-                    thread.runOnUI(() -> {
+                    thread.runOnUI(SE, () -> {
                         draw(activity, R.layout.layout_schedule_both_recycle_list);
                         // prepare
                         SwipeRefreshLayout swipe = container.findViewById(R.id.schedule_swipe);
@@ -171,10 +173,10 @@ public class ScheduleExamsTabFragmentPresenterImpl implements ScheduleExamsTabFr
                 });
             }
             @Override
-            public void onFailure(final int statusCode, final Client.Headers headers, final int state) {
-                thread.runOnUI(() -> {
+            public void onFailure(int code, Client.Headers headers, int state) {
+                thread.runOnUI(SE, () -> {
                     ScheduleExamsTabFragmentPresenterImpl.this.schedule = null;
-                    log.v(TAG, "onFailure | statusCode=", statusCode, " | state=", state);
+                    log.v(TAG, "onFailure | code=", code, " | state=", state);
                     switch (state) {
                         case Client.FAILED_OFFLINE:
                         case Schedule.FAILED_OFFLINE: {
@@ -193,7 +195,7 @@ public class ScheduleExamsTabFragmentPresenterImpl implements ScheduleExamsTabFr
                             if (view != null) {
                                 switch (state) {
                                     case Client.FAILED_SERVER_ERROR:
-                                        ((TextView) view.findViewById(R.id.try_again_message)).setText(Client.getFailureMessage(activity, statusCode));
+                                        ((TextView) view.findViewById(R.id.try_again_message)).setText(Client.getFailureMessage(activity, code));
                                         break;
                                     case Client.FAILED_CORRUPTED_JSON:
                                         ((TextView) view.findViewById(R.id.try_again_message)).setText(R.string.server_provided_corrupted_json);
@@ -245,8 +247,8 @@ public class ScheduleExamsTabFragmentPresenterImpl implements ScheduleExamsTabFr
                 });
             }
             @Override
-            public void onProgress(final int state) {
-                thread.runOnUI(() -> {
+            public void onProgress(int state) {
+                thread.runOnUI(SE, () -> {
                     log.v(TAG, "onProgress | state=", state);
                     final ViewGroup view = (ViewGroup) inflate(activity, R.layout.state_loading_text);
                     if (view != null) {
@@ -272,7 +274,7 @@ public class ScheduleExamsTabFragmentPresenterImpl implements ScheduleExamsTabFr
 
     @Override
     public void onCreate(Bundle savedInstanceState, ConnectedActivity activity, Fragment fragment) {
-        thread.run(() -> {
+        thread.run(SE, () -> {
             this.activity = activity;
             Bundle bundle = fragment.getArguments();
             if (bundle != null && bundle.containsKey("type")) {
@@ -282,7 +284,7 @@ public class ScheduleExamsTabFragmentPresenterImpl implements ScheduleExamsTabFr
                 type = ScheduleExamsTabHostFragmentPresenter.DEFAULT_TYPE;
             }
             log.v(TAG, "Fragment created | type=", type);
-            tabHostPresenter.tabs().put(type, refresh -> thread.run(() -> {
+            tabHostPresenter.tabs().put(type, refresh -> thread.run(SE, () -> {
                 log.v(TAG, "onInvalidate | type=", type, " | refresh=", refresh);
                 if (fragment.isResumed()) {
                     invalidate = false;
@@ -298,7 +300,7 @@ public class ScheduleExamsTabFragmentPresenterImpl implements ScheduleExamsTabFr
 
     @Override
     public void onDestroy() {
-        thread.run(() -> {
+        thread.run(SE, () -> {
             log.v(TAG, "Fragment destroyed | type=", type);
             tabHostPresenter.tabs().remove(type);
             tabHostPresenter.scroll().remove(type);
@@ -317,7 +319,7 @@ public class ScheduleExamsTabFragmentPresenterImpl implements ScheduleExamsTabFr
 
     @Override
     public void onResume() {
-        thread.run(() -> {
+        thread.run(SE, () -> {
             log.v(TAG, "Fragment resumed | type=", type, " | loaded=", loaded, " | invalidate=", invalidate, " | invalidateRefresh=", invalidateRefresh);
             if (invalidate) {
                 invalidate = false;
@@ -333,24 +335,26 @@ public class ScheduleExamsTabFragmentPresenterImpl implements ScheduleExamsTabFr
 
     @Override
     public void onPause() {
-        thread.run(() -> {
-            log.v(TAG, "Fragment paused | type=", type);
-            if (requestHandle != null && requestHandle.cancel()) {
-                log.v(TAG, "Fragment paused | type=", type, " | paused and requested reload");
-                loaded = false;
-            }
-        });
+        log.v(TAG, "Fragment paused | type=", type);
+        if (requestHandle != null) {
+            thread.standalone(() -> {
+                if (requestHandle != null && requestHandle.cancel()) {
+                    log.v(TAG, "Fragment paused | type=", type, " | paused and requested reload");
+                    loaded = false;
+                }
+            });
+        }
     }
 
     private void load(final boolean refresh) {
-        thread.runOnUI(() -> {
+        thread.runOnUI(SE, () -> {
             if (activity == null) {
                 log.w(TAG, "load | activity is null");
                 failed(activity);
                 return;
             }
             draw(activity, R.layout.state_loading_text);
-            thread.run(() -> {
+            thread.run(SE, () -> {
                 if (activity == null || tabHostPresenter.getQuery() == null) {
                     log.w(TAG, "load | some values are null | activity=", activity, " | getQuery()=", tabHostPresenter.getQuery());
                     failed(activity);
@@ -391,7 +395,7 @@ public class ScheduleExamsTabFragmentPresenterImpl implements ScheduleExamsTabFr
     }
 
     private void draw(View view) {
-        thread.runOnUI(() -> {
+        thread.runOnUI(SE, () -> {
             ViewGroup vg = container.findViewById(R.id.container);
             if (vg != null) {
                 vg.removeAllViews();
@@ -426,7 +430,7 @@ public class ScheduleExamsTabFragmentPresenterImpl implements ScheduleExamsTabFr
     // -->- Exams global menu ->--
 
     private void examsMenuShare(View view, RVAExams entity) {
-        thread.runOnUI(() -> {
+        thread.runOnUI(SE, () -> {
             if (schedule == null) {
                 notificationMessage.snackBar(activity, activity.getString(R.string.cache_failed));
                 return;
@@ -445,7 +449,7 @@ public class ScheduleExamsTabFragmentPresenterImpl implements ScheduleExamsTabFr
                 }
             }
             popup.setOnMenuItemClickListener(menuItem -> {
-                thread.run(() -> {
+                thread.standalone(() -> {
                     switch (menuItem.getItemId()) {
                         case R.id.share_all_schedule: shareSchedule(entity.getEvents()); break;
                         default:
@@ -470,26 +474,30 @@ public class ScheduleExamsTabFragmentPresenterImpl implements ScheduleExamsTabFr
     }
 
     private void examsMenuMore(View view, RVAExams entity) {
-        thread.run(() -> {
+        thread.run(SE, () -> {
             if (schedule == null) {
                 notificationMessage.snackBar(activity, activity.getString(R.string.cache_failed));
                 return;
             }
             String cacheToken = schedule.getQuery() == null ? null : schedule.getQuery().toLowerCase();
             boolean isCached = cacheToken != null && StringUtils.isNotBlank(storage.get(activity, Storage.CACHE, Storage.GLOBAL, "schedule_exams#lessons#" + cacheToken, ""));
-            thread.runOnUI(() -> {
+            thread.runOnUI(SE, () -> {
                 PopupMenu popup = new PopupMenu(activity, view);
                 popup.inflate(R.menu.schedule_exams_common_more);
                 popup.getMenu().findItem(R.id.toggle_cache).setChecked(isCached);
                 popup.setOnMenuItemClickListener(menuItem -> {
-                    thread.run(() -> {
+                    thread.run(SE, () -> {
                         switch (menuItem.getItemId()) {
                             case R.id.toggle_cache:
                                 if (toggleCache()) {
-                                    thread.runOnUI(() -> menuItem.setChecked(!isCached));
+                                    thread.runOnUI(SE, () -> menuItem.setChecked(!isCached));
                                 }
                                 break;
-                            case R.id.open_settings: activity.openActivityOrFragment(ConnectedActivity.TYPE.STACKABLE, SettingsScheduleExamsFragment.class, null); break;
+                            case R.id.open_settings:
+                                thread.runOnUI(SE, () -> {
+                                    activity.openActivityOrFragment(ConnectedActivity.TYPE.STACKABLE, SettingsScheduleExamsFragment.class, null);
+                                });
+                                break;
                         }
                     }, throwable -> {
                         log.exception(throwable);
@@ -632,7 +640,7 @@ public class ScheduleExamsTabFragmentPresenterImpl implements ScheduleExamsTabFr
     // -<-- Exams global menu --<- || -->- Subject menu ->--
 
     private void subjectMenu(View view, RVAExams entity) {
-        thread.runOnUI(() -> {
+        thread.runOnUI(SE, () -> {
             if (schedule == null || entity.getSubject() == null) {
                 notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
                 return;
@@ -661,7 +669,7 @@ public class ScheduleExamsTabFragmentPresenterImpl implements ScheduleExamsTabFr
                 }
             }
             popup.setOnMenuItemClickListener(item -> {
-                thread.runOnUI(() -> {
+                thread.runOnUI(SE, () -> {
                     subjectMenuSelected(item, schedule, subject);
                     popup.dismiss();
                 });
@@ -675,7 +683,7 @@ public class ScheduleExamsTabFragmentPresenterImpl implements ScheduleExamsTabFr
     }
 
     private void subjectMenuSelected(MenuItem item, SExams schedule, SSubject subject) {
-        thread.run(() -> {
+        thread.run(SE, () -> {
             log.v(TAG, "Subject menu | popup item | clicked | " + item.getTitle().toString());
             switch (item.getItemId()) {
                 case R.id.open_group: {
@@ -706,7 +714,7 @@ public class ScheduleExamsTabFragmentPresenterImpl implements ScheduleExamsTabFr
     // -<-- Subject menu --<- || -->- Teacher selection ->--
 
     private void teacherSelected(View view, RVAExams entity) {
-        thread.run(() -> {
+        thread.run(SE, () -> {
             if (entity.getTeacher() == null) {
                 return;
             }

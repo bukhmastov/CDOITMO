@@ -55,6 +55,8 @@ import java.util.Collection;
 
 import javax.inject.Inject;
 
+import static com.bukhmastov.cdoitmo.util.Thread.UP;
+
 public class UniversityPersonsFragmentPresenterImpl implements UniversityPersonsFragmentPresenter, SwipeRefreshLayout.OnRefreshListener {
 
     private static final String TAG = "UniversityPersonsFragment";
@@ -107,6 +109,7 @@ public class UniversityPersonsFragmentPresenterImpl implements UniversityPersons
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
+        thread.initialize(UP);
         log.v(TAG, "Fragment created");
         firebaseAnalyticsProvider.logCurrentScreen(activity, fragment);
     }
@@ -115,11 +118,12 @@ public class UniversityPersonsFragmentPresenterImpl implements UniversityPersons
     public void onDestroy() {
         log.v(TAG, "Fragment destroyed");
         loaded = false;
+        thread.interrupt(UP);
     }
 
     @Override
     public void onResume() {
-        thread.run(() -> {
+        thread.run(UP, () -> {
             log.v(TAG, "Fragment resumed");
             firebaseAnalyticsProvider.setCurrentScreen(activity, fragment);
             if (!loaded) {
@@ -131,8 +135,8 @@ public class UniversityPersonsFragmentPresenterImpl implements UniversityPersons
 
     @Override
     public void onPause() {
-        thread.run(() -> {
-            log.v(TAG, "Fragment paused");
+        log.v(TAG, "Fragment paused");
+        thread.standalone(() -> {
             if (requestHandle != null && requestHandle.cancel()) {
                 loaded = false;
             }
@@ -151,17 +155,19 @@ public class UniversityPersonsFragmentPresenterImpl implements UniversityPersons
     }
 
     private void load() {
-        thread.run(() -> load(""));
+        thread.run(UP, () -> load(""));
     }
 
-    private void load(final String search) {
-        thread.run(() -> load(search, storagePref.get(activity, "pref_use_cache", true) && storagePref.get(activity, "pref_use_university_cache", false)
-                ? Integer.parseInt(storagePref.get(activity, "pref_static_refresh", "168"))
-                : 0));
+    private void load(String search) {
+        thread.run(UP, () -> {
+            load(search, storagePref.get(activity, "pref_use_cache", true) && storagePref.get(activity, "pref_use_university_cache", false)
+                    ? Integer.parseInt(storagePref.get(activity, "pref_static_refresh", "168"))
+                    : 0);
+        });
     }
 
-    private void load(final String search, final int refresh_rate) {
-        thread.run(() -> {
+    private void load(String search, int refresh_rate) {
+        thread.run(UP, () -> {
             log.v(TAG, "load | search=", search, " | refresh_rate=", refresh_rate);
             if (!(storagePref.get(activity, "pref_use_cache", true) && storagePref.get(activity, "pref_use_university_cache", false))) {
                 load(search, false);
@@ -183,15 +189,15 @@ public class UniversityPersonsFragmentPresenterImpl implements UniversityPersons
         });
     }
 
-    private void load(final String search, final boolean force) {
-        thread.run(() -> {
+    private void load(String search, boolean force) {
+        thread.run(UP, () -> {
             log.v(TAG, "load | search=", search, " | force=", force);
             if ((!force || !Client.isOnline(activity)) && persons != null) {
                 display();
                 return;
             }
             if (App.OFFLINE_MODE) {
-                thread.runOnUI(() -> {
+                thread.runOnUI(UP, () -> {
                     draw(R.layout.state_offline_text);
                     View reload = container.findViewById(R.id.offline_reload);
                     if (reload != null) {
@@ -206,26 +212,22 @@ public class UniversityPersonsFragmentPresenterImpl implements UniversityPersons
             this.search = search;
             loadProvider(new RestResponseHandler() {
                 @Override
-                public void onSuccess(final int statusCode, final Client.Headers headers, final JSONObject obj, final JSONArray arr) {
-                    thread.run(() -> {
-                        if (statusCode == 200 && obj != null) {
-                            UPersons data = new UPersons().fromJson(obj);
-                            data.setTimestamp(time.getTimeInMillis());
-                            if (storagePref.get(activity, "pref_use_cache", true) && storagePref.get(activity, "pref_use_university_cache", false)) {
-                                storage.put(activity, Storage.CACHE, Storage.GLOBAL, "university#persons", data.toJsonString());
-                            }
-                            persons =  data;
-                            display();
-                            return;
+                public void onSuccess(int code, Client.Headers headers, JSONObject obj, JSONArray arr) throws Exception {
+                    if (code == 200 && obj != null) {
+                        UPersons data = new UPersons().fromJson(obj);
+                        data.setTimestamp(time.getTimeInMillis());
+                        if (storagePref.get(activity, "pref_use_cache", true) && storagePref.get(activity, "pref_use_university_cache", false)) {
+                            storage.put(activity, Storage.CACHE, Storage.GLOBAL, "university#persons", data.toJsonString());
                         }
-                        loadFailed();
-                    }, throwable -> {
-                        loadFailed();
-                    });
+                        persons =  data;
+                        display();
+                        return;
+                    }
+                    loadFailed();
                 }
                 @Override
-                public void onFailure(final int statusCode, final Client.Headers headers, final int state) {
-                    thread.runOnUI(() -> {
+                public void onFailure(int code, Client.Headers headers, int state) {
+                    thread.runOnUI(UP, () -> {
                         log.v(TAG, "load | failure ", state);
                         switch (state) {
                             case IfmoRestClient.FAILED_OFFLINE: {
@@ -243,7 +245,7 @@ public class UniversityPersonsFragmentPresenterImpl implements UniversityPersons
                                 TextView message = container.findViewById(R.id.try_again_message);
                                 if (message != null) {
                                     switch (state) {
-                                        case IfmoRestClient.FAILED_SERVER_ERROR:   message.setText(IfmoRestClient.getFailureMessage(activity, statusCode)); break;
+                                        case IfmoRestClient.FAILED_SERVER_ERROR:   message.setText(IfmoRestClient.getFailureMessage(activity, code)); break;
                                         case IfmoRestClient.FAILED_CORRUPTED_JSON: message.setText(R.string.server_provided_corrupted_json); break;
                                     }
                                 }
@@ -259,8 +261,8 @@ public class UniversityPersonsFragmentPresenterImpl implements UniversityPersons
                     });
                 }
                 @Override
-                public void onProgress(final int state) {
-                    thread.runOnUI(() -> {
+                public void onProgress(int state) {
+                    thread.runOnUI(UP, () -> {
                         log.v(TAG, "load | progress ", state);
                         draw(R.layout.state_loading_text);
                         TextView message = container.findViewById(R.id.loading_message);
@@ -283,13 +285,13 @@ public class UniversityPersonsFragmentPresenterImpl implements UniversityPersons
         });
     }
 
-    private void loadProvider(final RestResponseHandler handler) {
+    private void loadProvider(RestResponseHandler handler) {
         log.v(TAG, "loadProvider");
         ifmoRestClient.get(activity, "person?limit=" + limit + "&offset=" + offset + "&search=" + search, null, handler);
     }
 
     private void loadFailed() {
-        thread.runOnUI(() -> {
+        thread.runOnUI(UP, () -> {
             log.v(TAG, "loadFailed");
             draw(R.layout.state_failed_button);
             TextView message = container.findViewById(R.id.try_again_message);
@@ -306,7 +308,7 @@ public class UniversityPersonsFragmentPresenterImpl implements UniversityPersons
     }
 
     private void display() {
-        thread.runOnUI(() -> {
+        thread.runOnUI(UP, () -> {
             log.v(TAG, "display");
             if (persons == null) {
                 loadFailed();
@@ -338,7 +340,7 @@ public class UniversityPersonsFragmentPresenterImpl implements UniversityPersons
                     list.setAdapter(personsRecyclerViewAdapter);
                     list.addOnScrollListener(new RecyclerViewOnScrollListener(container));
                 }
-                personsRecyclerViewAdapter.setClickListener(R.id.person, (v, entity) -> thread.run(() -> {
+                personsRecyclerViewAdapter.setClickListener(R.id.person, (v, entity) -> thread.run(UP, () -> {
                     if (!(entity.getEntity() instanceof UPerson)) {
                         return;
                     }
@@ -348,35 +350,30 @@ public class UniversityPersonsFragmentPresenterImpl implements UniversityPersons
                     extras.putSerializable("person", person);
                     eventBus.fire(new OpenActivityEvent(UniversityPersonCardActivity.class, extras));
                 }));
-                personsRecyclerViewAdapter.setClickListener(R.id.load_more, (v, entity) -> thread.run(() -> {
+                personsRecyclerViewAdapter.setClickListener(R.id.load_more, (v, entity) -> thread.run(UP, () -> {
                     offset += limit;
-                    thread.runOnUI(() -> personsRecyclerViewAdapter.setState(R.id.loading_more));
+                    thread.runOnUI(UP, () -> personsRecyclerViewAdapter.setState(R.id.loading_more));
                     loadProvider(new RestResponseHandler() {
                         @Override
-                        public void onSuccess(final int statusCode, final Client.Headers headers, final JSONObject obj, final JSONArray arr) {
-                            thread.run(() -> {
-                                if (statusCode == 200 && obj != null) {
-                                    UPersons data = new UPersons().fromJson(obj);
-                                    persons.getPeople().addAll(data.getPeople());
-                                    persons.setCount(data.getCount());
-                                    persons.setLimit(data.getLimit());
-                                    persons.setOffset(data.getOffset());
-                                    persons.setTimestamp(time.getTimeInMillis());
-                                    if (storagePref.get(activity, "pref_use_cache", true) && storagePref.get(activity, "pref_use_university_cache", false)) {
-                                        storage.put(activity, Storage.CACHE, Storage.GLOBAL, "university#persons", data.toJsonString());
-                                    }
-                                    displayPeople(data.getPeople());
-                                    return;
+                        public void onSuccess(int code, Client.Headers headers, JSONObject obj, JSONArray arr) throws Exception {
+                            if (code == 200 && obj != null) {
+                                UPersons data = new UPersons().fromJson(obj);
+                                persons.getPeople().addAll(data.getPeople());
+                                persons.setCount(data.getCount());
+                                persons.setLimit(data.getLimit());
+                                persons.setOffset(data.getOffset());
+                                persons.setTimestamp(time.getTimeInMillis());
+                                if (storagePref.get(activity, "pref_use_cache", true) && storagePref.get(activity, "pref_use_university_cache", false)) {
+                                    storage.put(activity, Storage.CACHE, Storage.GLOBAL, "university#persons", data.toJsonString());
                                 }
-                                thread.runOnUI(() -> personsRecyclerViewAdapter.setState(R.id.load_more));
-                            }, throwable -> {
-                                log.exception(throwable);
-                                thread.runOnUI(() -> personsRecyclerViewAdapter.setState(R.id.load_more));
-                            });
+                                displayPeople(data.getPeople());
+                                return;
+                            }
+                            thread.runOnUI(UP, () -> personsRecyclerViewAdapter.setState(R.id.load_more));
                         }
                         @Override
-                        public void onFailure(int statusCode, Client.Headers headers, int state) {
-                            thread.runOnUI(() -> personsRecyclerViewAdapter.setState(R.id.load_more));
+                        public void onFailure(int code, Client.Headers headers, int state) {
+                            thread.runOnUI(UP, () -> personsRecyclerViewAdapter.setState(R.id.load_more));
                         }
                         @Override
                         public void onProgress(int state) {}
@@ -426,7 +423,7 @@ public class UniversityPersonsFragmentPresenterImpl implements UniversityPersons
     }
 
     private void displayPeople(Collection<UPerson> people) {
-        thread.run(() -> {
+        thread.run(UP, () -> {
             Collection<RVA.Item> items = new ArrayList<>();
             for (UPerson person : people) {
                 items.add(new UniversityPersonsRVA.Item<>(
@@ -437,7 +434,7 @@ public class UniversityPersonsFragmentPresenterImpl implements UniversityPersons
             if (items.size() == 0) {
                 items.add(new UniversityRVA.Item(UniversityPersonsRVA.TYPE_NO_DATA));
             }
-            thread.runOnUI(() -> {
+            thread.runOnUI(UP, () -> {
                 if (personsRecyclerViewAdapter != null) {
                     personsRecyclerViewAdapter.addItems(items);
                     if (persons != null && offset + limit < persons.getCount()) {

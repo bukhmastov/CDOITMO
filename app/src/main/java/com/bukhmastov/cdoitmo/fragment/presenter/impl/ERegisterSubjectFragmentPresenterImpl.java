@@ -4,7 +4,6 @@ import android.app.AlertDialog;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.TextView;
 
@@ -36,6 +35,8 @@ import javax.inject.Inject;
 import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+
+import static com.bukhmastov.cdoitmo.util.Thread.ERS;
 
 public class ERegisterSubjectFragmentPresenterImpl extends ConnectedFragmentWithDataPresenterImpl<ERSubject>
         implements ERegisterSubjectFragmentPresenter {
@@ -77,7 +78,7 @@ public class ERegisterSubjectFragmentPresenterImpl extends ConnectedFragmentWith
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
-        thread.run(() -> {
+        thread.run(ERS, () -> {
             log.v(TAG, "Fragment created");
             firebaseAnalyticsProvider.logCurrentScreen(activity, fragment);
             fragment.setHasOptionsMenu(true);
@@ -117,7 +118,7 @@ public class ERegisterSubjectFragmentPresenterImpl extends ConnectedFragmentWith
                         break;
                 }
                 simple.setOnMenuItemClickListener(item -> {
-                    thread.runOnUI(() -> {
+                    thread.runOnUI(ERS, () -> {
                         storagePref.put(activity, "pref_eregister_mode", "simple");
                         simple.setVisible(false);
                         advanced.setVisible(true);
@@ -126,7 +127,7 @@ public class ERegisterSubjectFragmentPresenterImpl extends ConnectedFragmentWith
                     return false;
                 });
                 advanced.setOnMenuItemClickListener(item -> {
-                    thread.runOnUI(() -> {
+                    thread.runOnUI(ERS, () -> {
                         storagePref.put(activity, "pref_eregister_mode", "advanced");
                         simple.setVisible(true);
                         advanced.setVisible(false);
@@ -135,16 +136,16 @@ public class ERegisterSubjectFragmentPresenterImpl extends ConnectedFragmentWith
                     return false;
                 });
             }
-            thread.run(() -> {
+            thread.run(ERS, () -> {
                 if (share == null) {
                     return;
                 }
                 ERSubject data = getData();
                 if (data == null || StringUtils.isBlank(data.getName()) || CollectionUtils.isEmpty(data.getMarks()) || CollectionUtils.isEmpty(data.getPoints())) {
-                    thread.runOnUI(() -> share.setVisible(false));
+                    thread.runOnUI(ERS, () -> share.setVisible(false));
                     return;
                 }
-                thread.runOnUI(() -> {
+                thread.runOnUI(ERS, () -> {
                     share.setVisible(true);
                     share.setOnMenuItemClickListener(menuItem -> {
                         share();
@@ -162,14 +163,14 @@ public class ERegisterSubjectFragmentPresenterImpl extends ConnectedFragmentWith
     }
 
     protected void display() {
-        thread.run(() -> {
+        thread.run(ERS, () -> {
             log.v(TAG, "display");
             ERSubject data = getData();
             if (data == null) {
                 return;
             }
             ERegisterSubjectViewRVA adapter = new ERegisterSubjectViewRVA(activity, data, "advanced".equals(storagePref.get(activity, "pref_eregister_mode", "advanced")));
-            thread.runOnUI(() -> {
+            thread.runOnUI(ERS, () -> {
                 // отображаем заголовок
                 activity.updateToolbar(activity, data.getName(), R.drawable.ic_e_journal);
                 // отображаем список
@@ -193,7 +194,7 @@ public class ERegisterSubjectFragmentPresenterImpl extends ConnectedFragmentWith
     }
 
     private void loadFailed() {
-        thread.runOnUI(() -> {
+        thread.runOnUI(ERS, () -> {
             log.v(TAG, "loadFailed");
             activity.draw(R.layout.state_failed_text);
             TextView message = activity.findViewById(R.id.text);
@@ -206,7 +207,7 @@ public class ERegisterSubjectFragmentPresenterImpl extends ConnectedFragmentWith
     }
 
     private void share() {
-        thread.run(() -> {
+        thread.standalone(() -> {
             ERSubject data = getData();
             if (data == null || StringUtils.isBlank(data.getName()) || CollectionUtils.isEmpty(data.getMarks()) || CollectionUtils.isEmpty(data.getPoints())) {
                 return;
@@ -215,7 +216,7 @@ public class ERegisterSubjectFragmentPresenterImpl extends ConnectedFragmentWith
             if (CollectionUtils.isEmpty(shareEntities)) {
                 return;
             }
-            thread.runOnUI(() -> {
+            thread.runOnUI(ERS, () -> {
                 if (shareEntities.size() == 1) {
                     eventBus.fire(new ShareTextEvent(shareEntities.get(0).text, "txt_eregister_subject"));
                     return;
@@ -367,5 +368,10 @@ public class ERegisterSubjectFragmentPresenterImpl extends ConnectedFragmentWith
     @Override
     protected String getCachePath() {
         return null;
+    }
+
+    @Override
+    protected String getThreadToken() {
+        return ERS;
     }
 }

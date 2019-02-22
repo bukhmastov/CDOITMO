@@ -1,18 +1,16 @@
 package com.bukhmastov.cdoitmo.firebase.impl;
 
 import android.content.Context;
-import androidx.annotation.StringDef;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activity.ConnectedActivity;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseCrashlyticsProvider;
-import com.bukhmastov.cdoitmo.util.NotificationMessage;
 import com.bukhmastov.cdoitmo.util.Log;
+import com.bukhmastov.cdoitmo.util.NotificationMessage;
 import com.bukhmastov.cdoitmo.util.Static;
 import com.bukhmastov.cdoitmo.util.StoragePref;
-import com.bukhmastov.cdoitmo.util.Thread;
 import com.crashlytics.android.Crashlytics;
 
 import java.lang.annotation.Retention;
@@ -20,6 +18,7 @@ import java.lang.annotation.RetentionPolicy;
 
 import javax.inject.Inject;
 
+import androidx.annotation.StringDef;
 import dagger.Lazy;
 import io.fabric.sdk.android.Fabric;
 
@@ -30,8 +29,6 @@ public class FirebaseCrashlyticsProviderImpl implements FirebaseCrashlyticsProvi
 
     @Inject
     Log log;
-    @Inject
-    Thread thread;
     @Inject
     Lazy<StoragePref> storagePref;
     @Inject
@@ -58,6 +55,7 @@ public class FirebaseCrashlyticsProviderImpl implements FirebaseCrashlyticsProvi
     public boolean setEnabled(Context context) {
         return setEnabled(context, storagePref.get().get(context, "pref_allow_send_reports", true));
     }
+
     @Override
     public boolean setEnabled(Context context, boolean enabled) {
         try {
@@ -72,6 +70,7 @@ public class FirebaseCrashlyticsProviderImpl implements FirebaseCrashlyticsProvi
         }
         return this.enabled;
     }
+
     @Override
     public boolean setEnabled(ConnectedActivity activity, boolean enabled) {
         try {
@@ -133,26 +132,24 @@ public class FirebaseCrashlyticsProviderImpl implements FirebaseCrashlyticsProvi
     }
 
     @Override
-    public void exception(final Throwable throwable) {
-        thread.run(thread.BACKGROUND, () -> {
-            try {
-                if (!enabled) return;
-                Crashlytics.logException(throwable);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        });
+    public void exception(Throwable throwable) {
+        if (!enabled) return;
+        try {
+            Crashlytics.logException(throwable);
+        } catch (Throwable th) {
+            th.printStackTrace();
+        }
+        // thread.standalone(() -> Crashlytics.logException(throwable), Throwable::printStackTrace);
     }
 
-    private void log(final @LEVEL String level, final String TAG, final String log) {
-        thread.run(thread.BACKGROUND, () -> {
-            try {
-                if (!enabled) return;
-                Crashlytics.log(level2priority(level), TAG, log);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        });
+    private void log(@LEVEL String level, String TAG, String log) {
+        if (!enabled) return;
+        try {
+            Crashlytics.log(level2priority(level), TAG, log);
+        } catch (Throwable th) {
+            th.printStackTrace();
+        }
+        //thread.standalone(() -> Crashlytics.log(level2priority(level), TAG, log), Throwable::printStackTrace);
     }
 
     private int level2priority(final @LEVEL String level) {

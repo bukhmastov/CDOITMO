@@ -58,9 +58,9 @@ public class PikaActivityPresenterImpl implements PikaActivityPresenter {
                 dimas = true;
                 ((ImageView) activity.findViewById(R.id.image)).setImageDrawable(activity.getDrawable(R.drawable.wuwari));
             }
-            View pika_container = activity.findViewById(R.id.pika_container);
-            if (pika_container != null) {
-                pika_container.setOnClickListener(v -> {
+            View pikaContainer = activity.findViewById(R.id.pika_container);
+            if (pikaContainer != null) {
+                pikaContainer.setOnClickListener(v -> {
                     activity.finish();
                     activity.overridePendingTransition(R.anim.zoom_bottom_in, R.anim.zoom_bottom_out);
                 });

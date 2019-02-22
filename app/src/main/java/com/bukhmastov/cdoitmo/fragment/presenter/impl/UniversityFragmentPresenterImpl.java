@@ -24,6 +24,8 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.FragmentManager;
 import androidx.viewpager.widget.ViewPager;
 
+import static com.bukhmastov.cdoitmo.util.Thread.UH;
+
 public class UniversityFragmentPresenterImpl extends ConnectedFragmentPresenterImpl
         implements UniversityFragmentPresenter, ViewPager.OnPageChangeListener {
 
@@ -60,7 +62,8 @@ public class UniversityFragmentPresenterImpl extends ConnectedFragmentPresenterI
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
-        thread.run(() -> {
+        thread.initialize(UH);
+        thread.run(UH, () -> {
             log.v(TAG, "Fragment created");
             firebaseAnalyticsProvider.logCurrentScreen(activity, fragment);
             Intent intent = activity.getIntent();
@@ -75,30 +78,33 @@ public class UniversityFragmentPresenterImpl extends ConnectedFragmentPresenterI
 
     @Override
     public void onDestroy() {
-        thread.runOnUI(() -> {
+        thread.runOnUI(UH, () -> {
             log.v(TAG, "Fragment destroyed");
-            TabLayout scrollable_tabs = activity.findViewById(R.id.scrollable_tabs);
-            if (scrollable_tabs != null) {
-                scrollable_tabs.setVisibility(View.GONE);
+            TabLayout scrollableTabs = activity.findViewById(R.id.scrollable_tabs);
+            if (scrollableTabs != null) {
+                scrollableTabs.setVisibility(View.GONE);
             }
+            thread.standalone(() -> {
+                thread.interrupt(UH);
+            });
         });
     }
 
     @Override
     public void onResume() {
-        thread.runOnUI(() -> {
+        thread.runOnUI(UH, () -> {
             log.v(TAG, "Fragment resumed");
             firebaseAnalyticsProvider.setCurrentScreen(activity, fragment);
-            TabLayout scrollable_tabs = activity.findViewById(R.id.scrollable_tabs);
-            if (scrollable_tabs != null) {
-                scrollable_tabs.setVisibility(View.VISIBLE);
+            TabLayout scrollableTabs = activity.findViewById(R.id.scrollable_tabs);
+            if (scrollableTabs != null) {
+                scrollableTabs.setVisibility(View.VISIBLE);
             }
         });
     }
 
     @Override
     public void onViewCreated() {
-        thread.runOnUI(() -> {
+        thread.runOnUI(UH, () -> {
             if (fragment.isNotAddedToActivity()) {
                 log.w(TAG, "onViewCreated | fragment not added to activity");
                 return;
@@ -160,5 +166,10 @@ public class UniversityFragmentPresenterImpl extends ConnectedFragmentPresenterI
     @Override
     protected String getLogTag() {
         return TAG;
+    }
+
+    @Override
+    protected String getThreadToken() {
+        return UH;
     }
 }

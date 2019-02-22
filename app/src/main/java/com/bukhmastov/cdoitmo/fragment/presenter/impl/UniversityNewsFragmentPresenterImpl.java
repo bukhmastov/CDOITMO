@@ -55,6 +55,8 @@ import java.util.Collection;
 
 import javax.inject.Inject;
 
+import static com.bukhmastov.cdoitmo.util.Thread.UN;
+
 public class UniversityNewsFragmentPresenterImpl implements UniversityNewsFragmentPresenter, SwipeRefreshLayout.OnRefreshListener {
 
     private static final String TAG = "UniversityNewsFragment";
@@ -107,6 +109,7 @@ public class UniversityNewsFragmentPresenterImpl implements UniversityNewsFragme
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
+        thread.initialize(UN);
         log.v(TAG, "Fragment created");
         firebaseAnalyticsProvider.logCurrentScreen(activity, fragment);
     }
@@ -115,11 +118,12 @@ public class UniversityNewsFragmentPresenterImpl implements UniversityNewsFragme
     public void onDestroy() {
         log.v(TAG, "Fragment destroyed");
         loaded = false;
+        thread.interrupt(UN);
     }
 
     @Override
     public void onResume() {
-        thread.run(() -> {
+        thread.run(UN, () -> {
             log.v(TAG, "Fragment resumed");
             firebaseAnalyticsProvider.setCurrentScreen(activity, fragment);
             if (!loaded) {
@@ -131,8 +135,8 @@ public class UniversityNewsFragmentPresenterImpl implements UniversityNewsFragme
 
     @Override
     public void onPause() {
-        thread.run(() -> {
-            log.v(TAG, "Fragment paused");
+        log.v(TAG, "Fragment paused");
+        thread.standalone(() -> {
             if (requestHandle != null && requestHandle.cancel()) {
                 loaded = false;
             }
@@ -151,17 +155,19 @@ public class UniversityNewsFragmentPresenterImpl implements UniversityNewsFragme
     }
 
     private void load() {
-        thread.run(() -> load(""));
+        thread.run(UN, () -> load(""));
     }
 
-    private void load(final String search) {
-        thread.run(() -> load(search, storagePref.get(activity, "pref_use_cache", true) && storagePref.get(activity, "pref_use_university_cache", false)
-                ? Integer.parseInt(storagePref.get(activity, "pref_dynamic_refresh", "0"))
-                : 0));
+    private void load(String search) {
+        thread.run(UN, () -> {
+            load(search, storagePref.get(activity, "pref_use_cache", true) && storagePref.get(activity, "pref_use_university_cache", false)
+                    ? Integer.parseInt(storagePref.get(activity, "pref_dynamic_refresh", "0"))
+                    : 0);
+        });
     }
 
-    private void load(final String search, final int refresh_rate) {
-        thread.run(() -> {
+    private void load(String search, int refresh_rate) {
+        thread.run(UN, () -> {
             log.v(TAG, "load | search=", search, " | refresh_rate=", refresh_rate);
             if (!(storagePref.get(activity, "pref_use_cache", true) && storagePref.get(activity, "pref_use_university_cache", false))) {
                 load(search, false);
@@ -183,15 +189,15 @@ public class UniversityNewsFragmentPresenterImpl implements UniversityNewsFragme
         });
     }
 
-    private void load(final String search, final boolean force) {
-        thread.run(() -> {
+    private void load(String search, boolean force) {
+        thread.run(UN, () -> {
             log.v(TAG, "load | search=", search, " | force=", force);
             if ((!force || !Client.isOnline(activity)) && news != null) {
                 display();
                 return;
             }
             if (App.OFFLINE_MODE) {
-                thread.runOnUI(() -> {
+                thread.runOnUI(UN, () -> {
                     draw(R.layout.state_offline_text);
                     View reload = container.findViewById(R.id.offline_reload);
                     if (reload != null) {
@@ -206,26 +212,22 @@ public class UniversityNewsFragmentPresenterImpl implements UniversityNewsFragme
             this.search = search;
             loadProvider(new RestResponseHandler() {
                 @Override
-                public void onSuccess(final int statusCode, final Client.Headers headers, final JSONObject obj, final JSONArray arr) {
-                    thread.run(() -> {
-                        if (statusCode == 200 && obj != null) {
-                            UNews data = new UNews().fromJson(obj);
-                            data.setTimestamp(time.getTimeInMillis());
-                            if (storagePref.get(activity, "pref_use_cache", true) && storagePref.get(activity, "pref_use_university_cache", false)) {
-                                storage.put(activity, Storage.CACHE, Storage.GLOBAL, "university#news", data.toJsonString());
-                            }
-                            news = data;
-                            display();
-                            return;
+                public void onSuccess(int code, Client.Headers headers, JSONObject obj, JSONArray arr) throws Exception {
+                    if (code == 200 && obj != null) {
+                        UNews data = new UNews().fromJson(obj);
+                        data.setTimestamp(time.getTimeInMillis());
+                        if (storagePref.get(activity, "pref_use_cache", true) && storagePref.get(activity, "pref_use_university_cache", false)) {
+                            storage.put(activity, Storage.CACHE, Storage.GLOBAL, "university#news", data.toJsonString());
                         }
-                        loadFailed();
-                    }, throwable -> {
-                        loadFailed();
-                    });
+                        news = data;
+                        display();
+                        return;
+                    }
+                    loadFailed();
                 }
                 @Override
-                public void onFailure(final int statusCode, final Client.Headers headers, final int state) {
-                    thread.runOnUI(() -> {
+                public void onFailure(int code, Client.Headers headers, int state) {
+                    thread.runOnUI(UN, () -> {
                         log.v(TAG, "load | failure ", state);
                         switch (state) {
                             case IfmoRestClient.FAILED_OFFLINE: {
@@ -243,7 +245,7 @@ public class UniversityNewsFragmentPresenterImpl implements UniversityNewsFragme
                                 TextView message = activity.findViewById(R.id.try_again_message);
                                 if (message != null) {
                                     switch (state) {
-                                        case IfmoRestClient.FAILED_SERVER_ERROR:   message.setText(IfmoRestClient.getFailureMessage(activity, statusCode)); break;
+                                        case IfmoRestClient.FAILED_SERVER_ERROR:   message.setText(IfmoRestClient.getFailureMessage(activity, code)); break;
                                         case IfmoRestClient.FAILED_CORRUPTED_JSON: message.setText(R.string.server_provided_corrupted_json); break;
                                     }
                                 }
@@ -259,8 +261,8 @@ public class UniversityNewsFragmentPresenterImpl implements UniversityNewsFragme
                     });
                 }
                 @Override
-                public void onProgress(final int state) {
-                    thread.runOnUI(() -> {
+                public void onProgress(int state) {
+                    thread.runOnUI(UN, () -> {
                         log.v(TAG, "load | progress " + state);
                         draw(R.layout.state_loading_text);
                         TextView message = container.findViewById(R.id.loading_message);
@@ -289,7 +291,7 @@ public class UniversityNewsFragmentPresenterImpl implements UniversityNewsFragme
     }
 
     private void loadFailed() {
-        thread.runOnUI(() -> {
+        thread.runOnUI(UN, () -> {
             log.v(TAG, "loadFailed");
             draw(R.layout.state_failed_button);
             TextView message = container.findViewById(R.id.try_again_message);
@@ -306,7 +308,7 @@ public class UniversityNewsFragmentPresenterImpl implements UniversityNewsFragme
     }
 
     private void display() {
-        thread.runOnUI(() -> {
+        thread.runOnUI(UN, () -> {
             log.v(TAG, "display");
             if (news == null) {
                 loadFailed();
@@ -338,7 +340,7 @@ public class UniversityNewsFragmentPresenterImpl implements UniversityNewsFragme
                     list.setAdapter(newsRecyclerViewAdapter);
                     list.addOnScrollListener(new RecyclerViewOnScrollListener(container));
                 }
-                newsRecyclerViewAdapter.setClickListener(R.id.news_click, (v, entity) -> thread.run(() -> {
+                newsRecyclerViewAdapter.setClickListener(R.id.news_click, (v, entity) -> thread.run(UN, () -> {
                     if (!(entity.getEntity() instanceof UNewsItem)) {
                         return;
                     }
@@ -351,35 +353,30 @@ public class UniversityNewsFragmentPresenterImpl implements UniversityNewsFragme
                     extras.putString("title", activity.getString(R.string.news));
                     eventBus.fire(new OpenActivityEvent(WebViewActivity.class, extras));
                 }));
-                newsRecyclerViewAdapter.setClickListener(R.id.load_more, (v, entity) -> thread.run(() -> {
+                newsRecyclerViewAdapter.setClickListener(R.id.load_more, (v, entity) -> thread.run(UN, () -> {
                     offset += limit;
-                    thread.runOnUI(() -> newsRecyclerViewAdapter.setState(R.id.loading_more));
+                    thread.runOnUI(UN, () -> newsRecyclerViewAdapter.setState(R.id.loading_more));
                     loadProvider(new RestResponseHandler() {
                         @Override
-                        public void onSuccess(final int statusCode, final Client.Headers headers, final JSONObject obj, final JSONArray arr) {
-                            thread.run(() -> {
-                                if (statusCode == 200 && obj != null) {
-                                    UNews data = new UNews().fromJson(obj);
-                                    news.getNewsItems().addAll(data.getNewsItems());
-                                    news.setCount(data.getCount());
-                                    news.setLimit(data.getLimit());
-                                    news.setOffset(data.getOffset());
-                                    news.setTimestamp(time.getTimeInMillis());
-                                    if (storagePref.get(activity, "pref_use_cache", true) && storagePref.get(activity, "pref_use_university_cache", false)) {
-                                        storage.put(activity, Storage.CACHE, Storage.GLOBAL, "university#news", data.toJsonString());
-                                    }
-                                    displayNews(data.getNewsItems());
-                                    return;
+                        public void onSuccess(int code, Client.Headers headers, JSONObject obj, JSONArray arr) throws Exception {
+                            if (code == 200 && obj != null) {
+                                UNews data = new UNews().fromJson(obj);
+                                news.getNewsItems().addAll(data.getNewsItems());
+                                news.setCount(data.getCount());
+                                news.setLimit(data.getLimit());
+                                news.setOffset(data.getOffset());
+                                news.setTimestamp(time.getTimeInMillis());
+                                if (storagePref.get(activity, "pref_use_cache", true) && storagePref.get(activity, "pref_use_university_cache", false)) {
+                                    storage.put(activity, Storage.CACHE, Storage.GLOBAL, "university#news", data.toJsonString());
                                 }
-                                thread.runOnUI(() -> newsRecyclerViewAdapter.setState(R.id.load_more));
-                            }, throwable -> {
-                                log.exception(throwable);
-                                thread.runOnUI(() -> newsRecyclerViewAdapter.setState(R.id.load_more));
-                            });
+                                displayNews(data.getNewsItems());
+                                return;
+                            }
+                            thread.runOnUI(UN, () -> newsRecyclerViewAdapter.setState(R.id.load_more));
                         }
                         @Override
-                        public void onFailure(int statusCode, Client.Headers headers, int state) {
-                            thread.runOnUI(() -> newsRecyclerViewAdapter.setState(R.id.load_more));
+                        public void onFailure(int code, Client.Headers headers, int state) {
+                            thread.runOnUI(UN, () -> newsRecyclerViewAdapter.setState(R.id.load_more));
                         }
                         @Override
                         public void onProgress(int state) {}
@@ -429,7 +426,7 @@ public class UniversityNewsFragmentPresenterImpl implements UniversityNewsFragme
     }
 
     private void displayNews(Collection<UNewsItem> uNews) {
-        thread.run(() -> {
+        thread.run(UN, () -> {
             Collection<RVA.Item> items = new ArrayList<>();
             for (UNewsItem newsItem : uNews) {
                 items.add(new UniversityNewsRVA.Item<>(
@@ -440,7 +437,7 @@ public class UniversityNewsFragmentPresenterImpl implements UniversityNewsFragme
             if (items.size() == 0) {
                 items.add(new UniversityRVA.Item(UniversityNewsRVA.TYPE_NO_DATA));
             }
-            thread.runOnUI(() -> {
+            thread.runOnUI(UN, () -> {
                 if (newsRecyclerViewAdapter != null) {
                     newsRecyclerViewAdapter.addItems(items);
                     if (news != null && offset + limit < news.getCount()) {

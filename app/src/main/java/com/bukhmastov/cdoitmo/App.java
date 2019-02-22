@@ -182,7 +182,7 @@ public class App extends Application {
 
     @Event
     public void onShareTextEvent(ShareTextEvent event) {
-        thread.run(() -> {
+        thread.standalone(() -> {
             if (StringUtils.isBlank(event.getText())) {
                 return;
             }

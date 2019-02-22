@@ -40,7 +40,7 @@ public class SettingsScheduleLessonsImpl extends SettingsSchedule<SLessons> impl
 
     @Override
     public void onSuccess(SLessons schedule, boolean fromCache) {
-        thread.run(() -> {
+        try {
             log.v(TAG, "search | onSuccess | schedule=", (schedule == null ? "null" : "notnull"));
             toggleSearchState("action");
             if (schedule == null || StringUtils.isBlank(schedule.getType())) {
@@ -48,7 +48,9 @@ public class SettingsScheduleLessonsImpl extends SettingsSchedule<SLessons> impl
                 return;
             }
             switch (schedule.getType()) {
-                case "group": case "room": case "teacher": {
+                case "group":
+                case "room":
+                case "teacher": {
                     if (CollectionUtils.isEmpty(schedule.getSchedule())) {
                         return;
                     }
@@ -92,10 +94,10 @@ public class SettingsScheduleLessonsImpl extends SettingsSchedule<SLessons> impl
                     break;
                 }
             }
-        }, throwable -> {
+        } catch (Throwable throwable) {
             log.exception(throwable);
             notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
-        });
+        }
     }
 
     @Override

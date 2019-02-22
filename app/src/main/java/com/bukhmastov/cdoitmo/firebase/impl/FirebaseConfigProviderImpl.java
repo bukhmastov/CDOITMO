@@ -3,6 +3,7 @@ package com.bukhmastov.cdoitmo.firebase.impl;
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseConfigProvider;
+import com.bukhmastov.cdoitmo.function.Consumer;
 import com.bukhmastov.cdoitmo.model.firebase.config.FBConfigMessage;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Thread;
@@ -17,9 +18,6 @@ public class FirebaseConfigProviderImpl implements FirebaseConfigProvider {
     private static final boolean DEBUG = false;
     private static final long cacheExpiration = 7200; // 2 hours
 
-    private interface Callback {
-        void onComplete(boolean successful);
-    }
 
     @Inject
     Log log;
@@ -42,7 +40,7 @@ public class FirebaseConfigProviderImpl implements FirebaseConfigProvider {
     }
 
     @Override
-    public void getString(final String key, final Result result) {
+    public void getString(String key, Result result) {
         log.v(TAG, "getString | key=", key);
         fetch(successful -> {
             String value = getFirebaseRemoteConfig().getString(key);
@@ -52,7 +50,7 @@ public class FirebaseConfigProviderImpl implements FirebaseConfigProvider {
     }
 
     @Override
-    public void getMessage(final String key, final ResultMessage result) {
+    public void getMessage(String key, ResultMessage result) {
         log.v(TAG, "getMessage | key=", key);
         fetch(successful -> {
             try {
@@ -69,17 +67,17 @@ public class FirebaseConfigProviderImpl implements FirebaseConfigProvider {
         });
     }
 
-    private void fetch(final Callback callback) {
-        thread.run(() -> {
+    private void fetch(Consumer<Boolean> onComplete) {
+        thread.standalone(() -> {
             log.v(TAG, "fetch");
             getFirebaseRemoteConfig().fetch(DEBUG ? 0 : cacheExpiration)
-                    .addOnCompleteListener(task -> thread.run(() -> {
+                    .addOnCompleteListener(task -> thread.standalone(() -> {
                         boolean successful = task.isSuccessful();
                         log.v(TAG, "fetch | onComplete | successful=", successful);
                         if (successful) {
                             getFirebaseRemoteConfig().activateFetched();
                         }
-                        callback.onComplete(successful);
+                        onComplete.accept(successful);
                     }));
         });
     }

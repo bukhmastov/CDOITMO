@@ -65,16 +65,17 @@ public class LinkedAccountsFragmentPresenterImpl extends ConnectedFragmentPresen
             View accountCdoLink = fragment.container().findViewById(R.id.account_cdo_link);
             View accountCdoInfo = fragment.container().findViewById(R.id.account_cdo_info);
             if (accountCdoLink != null) {
-                accountCdoLink.setOnClickListener(v -> thread.run(() -> {
+                accountCdoLink.setOnClickListener(v -> thread.standalone(() -> {
                     log.v(TAG, "accountCdoLink clicked");
                     eventBus.fire(new OpenIntentEvent(new Intent(Intent.ACTION_VIEW, Uri.parse("http://de.ifmo.ru"))));
                 }));
             }
-            thread.run(() -> {
-                String cdoUserInfo = storage.get(activity, Storage.PERMANENT, Storage.USER, "user#deifmo#login", "").trim() + " (" + storage.get(activity, Storage.PERMANENT, Storage.USER, "user#name", "").trim() + ")";
+            thread.standalone(() -> {
+                String login = storage.get(activity, Storage.PERMANENT, Storage.USER, "user#deifmo#login", "").trim();
+                String name = storage.get(activity, Storage.PERMANENT, Storage.USER, "user#name", "").trim();
                 thread.runOnUI(() -> {
                     if (accountCdoInfo != null) {
-                        ((TextView) accountCdoInfo).setText(cdoUserInfo);
+                        ((TextView) accountCdoInfo).setText(login + " (" + name + ")");
                     }
                 });
             });
@@ -82,7 +83,7 @@ public class LinkedAccountsFragmentPresenterImpl extends ConnectedFragmentPresen
     }
 
     private void initIsu() {
-        thread.run(() -> {
+        thread.standalone(() -> {
             boolean authorized = isuPrivateRestClient.isAuthorized(activity);
             thread.runOnUI(() -> {
                 View accountIsuLoading = activity.findViewById(R.id.account_isu_loading);
@@ -105,12 +106,10 @@ public class LinkedAccountsFragmentPresenterImpl extends ConnectedFragmentPresen
                     PopupMenu popup = new PopupMenu(activity, v);
                     popup.inflate(R.menu.linked_accounts_logout);
                     popup.setOnMenuItemClickListener(item -> {
-                        thread.run(() -> {
-                            switch (item.getItemId()) {
-                                case R.id.logout: isuLogout(); break;
-                                case R.id.update_connection: isuLogin(); break;
-                            }
-                        });
+                        switch (item.getItemId()) {
+                            case R.id.logout: isuLogout(); break;
+                            case R.id.update_connection: isuLogin(); break;
+                        }
                         popup.dismiss();
                         return true;
                     });
@@ -121,7 +120,7 @@ public class LinkedAccountsFragmentPresenterImpl extends ConnectedFragmentPresen
     }
 
     private void isuLogin() {
-        thread.run(() -> isuPrivateRestClient.authorize(activity, new ResponseHandler() {
+        thread.standalone(() -> isuPrivateRestClient.authorize(activity, new ResponseHandler() {
             @Override
             public void onSuccess(int statusCode, Client.Headers headers, String response) {
                 thread.runOnUI(() -> {
@@ -173,7 +172,7 @@ public class LinkedAccountsFragmentPresenterImpl extends ConnectedFragmentPresen
     }
 
     private void isuLogout() {
-        thread.run(() -> {
+        thread.standalone(() -> {
             storage.delete(activity, Storage.PERMANENT, Storage.USER, "user#isu#access_token");
             storage.delete(activity, Storage.PERMANENT, Storage.USER, "user#isu#refresh_token");
             storage.delete(activity, Storage.PERMANENT, Storage.USER, "user#isu#expires_at");

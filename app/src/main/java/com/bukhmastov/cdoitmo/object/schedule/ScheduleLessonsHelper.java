@@ -1,7 +1,10 @@
 package com.bukhmastov.cdoitmo.object.schedule;
 
+import android.os.Bundle;
+
 import com.bukhmastov.cdoitmo.activity.ConnectedActivity;
 import com.bukhmastov.cdoitmo.function.Callable;
+import com.bukhmastov.cdoitmo.function.Consumer;
 import com.bukhmastov.cdoitmo.model.schedule.lessons.SDay;
 import com.bukhmastov.cdoitmo.model.schedule.lessons.SLesson;
 import com.bukhmastov.cdoitmo.model.schedule.lessons.SLessons;
@@ -17,13 +20,13 @@ public interface ScheduleLessonsHelper {
 
     boolean restoreLesson(String query, int weekday, SLesson lesson, Callable callback);
 
-    boolean createLesson(ConnectedActivity activity, String query, String title, String type, int weekday, SLesson lesson, Callable callback);
+    boolean createLesson(String query, String title, String type, int weekday, SLesson lesson, Consumer<Bundle> onOpen);
 
     boolean createLesson(String query, int weekday, SLesson lesson, Callable callback);
 
     boolean deleteLesson(String query, int weekday, SLesson lesson, Callable callback);
 
-    boolean editLesson(ConnectedActivity activity, String query, String title, String type, int weekday, SLesson lesson, Callable callback);
+    boolean editLesson(String query, String title, String type, int weekday, SLesson lesson, Consumer<Bundle> onOpen);
 
     String getLessonHash(SLesson lesson) throws Exception;
 

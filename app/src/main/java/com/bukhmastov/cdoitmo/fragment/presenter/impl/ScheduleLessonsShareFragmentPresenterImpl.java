@@ -56,6 +56,8 @@ import javax.inject.Inject;
 import androidx.annotation.Nullable;
 import androidx.core.content.FileProvider;
 
+import static com.bukhmastov.cdoitmo.util.Thread.SLS;
+
 public class ScheduleLessonsShareFragmentPresenterImpl extends ConnectedFragmentPresenterImpl
         implements ScheduleLessonsShareFragmentPresenter {
 
@@ -116,7 +118,7 @@ public class ScheduleLessonsShareFragmentPresenterImpl extends ConnectedFragment
         } catch (Exception e) {
             action = null;
         }
-        thread.run(() -> {
+        thread.run(SLS, () -> {
             firebaseAnalyticsProvider.logCurrentScreen(activity, fragment);
             log.v(TAG, "Fragment created | action=" + action);
             if (action == null || !(action.equals("share") || action.equals("handle"))) {
@@ -129,16 +131,15 @@ public class ScheduleLessonsShareFragmentPresenterImpl extends ConnectedFragment
 
     @Override
     public void onDestroy() {
-        thread.run(() -> {
-            log.v(TAG, "Fragment destroyed");
-            loaded = false;
-            changes.clear();
-        });
+        log.v(TAG, "Fragment destroyed");
+        loaded = false;
+        changes.clear();
+        super.onDestroy();
     }
 
     @Override
     public void onResume() {
-        thread.run(() -> {
+        thread.run(SLS, () -> {
             if (!keepGoing) {
                 return;
             }
@@ -176,7 +177,7 @@ public class ScheduleLessonsShareFragmentPresenterImpl extends ConnectedFragment
     }
 
     private void load(Bundle extras) {
-        thread.run(() -> {
+        thread.run(SLS, () -> {
             log.v(TAG, "load | action=", action);
             switch (action) {
                 case "handle": loadHandle(extras); break;
@@ -221,7 +222,7 @@ public class ScheduleLessonsShareFragmentPresenterImpl extends ConnectedFragment
         query = fsLessonsContent.getQuery();
         title = fsLessonsContent.getTitle();
         type = fsLessonsContent.getType();
-        thread.runOnUI(() -> {
+        thread.runOnUI(SLS, () -> {
             TextView shareTitle = fragment.container().findViewById(R.id.share_title);
             if (shareTitle != null) {
                 shareTitle.setText(scheduleLessons.getScheduleHeader(fsLessonsContent.getTitle(), fsLessonsContent.getType()));
@@ -251,8 +252,8 @@ public class ScheduleLessonsShareFragmentPresenterImpl extends ConnectedFragment
         }
         scheduleLessons.search(query, false, false, new Schedule.Handler<SLessons>() {
             @Override
-            public void onSuccess(final SLessons schedule, final boolean fromCache) {
-                thread.run(() -> {
+            public void onSuccess(SLessons schedule, boolean fromCache) {
+                try {
                     log.v(TAG, "loadHandle | success | schedule=", schedule);
                     if (schedule == null || Objects.equals("teachers", schedule.getType())) {
                         notificationMessage.toast(activity, activity.getString(R.string.something_went_wrong));
@@ -269,19 +270,19 @@ public class ScheduleLessonsShareFragmentPresenterImpl extends ConnectedFragment
                         }
                     }
                     display();
-                }, throwable -> {
+                } catch (Throwable throwable) {
                     log.exception(throwable);
                     notificationMessage.toast(activity, activity.getString(R.string.something_went_wrong));
                     finish();
-                });
+                }
             }
             @Override
             public void onFailure(int state) {
                 this.onFailure(0, null, state);
             }
             @Override
-            public void onFailure(final int statusCode, final Client.Headers headers, final int state) {
-                thread.runOnUI(() -> {
+            public void onFailure(int code, Client.Headers headers, int state) {
+                thread.runOnUI(SLS, () -> {
                     log.v(TAG, "loadHandle | failure ", state);
                     ViewGroup shareContent = fragment.container().findViewById(R.id.share_content);
                     if (shareContent == null) {
@@ -296,7 +297,7 @@ public class ScheduleLessonsShareFragmentPresenterImpl extends ConnectedFragment
                             break;
                         case Client.FAILED_SERVER_ERROR:
                             view = fragment.inflate(R.layout.state_failed_text_compact);
-                            ((TextView) view.findViewById(R.id.text)).setText(Client.getFailureMessage(activity, statusCode));
+                            ((TextView) view.findViewById(R.id.text)).setText(Client.getFailureMessage(activity, code));
                             shareContent.addView(view);
                             break;
                         case Client.FAILED_CORRUPTED_JSON:
@@ -321,8 +322,8 @@ public class ScheduleLessonsShareFragmentPresenterImpl extends ConnectedFragment
                 });
             }
             @Override
-            public void onProgress(final int state) {
-                thread.runOnUI(() -> {
+            public void onProgress(int state) {
+                thread.runOnUI(SLS, () -> {
                     log.v(TAG, "loadHandle | progress ", state);
                     ViewGroup shareContent = fragment.container().findViewById(R.id.share_content);
                     if (shareContent != null) {
@@ -353,14 +354,14 @@ public class ScheduleLessonsShareFragmentPresenterImpl extends ConnectedFragment
         if (StringUtils.isBlank(query) || StringUtils.isBlank(title) || StringUtils.isBlank(type)) {
             throw new NullPointerException("Some extras are blank: " + query + " | " + title + " | " + type);
         }
-        thread.runOnUI(() -> {
+        thread.runOnUI(SLS, () -> {
             TextView shareTitle = fragment.container().findViewById(R.id.share_title);
             if (shareTitle != null) {
                 shareTitle.setText(scheduleLessons.getScheduleHeader(title, type));
             }
             ViewGroup shareInfo = fragment.container().findViewById(R.id.share_info);
             if (shareInfo != null) {
-                shareInfo.setOnClickListener(view -> thread.run(() -> {
+                shareInfo.setOnClickListener(view -> thread.runOnUI(SLS, () -> {
                     if (activity == null || activity.isFinishing() || activity.isDestroyed()) {
                         return;
                     }
@@ -404,8 +405,8 @@ public class ScheduleLessonsShareFragmentPresenterImpl extends ConnectedFragment
         }
         scheduleLessons.search(query, false, false, new Schedule.Handler<SLessons>() {
             @Override
-            public void onSuccess(final SLessons schedule, final boolean fromCache) {
-                thread.run(() -> {
+            public void onSuccess(SLessons schedule, boolean fromCache) {
+                try {
                     log.v(TAG, "loadShare | success | schedule=", schedule);
                     if (schedule == null || Objects.equals("teachers", schedule.getType())) {
                         notificationMessage.toast(activity, activity.getString(R.string.something_went_wrong));
@@ -424,19 +425,19 @@ public class ScheduleLessonsShareFragmentPresenterImpl extends ConnectedFragment
                         }
                     }
                     display();
-                }, throwable -> {
+                } catch (Throwable throwable) {
                     log.exception(throwable);
                     notificationMessage.toast(activity, activity.getString(R.string.something_went_wrong));
                     finish();
-                });
+                }
             }
             @Override
             public void onFailure(int state) {
                 this.onFailure(0, null, state);
             }
             @Override
-            public void onFailure(final int statusCode, final Client.Headers headers, final int state) {
-                thread.runOnUI(() -> {
+            public void onFailure(int code, Client.Headers headers, int state) {
+                thread.runOnUI(SLS, () -> {
                     log.v(TAG, "loadShare | failure ", state);
                     ViewGroup shareContent = fragment.container().findViewById(R.id.share_content);
                     if (shareContent == null) {
@@ -451,7 +452,7 @@ public class ScheduleLessonsShareFragmentPresenterImpl extends ConnectedFragment
                             break;
                         case Client.FAILED_SERVER_ERROR:
                             view = fragment.inflate(R.layout.state_failed_text_compact);
-                            ((TextView) view.findViewById(R.id.text)).setText(Client.getFailureMessage(activity, statusCode));
+                            ((TextView) view.findViewById(R.id.text)).setText(Client.getFailureMessage(activity, code));
                             shareContent.addView(view);
                             break;
                         case Client.FAILED_CORRUPTED_JSON:
@@ -476,8 +477,8 @@ public class ScheduleLessonsShareFragmentPresenterImpl extends ConnectedFragment
                 });
             }
             @Override
-            public void onProgress(final int state) {
-                thread.runOnUI(() -> {
+            public void onProgress(int state) {
+                thread.runOnUI(SLS, () -> {
                     log.v(TAG, "loadShare | progress ", state);
                     ViewGroup shareContent = fragment.container().findViewById(R.id.share_content);
                     if (shareContent != null) {
@@ -502,7 +503,7 @@ public class ScheduleLessonsShareFragmentPresenterImpl extends ConnectedFragment
     }
     
     private void display() {
-        thread.runOnUI(() -> {
+        thread.runOnUI(SLS, () -> {
             log.v(TAG, "display | action=", action);
             ViewGroup shareContent = fragment.container().findViewById(R.id.share_content);
             if (shareContent == null) {
@@ -588,7 +589,7 @@ public class ScheduleLessonsShareFragmentPresenterImpl extends ConnectedFragment
     }
     
     private void execute() {
-        thread.run(() -> {
+        thread.run(SLS, () -> {
             log.v(TAG, "execute | action=", action);
             boolean selected = false;
             for (Change change : changes) {
@@ -723,7 +724,7 @@ public class ScheduleLessonsShareFragmentPresenterImpl extends ConnectedFragment
                 content.getReduced().add(day);
             }
         }
-        try {
+        thread.standalone(() -> {
             byte[] bytes = data.toJsonString().getBytes(StandardCharsets.UTF_8);
             File file = makeFile(bytes);
             Uri uri = FileProvider.getUriForFile(activity, "com.bukhmastov.cdoitmo.fileprovider", file);
@@ -738,9 +739,10 @@ public class ScheduleLessonsShareFragmentPresenterImpl extends ConnectedFragment
                     FirebaseAnalyticsProvider.Event.SHARE,
                     firebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.TYPE, "file_slessons_changes")
             );
-        } catch (Exception ignore) {
+        }, throwable -> {
+            log.exception(throwable);
             notificationMessage.toast(activity, activity.getString(R.string.failed_to_share_file));
-        }
+        });
     }
 
     private void setDesc(SLesson lesson, TextView textView) {
@@ -873,7 +875,7 @@ public class ScheduleLessonsShareFragmentPresenterImpl extends ConnectedFragment
     }
 
     private void finish() {
-        thread.runOnUI(() -> {
+        thread.runOnUI(SLS, () -> {
             log.v(TAG, "finish");
             if ("handle".equals(action)) {
                 activity.finish();
@@ -886,5 +888,10 @@ public class ScheduleLessonsShareFragmentPresenterImpl extends ConnectedFragment
     @Override
     protected String getLogTag() {
         return TAG;
+    }
+
+    @Override
+    protected String getThreadToken() {
+        return SLS;
     }
 }

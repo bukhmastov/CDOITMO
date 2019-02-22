@@ -100,7 +100,7 @@ public class DeIfmoRestClientImpl extends DeIfmoRestClient {
         handler.onProgress(STATE_HANDLING);
         doGetJson(context, getAbsoluteUrl(protocol, url), query, new RawJsonHandler() {
             @Override
-            public void onDone(int code, okhttp3.Headers headers, String response, JSONObject obj, JSONArray arr) {
+            public void onDone(int code, okhttp3.Headers headers, String response, JSONObject obj, JSONArray arr) throws Exception {
                 log.v(TAG, "get | url=", url, " | success | statusCode=", code);
                 if (code >= 400) {
                     handler.onFailure(code, new Client.Headers(headers), FAILED_SERVER_ERROR);

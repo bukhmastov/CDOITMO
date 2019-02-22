@@ -83,130 +83,126 @@ public class CacheClearDialog extends Dialog {
     public void show() {
         log.v(TAG, "show");
         thread.runOnUI(() -> {
-            final ViewGroup layout = (ViewGroup) inflate(R.layout.dialog_storage_cache);
+            ViewGroup layout = (ViewGroup) inflate(R.layout.dialog_storage_cache);
             if (layout == null) {
                 return;
             }
-            thread.run(() -> {
-                try {
-                    final ViewGroup cache_list = layout.findViewById(R.id.cache_list);
-                    for (Entry item : items) {
-                        final ViewGroup layout_item = (ViewGroup) inflate(R.layout.dialog_storage_cache_item);
-                        if (layout_item == null) {
-                            continue;
-                        }
-                        final ViewGroup cache_item = layout_item.findViewById(R.id.cache_item);
-                        final TextView cache_item_title = layout_item.findViewById(R.id.cache_item_title);
-                        final TextView cache_item_summary = layout_item.findViewById(R.id.cache_item_summary);
-                        final ImageView cache_item_type = layout_item.findViewById(R.id.cache_item_type);
-                        final ViewGroup cache_item_size_container = layout_item.findViewById(R.id.cache_item_size_container);
-                        final TextView cache_item_size = layout_item.findViewById(R.id.cache_item_size);
-                        layout_item.setTag(TAG_PREFIX + item.path);
-                        cache_item_title.setText(item.title);
-                        if (item.desc == null) {
-                            cache_item_summary.setVisibility(View.GONE);
-                        } else {
-                            cache_item_summary.setText(item.desc);
-                        }
-                        switch (item.type) {
-                            case Storage.GLOBAL: cache_item_type.setImageResource(R.drawable.ic_group); break;
-                            case Storage.USER: cache_item_type.setImageResource(R.drawable.ic_person); break;
-                        }
-                        cache_item_size_container.setVisibility(View.INVISIBLE);
-                        cache_item_size.setText("...");
-                        cache_item.setOnClickListener((v) -> thread.run(thread.BACKGROUND, () -> {
-                            if ("_mem_".equals(item.path)) {
-                                storage.cacheReset();
-                                ConnectedActivity.clearStore();
-                                eventBus.fire(new ClearCacheEvent());
-                                notificationMessage.snackBar(activity, activity.getString(R.string.cache_cleared));
-                                return;
-                            } else {
-                                if (item.bytes <= 0L) {
-                                    return;
-                                }
-                                if ("_all_".equals(item.path)) {
-                                    storage.clear(activity, Storage.CACHE, Storage.USER);
-                                    storage.clear(activity, Storage.CACHE, Storage.GLOBAL);
-                                } else {
-                                    switch (item.type) {
-                                        case Storage.USER: storage.clear(activity, Storage.CACHE, Storage.USER, item.path); break;
-                                        case Storage.GLOBAL: storage.clear(activity, Storage.CACHE, Storage.GLOBAL, item.path); break;
-                                    }
-                                    eventBus.fire(new ClearCacheEvent(item.path));
-                                }
-                            }
-                            notificationMessage.snackBar(activity, activity.getString(R.string.cache_cleared));
-                            calculateCacheSize(cache_list);
-                        }));
-                        cache_list.addView(layout_item);
-                    }
-                    // show dialog
-                    if (activity.isFinishing() || activity.isDestroyed()) {
-                        return;
-                    }
-                    thread.runOnUI(() -> new AlertDialog.Builder(activity)
-                            .setTitle(R.string.cache_clear)
-                            .setView(layout)
-                            .setNegativeButton(R.string.close, null)
-                            .create().show());
-                    // calculate size
-                    calculateCacheSize(cache_list);
-                } catch (Exception e) {
-                    log.exception(e);
+            ViewGroup cacheList = layout.findViewById(R.id.cache_list);
+            for (Entry item : items) {
+                ViewGroup layoutItem = (ViewGroup) inflate(R.layout.dialog_storage_cache_item);
+                if (layoutItem == null) {
+                    continue;
                 }
+                ViewGroup cacheItem = layoutItem.findViewById(R.id.cache_item);
+                TextView cacheItemTitle = layoutItem.findViewById(R.id.cache_item_title);
+                TextView cacheItemSummary = layoutItem.findViewById(R.id.cache_item_summary);
+                ImageView cacheItemType = layoutItem.findViewById(R.id.cache_item_type);
+                ViewGroup cacheItemSizeContainer = layoutItem.findViewById(R.id.cache_item_size_container);
+                TextView cacheItemSize = layoutItem.findViewById(R.id.cache_item_size);
+                layoutItem.setTag(TAG_PREFIX + item.path);
+                cacheItemTitle.setText(item.title);
+                if (item.desc == null) {
+                    cacheItemSummary.setVisibility(View.GONE);
+                } else {
+                    cacheItemSummary.setText(item.desc);
+                }
+                switch (item.type) {
+                    case Storage.GLOBAL: cacheItemType.setImageResource(R.drawable.ic_group); break;
+                    case Storage.USER: cacheItemType.setImageResource(R.drawable.ic_person); break;
+                }
+                cacheItemSizeContainer.setVisibility(View.INVISIBLE);
+                cacheItemSize.setText("...");
+                cacheItem.setOnClickListener((v) -> thread.standalone(() -> {
+                    if ("_mem_".equals(item.path)) {
+                        storage.cacheReset();
+                        ConnectedActivity.clearStore();
+                        eventBus.fire(new ClearCacheEvent());
+                        notificationMessage.snackBar(activity, activity.getString(R.string.cache_cleared));
+                        return;
+                    } else {
+                        if (item.bytes <= 0L) {
+                            return;
+                        }
+                        if ("_all_".equals(item.path)) {
+                            storage.clear(activity, Storage.CACHE, Storage.USER);
+                            storage.clear(activity, Storage.CACHE, Storage.GLOBAL);
+                        } else {
+                            switch (item.type) {
+                                case Storage.USER: storage.clear(activity, Storage.CACHE, Storage.USER, item.path); break;
+                                case Storage.GLOBAL: storage.clear(activity, Storage.CACHE, Storage.GLOBAL, item.path); break;
+                            }
+                            eventBus.fire(new ClearCacheEvent(item.path));
+                        }
+                    }
+                    notificationMessage.snackBar(activity, activity.getString(R.string.cache_cleared));
+                    calculateCacheSize(cacheList);
+                }));
+                cacheList.addView(layoutItem);
+            }
+            // show dialog
+            if (activity.isFinishing() || activity.isDestroyed()) {
+                return;
+            }
+            thread.runOnUI(() -> new AlertDialog.Builder(activity)
+                    .setTitle(R.string.cache_clear)
+                    .setView(layout)
+                    .setNegativeButton(R.string.close, null)
+                    .create().show());
+            // calculate size
+            thread.standalone(() -> {
+                calculateCacheSize(cacheList);
             });
+        }, throwable -> {
+            log.exception(throwable);
         });
     }
 
-    private void calculateCacheSize(final ViewGroup cache_list) {
-        thread.run(thread.BACKGROUND, () -> {
-            for (final Entry item : items) {
-                thread.runOnUI(() -> {
-                    final ViewGroup layout_item = cache_list.findViewWithTag(TAG_PREFIX + item.path);
-                    if (layout_item == null) {
-                        return;
-                    }
-                    final ViewGroup cache_item_size_container = layout_item.findViewById(R.id.cache_item_size_container);
-                    final TextView cache_item_size = layout_item.findViewById(R.id.cache_item_size);
-                    cache_item_size_container.setVisibility(View.VISIBLE);
-                    cache_item_size.setText("...");
-                });
-            }
-            for (final Entry item : items) {
-                final Long size;
-                if ("_mem_".equals(item.path)) {
-                    size = -1L;
-                } else if ("_all_".equals(item.path)) {
-                    size =  storage.getDirSize(activity, Storage.CACHE, Storage.USER, "") +
-                            storage.getDirSize(activity, Storage.CACHE, Storage.GLOBAL, "");
-                } else {
-                    switch (item.type) {
-                        case Storage.USER: size = storage.getDirSize(activity, Storage.CACHE, Storage.USER, item.path); break;
-                        case Storage.GLOBAL: size = storage.getDirSize(activity, Storage.CACHE, Storage.GLOBAL, item.path); break;
-                        default: size = -1L; break;
-                    }
+    private void calculateCacheSize(ViewGroup cacheList) {
+        for (Entry item : items) {
+            thread.runOnUI(() -> {
+                ViewGroup layoutItem = cacheList.findViewWithTag(TAG_PREFIX + item.path);
+                if (layoutItem == null) {
+                    return;
                 }
-                thread.runOnUI(() -> {
-                    final ViewGroup layout_item = cache_list.findViewWithTag(TAG_PREFIX + item.path);
-                    if (layout_item == null) {
-                        return;
-                    }
-                    final ViewGroup cache_item_size_container = layout_item.findViewById(R.id.cache_item_size_container);
-                    final TextView cache_item_size = layout_item.findViewById(R.id.cache_item_size);
-                    item.bytes = size;
-                    if (size < 0L) {
-                        cache_item_size_container.setVisibility(View.INVISIBLE);
-                    } else if (size == 0L) {
-                        cache_item_size.setText(R.string.empty);
-                        cache_item_size_container.setVisibility(View.VISIBLE);
-                    } else {
-                        cache_item_size.setText(textUtils.bytes2readable(activity, storagePref, size));
-                        cache_item_size_container.setVisibility(View.VISIBLE);
-                    }
-                    cache_item_size_container.invalidate();
-                });
+                ViewGroup cacheItemSizeContainer = layoutItem.findViewById(R.id.cache_item_size_container);
+                TextView cacheItemSize = layoutItem.findViewById(R.id.cache_item_size);
+                cacheItemSizeContainer.setVisibility(View.VISIBLE);
+                cacheItemSize.setText("...");
+            });
+        }
+        for (Entry item : items) {
+            final Long size;
+            if ("_mem_".equals(item.path)) {
+                size = -1L;
+            } else if ("_all_".equals(item.path)) {
+                size =  storage.getDirSize(activity, Storage.CACHE, Storage.USER, "") +
+                        storage.getDirSize(activity, Storage.CACHE, Storage.GLOBAL, "");
+            } else {
+                switch (item.type) {
+                    case Storage.USER: size = storage.getDirSize(activity, Storage.CACHE, Storage.USER, item.path); break;
+                    case Storage.GLOBAL: size = storage.getDirSize(activity, Storage.CACHE, Storage.GLOBAL, item.path); break;
+                    default: size = -1L; break;
+                }
             }
-        });
+            thread.runOnUI(() -> {
+                ViewGroup layoutItem = cacheList.findViewWithTag(TAG_PREFIX + item.path);
+                if (layoutItem == null) {
+                    return;
+                }
+                ViewGroup cacheItemSizeContainer = layoutItem.findViewById(R.id.cache_item_size_container);
+                TextView cacheItemSize = layoutItem.findViewById(R.id.cache_item_size);
+                item.bytes = size;
+                if (size < 0L) {
+                    cacheItemSizeContainer.setVisibility(View.INVISIBLE);
+                } else if (size == 0L) {
+                    cacheItemSize.setText(R.string.empty);
+                    cacheItemSizeContainer.setVisibility(View.VISIBLE);
+                } else {
+                    cacheItemSize.setText(textUtils.bytes2readable(activity, storagePref, size));
+                    cacheItemSizeContainer.setVisibility(View.VISIBLE);
+                }
+                cacheItemSizeContainer.invalidate();
+            });
+        }
     }
 }

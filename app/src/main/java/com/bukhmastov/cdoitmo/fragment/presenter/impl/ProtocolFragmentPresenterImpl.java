@@ -52,6 +52,8 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
+import static com.bukhmastov.cdoitmo.util.Thread.PR;
+
 public class ProtocolFragmentPresenterImpl extends ConnectedFragmentWithDataPresenterImpl<Protocol>
         implements ProtocolFragmentPresenter, SwipeRefreshLayout.OnRefreshListener {
 
@@ -97,12 +99,12 @@ public class ProtocolFragmentPresenterImpl extends ConnectedFragmentWithDataPres
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
-        thread.run(() -> {
+        thread.run(PR, () -> {
             log.v(TAG, "Fragment created");
             if (App.UNAUTHORIZED_MODE) {
                 forbidden = true;
                 log.w(TAG, "Fragment created | UNAUTHORIZED_MODE not allowed, closing fragment...");
-                thread.runOnUI(() -> fragment.close());
+                thread.runOnUI(PR, () -> fragment.close());
                 return;
             }
             firebaseAnalyticsProvider.logCurrentScreen(activity, fragment);
@@ -126,7 +128,7 @@ public class ProtocolFragmentPresenterImpl extends ConnectedFragmentWithDataPres
                     case "advanced": simple.setVisible(true); break;
                 }
                 simple.setOnMenuItemClickListener(item -> {
-                    thread.runOnUI(() -> {
+                    thread.runOnUI(PR, () -> {
                         storagePref.put(activity, "pref_protocol_changes_mode", "simple");
                         simple.setVisible(false);
                         advanced.setVisible(true);
@@ -135,7 +137,7 @@ public class ProtocolFragmentPresenterImpl extends ConnectedFragmentWithDataPres
                     return false;
                 });
                 advanced.setOnMenuItemClickListener(item -> {
-                    thread.runOnUI(() -> {
+                    thread.runOnUI(PR, () -> {
                         storagePref.put(activity, "pref_protocol_changes_mode", "advanced");
                         simple.setVisible(true);
                         advanced.setVisible(false);
@@ -144,16 +146,16 @@ public class ProtocolFragmentPresenterImpl extends ConnectedFragmentWithDataPres
                     return false;
                 });
             }
-            thread.run(() -> {
+            thread.run(PR, () -> {
                 if (share == null) {
                     return;
                 }
                 Protocol data = getData();
                 if (data == null || CollectionUtils.isEmpty(data.getChanges())) {
-                    thread.runOnUI(() -> share.setVisible(false));
+                    thread.runOnUI(PR, () -> share.setVisible(false));
                     return;
                 }
-                thread.runOnUI(() -> {
+                thread.runOnUI(PR, () -> {
                     share.setVisible(true);
                     share.setOnMenuItemClickListener(menuItem -> {
                         View view = activity.findViewById(R.id.action_share);
@@ -174,18 +176,22 @@ public class ProtocolFragmentPresenterImpl extends ConnectedFragmentWithDataPres
 
     @Override
     public void onRefresh() {
-        thread.run(() -> {
+        thread.run(PR, () -> {
             log.v(TAG, "refreshing");
             load(true);
         });
     }
 
     protected void load() {
-        thread.run(() -> load(storagePref.get(activity, "pref_use_cache", true) ? Integer.parseInt(storagePref.get(activity, "pref_dynamic_refresh", "0")) : 0));
+        thread.run(PR, () -> {
+            load(storagePref.get(activity, "pref_use_cache", true) ?
+                    Integer.parseInt(storagePref.get(activity, "pref_dynamic_refresh", "0")) :
+                    0);
+        });
     }
 
     private void load(int refresh_rate) {
-        thread.run(() -> {
+        thread.run(PR, () -> {
             log.v(TAG, "load | refresh_rate=" + refresh_rate);
             if (!storagePref.get(activity, "pref_use_cache", true)) {
                 load(false);
@@ -206,15 +212,15 @@ public class ProtocolFragmentPresenterImpl extends ConnectedFragmentWithDataPres
     }
 
     private void load(boolean force) {
-        thread.run(() -> load(force, null, 0));
+        thread.run(PR, () -> load(force, null, 0));
     }
 
     private void load(boolean force, Protocol cached) {
-        thread.run(() -> load(force, cached, 0));
+        thread.run(PR, () -> load(force, cached, 0));
     }
 
     private void load(boolean force, Protocol cached, int attempt) {
-        thread.run(() -> {
+        thread.run(PR, () -> {
             log.v(TAG, "load | force=" + (force ? "true" : "false") + " | attempt=" + attempt);
             if ((!force || !Client.isOnline(activity)) && storagePref.get(activity, "pref_use_cache", true)) {
                 try {
@@ -234,7 +240,7 @@ public class ProtocolFragmentPresenterImpl extends ConnectedFragmentWithDataPres
                     display();
                     return;
                 }
-                thread.runOnUI(() -> {
+                thread.runOnUI(PR, () -> {
                     fragment.draw(R.layout.state_offline_text);
                     View reload = fragment.container().findViewById(R.id.offline_reload);
                     if (reload != null) {
@@ -257,31 +263,27 @@ public class ProtocolFragmentPresenterImpl extends ConnectedFragmentWithDataPres
             }
             deIfmoRestClient.get(activity, "eregisterlog?days=" + String.valueOf(numberOfWeeks * 7), null, new RestResponseHandler() {
                 @Override
-                public void onSuccess(final int statusCode, final Client.Headers headers, final JSONObject obj, final JSONArray arr) {
-                    thread.run(() -> {
-                        log.v(TAG, "load | success | statusCode=" + statusCode + " | arr=" + (arr == null ? "null" : "notnull"));
-                        if (statusCode == 200 && arr != null) {
-                            Protocol data = new Protocol().fromJson(new JSONObject().put("protocol", arr));
-                            data.setTimestamp(time.getTimeInMillis());
-                            data.setNumberOfWeeks(numberOfWeeks);
-                            data = new ProtocolConverter(data).convert();
-                            if (data != null && storagePref.get(activity, "pref_use_cache", true)) {
-                                String json = data.toJsonString();
-                                storage.put(activity, Storage.CACHE, Storage.USER, "protocol#core", json);
-                                storage.put(activity, Storage.PERMANENT, Storage.USER, "protocol_tracker#protocol", json);
-                            }
-                            setData(data);
-                            display();
-                            return;
+                public void onSuccess(int code, Client.Headers headers, JSONObject obj, JSONArray arr) throws Exception {
+                    log.v(TAG, "load | success | code=" + code + " | arr=" + (arr == null ? "null" : "notnull"));
+                    if (code == 200 && arr != null) {
+                        Protocol data = new Protocol().fromJson(new JSONObject().put("protocol", arr));
+                        data.setTimestamp(time.getTimeInMillis());
+                        data.setNumberOfWeeks(numberOfWeeks);
+                        data = new ProtocolConverter(data).convert();
+                        if (data != null && storagePref.get(activity, "pref_use_cache", true)) {
+                            String json = data.toJsonString();
+                            storage.put(activity, Storage.CACHE, Storage.USER, "protocol#core", json);
+                            storage.put(activity, Storage.PERMANENT, Storage.USER, "protocol_tracker#protocol", json);
                         }
-                        load(force, cached, attempt + 1);
-                    }, throwable -> {
-                        loadFailed();
-                    });
+                        setData(data);
+                        display();
+                        return;
+                    }
+                    load(force, cached, attempt + 1);
                 }
                 @Override
-                public void onFailure(final int statusCode, final Client.Headers headers, final int state) {
-                    thread.run(() -> {
+                public void onFailure(int code, Client.Headers headers, int state) {
+                    thread.run(PR, () -> {
                         log.v(TAG, "load | failure " + state);
                         switch (state) {
                             case DeIfmoRestClient.FAILED_OFFLINE:
@@ -289,7 +291,7 @@ public class ProtocolFragmentPresenterImpl extends ConnectedFragmentWithDataPres
                                     display();
                                     return;
                                 }
-                                thread.runOnUI(() -> {
+                                thread.runOnUI(PR, () -> {
                                     fragment.draw(R.layout.state_offline_text);
                                     View reload = fragment.container().findViewById(R.id.offline_reload);
                                     if (reload != null) {
@@ -302,16 +304,16 @@ public class ProtocolFragmentPresenterImpl extends ConnectedFragmentWithDataPres
                             case DeIfmoRestClient.FAILED_TRY_AGAIN:
                             case DeIfmoRestClient.FAILED_SERVER_ERROR:
                             case DeIfmoRestClient.FAILED_CORRUPTED_JSON:
-                                thread.runOnUI(() -> {
+                                thread.runOnUI(PR, () -> {
                                     fragment.draw(R.layout.state_failed_button);
                                     TextView message = fragment.container().findViewById(R.id.try_again_message);
                                     if (message != null) {
                                         switch (state) {
                                             case DeIfmoRestClient.FAILED_SERVER_ERROR:
                                                 if (activity == null) {
-                                                    message.setText(DeIfmoRestClient.getFailureMessage(statusCode));
+                                                    message.setText(DeIfmoRestClient.getFailureMessage(code));
                                                 } else {
-                                                    message.setText(DeIfmoRestClient.getFailureMessage(activity, statusCode));
+                                                    message.setText(DeIfmoRestClient.getFailureMessage(activity, code));
                                                 }
                                                 break;
                                             case DeIfmoRestClient.FAILED_CORRUPTED_JSON:
@@ -333,8 +335,8 @@ public class ProtocolFragmentPresenterImpl extends ConnectedFragmentWithDataPres
                     });
                 }
                 @Override
-                public void onProgress(final int state) {
-                    thread.runOnUI(() -> {
+                public void onProgress(int state) {
+                    thread.runOnUI(PR, () -> {
                         log.v(TAG, "load | progress " + state);
                         fragment.draw(R.layout.state_loading_text);
                         TextView message = fragment.container().findViewById(R.id.loading_message);
@@ -358,7 +360,7 @@ public class ProtocolFragmentPresenterImpl extends ConnectedFragmentWithDataPres
     }
 
     private void loadFailed() {
-        thread.runOnUI(() -> {
+        thread.runOnUI(PR, () -> {
             log.v(TAG, "loadFailed");
             fragment.draw(R.layout.state_failed_button);
             TextView message = fragment.container().findViewById(R.id.try_again_message);
@@ -373,7 +375,7 @@ public class ProtocolFragmentPresenterImpl extends ConnectedFragmentWithDataPres
     }
 
     protected void display() {
-        thread.run(() -> {
+        thread.run(PR, () -> {
             log.v(TAG, "display");
             Protocol data = getData();
             if (data == null) {
@@ -381,7 +383,7 @@ public class ProtocolFragmentPresenterImpl extends ConnectedFragmentWithDataPres
                 return;
             }
             ProtocolRVA adapter = new ProtocolRVA(activity, data, "advanced".equals(storagePref.get(activity, "pref_protocol_changes_mode", "advanced")));
-            thread.runOnUI(() -> {
+            thread.runOnUI(PR, () -> {
                 onToolbarSetup(fragment.toolbar());
                 fragment.draw(R.layout.layout_protocol);
                 // set adapter to recycler view
@@ -419,8 +421,8 @@ public class ProtocolFragmentPresenterImpl extends ConnectedFragmentWithDataPres
                     spinner.setSelection(data.getNumberOfWeeks() - 1);
                     spinnerWeeksBlocker = true;
                     spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-                        public void onItemSelected(final AdapterView<?> parent, final View item, final int position, final long selectedId) {
-                            thread.run(() -> {
+                        public void onItemSelected(AdapterView<?> parent, View item, int position, long selectedId) {
+                            thread.run(PR, () -> {
                                 if (spinnerWeeksBlocker) {
                                     spinnerWeeksBlocker = false;
                                     return;
@@ -446,7 +448,7 @@ public class ProtocolFragmentPresenterImpl extends ConnectedFragmentWithDataPres
     }
 
     private void share(View view) {
-        thread.run(() -> {
+        thread.run(PR, () -> {
             Protocol data = getData();
             if (data == null || data.getChanges() == null) {
                 return;
@@ -462,7 +464,7 @@ public class ProtocolFragmentPresenterImpl extends ConnectedFragmentWithDataPres
                 }
                 subjects.get(sbj).add(change);
             }
-            thread.runOnUI(() -> {
+            thread.runOnUI(PR, () -> {
                 SparseArray<Map<String, List<PChange>>> menuSubjectsMap = new SparseArray<>();
                 PopupMenu popup = new PopupMenu(activity, view);
                 popup.inflate(R.menu.protocol_share);
@@ -481,7 +483,7 @@ public class ProtocolFragmentPresenterImpl extends ConnectedFragmentWithDataPres
                     }
                 }
                 popup.setOnMenuItemClickListener(menuItem -> {
-                    thread.run(() -> {
+                    thread.run(PR, () -> {
                         switch (menuItem.getItemId()) {
                             case R.id.share_all_protocol: share(subjects); break;
                             default:
@@ -510,7 +512,7 @@ public class ProtocolFragmentPresenterImpl extends ConnectedFragmentWithDataPres
     }
 
     private void share(Map<String, List<PChange>> subjects) {
-        thread.run(() -> {
+        thread.standalone(() -> {
             if (subjects == null) {
                 return;
             }
@@ -555,5 +557,10 @@ public class ProtocolFragmentPresenterImpl extends ConnectedFragmentWithDataPres
     @Override
     protected String getCachePath() {
         return "protocol#core";
+    }
+
+    @Override
+    protected String getThreadToken() {
+        return PR;
     }
 }

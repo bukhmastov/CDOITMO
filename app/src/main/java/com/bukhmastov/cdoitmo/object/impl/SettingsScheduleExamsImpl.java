@@ -40,7 +40,7 @@ public class SettingsScheduleExamsImpl extends SettingsSchedule<SExams> implemen
 
     @Override
     public void onSuccess(SExams schedule, boolean fromCache) {
-        thread.run(() -> {
+        try {
             log.v(TAG, "search | onSuccess | schedule=", (schedule == null ? "null" : "notnull"));
             toggleSearchState("action");
             if (schedule == null || StringUtils.isBlank(schedule.getType())) {
@@ -48,7 +48,8 @@ public class SettingsScheduleExamsImpl extends SettingsSchedule<SExams> implemen
                 return;
             }
             switch (schedule.getType()) {
-                case "group": case "teacher": {
+                case "group":
+                case "teacher": {
                     if (CollectionUtils.isEmpty(schedule.getSchedule())) {
                         return;
                     }
@@ -92,10 +93,10 @@ public class SettingsScheduleExamsImpl extends SettingsSchedule<SExams> implemen
                     break;
                 }
             }
-        }, throwable -> {
+        } catch (Throwable throwable) {
             log.exception(throwable);
             notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
-        });
+        }
     }
 
     @Override

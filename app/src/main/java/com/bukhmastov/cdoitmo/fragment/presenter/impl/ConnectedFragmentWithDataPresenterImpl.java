@@ -3,6 +3,7 @@ package com.bukhmastov.cdoitmo.fragment.presenter.impl;
 import com.bukhmastov.cdoitmo.fragment.presenter.ConnectedFragmentPresenter;
 import com.bukhmastov.cdoitmo.model.JsonEntity;
 import com.bukhmastov.cdoitmo.util.Storage;
+import com.bukhmastov.cdoitmo.util.Thread;
 import com.bukhmastov.cdoitmo.util.singleton.StringUtils;
 
 import org.json.JSONException;
@@ -23,12 +24,13 @@ public abstract class ConnectedFragmentWithDataPresenterImpl<T extends JsonEntit
     protected abstract String getLogTag();
     protected abstract @Storage.Type String getCacheType();
     protected abstract String getCachePath();
+    protected abstract @Thread.ThreadToken String getThreadToken();
     protected abstract void load();
     protected abstract void display();
 
     @Override
     public void onResume() {
-        thread.run(() -> {
+        thread.run(getThreadToken(), () -> {
             log.v(getLogTag(), "Fragment resumed");
             if (forbidden) {
                 log.v(getLogTag(), "Fragment resumed - interrupted");

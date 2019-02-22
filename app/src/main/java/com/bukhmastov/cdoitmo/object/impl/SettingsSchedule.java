@@ -83,14 +83,14 @@ public abstract class SettingsSchedule<T extends ScheduleJsonEntity> extends Set
                         teacherPickerAdapter.clear();
                         searchTextView.dismissDropDown();
                     });
-                    thread.run(() -> {
+                    thread.standalone(() -> {
                         if (requestHandle != null) {
                             requestHandle.cancel();
                         }
                     });
                 }
             });
-            searchAction.setOnClickListener(view -> thread.run(() -> {
+            searchAction.setOnClickListener(view -> thread.standalone(() -> {
                 String query = searchTextView.getText().toString().trim();
                 log.v(TAG, "show | search action | clicked | query=", query);
                 if (!query.isEmpty()) {
@@ -101,7 +101,7 @@ public abstract class SettingsSchedule<T extends ScheduleJsonEntity> extends Set
                 }
             }));
             searchTextView.setOnItemClickListener((parent, view, position, id) -> {
-                thread.run(() -> {
+                thread.standalone(() -> {
                     log.v(TAG, "show | search list selected");
                     STeacher teacher = teacherPickerAdapter.getItem(position);
                     if (teacher == null) {
@@ -168,7 +168,7 @@ public abstract class SettingsSchedule<T extends ScheduleJsonEntity> extends Set
                     .setTitle(R.string.default_schedule)
                     .setView(layout)
                     .setPositiveButton(R.string.accept, (dialog, which) -> {
-                        thread.run(() -> {
+                        thread.standalone(() -> {
                             log.v(TAG, "show | onPositiveButton | query=", query, " | title=", title);
                             if (callback == null || query == null || title == null) {
                                 return;
@@ -190,17 +190,15 @@ public abstract class SettingsSchedule<T extends ScheduleJsonEntity> extends Set
 
     @Override
     public void onFailure(int statusCode, Client.Headers headers, int state) {
-        thread.run(() -> {
-            log.v(TAG, "search | onFailure | state=", state);
-            toggleSearchState("action");
-            switch (state) {
-                case Client.FAILED_OFFLINE:
-                case Schedule.FAILED_OFFLINE: notificationMessage.snackBar(activity, activity.getString(R.string.offline_mode_on)); break;
-                case Client.FAILED_SERVER_ERROR: notificationMessage.snackBar(activity, Client.getFailureMessage(activity, statusCode)); break;
-                case Client.FAILED_CORRUPTED_JSON: notificationMessage.snackBar(activity, activity.getString(R.string.server_provided_corrupted_json)); break;
-                default: notificationMessage.snackBar(activity, activity.getString(R.string.schedule_not_found)); break;
-            }
-        });
+        log.v(TAG, "search | onFailure | state=", state);
+        toggleSearchState("action");
+        switch (state) {
+            case Client.FAILED_OFFLINE:
+            case Schedule.FAILED_OFFLINE: notificationMessage.snackBar(activity, activity.getString(R.string.offline_mode_on)); break;
+            case Client.FAILED_SERVER_ERROR: notificationMessage.snackBar(activity, Client.getFailureMessage(activity, statusCode)); break;
+            case Client.FAILED_CORRUPTED_JSON: notificationMessage.snackBar(activity, activity.getString(R.string.server_provided_corrupted_json)); break;
+            default: notificationMessage.snackBar(activity, activity.getString(R.string.schedule_not_found)); break;
+        }
     }
 
     @Override
@@ -221,7 +219,7 @@ public abstract class SettingsSchedule<T extends ScheduleJsonEntity> extends Set
         }
     }
 
-    protected void toggleSearchState(final String state) {
+    protected void toggleSearchState(String state) {
         thread.runOnUI(() -> {
             switch (state) {
                 case "action":

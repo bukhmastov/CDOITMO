@@ -56,6 +56,8 @@ import androidx.appcompat.widget.Toolbar;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 
+import static com.bukhmastov.cdoitmo.util.Thread.AM;
+
 public class MainActivityPresenterImpl implements MainActivityPresenter, NavigationView.OnNavigationItemSelectedListener {
 
     private static final String TAG = "MainActivity";
@@ -125,7 +127,8 @@ public class MainActivityPresenterImpl implements MainActivityPresenter, Navigat
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
-        thread.runOnUI(() -> {
+        thread.initialize(AM);
+        thread.runOnUI(AM, () -> {
             if (!initialized) {
                 log.i(TAG, "Activity created, initialization");
                 init(activity);
@@ -138,17 +141,18 @@ public class MainActivityPresenterImpl implements MainActivityPresenter, Navigat
 
     @Override
     public void onResume() {
-        thread.runOnUI(() -> {
+        thread.runOnUI(AM, () -> {
             log.v(TAG, "Activity resumed");
-            if (initialized) {
-                final NavigationView navigationView = activity.findViewById(R.id.nav_view);
-                navigationMenu.displayEnableDisableOfflineButton(navigationView);
-                navigationMenu.hideIfUnauthorizedMode(navigationView);
-                if (!exitOfflineMode && (App.OFFLINE_MODE || account.isAuthorized())) {
-                    authorized();
-                } else {
-                    authorize(LoginActivity.SIGNAL_LOGIN);
-                }
+            if (!initialized) {
+                return;
+            }
+            NavigationView navigationView = activity.findViewById(R.id.nav_view);
+            navigationMenu.displayEnableDisableOfflineButton(navigationView);
+            navigationMenu.hideIfUnauthorizedMode(navigationView);
+            if (!exitOfflineMode && (App.OFFLINE_MODE || account.isAuthorized())) {
+                authorized();
+            } else {
+                authorize(LoginActivity.SIGNAL_LOGIN);
             }
         });
     }
@@ -162,6 +166,7 @@ public class MainActivityPresenterImpl implements MainActivityPresenter, Navigat
     public void onDestroy() {
         log.i(TAG, "Activity destroyed");
         loaded = false;
+        thread.interrupt(AM);
     }
 
     @Override
@@ -202,7 +207,7 @@ public class MainActivityPresenterImpl implements MainActivityPresenter, Navigat
     }
 
     @Override
-    public boolean onNavigationItemSelected(@NonNull final MenuItem item) {
+    public boolean onNavigationItemSelected(@NonNull MenuItem item) {
         log.v(TAG, "NavigationItemSelected | item=", item.getTitle());
         DrawerLayout drawer_layout = activity.findViewById(R.id.drawer_layout);
         if (drawer_layout != null) drawer_layout.closeDrawer(GravityCompat.START);
@@ -212,7 +217,7 @@ public class MainActivityPresenterImpl implements MainActivityPresenter, Navigat
 
     @Override
     public void authorize(int state) {
-        thread.run(() -> {
+        thread.run(AM, () -> {
             try {
                 log.v(TAG, "authorize | state=", state);
                 loaded = false;
@@ -226,7 +231,7 @@ public class MainActivityPresenterImpl implements MainActivityPresenter, Navigat
 
     @Override
     public void authorized() {
-        thread.run(() -> {
+        thread.run(AM, () -> {
             log.v(TAG, "authorized");
             if (!loaded) {
                 loaded = true;
@@ -234,8 +239,10 @@ public class MainActivityPresenterImpl implements MainActivityPresenter, Navigat
                 selectSection(selectedSection);
                 navigationMenu.displayUserData(activity, storage, activity.findViewById(R.id.nav_view));
                 navigationMenu.displayRemoteMessage(activity, firebaseConfigProvider, storage);
-                notificationMessage.snackBarOffline(activity);
-                navigationMenu.toggleOfflineIcon(activity.toolbar);
+                thread.runOnUI(AM, () -> {
+                    navigationMenu.toggleOfflineIcon(activity.toolbar);
+                    notificationMessage.snackBarOffline(activity);
+                });
             } else if (selectedMenuItem != null) {
                 try {
                     selectSection(selectedMenuItem.getItemId());
@@ -249,7 +256,7 @@ public class MainActivityPresenterImpl implements MainActivityPresenter, Navigat
     @Override
     public void selectSection(int s) {
         final int section = applySectionUnAuthorizedMode(s);
-        thread.run(() -> {
+        thread.run(AM, () -> {
             log.v(TAG, "selectSection | section=", section);
             switch (section) {
                 case R.id.nav_e_register:
@@ -276,7 +283,7 @@ public class MainActivityPresenterImpl implements MainActivityPresenter, Navigat
                         case R.id.nav_scholarship: connectedFragmentClass = IsuScholarshipPaidFragment.class; break;
                         case R.id.nav_university: connectedFragmentClass = UniversityFragment.class; break;
                     }
-                    thread.runOnUI(() -> {
+                    thread.runOnUI(AM, () -> {
                         if (activity.openFragment(ConnectedActivity.TYPE.ROOT, connectedFragmentClass, null)) {
                             ((NavigationView) activity.findViewById(R.id.nav_view)).setCheckedItem(section);
                             selectedSection = section;
@@ -294,7 +301,7 @@ public class MainActivityPresenterImpl implements MainActivityPresenter, Navigat
                         case R.id.nav_homescreen: connectedFragmentClass = HomeScreenInteractionFragment.class; break;
                         case R.id.nav_settings: connectedFragmentClass = SettingsFragment.class; break;
                     }
-                    thread.runOnUI(() -> {
+                    thread.runOnUI(AM, () -> {
                         if (activity.openActivityOrFragment(ConnectedActivity.TYPE.ROOT, connectedFragmentClass, null)) {
                             if (App.tablet) {
                                 ((NavigationView) activity.findViewById(R.id.nav_view)).setCheckedItem(section);
@@ -337,7 +344,7 @@ public class MainActivityPresenterImpl implements MainActivityPresenter, Navigat
     }
 
     private void init(@NonNull ConnectedActivity activity) {
-        thread.run(() -> {
+        thread.run(AM, () -> {
             try {
                 try {
                     log.i(TAG, "App | launched");
@@ -372,7 +379,7 @@ public class MainActivityPresenterImpl implements MainActivityPresenter, Navigat
                 log.exception(e);
             } finally {
                 log.i(TAG, "App | initialized");
-                thread.runOnUI(() -> {
+                thread.runOnUI(AM, () -> {
                     // app initialization completed, going to recreate activity
                     initialized = true;
                     activity.recreate();
@@ -382,7 +389,7 @@ public class MainActivityPresenterImpl implements MainActivityPresenter, Navigat
     }
 
     private void setup(@NonNull ConnectedActivity activity, @Nullable Bundle savedInstanceState) {
-        thread.runOnUI(() -> {
+        thread.runOnUI(AM, () -> {
             // setup toolbar and drawer layout
             Toolbar toolbar = activity.findViewById(R.id.toolbar_main);
             DrawerLayout drawerLayout = activity.findViewById(R.id.drawer_layout);
@@ -458,7 +465,7 @@ public class MainActivityPresenterImpl implements MainActivityPresenter, Navigat
                         selectedSection = R.id.nav_scholarship;
                         break;
                     default:
-                        log.wtf(TAG, "unsupported act: '", act, "'. Going to select 'e_journal' instead");
+                        log.w(TAG, "unsupported act: '", act, "'. Going to select 'e_journal' instead");
                         selectedSection = R.id.nav_e_register;
                         break;
                 }

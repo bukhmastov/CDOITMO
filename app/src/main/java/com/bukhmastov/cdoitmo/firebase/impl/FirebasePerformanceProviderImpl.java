@@ -50,9 +50,10 @@ public class FirebasePerformanceProviderImpl implements FirebasePerformanceProvi
 
     @Override
     public void setEnabled(Context context) {
-        thread.run(() -> {
-            log.i(TAG, "Firebase Performance fetching status");
-            firebaseConfigProvider.get().getString(FirebaseConfigProvider.PERFORMANCE_ENABLED, value -> thread.run(() -> setEnabled(context, "1".equals(value))));
+        thread.assertNotUI();
+        log.i(TAG, "Firebase Performance fetching status");
+        firebaseConfigProvider.get().getString(FirebaseConfigProvider.PERFORMANCE_ENABLED, value -> {
+            setEnabled(context, "1".equals(value));
         });
     }
     @Override

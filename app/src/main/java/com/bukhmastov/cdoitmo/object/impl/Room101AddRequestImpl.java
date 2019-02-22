@@ -81,6 +81,7 @@ public class Room101AddRequestImpl implements Room101AddRequest {
 
     @Override
     public void start(@NonNull Activity activity, @NonNull Callback callback) {
+        thread.assertNotUI();
         this.activity = activity;
         this.callback = callback;
         this.timePickerPattern = Pattern.compile("^(\\d{1,2}:\\d{2})\\s?(\\((" + activity.getString(R.string.room101_available) + ":\\s)?(\\d*)\\))?$");
@@ -92,6 +93,7 @@ public class Room101AddRequestImpl implements Room101AddRequest {
     @Override
     public void back() {
         log.v(TAG, "back");
+        thread.assertNotUI();
         switch (currentStage) {
             case STAGE_PICK_DATE_LOAD:
             case STAGE_PICK_TIME_START_LOAD:
@@ -113,6 +115,7 @@ public class Room101AddRequestImpl implements Room101AddRequest {
     @Override
     public void forward() {
         log.v(TAG, "forward");
+        thread.assertNotUI();
         switch (currentStage) {
             case STAGE_PICK_DATE_LOAD:
             case STAGE_PICK_TIME_START_LOAD:
@@ -151,6 +154,7 @@ public class Room101AddRequestImpl implements Room101AddRequest {
     @Override
     public void close(boolean done) {
         log.v(TAG, "close | done=", done);
+        thread.assertNotUI();
         if (requestHandle != null) {
             requestHandle.cancel();
         }
@@ -164,6 +168,7 @@ public class Room101AddRequestImpl implements Room101AddRequest {
     @Override
     public void reset() {
         log.v(TAG, "reset");
+        thread.assertNotUI();
         currentStage = 0;
         if (requestHandle != null) {
             requestHandle.cancel();
@@ -192,8 +197,8 @@ public class Room101AddRequestImpl implements Room101AddRequest {
         }
     }
 
-    private void loadDatePick(final int stage) {
-        thread.run(() -> {
+    private void loadDatePick(int stage) {
+        try {
             log.v(TAG, "loadDatePick | stage=", stage);
             if (stage == 0) {
                 callback.onDraw(getLoadingLayout(activity.getString(R.string.data_loading)));
@@ -201,9 +206,9 @@ public class Room101AddRequestImpl implements Room101AddRequest {
                 pickDate = null;
                 room101FragmentPresenter.get().execute(activity, "newRequest", new ResponseHandler() {
                     @Override
-                    public void onSuccess(final int statusCode, final Client.Headers headers, final String response) {
-                        thread.run(() -> {
-                            if (statusCode == 200) {
+                    public void onSuccess(int code, Client.Headers headers, String response) {
+                        try {
+                            if (code == 200) {
                                 Room101Request room101Request = new Room101DatePickParser(response).parse();
                                 if (room101Request != null) {
                                     data = room101Request;
@@ -212,14 +217,14 @@ public class Room101AddRequestImpl implements Room101AddRequest {
                                 }
                             }
                             failed();
-                        }, throwable -> {
+                        } catch (Throwable throwable) {
                             failed(throwable);
-                        });
+                        }
                     }
                     @Override
-                    public void onFailure(int statusCode, Client.Headers headers, int state) {
+                    public void onFailure(int code, Client.Headers headers, int state) {
                         if (state == Room101Client.FAILED_SERVER_ERROR) {
-                            failed(Room101Client.getFailureMessage(activity, statusCode));
+                            failed(Room101Client.getFailureMessage(activity, code));
                         } else {
                             failed();
                         }
@@ -231,16 +236,18 @@ public class Room101AddRequestImpl implements Room101AddRequest {
                         requestHandle = request;
                     }
                 });
-            } else if (stage == 1) {
+                return;
+            }
+            if (stage == 1) {
                 HashMap<String, String> params = new HashMap<>();
                 params.put("month", "next");
                 params.put("login", storage.get(activity, Storage.PERMANENT, Storage.USER, "user#deifmo#login"));
                 params.put("password", storage.get(activity, Storage.PERMANENT, Storage.USER, "user#deifmo#password"));
                 room101Client.post(activity, "newRequest.php", params, new ResponseHandler() {
                     @Override
-                    public void onSuccess(final int statusCode, final Client.Headers headers, final String response) {
-                        thread.run(() -> {
-                            if (statusCode == 200) {
+                    public void onSuccess(int code, Client.Headers headers, String response) {
+                        try {
+                            if (code == 200) {
                                 Room101Request room101Request = new Room101DatePickParser(response).parse();
                                 if (room101Request != null) {
                                     if (data == null) {
@@ -254,14 +261,14 @@ public class Room101AddRequestImpl implements Room101AddRequest {
                                 }
                             }
                             failed();
-                        }, throwable -> {
+                        } catch (Throwable throwable) {
                             failed(throwable);
-                        });
+                        }
                     }
                     @Override
-                    public void onFailure(int statusCode, Client.Headers headers, int state) {
+                    public void onFailure(int code, Client.Headers headers, int state) {
                         if (state == Room101Client.FAILED_SERVER_ERROR) {
-                            failed(Room101Client.getFailureMessage(activity, statusCode));
+                            failed(Room101Client.getFailureMessage(activity, code));
                         } else {
                             failed();
                         }
@@ -273,15 +280,16 @@ public class Room101AddRequestImpl implements Room101AddRequest {
                         requestHandle = request;
                     }
                 });
-            } else {
-                failed();
+                return;
             }
-        }, throwable -> {
+            failed();
+        } catch (Throwable throwable) {
             failed(throwable);
-        });
+        }
     }
+
     private void loadTimeStartPick() {
-        thread.run(() -> {
+        try {
             log.v(TAG, "loadTimeStartPick");
             callback.onDraw(getLoadingLayout(activity.getString(R.string.data_handling)));
             data = null;
@@ -295,9 +303,9 @@ public class Room101AddRequestImpl implements Room101AddRequest {
             params.put("password", storage.get(activity, Storage.PERMANENT, Storage.USER, "user#deifmo#password"));
             room101Client.post(activity, "newRequest.php", params, new ResponseHandler() {
                 @Override
-                public void onSuccess(final int statusCode, final Client.Headers headers, final String response) {
-                    thread.run(() -> {
-                        if (statusCode == 200) {
+                public void onSuccess(int code, Client.Headers headers, String response) {
+                    try {
+                        if (code == 200) {
                             Room101Request room101Request = new Room101TimeStartPickParser(response).parse();
                             if (room101Request != null) {
                                 data = room101Request;
@@ -307,14 +315,14 @@ public class Room101AddRequestImpl implements Room101AddRequest {
                             }
                         }
                         failed();
-                    }, throwable -> {
+                    } catch (Throwable throwable) {
                         failed(throwable);
-                    });
+                    }
                 }
                 @Override
-                public void onFailure(int statusCode, Client.Headers headers, int state) {
+                public void onFailure(int code, Client.Headers headers, int state) {
                     if (state == Room101Client.FAILED_SERVER_ERROR) {
-                        failed(Room101Client.getFailureMessage(activity, statusCode));
+                        failed(Room101Client.getFailureMessage(activity, code));
                     } else {
                         failed();
                     }
@@ -326,12 +334,13 @@ public class Room101AddRequestImpl implements Room101AddRequest {
                     requestHandle = request;
                 }
             });
-        }, throwable -> {
+        } catch (Throwable throwable) {
             failed(throwable);
-        });
+        }
     }
+
     private void loadTimeEndPick() {
-        thread.run(() -> {
+        try {
             log.v(TAG, "loadTimeEndPick");
             callback.onDraw(getLoadingLayout(activity.getString(R.string.data_handling)));
             data = null;
@@ -345,9 +354,9 @@ public class Room101AddRequestImpl implements Room101AddRequest {
             params.put("password", storage.get(activity, Storage.PERMANENT, Storage.USER, "user#deifmo#password"));
             room101Client.post(activity, "newRequest.php", params, new ResponseHandler() {
                 @Override
-                public void onSuccess(final int statusCode, final Client.Headers headers, final String response) {
-                    thread.run(() -> {
-                        if (statusCode == 200) {
+                public void onSuccess(int code, Client.Headers headers, String response) {
+                    try {
+                        if (code == 200) {
                             Room101Request room101Request = new Room101TimeEndPickParser(response).parse();
                             if (room101Request != null) {
                                 data = room101Request;
@@ -357,14 +366,14 @@ public class Room101AddRequestImpl implements Room101AddRequest {
                             return;
                         }
                         failed();
-                    }, throwable -> {
+                    } catch (Throwable throwable) {
                         failed(throwable);
-                    });
+                    }
                 }
                 @Override
-                public void onFailure(int statusCode, Client.Headers headers, int state) {
+                public void onFailure(int code, Client.Headers headers, int state) {
                     if (state == Room101Client.FAILED_SERVER_ERROR) {
-                        failed(Room101Client.getFailureMessage(activity, statusCode));
+                        failed(Room101Client.getFailureMessage(activity, code));
                     } else {
                         failed();
                     }
@@ -376,22 +385,24 @@ public class Room101AddRequestImpl implements Room101AddRequest {
                     requestHandle = request;
                 }
             });
-        }, throwable -> {
+        } catch (Throwable throwable) {
             failed(throwable);
-        });
+        }
     }
+
     private void loadConfirmation() {
-        thread.run(() -> {
+        try {
             log.v(TAG, "loadConfirmation");
             data = null;
             currentStage++;
             proceedStage();
-        }, throwable -> {
+        } catch (Throwable throwable) {
             failed(throwable);
-        });
+        }
     }
+
     private void create() {
-        thread.run(() -> {
+        try {
             log.v(TAG, "create");
             callback.onDraw(getLoadingLayout(activity.getString(R.string.add_request)));
             data = null;
@@ -404,17 +415,17 @@ public class Room101AddRequestImpl implements Room101AddRequest {
             params.put("password", storage.get(activity, Storage.PERMANENT, Storage.USER, "user#deifmo#password"));
             room101Client.post(activity, "newRequest.php", params, new ResponseHandler() {
                 @Override
-                public void onSuccess(int statusCode, Client.Headers headers, String response) {
+                public void onSuccess(int code, Client.Headers headers, String response) {
                     data = new Room101Request();
-                    data.setDone(statusCode == 302);
+                    data.setDone(code == 302);
                     currentStage++;
                     proceedStage();
                 }
                 @Override
-                public void onFailure(int statusCode, Client.Headers headers, int state) {
+                public void onFailure(int code, Client.Headers headers, int state) {
                     data = new Room101Request();
                     data.setDone(false);
-                    data.setMessage(state == Room101Client.FAILED_SERVER_ERROR ? Room101Client.getFailureMessage(activity, statusCode) : activity.getString(R.string.request_denied));
+                    data.setMessage(state == Room101Client.FAILED_SERVER_ERROR ? Room101Client.getFailureMessage(activity, code) : activity.getString(R.string.request_denied));
                     currentStage++;
                     proceedStage();
                 }
@@ -425,13 +436,13 @@ public class Room101AddRequestImpl implements Room101AddRequest {
                     requestHandle = request;
                 }
             });
-        }, throwable -> {
+        } catch (Throwable throwable) {
             failed(throwable);
-        });
+        }
     }
 
     private void datePick() {
-        thread.run(() -> {
+        try {
             log.v(TAG, "datePick | pickDate=", pickDate, " | pickTimeStart=", pickTimeStart, " | pickTimeEnd=", pickTimeEnd);
             if (data == null) {
                 throw new NullPointerException("Data cannot be null");
@@ -453,13 +464,14 @@ public class Room101AddRequestImpl implements Room101AddRequest {
                     }
                 }
             }));
-        }, throwable -> {
+        } catch (Throwable throwable) {
             log.exception(throwable);
             failed(throwable);
-        });
+        }
     }
+
     private void timeStartPick() {
-        thread.run(() -> {
+        try {
             log.v(TAG, "timeStartPick | pickDate=", pickDate, " | pickTimeStart=", pickTimeStart, " | pickTimeEnd=", pickTimeEnd);
             if (data == null) {
                 throw new NullPointerException("Data cannot be null");
@@ -486,13 +498,14 @@ public class Room101AddRequestImpl implements Room101AddRequest {
                     }
                 }
             }));
-        }, throwable -> {
+        } catch (Throwable throwable) {
             log.exception(throwable);
             failed(throwable);
-        });
+        }
     }
+
     private void timeEndPick() {
-        thread.run(() -> {
+        try {
             log.v(TAG, "timeEndPick | pickDate=", pickDate, " | pickTimeStart=", pickTimeStart, " | pickTimeEnd=", pickTimeEnd);
             if (data == null) {
                 throw new NullPointerException("Data cannot be null");
@@ -519,13 +532,14 @@ public class Room101AddRequestImpl implements Room101AddRequest {
                     }
                 }
             }));
-        }, throwable -> {
+        } catch (Throwable throwable) {
             log.exception(throwable);
             failed(throwable);
-        });
+        }
     }
+
     private void confirmation() {
-        thread.run(() -> {
+        try {
             log.v(TAG, "confirmation | pickDate=", pickDate, " | pickTimeStart=", pickTimeStart, " | pickTimeEnd=", pickTimeEnd);
             if (pickDate == null) {
                 throw new NullPointerException("pickDate cannot be null");
@@ -537,13 +551,14 @@ public class Room101AddRequestImpl implements Room101AddRequest {
                 throw new NullPointerException("pickTimeEnd cannot be null");
             }
             callback.onDraw(getChooserLayout(activity.getString(R.string.attention), activity.getString(R.string.room101_warning), null, null));
-        }, throwable -> {
+        } catch (Throwable throwable) {
             log.exception(throwable);
             failed(throwable);
-        });
+        }
     }
+
     private void done() {
-        thread.run(() -> {
+        try {
             log.v(TAG, "done | pickDate=" + pickDate + " | pickTimeStart=" + pickTimeStart + " | pickTimeEnd=" + pickTimeEnd);
             if (data == null) {
                 throw new NullPointerException("Data cannot be null");
@@ -564,19 +579,21 @@ public class Room101AddRequestImpl implements Room101AddRequest {
                         firebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.ROOM101_REQUEST_DETAILS, pickDate + "#" + pickTimeStart + "#" + pickTimeEnd)
                 );
             }
-        }, throwable -> {
+        } catch (Throwable throwable) {
             log.exception(throwable);
             failed(throwable);
-        });
+        }
     }
 
     private void failed() {
         failed(activity.getString(R.string.error_occurred));
     }
+
     private void failed(Throwable throwable) {
         log.e(TAG, "failed | throwable=", throwable.getMessage());
         failed(activity.getString(R.string.error_occurred));
     }
+
     private void failed(String message) {
         log.v(TAG, "failed | message=" + message);
         notificationMessage.snackBar(activity, message);
@@ -588,11 +605,13 @@ public class Room101AddRequestImpl implements Room101AddRequest {
         ((TextView) view.findViewById(R.id.loading_message)).setText(text);
         return view;
     }
+
     private View getEmptyLayout(String text) throws InflateException {
         View view = inflate(R.layout.state_nothing_to_display_compact);
         ((TextView) view.findViewById(R.id.ntd_text)).setText(text);
         return view;
     }
+
     private View getChooserLayout(String header, String desc, Collection<ROption> options, CompoundButton.OnCheckedChangeListener onCheckedChangeListener) {
         View view = inflate(R.layout.layout_room101_add_request_state);
         if (view == null) {
@@ -636,6 +655,7 @@ public class Room101AddRequestImpl implements Room101AddRequest {
         }
         return view;
     }
+
     private void setRequestInfo(final ViewGroup viewGroup, final int layout, final boolean show, final String text) {
         thread.runOnUI(() -> {
             if (show) {
@@ -645,9 +665,11 @@ public class Room101AddRequestImpl implements Room101AddRequest {
             }
         });
     }
+
     private void removeView(View view, int layout) {
         staticUtil.removeView(view.findViewById(layout));
     }
+
     private View inflate(@LayoutRes int layout) throws InflateException {
         LayoutInflater inflater = (LayoutInflater) activity.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         return inflater.inflate(layout, null);

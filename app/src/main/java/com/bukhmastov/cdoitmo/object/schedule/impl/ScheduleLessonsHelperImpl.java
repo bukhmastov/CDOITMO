@@ -9,6 +9,7 @@ import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.fragment.ScheduleLessonsModifyFragment;
 import com.bukhmastov.cdoitmo.fragment.presenter.ScheduleLessonsModifyFragmentPresenter;
 import com.bukhmastov.cdoitmo.function.Callable;
+import com.bukhmastov.cdoitmo.function.Consumer;
 import com.bukhmastov.cdoitmo.model.schedule.lessons.SDay;
 import com.bukhmastov.cdoitmo.model.schedule.lessons.SLesson;
 import com.bukhmastov.cdoitmo.model.schedule.lessons.SLessons;
@@ -207,11 +208,8 @@ public class ScheduleLessonsHelperImpl implements ScheduleLessonsHelper {
     }
 
     @Override
-    public boolean createLesson(ConnectedActivity activity, String query, String title, String type, int weekday, SLesson lesson, Callable callback) {
+    public boolean createLesson(String query, String title, String type, int weekday, SLesson lesson, Consumer<Bundle> onOpen) {
         try {
-            if (activity == null) {
-                return false;
-            }
             if (StringUtils.isBlank(query) || StringUtils.isBlank(title) || StringUtils.isBlank(type) || lesson == null) {
                 return false;
             }
@@ -223,11 +221,7 @@ public class ScheduleLessonsHelperImpl implements ScheduleLessonsHelper {
             extras.putString("title", title);
             extras.putInt("weekday", weekday);
             extras.putSerializable("lesson", lesson);
-            thread.runOnUI(() -> {
-                if (activity.openActivityOrFragment(ScheduleLessonsModifyFragment.class, extras) && callback != null) {
-                    thread.run(callback::call);
-                }
-            });
+            onOpen.accept(extras);
             return true;
         } catch (Exception e) {
             log.exception(e);
@@ -341,11 +335,8 @@ public class ScheduleLessonsHelperImpl implements ScheduleLessonsHelper {
     }
 
     @Override
-    public boolean editLesson(ConnectedActivity activity, String query, String title, String type, int weekday, SLesson lesson, Callable callback) {
+    public boolean editLesson(String query, String title, String type, int weekday, SLesson lesson, Consumer<Bundle> onOpen) {
         try {
-            if (activity == null) {
-                return false;
-            }
             if (StringUtils.isBlank(query) || StringUtils.isBlank(title) || StringUtils.isBlank(type) || lesson == null) {
                 return false;
             }
@@ -357,11 +348,7 @@ public class ScheduleLessonsHelperImpl implements ScheduleLessonsHelper {
             extras.putString("title", title);
             extras.putInt("weekday", weekday);
             extras.putSerializable("lesson", lesson);
-            thread.runOnUI(() -> {
-                if (activity.openActivityOrFragment(ScheduleLessonsModifyFragment.class, extras) && callback != null) {
-                    thread.run(callback::call);
-                }
-            });
+            onOpen.accept(extras);
             return true;
         } catch (Exception e) {
             log.exception(e);

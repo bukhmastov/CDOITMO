@@ -15,7 +15,7 @@ public class RestResponseHandlerJoiner implements RestResponseHandler {
     }
 
     @Override
-    public void onSuccess(int code, Client.Headers headers, JSONObject obj, JSONArray arr) {
+    public void onSuccess(int code, Client.Headers headers, JSONObject obj, JSONArray arr) throws Exception {
         handler.onSuccess(code, headers, obj, arr);
     }
 
