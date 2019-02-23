@@ -7,6 +7,8 @@ import androidx.annotation.Nullable;
 import com.bukhmastov.cdoitmo.function.Callable;
 import com.bukhmastov.cdoitmo.network.model.Client;
 
+import java.util.List;
+
 public interface Account {
 
     String USER_UNAUTHORIZED = "unauthorized";
@@ -32,6 +34,8 @@ public interface Account {
     void setAuthorized(boolean authorized);
 
     boolean isAuthorized();
+
+    void setUserInfo(@NonNull Context context, String name, List<String> groups, String avatar);
 
     interface LoginHandler {
         void onSuccess();

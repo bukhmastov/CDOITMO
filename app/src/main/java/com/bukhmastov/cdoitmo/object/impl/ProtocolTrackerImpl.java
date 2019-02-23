@@ -60,6 +60,8 @@ public class ProtocolTrackerImpl implements ProtocolTracker {
     @Inject
     StoragePref storagePref;
     @Inject
+    Lazy<DeIfmoRestClient> deIfmoRestClient;
+    @Inject
     Lazy<Time> time;
 
     public ProtocolTrackerImpl() {
@@ -226,11 +228,11 @@ public class ProtocolTrackerImpl implements ProtocolTracker {
     }
 
     @Override
-    public void setup(@NonNull Context context, @NonNull DeIfmoRestClient deIfmoRestClient) {
-        setup(context, deIfmoRestClient, 0);
+    public void setup(@NonNull Context context) {
+        setup(context, 0);
     }
 
-    private void setup(@NonNull Context context, @NonNull DeIfmoRestClient deIfmoRestClient, int attempt) {
+    private void setup(@NonNull Context context, int attempt) {
         log.v(TAG, "setup | attempt=", attempt);
         thread.assertNotUI();
         if (!storagePref.get(context, "pref_protocol_changes_track", true)) {
@@ -241,11 +243,11 @@ public class ProtocolTrackerImpl implements ProtocolTracker {
             log.v(TAG, "setup | failed to setup, number of attempts exceeded the limit");
             return;
         }
-        deIfmoRestClient.get(context, "eregisterlog?days=126", null, new RestResponseHandler() {
+        deIfmoRestClient.get().get(context, "eregisterlog?days=126", null, new RestResponseHandler() {
             @Override
             public void onSuccess(int code, Client.Headers headers, JSONObject obj, JSONArray arr) {
                 if (code != 200 || arr == null) {
-                    setup(context, deIfmoRestClient, attempt + 1);
+                    setup(context, attempt + 1);
                 }
                 try {
                     Protocol protocol = new Protocol().fromJson(new JSONObject().put("protocol", arr));
@@ -254,12 +256,12 @@ public class ProtocolTrackerImpl implements ProtocolTracker {
                     new ProtocolConverter(protocol).convert();
                     log.i(TAG, "setup | uploaded");
                 } catch (Exception e) {
-                    setup(context, deIfmoRestClient, attempt + 1);
+                    setup(context, attempt + 1);
                 }
             }
             @Override
             public void onFailure(int code, Client.Headers headers, int state) {
-                setup(context, deIfmoRestClient, attempt + 1);
+                setup(context, attempt + 1);
             }
             @Override
             public void onProgress(int state) {}

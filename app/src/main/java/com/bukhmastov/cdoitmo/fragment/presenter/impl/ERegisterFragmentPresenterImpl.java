@@ -475,7 +475,7 @@ public class ERegisterFragmentPresenterImpl extends ConnectedFragmentWithDataPre
     }
 
     private void share() {
-        thread.standalone(() -> {
+        thread.run(ER, () -> {
             TreeSet<ERSubject> subjects = makeSubjectsSet(getData());
             if (CollectionUtils.isEmpty(subjects)) {
                 return;

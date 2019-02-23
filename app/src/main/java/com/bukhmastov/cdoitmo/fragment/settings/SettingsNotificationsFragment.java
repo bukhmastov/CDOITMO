@@ -1,15 +1,12 @@
 package com.bukhmastov.cdoitmo.fragment.settings;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.media.Ringtone;
 import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Bundle;
-import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentManager;
-import dagger.Lazy;
-
 import android.text.TextUtils;
 
 import com.bukhmastov.cdoitmo.R;
@@ -23,11 +20,15 @@ import com.bukhmastov.cdoitmo.object.preference.PreferenceSwitch;
 import com.bukhmastov.cdoitmo.provider.InjectProvider;
 import com.bukhmastov.cdoitmo.util.StoragePref;
 
-import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
 
 import javax.inject.Inject;
+
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
+import dagger.Lazy;
 
 public class SettingsNotificationsFragment extends SettingsTemplatePreferencesFragment {
 
@@ -37,15 +38,15 @@ public class SettingsNotificationsFragment extends SettingsTemplatePreferencesFr
         private static String preference_key = null;
         private static PreferenceBasic.OnPreferenceClickedCallback callback = null;
     }
-    public static final ArrayList<Preference> preferences;
+    public static final List<Preference> preferences;
     static {
-        preferences = new ArrayList<>();
+        preferences = new LinkedList<>();
         preferences.add(new PreferenceSwitch(
                 "pref_use_notifications",
                 true,
                 R.string.pref_use_notifications,
                 R.string.pref_use_notifications_summary,
-                new ArrayList<>((android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.O ?
+                new LinkedList<>((android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.O ?
                         Arrays.asList("pref_notify_type", "pref_notify_frequency", "pref_notify_network_unmetered", "pref_notify_sound", "pref_notify_vibrate", "pref_open_system_notifications_settings") :
                         Arrays.asList("pref_notify_type", "pref_notify_frequency", "pref_notify_network_unmetered", "pref_open_system_notifications_settings")
                 )),
@@ -57,7 +58,7 @@ public class SettingsNotificationsFragment extends SettingsTemplatePreferencesFr
         if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.O) {
             preferences.add(new PreferenceBasic("pref_notify_sound", "content://settings/system/notification_sound", R.string.pref_notify_sound, true, new PreferenceBasic.Callback() {
                 @Override
-                public void onPreferenceClicked(ConnectedActivity activity, Preference preference, final InjectProvider injectProvider, PreferenceBasic.OnPreferenceClickedCallback callback) {
+                public void onPreferenceClicked(ConnectedActivity activity, Preference preference, InjectProvider injectProvider, PreferenceBasic.OnPreferenceClickedCallback callback) {
                     final String value = injectProvider.getStoragePref().get(activity, preference.key, (String) preference.defaultValue).trim();
                     final Uri currentTone = value.isEmpty() ? null : Uri.parse(value);
                     final Intent intent = new Intent(RingtoneManager.ACTION_RINGTONE_PICKER);
@@ -81,16 +82,16 @@ public class SettingsNotificationsFragment extends SettingsTemplatePreferencesFr
                     }
                 }
                 @Override
-                public String onGetSummary(ConnectedActivity activity, String value) {
+                public String onGetSummary(Context context, String value) {
                     try {
                         if (TextUtils.isEmpty(value)) {
-                            return activity.getString(R.string.pref_ringtone_silent);
+                            return context.getString(R.string.pref_ringtone_silent);
                         } else {
-                            Ringtone ringtone = RingtoneManager.getRingtone(activity, Uri.parse(value));
+                            Ringtone ringtone = RingtoneManager.getRingtone(context, Uri.parse(value));
                             if (ringtone == null) {
                                 return null;
                             } else {
-                                return ringtone.getTitle(activity);
+                                return ringtone.getTitle(context);
                             }
                         }
                     } catch (Exception e) {
@@ -102,22 +103,20 @@ public class SettingsNotificationsFragment extends SettingsTemplatePreferencesFr
         }
         preferences.add(new PreferenceBasic("pref_open_system_notifications_settings", null, R.string.pref_open_system_notifications_settings, false, new PreferenceBasic.Callback() {
             @Override
-            public void onPreferenceClicked(final ConnectedActivity activity, final Preference preference, final InjectProvider injectProvider, final PreferenceBasic.OnPreferenceClickedCallback callback) {
-                injectProvider.getThread().runOnUI(() -> {
-                    try {
-                        Intent intent = new Intent("android.settings.APP_NOTIFICATION_SETTINGS");
-                        intent.putExtra("android.provider.extra.APP_PACKAGE", activity.getPackageName());
-                        intent.putExtra("app_package", activity.getPackageName());
-                        intent.putExtra("app_uid", activity.getApplicationInfo().uid);
-                        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                        injectProvider.getEventBus().fire(new OpenIntentEvent(intent));
-                    } catch (Exception e) {
-                        injectProvider.getNotificationMessage().snackBar(activity, activity.getString(R.string.something_went_wrong));
-                    }
-                });
+            public void onPreferenceClicked(ConnectedActivity activity, Preference preference, InjectProvider injectProvider, PreferenceBasic.OnPreferenceClickedCallback callback) {
+                try {
+                    Intent intent = new Intent("android.settings.APP_NOTIFICATION_SETTINGS");
+                    intent.putExtra("android.provider.extra.APP_PACKAGE", activity.getPackageName());
+                    intent.putExtra("app_package", activity.getPackageName());
+                    intent.putExtra("app_uid", activity.getApplicationInfo().uid);
+                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    injectProvider.getEventBus().fire(new OpenIntentEvent(intent));
+                } catch (Exception e) {
+                    injectProvider.getNotificationMessage().snackBar(activity, activity.getString(R.string.something_went_wrong));
+                }
             }
             @Override
-            public String onGetSummary(ConnectedActivity activity, String value) {
+            public String onGetSummary(Context context, String value) {
                 return null;
             }
         }));

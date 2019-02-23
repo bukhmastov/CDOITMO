@@ -42,6 +42,7 @@ public class FirebaseConfigProviderImpl implements FirebaseConfigProvider {
     @Override
     public void getString(String key, Result result) {
         log.v(TAG, "getString | key=", key);
+        thread.assertNotUI();
         fetch(successful -> {
             String value = getFirebaseRemoteConfig().getString(key);
             log.v(TAG, "getString | onComplete | key=", key, " | value=", value);
@@ -52,6 +53,7 @@ public class FirebaseConfigProviderImpl implements FirebaseConfigProvider {
     @Override
     public void getMessage(String key, ResultMessage result) {
         log.v(TAG, "getMessage | key=", key);
+        thread.assertNotUI();
         fetch(successful -> {
             try {
                 String value = getFirebaseRemoteConfig().getString(key);
@@ -68,17 +70,15 @@ public class FirebaseConfigProviderImpl implements FirebaseConfigProvider {
     }
 
     private void fetch(Consumer<Boolean> onComplete) {
-        thread.standalone(() -> {
-            log.v(TAG, "fetch");
-            getFirebaseRemoteConfig().fetch(DEBUG ? 0 : cacheExpiration)
-                    .addOnCompleteListener(task -> thread.standalone(() -> {
-                        boolean successful = task.isSuccessful();
-                        log.v(TAG, "fetch | onComplete | successful=", successful);
-                        if (successful) {
-                            getFirebaseRemoteConfig().activateFetched();
-                        }
-                        onComplete.accept(successful);
-                    }));
-        });
+        log.v(TAG, "fetch");
+        getFirebaseRemoteConfig().fetch(DEBUG ? 0 : cacheExpiration)
+                .addOnCompleteListener(task -> thread.standalone(() -> {
+                    boolean successful = task.isSuccessful();
+                    log.v(TAG, "fetch | onComplete | successful=", successful);
+                    if (successful) {
+                        getFirebaseRemoteConfig().activateFetched();
+                    }
+                    onComplete.accept(successful);
+                }));
     }
 }

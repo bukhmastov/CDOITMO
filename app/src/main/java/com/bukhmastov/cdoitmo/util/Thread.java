@@ -74,11 +74,12 @@ public interface Thread {
 
     String THREAD_NAME_STANDALONE = "CDO-standalone-%d";
     String THREAD_NAME_BACKGROUND = "CDO-%s";
+    String THREAD_NAME_STANDALONE_PREFIX = THREAD_NAME_STANDALONE.replace("%d", "");
 
     @Retention(RetentionPolicy.SOURCE)
     @StringDef({
-            ER, ERS, PR, RA, RAL, R101, SL, SLM, SLS, SE, SA, IGR,
-            ISSA, ISSP, ISSPD, UH, UP, UF, UU, UN, UE, UB, UPC,
+            ER, ERS, PR, RA, RAL, R101, SL, SLM, SLS, SE, SA, IG,
+            ISA, ISP, ISPD, UH, UP, UF, UU, UN, UE, UB, UPC,
             AM, AL, AS, AHS,
             WDR, WTR, WSL, WSLC
     })
@@ -94,10 +95,10 @@ public interface Thread {
     String SE = "schedule-exams";
     String SA = "schedule-attestations";
     String R101 = "room101";
-    String IGR = "isu-group";
-    String ISSA = "isu-scholarship-assigned";
-    String ISSP = "isu-scholarship-paid";
-    String ISSPD = "isu-scholarship-paid-details";
+    String IG = "isu-group";
+    String ISA = "isu-scholarship-assigned";
+    String ISP = "isu-scholarship-paid";
+    String ISPD = "isu-scholarship-paid-details";
     String UH = "university-host";
     String UP = "university-persons";
     String UF = "university-faculties";

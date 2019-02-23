@@ -16,6 +16,7 @@ import com.bukhmastov.cdoitmo.event.bus.annotation.Event;
 import com.bukhmastov.cdoitmo.event.events.ClearCacheEvent;
 import com.bukhmastov.cdoitmo.event.events.MainActivityEvent;
 import com.bukhmastov.cdoitmo.event.events.OpenActivityEvent;
+import com.bukhmastov.cdoitmo.event.events.UserInfoChangedEvent;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseConfigProvider;
@@ -118,6 +119,16 @@ public class MainActivityPresenterImpl implements MainActivityPresenter, Navigat
     @Event
     public void onUnloadEvent(MainActivityEvent.UnloadEvent event) {
         loaded = false;
+    }
+
+    @Event
+    public void onUserInfoChangedEvent(UserInfoChangedEvent event) {
+        if (!loaded) {
+            return;
+        }
+        thread.run(AM, () -> {
+            navigationMenu.displayUserData(activity, storage, activity.findViewById(R.id.nav_view));
+        });
     }
 
     @Override

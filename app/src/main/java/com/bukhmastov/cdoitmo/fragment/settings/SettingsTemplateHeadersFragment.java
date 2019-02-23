@@ -83,11 +83,11 @@ public abstract class SettingsTemplateHeadersFragment extends ConnectedFragment 
             if (activity() == null) {
                 return;
             }
-            ViewGroup settings_container = activity().findViewById(getRootId());
-            if (settings_container != null) {
-                settings_container.removeAllViews();
+            ViewGroup settingsContainer = activity().findViewById(getRootId());
+            if (settingsContainer != null) {
+                settingsContainer.removeAllViews();
                 for (PreferenceHeader preferenceHeader : getPreferenceHeaders()) {
-                    settings_container.addView(PreferenceHeader.getView(activity(), preferenceHeader));
+                    settingsContainer.addView(PreferenceHeader.getView(activity(), preferenceHeader));
                 }
                 loaded = true;
             }

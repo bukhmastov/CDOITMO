@@ -2,6 +2,7 @@ package com.bukhmastov.cdoitmo.util.impl;
 
 import android.app.AlertDialog;
 import android.content.Context;
+import android.text.TextUtils;
 
 import com.bukhmastov.cdoitmo.App;
 import com.bukhmastov.cdoitmo.R;
@@ -12,7 +13,6 @@ import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebasePerformanceProvider;
 import com.bukhmastov.cdoitmo.function.Callable;
 import com.bukhmastov.cdoitmo.network.DeIfmoClient;
-import com.bukhmastov.cdoitmo.network.DeIfmoRestClient;
 import com.bukhmastov.cdoitmo.network.handlers.ResponseHandler;
 import com.bukhmastov.cdoitmo.network.model.Client;
 import com.bukhmastov.cdoitmo.object.ProtocolTracker;
@@ -20,8 +20,13 @@ import com.bukhmastov.cdoitmo.util.Account;
 import com.bukhmastov.cdoitmo.util.Accounts;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Storage;
+import com.bukhmastov.cdoitmo.util.StoragePref;
 import com.bukhmastov.cdoitmo.util.Thread;
 import com.bukhmastov.cdoitmo.util.singleton.StringUtils;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.Objects;
 
 import javax.inject.Inject;
 
@@ -43,9 +48,9 @@ public class AccountImpl implements Account {
     @Inject
     Storage storage;
     @Inject
-    DeIfmoClient deIfmoClient;
+    StoragePref storagePref;
     @Inject
-    DeIfmoRestClient deIfmoRestClient;
+    DeIfmoClient deIfmoClient;
     @Inject
     ProtocolTracker protocolTracker;
     @Inject
@@ -235,7 +240,7 @@ public class AccountImpl implements Account {
             accounts.add(context, login);
         }
         if (isNewUser && isAuthorized) {
-            thread.standalone(() -> protocolTracker.setup(context, deIfmoRestClient));
+            thread.standalone(() -> protocolTracker.setup(context));
         }
     }
 
@@ -378,5 +383,42 @@ public class AccountImpl implements Account {
     @Override
     public boolean isAuthorized() {
         return authorized;
+    }
+
+    @Override
+    public void setUserInfo(@NonNull Context context, String name, List<String> groups, String avatar) {
+
+        if (name != null) {
+            storage.put(context, Storage.PERMANENT, Storage.USER, "user#name", name);
+        }
+
+        if (avatar != null) {
+            storage.put(context, Storage.PERMANENT, Storage.USER, "user#avatar", avatar);
+        }
+
+        if (groups != null) {
+            String groupOverride = storagePref.get(context, "pref_group_force_override", "");
+            List<String> groupsOverride = StringUtils.isNotBlank(groupOverride) ?
+                    Arrays.asList(groupOverride.split(",\\s|\\s|,")) :
+                    null;
+
+            groups = StringUtils.nvlt(groupsOverride, groups);
+
+            String groupCurrent = storage.get(context, Storage.PERMANENT, Storage.USER, "user#group");
+            boolean gFound = false;
+            for (String g1 : groups) {
+                if (Objects.equals(g1, groupCurrent)) {
+                    gFound = true;
+                    break;
+                }
+            }
+            if (!gFound) {
+                groupCurrent = groups.size() > 0 ? groups.get(0) : "";
+            }
+
+            storage.put(context, Storage.PERMANENT, Storage.USER, "user#group", groupCurrent);
+            storage.put(context, Storage.PERMANENT, Storage.USER, "user#groups", TextUtils.join(", ", groups));
+            firebaseAnalyticsProvider.setUserProperties(context, groupCurrent);
+        }
     }
 }

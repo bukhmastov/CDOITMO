@@ -10,7 +10,9 @@ import com.bukhmastov.cdoitmo.activity.ConnectedActivity;
 import com.bukhmastov.cdoitmo.activity.FragmentActivity;
 import com.bukhmastov.cdoitmo.activity.presenter.FragmentActivityPresenter;
 import com.bukhmastov.cdoitmo.event.bus.EventBus;
+import com.bukhmastov.cdoitmo.event.bus.annotation.Event;
 import com.bukhmastov.cdoitmo.event.events.MainActivityEvent;
+import com.bukhmastov.cdoitmo.event.events.UserInfoChangedEvent;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseConfigProvider;
 import com.bukhmastov.cdoitmo.util.Log;
@@ -54,6 +56,14 @@ public class FragmentActivityPresenterImpl implements FragmentActivityPresenter,
 
     public FragmentActivityPresenterImpl() {
         AppComponentProvider.getComponent().inject(this);
+        eventBus.register(this);
+    }
+
+    @Event
+    public void onUserInfoChangedEvent(UserInfoChangedEvent event) {
+        thread.standalone(() -> {
+            navigationMenu.displayUserData(activity, storage, activity.findViewById(R.id.nav_view));
+        });
     }
 
     @Override

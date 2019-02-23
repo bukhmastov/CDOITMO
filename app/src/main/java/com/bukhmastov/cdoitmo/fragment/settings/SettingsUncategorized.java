@@ -3,7 +3,7 @@ package com.bukhmastov.cdoitmo.fragment.settings;
 import com.bukhmastov.cdoitmo.object.preference.Preference;
 import com.bukhmastov.cdoitmo.object.preference.PreferenceImitation;
 
-import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
 public class SettingsUncategorized {
@@ -11,7 +11,7 @@ public class SettingsUncategorized {
     public static final List<Preference> preferences;
 
     static {
-        preferences = new ArrayList<>();
+        preferences = new LinkedList<>();
         preferences.add(new PreferenceImitation("pref_tab_refresh", "0", true));
         preferences.add(new PreferenceImitation("pref_schedule_refresh", "168", true));
         preferences.add(new PreferenceImitation("pref_university_tab", -1, true));

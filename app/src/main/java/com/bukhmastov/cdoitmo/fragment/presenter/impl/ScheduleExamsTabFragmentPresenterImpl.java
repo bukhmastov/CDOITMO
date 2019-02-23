@@ -449,7 +449,7 @@ public class ScheduleExamsTabFragmentPresenterImpl implements ScheduleExamsTabFr
                 }
             }
             popup.setOnMenuItemClickListener(menuItem -> {
-                thread.standalone(() -> {
+                thread.run(SE, () -> {
                     switch (menuItem.getItemId()) {
                         case R.id.share_all_schedule: shareSchedule(entity.getEvents()); break;
                         default:

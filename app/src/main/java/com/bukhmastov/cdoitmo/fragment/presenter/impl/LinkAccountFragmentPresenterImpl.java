@@ -1,5 +1,6 @@
 package com.bukhmastov.cdoitmo.fragment.presenter.impl;
 
+import android.content.Context;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
@@ -7,18 +8,32 @@ import android.widget.EditText;
 import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
+import com.bukhmastov.cdoitmo.event.bus.EventBus;
+import com.bukhmastov.cdoitmo.event.events.UserInfoChangedEvent;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.fragment.presenter.LinkAccountFragmentPresenter;
+import com.bukhmastov.cdoitmo.model.user.isu.IsuUserData;
+import com.bukhmastov.cdoitmo.model.user.isu.IsuUserDataGroup;
 import com.bukhmastov.cdoitmo.network.IsuPrivateRestClient;
 import com.bukhmastov.cdoitmo.network.handlers.ResponseHandler;
+import com.bukhmastov.cdoitmo.network.handlers.RestResponseHandler;
 import com.bukhmastov.cdoitmo.network.model.Client;
 import com.bukhmastov.cdoitmo.network.model.Isu;
+import com.bukhmastov.cdoitmo.util.Account;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.NotificationMessage;
 import com.bukhmastov.cdoitmo.util.Storage;
 import com.bukhmastov.cdoitmo.util.Thread;
+import com.bukhmastov.cdoitmo.util.singleton.CollectionUtils;
 import com.bukhmastov.cdoitmo.util.singleton.StringUtils;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 import javax.inject.Inject;
 
@@ -31,11 +46,17 @@ public class LinkAccountFragmentPresenterImpl extends ConnectedFragmentPresenter
     private View linkAccountProgress = null;
 
     @Inject
+    Context context;
+    @Inject
     Log log;
     @Inject
     Thread thread;
     @Inject
     Storage storage;
+    @Inject
+    Account account;
+    @Inject
+    EventBus eventBus;
     @Inject
     IsuPrivateRestClient isuPrivateRestClient;
     @Inject
@@ -120,25 +141,21 @@ public class LinkAccountFragmentPresenterImpl extends ConnectedFragmentPresenter
             return;
         }
         switch (type) {
-            case ISU: authIsu(login, password); break;
+            case ISU: isuAuth(login, password); break;
             /* Place for future types, if any */
         }
     }
 
-    private void authIsu(String login, String password) {
+    private void isuAuth(String login, String password) {
         thread.standalone(() -> {
             storage.delete(activity, Storage.PERMANENT, Storage.USER, "user#isu#access_token");
             storage.delete(activity, Storage.PERMANENT, Storage.USER, "user#isu#refresh_token");
             storage.delete(activity, Storage.PERMANENT, Storage.USER, "user#isu#expires_at");
             isuPrivateRestClient.authorize(activity, login, password, new ResponseHandler() {
                 @Override
-                public void onSuccess(int statusCode, Client.Headers headers, String response) {
-                    thread.runOnUI(() -> {
-                        if ("authorized".equals(response)) {
-                            firebaseAnalyticsProvider.logEvent(activity, FirebaseAnalyticsProvider.Event.LOGIN_ISU);
-                            notificationMessage.toast(activity, activity.getString(R.string.account_linked));
-                            fragment.close();
-                        } else {
+                public void onSuccess(int code, Client.Headers headers, String response) {
+                    if (!"authorized".equals(response)) {
+                        thread.runOnUI(() -> {
                             firebaseAnalyticsProvider.logEvent(
                                     activity,
                                     FirebaseAnalyticsProvider.Event.LOGIN_ISU_FAILED,
@@ -147,13 +164,91 @@ public class LinkAccountFragmentPresenterImpl extends ConnectedFragmentPresenter
                             linkAccountForm.setVisibility(View.VISIBLE);
                             linkAccountProgress.setVisibility(View.GONE);
                             notificationMessage.snackBar(activity, activity.getString(R.string.auth_failed));
+                        });
+                        return;
+                    }
+                    isuPrivateRestClient.get(activity, "userdata/%apikey%/%isutoken%", null, new RestResponseHandler() {
+                        @Override
+                        public void onSuccess(int code, Client.Headers headers, JSONObject obj, JSONArray arr) throws Exception {
+                            if (obj == null) {
+                                onDone();
+                                return;
+                            }
+                            IsuUserData isuUserData = new IsuUserData().fromJson(obj);
+                            String surname = StringUtils.defaultIfBlank(isuUserData.getSurname(), null);
+                            String nameO = StringUtils.defaultIfBlank(isuUserData.getName(), null);
+                            String patronymic = StringUtils.defaultIfBlank(isuUserData.getPatronymic(), null);
+                            String name = "";
+                            if (surname != null) {
+                                name += surname.trim();
+                                name = name.trim();
+                            }
+                            if (nameO != null) {
+                                name += " " + nameO;
+                                name = name.trim();
+                            }
+                            if (patronymic != null) {
+                                name += " " + patronymic;
+                                name = name.trim();
+                            }
+                            if (StringUtils.isBlank(name)) {
+                                name = null;
+                            }
+
+                            List<String> groups = new ArrayList<>();
+                            List<IsuUserDataGroup> isuGroups = CollectionUtils.emptyIfNull(isuUserData.getGroups());
+                            Collections.reverse(isuGroups);
+                            for (IsuUserDataGroup group : isuGroups) {
+                                if (StringUtils.isBlank(group.getGroup())) {
+                                    continue;
+                                }
+                                groups.add(group.getGroup());
+                            }
+                            if (CollectionUtils.isEmpty(groups)) {
+                                groups = null;
+                            }
+
+                            String avatar = null;
+                            if (isuUserData.getAvatar() != null && StringUtils.isNotBlank(isuUserData.getAvatar().getUrl())) {
+                                avatar = isuUserData.getAvatar().getUrl();
+                            }
+                            if (StringUtils.isBlank(avatar)) {
+                                avatar = null;
+                            }
+
+                            account.setUserInfo(context, name, groups, avatar);
+                            eventBus.fire(new UserInfoChangedEvent());
+
+                            onDone();
+                        }
+                        @Override
+                        public void onFailure(int code, Client.Headers headers, int state) {
+                            onDone();
+                        }
+                        @Override
+                        public void onProgress(int state) {
+                            onProgressMessage(R.string.data_initializing);
+                        }
+                        @Override
+                        public void onNewRequest(Client.Request request) {
+                            if (requestHandle != null) {
+                                requestHandle.cancel();
+                            }
+                            requestHandle = request;
+                        }
+                        private void onDone() {
+                            thread.runOnUI(() -> {
+                                firebaseAnalyticsProvider.logEvent(activity, FirebaseAnalyticsProvider.Event.LOGIN_ISU);
+                                notificationMessage.toast(activity, activity.getString(R.string.account_linked));
+                                fragment.close();
+                            });
                         }
                     });
                 }
                 @Override
-                public void onFailure(int statusCode, Client.Headers headers, int state) {
+                public void onFailure(int code, Client.Headers headers, int state) {
                     thread.runOnUI(() -> {
-                        log.v(TAG, "auth | failure | state=", state, " | statusCode=", statusCode);
+                        log.v(TAG, "auth | failure | state=", state, " | code=", code);
                         firebaseAnalyticsProvider.logEvent(
                                 activity,
                                 FirebaseAnalyticsProvider.Event.LOGIN_ISU_FAILED,
@@ -166,7 +261,7 @@ public class LinkAccountFragmentPresenterImpl extends ConnectedFragmentPresenter
                                 notificationMessage.snackBar(activity, activity.getString(R.string.device_offline_action_refused));
                                 break;
                             case Isu.FAILED_SERVER_ERROR:
-                                notificationMessage.snackBar(activity, activity.getString(R.string.auth_failed) + ". " + Isu.getFailureMessage(activity, statusCode));
+                                notificationMessage.snackBar(activity, activity.getString(R.string.auth_failed) + ". " + Isu.getFailureMessage(activity, code));
                                 break;
                             case Isu.FAILED_TRY_AGAIN:
                             case Isu.FAILED_AUTH_TRY_AGAIN:
@@ -183,20 +278,13 @@ public class LinkAccountFragmentPresenterImpl extends ConnectedFragmentPresenter
                 }
                 @Override
                 public void onProgress(int state) {
-                    thread.runOnUI(() -> {
-                        log.v(TAG, "authIsu | progress | state=", state);
-                        linkAccountForm.setVisibility(View.GONE);
-                        linkAccountProgress.setVisibility(View.VISIBLE);
-                        TextView message = activity.findViewById(R.id.link_account_progress_message);
-                        if (message != null) {
-                            switch (state) {
-                                default:
-                                case Isu.STATE_HANDLING: message.setText(R.string.loading); break;
-                                case Isu.STATE_AUTHORIZED: message.setText(R.string.authorized); break;
-                                case Isu.STATE_AUTHORIZATION: message.setText(R.string.authorization); break;
-                            }
-                        }
-                    });
+                    log.v(TAG, "isuAuth | progress | state=", state);
+                    switch (state) {
+                        default:
+                        case Isu.STATE_HANDLING: onProgressMessage(R.string.loading); break;
+                        case Isu.STATE_AUTHORIZED: onProgressMessage(R.string.authorized); break;
+                        case Isu.STATE_AUTHORIZATION: onProgressMessage(R.string.authorization); break;
+                    }
                 }
                 @Override
                 public void onNewRequest(Client.Request request) {
@@ -204,6 +292,16 @@ public class LinkAccountFragmentPresenterImpl extends ConnectedFragmentPresenter
                         requestHandle.cancel();
                     }
                     requestHandle = request;
+                }
+                private void onProgressMessage(int resId) {
+                    thread.runOnUI(() -> {
+                        linkAccountForm.setVisibility(View.GONE);
+                        linkAccountProgress.setVisibility(View.VISIBLE);
+                        TextView message = activity.findViewById(R.id.link_account_progress_message);
+                        if (message != null) {
+                            message.setText(resId);
+                        }
+                    });
                 }
             });
         });

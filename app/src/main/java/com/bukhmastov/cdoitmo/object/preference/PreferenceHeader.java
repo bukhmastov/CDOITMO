@@ -16,10 +16,9 @@ import com.bukhmastov.cdoitmo.activity.ConnectedActivity;
 
 public class PreferenceHeader {
 
-    protected static final String TAG = "PreferenceHeader";
-    public @DrawableRes final int icon;
-    public @StringRes final int title;
-    public final Class fragment;
+    private final @DrawableRes int icon;
+    private final @StringRes int title;
+    private final Class fragment;
 
     public PreferenceHeader(@StringRes int title, @DrawableRes int icon, Class fragment) {
         this.title = title;
@@ -29,13 +28,15 @@ public class PreferenceHeader {
 
     @Nullable
     public static View getView(final ConnectedActivity activity, final PreferenceHeader preference) {
-        final View header = inflate(activity, R.layout.preference_header);
+        View header = inflate(activity, R.layout.preference_header);
         if (header == null) {
             return null;
         }
         ((ImageView) header.findViewById(R.id.preference_header_icon)).setImageResource(preference.icon);
         ((TextView) header.findViewById(R.id.preference_header_title)).setText(preference.title);
-        header.findViewById(R.id.preference_header).setOnClickListener(v -> activity.openFragment(ConnectedActivity.TYPE.STACKABLE, preference.fragment, null));
+        header.findViewById(R.id.preference_header).setOnClickListener(v -> {
+            activity.openFragment(ConnectedActivity.TYPE.STACKABLE, preference.fragment, null);
+        });
         return header;
     }
 

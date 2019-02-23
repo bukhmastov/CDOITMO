@@ -1,6 +1,6 @@
 package com.bukhmastov.cdoitmo.fragment.settings;
 
-import androidx.fragment.app.Fragment;
+import android.content.Context;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activity.ConnectedActivity;
@@ -12,30 +12,32 @@ import com.bukhmastov.cdoitmo.object.preference.PreferenceSwitch;
 import com.bukhmastov.cdoitmo.provider.InjectProvider;
 import com.bukhmastov.cdoitmo.util.Storage;
 
-import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
+
+import androidx.fragment.app.Fragment;
 
 public class SettingsScheduleExamsFragment extends SettingsTemplatePreferencesFragment {
 
     private static final String TAG = "SettingsScheduleExamsFragment";
-    public static final ArrayList<Preference> preferences;
+    public static final List<Preference> preferences;
     static {
-        preferences = new ArrayList<>();
+        preferences = new LinkedList<>();
         preferences.add(new PreferenceBasic("pref_schedule_exams_default", "{\"query\":\"auto\",\"title\":\"\"}", R.string.default_schedule, true, new PreferenceBasic.Callback() {
             @Override
-            public void onPreferenceClicked(final ConnectedActivity activity, final Preference preference, final InjectProvider injectProvider, final PreferenceBasic.OnPreferenceClickedCallback callback) {
-                injectProvider.getSettingsScheduleExams().show(activity, preference, value -> injectProvider.getThread().standalone(() -> {
+            public void onPreferenceClicked(ConnectedActivity activity, Preference preference, InjectProvider injectProvider, PreferenceBasic.OnPreferenceClickedCallback callback) {
+                injectProvider.getSettingsScheduleExams().show(activity, preference, value -> {
                     injectProvider.getStoragePref().put(activity, "pref_schedule_exams_default", value);
                     callback.onSetSummary(activity, value);
-                }));
+                });
             }
             @Override
-            public String onGetSummary(ConnectedActivity activity, String value) {
+            public String onGetSummary(Context context, String value) {
                 try {
                     SettingsQuery settingsQuery = new SettingsQuery().fromJsonString(value);
                     switch (settingsQuery.getQuery()) {
-                        case "personal": return activity.getString(R.string.personal_schedule);
-                        case "auto": return activity.getString(R.string.current_group);
+                        case "personal": return context.getString(R.string.personal_schedule);
+                        case "auto": return context.getString(R.string.current_group);
                         default: return settingsQuery.getTitle();
                     }
                 } catch (Exception e) {
@@ -48,16 +50,18 @@ public class SettingsScheduleExamsFragment extends SettingsTemplatePreferencesFr
         preferences.add(new PreferenceSwitch("pref_schedule_exams_use_cache", false, R.string.cache_schedule, null, null));
         preferences.add(new PreferenceBasic("pref_schedule_exams_clear_cache", null, R.string.clear_schedule_cache, false, new PreferenceBasic.Callback() {
             @Override
-            public void onPreferenceClicked(final ConnectedActivity activity, final Preference preference, final InjectProvider injectProvider, final PreferenceBasic.OnPreferenceClickedCallback callback) {
+            public void onPreferenceClicked(ConnectedActivity activity, Preference preference, InjectProvider injectProvider, PreferenceBasic.OnPreferenceClickedCallback callback) {
                 injectProvider.getThread().standalone(() -> {
                     if (activity != null) {
                         boolean success = injectProvider.getStorage().clear(activity, Storage.CACHE, Storage.GLOBAL, "schedule_exams");
-                        injectProvider.getNotificationMessage().snackBar(activity, activity.getString(success ? R.string.cache_cleared : R.string.something_went_wrong));
+                        if (success) {
+                            injectProvider.getNotificationMessage().snackBar(activity, activity.getString(R.string.cache_cleared));
+                        }
                     }
                 });
             }
             @Override
-            public String onGetSummary(ConnectedActivity activity, String value) {
+            public String onGetSummary(Context context, String value) {
                 return null;
             }
         }));

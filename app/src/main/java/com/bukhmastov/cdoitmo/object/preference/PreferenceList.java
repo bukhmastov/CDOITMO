@@ -32,7 +32,9 @@ public class PreferenceList extends Preference {
     private @ArrayRes int arrayDesc = 0;
     private boolean changeSummary;
 
-    public PreferenceList(String key, Object defaultValue, @StringRes int title, @StringRes int summary, @StringRes int description, @ArrayRes int arrayTitles, @ArrayRes int arrayDesc, @ArrayRes int arrayValues, boolean changeSummary) {
+    public PreferenceList(String key, Object defaultValue, @StringRes int title, @StringRes int summary,
+                          @StringRes int description, @ArrayRes int arrayTitles, @ArrayRes int arrayDesc,
+                          @ArrayRes int arrayValues, boolean changeSummary) {
         super(key, defaultValue, title, summary);
         this.description = description;
         this.arrayTitles = arrayTitles;
@@ -40,20 +42,24 @@ public class PreferenceList extends Preference {
         this.arrayDesc = arrayDesc;
         this.changeSummary = changeSummary;
     }
-    public PreferenceList(String key, Object defaultValue, @StringRes int title, @StringRes int summary, @ArrayRes int arrayTitles, @ArrayRes int arrayDesc, @ArrayRes int arrayValues, boolean changeSummary) {
+    public PreferenceList(String key, Object defaultValue, @StringRes int title, @StringRes int summary,
+                          @ArrayRes int arrayTitles, @ArrayRes int arrayDesc, @ArrayRes int arrayValues,
+                          boolean changeSummary) {
         super(key, defaultValue, title, summary);
         this.arrayTitles = arrayTitles;
         this.arrayValues = arrayValues;
         this.arrayDesc = arrayDesc;
         this.changeSummary = changeSummary;
     }
-    public PreferenceList(String key, Object defaultValue, @StringRes int title, @StringRes int summary, @ArrayRes int arrayTitles, @ArrayRes int arrayValues, boolean changeSummary) {
+    public PreferenceList(String key, Object defaultValue, @StringRes int title, @StringRes int summary,
+                          @ArrayRes int arrayTitles, @ArrayRes int arrayValues, boolean changeSummary) {
         super(key, defaultValue, title, summary);
         this.arrayTitles = arrayTitles;
         this.arrayValues = arrayValues;
         this.changeSummary = changeSummary;
     }
-    public PreferenceList(String key, Object defaultValue, @StringRes int title, @ArrayRes int arrayTitles, @ArrayRes int arrayValues, boolean changeSummary) {
+    public PreferenceList(String key, Object defaultValue, @StringRes int title, @ArrayRes int arrayTitles,
+                          @ArrayRes int arrayValues, boolean changeSummary) {
         super(key, defaultValue, title);
         this.arrayTitles = arrayTitles;
         this.arrayValues = arrayValues;
@@ -61,25 +67,27 @@ public class PreferenceList extends Preference {
     }
 
     @Nullable
-    public static View getView(final ConnectedActivity activity, final PreferenceList preference, final InjectProvider injectProvider) {
-        final List<String> titles = preference.arrayTitles != 0 ? Arrays.asList(activity.getResources().getStringArray(preference.arrayTitles)) : new ArrayList<>();
-        final List<String> values = preference.arrayValues != 0 ? Arrays.asList(activity.getResources().getStringArray(preference.arrayValues)) : new ArrayList<>();
-        final List<String> descs = preference.arrayDesc != 0 ? Arrays.asList(activity.getResources().getStringArray(preference.arrayDesc)) : new ArrayList<>();
-        final View preference_layout = inflate(activity, R.layout.preference_list);
-        if (preference_layout == null) {
+    public static View getView(ConnectedActivity activity, PreferenceList preference, InjectProvider injectProvider) {
+        List<String> titles = preference.arrayTitles != 0 ? Arrays.asList(activity.getResources().getStringArray(preference.arrayTitles)) : new ArrayList<>();
+        List<String> values = preference.arrayValues != 0 ? Arrays.asList(activity.getResources().getStringArray(preference.arrayValues)) : new ArrayList<>();
+        List<String> descs = preference.arrayDesc != 0 ? Arrays.asList(activity.getResources().getStringArray(preference.arrayDesc)) : new ArrayList<>();
+        View preferenceLayout = inflate(activity, R.layout.preference_list);
+        if (preferenceLayout == null) {
             return null;
         }
-        final View preference_list = preference_layout.findViewById(R.id.preference_list);
-        final TextView preference_list_title = preference_layout.findViewById(R.id.preference_list_title);
-        final TextView preference_list_summary = preference_layout.findViewById(R.id.preference_list_summary);
-        preference_list_title.setText(preference.title);
-        preference_list_summary.setVisibility(View.VISIBLE);
+        View preferenceList = preferenceLayout.findViewById(R.id.preference_list);
+        TextView preferenceListTitle = preferenceLayout.findViewById(R.id.preference_list_title);
+        TextView preferenceListSummary = preferenceLayout.findViewById(R.id.preference_list_summary);
+        preferenceListTitle.setText(preference.title);
+        preferenceListSummary.setVisibility(View.VISIBLE);
         if (preference.summary != 0) {
-            preference_list_summary.setText(preference.summary);
+            preferenceListSummary.setText(preference.summary);
         } else {
-            preference_list_summary.setText(titles.get(values.indexOf(injectProvider.getStoragePref().get(activity, preference.key, preference.defaultValue == null ? "" : (String) preference.defaultValue))));
+            String selected = injectProvider.getStoragePref().get(activity, preference.key, preference.defaultValue == null ? "" : (String) preference.defaultValue);
+            String summary = titles.get(values.indexOf(selected));
+            preferenceListSummary.setText(summary);
         }
-        preference_list.setOnClickListener(v -> {
+        preferenceList.setOnClickListener(v -> {
             if (activity.isFinishing() || activity.isDestroyed() || preference.isDisabled()) {
                 return;
             }
@@ -87,47 +95,49 @@ public class PreferenceList extends Preference {
             if (preference.defaultValue != null) {
                 checked = values.indexOf(injectProvider.getStoragePref().get(activity, preference.key, (String) preference.defaultValue));
             }
-            final View view = inflate(activity, R.layout.preference_list_single_choice);
+            View view = inflate(activity, R.layout.preference_list_single_choice);
             if (view == null) {
                 return;
             }
-            final AlertDialog dialog = new AlertDialog.Builder(activity)
+            AlertDialog dialog = new AlertDialog.Builder(activity)
                     .setTitle(preference.title)
                     .setView(view)
                     .setNegativeButton(R.string.cancel, null)
                     .create();
-            final TextView message = view.findViewById(R.id.message);
+            TextView message = view.findViewById(R.id.message);
             if (preference.description != 0) {
                 message.setVisibility(View.VISIBLE);
                 message.setText(preference.description);
             } else {
                 message.setVisibility(View.GONE);
             }
-            final RadioGroup radio_group = view.findViewById(R.id.radio_group);
-            final OnCheckedChangeListener onCheckedChangeListener = (buttonView, isChecked, index) -> {
+            RadioGroup radioGroup = view.findViewById(R.id.radio_group);
+            OnCheckedChangeListener onCheckedChangeListener = (buttonView, isChecked, index) -> {
                 if (isChecked) {
                     String value = values.get(index);
                     injectProvider.getStoragePref().put(activity, preference.key, value);
                     preference.onPreferenceChanged(activity);
                     if (preference.changeSummary) {
-                        preference_list_summary.setText(titles.get(index));
+                        preferenceListSummary.setText(titles.get(index));
                     }
                     dialog.dismiss();
                 }
             };
             for (int i = 0; i < titles.size(); i++) {
-                final int index = i;
-                final View item = inflate(activity, R.layout.preference_list_single_choice_item);
+                int index = i;
+                View item = inflate(activity, R.layout.preference_list_single_choice_item);
                 if (item == null) {
                     continue;
                 }
-                final ViewGroup content = item.findViewById(R.id.content);
-                final RadioButton button = item.findViewById(R.id.button);
-                final TextView desc = item.findViewById(R.id.desc);
+                ViewGroup content = item.findViewById(R.id.content);
+                RadioButton button = item.findViewById(R.id.button);
+                TextView desc = item.findViewById(R.id.desc);
                 content.setOnClickListener(v1 -> button.toggle());
                 button.setText(titles.get(index));
                 button.setChecked(checked == index);
-                button.setOnCheckedChangeListener((buttonView, isChecked) -> onCheckedChangeListener.onCheckedChanged(buttonView, isChecked, index));
+                button.setOnCheckedChangeListener((buttonView, isChecked) -> {
+                    onCheckedChangeListener.onCheckedChanged(buttonView, isChecked, index);
+                });
                 if (index < descs.size()) {
                     String text = descs.get(index);
                     if (!text.isEmpty()) {
@@ -135,11 +145,11 @@ public class PreferenceList extends Preference {
                         desc.setVisibility(View.VISIBLE);
                     }
                 }
-                radio_group.addView(item, RadioGroup.LayoutParams.MATCH_PARENT, RadioGroup.LayoutParams.WRAP_CONTENT);
+                radioGroup.addView(item, RadioGroup.LayoutParams.MATCH_PARENT, RadioGroup.LayoutParams.WRAP_CONTENT);
             }
             dialog.show();
         });
-        preference_list.setTag(preference.key);
-        return preference_layout;
+        preferenceList.setTag(preference.key);
+        return preferenceLayout;
     }
 }

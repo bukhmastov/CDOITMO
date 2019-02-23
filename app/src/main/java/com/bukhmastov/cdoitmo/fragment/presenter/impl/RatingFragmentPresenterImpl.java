@@ -482,7 +482,7 @@ public class RatingFragmentPresenterImpl implements RatingFragmentPresenter, Swi
     }
 
     private void share() {
-        thread.standalone(() -> {
+        thread.run(RA, () -> {
             if (data.get(OWN) == null || !(data.get(OWN).data instanceof RatingPickerOwn) || CollectionUtils.isEmpty(((RatingPickerOwn) data.get(OWN).data).getCourses())) {
                 return;
             }

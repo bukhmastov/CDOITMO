@@ -1,6 +1,7 @@
 package com.bukhmastov.cdoitmo.fragment.settings;
 
 import android.app.AlertDialog;
+import android.content.Context;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activity.ConnectedActivity;
@@ -11,8 +12,8 @@ import com.bukhmastov.cdoitmo.object.preference.PreferenceList;
 import com.bukhmastov.cdoitmo.object.preference.PreferenceSwitch;
 import com.bukhmastov.cdoitmo.provider.InjectProvider;
 
-import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
 
 import androidx.fragment.app.Fragment;
@@ -20,14 +21,14 @@ import androidx.fragment.app.Fragment;
 public class SettingsCacheFragment extends SettingsTemplatePreferencesFragment {
 
     private static final String TAG = "SettingsCacheFragment";
-    public static final ArrayList<Preference> preferences;
+    public static final List<Preference> preferences;
     static {
-        preferences = new ArrayList<>();
+        preferences = new LinkedList<>();
         preferences.add(new PreferenceSwitch(
                 "pref_use_cache",
                 true,
                 R.string.pref_use_cache,
-                new ArrayList<>(Arrays.asList("pref_dynamic_refresh", "pref_static_refresh", "pref_use_university_cache", "pref_clear_cache", "pref_schedule_lessons_clear_cache", "pref_schedule_exams_clear_cache", "pref_schedule_attestations_clear_cache", "pref_university_clear_cache")),
+                new LinkedList<>(Arrays.asList("pref_dynamic_refresh", "pref_static_refresh", "pref_use_university_cache", "pref_clear_cache", "pref_schedule_lessons_clear_cache", "pref_schedule_exams_clear_cache", "pref_schedule_attestations_clear_cache", "pref_university_clear_cache")),
                 (activity, preference, value, callback) -> {
                     if (value || activity.isFinishing() || activity.isDestroyed()) {
                         callback.onDecisionMade(activity, preference, true);
@@ -47,11 +48,11 @@ public class SettingsCacheFragment extends SettingsTemplatePreferencesFragment {
         preferences.add(new PreferenceSwitch("pref_use_university_cache", false, R.string.pref_use_university_cache, R.string.pref_use_university_cache_summary, null, null));
         preferences.add(new PreferenceBasic("pref_clear_cache", null, R.string.cache_clear, false, new PreferenceBasic.Callback() {
             @Override
-            public void onPreferenceClicked(final ConnectedActivity activity, final Preference preference, final InjectProvider injectProvider, final PreferenceBasic.OnPreferenceClickedCallback callback) {
-                injectProvider.getThread().standalone(() -> new CacheClearDialog(activity).show());
+            public void onPreferenceClicked(ConnectedActivity activity, Preference preference, InjectProvider injectProvider, PreferenceBasic.OnPreferenceClickedCallback callback) {
+                new CacheClearDialog(activity).show();
             }
             @Override
-            public String onGetSummary(ConnectedActivity activity, String value) {
+            public String onGetSummary(Context context, String value) {
                 return null;
             }
         }));

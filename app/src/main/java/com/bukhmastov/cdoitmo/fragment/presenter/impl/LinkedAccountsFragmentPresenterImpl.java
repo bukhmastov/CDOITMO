@@ -56,8 +56,10 @@ public class LinkedAccountsFragmentPresenterImpl extends ConnectedFragmentPresen
     public void onResume() {
         log.v(TAG, "Fragment resumed");
         firebaseAnalyticsProvider.setCurrentScreen(activity, fragment);
-        initDeIfmo();
-        initIsu();
+        thread.standalone(() -> {
+            initDeIfmo();
+            initIsu();
+        });
     }
 
     private void initDeIfmo() {
@@ -83,39 +85,38 @@ public class LinkedAccountsFragmentPresenterImpl extends ConnectedFragmentPresen
     }
 
     private void initIsu() {
-        thread.standalone(() -> {
-            boolean authorized = isuPrivateRestClient.isAuthorized(activity);
-            thread.runOnUI(() -> {
-                View accountIsuLoading = activity.findViewById(R.id.account_isu_loading);
-                View accountIsuContent = activity.findViewById(R.id.account_isu_content);
-                TextView accountIsuInfo = activity.findViewById(R.id.account_isu_info);
-                accountIsuLoading.setVisibility(View.VISIBLE);
-                accountIsuContent.setVisibility(View.GONE);
-                accountIsuInfo.setText(authorized ? R.string.authorized : R.string.not_authorized);
-                accountIsuLoading.setVisibility(View.GONE);
-                accountIsuContent.setVisibility(View.VISIBLE);
-                accountIsuContent.setOnClickListener(v -> thread.runOnUI(() -> {
-                    if (!authorized) {
-                        Bundle extras = new Bundle();
-                        extras.putString("type", LinkAccountFragmentPresenter.ISU);
-                        if (!activity.openFragment(ConnectedActivity.TYPE.STACKABLE, LinkAccountFragment.class, extras)) {
-                            notificationMessage.snackBar(activity, activity.getString(R.string.failed_to_open_fragment));
-                        }
-                        return;
+        thread.assertNotUI();
+        boolean authorized = isuPrivateRestClient.isAuthorized(activity);
+        thread.runOnUI(() -> {
+            View accountIsuLoading = activity.findViewById(R.id.account_isu_loading);
+            View accountIsuContent = activity.findViewById(R.id.account_isu_content);
+            TextView accountIsuInfo = activity.findViewById(R.id.account_isu_info);
+            accountIsuLoading.setVisibility(View.VISIBLE);
+            accountIsuContent.setVisibility(View.GONE);
+            accountIsuInfo.setText(authorized ? R.string.authorized : R.string.not_authorized);
+            accountIsuLoading.setVisibility(View.GONE);
+            accountIsuContent.setVisibility(View.VISIBLE);
+            accountIsuContent.setOnClickListener(v -> thread.runOnUI(() -> {
+                if (!authorized) {
+                    Bundle extras = new Bundle();
+                    extras.putString("type", LinkAccountFragmentPresenter.ISU);
+                    if (!activity.openFragment(ConnectedActivity.TYPE.STACKABLE, LinkAccountFragment.class, extras)) {
+                        notificationMessage.snackBar(activity, activity.getString(R.string.failed_to_open_fragment));
                     }
-                    PopupMenu popup = new PopupMenu(activity, v);
-                    popup.inflate(R.menu.linked_accounts_logout);
-                    popup.setOnMenuItemClickListener(item -> {
-                        switch (item.getItemId()) {
-                            case R.id.logout: isuLogout(); break;
-                            case R.id.update_connection: isuLogin(); break;
-                        }
-                        popup.dismiss();
-                        return true;
-                    });
-                    popup.show();
-                }));
-            });
+                    return;
+                }
+                PopupMenu popup = new PopupMenu(activity, v);
+                popup.inflate(R.menu.linked_accounts_logout);
+                popup.setOnMenuItemClickListener(item -> {
+                    switch (item.getItemId()) {
+                        case R.id.logout: isuLogout(); break;
+                        case R.id.update_connection: isuLogin(); break;
+                    }
+                    popup.dismiss();
+                    return true;
+                });
+                popup.show();
+            }));
         });
     }
 

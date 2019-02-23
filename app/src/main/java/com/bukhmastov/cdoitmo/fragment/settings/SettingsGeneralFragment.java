@@ -16,8 +16,8 @@ import com.bukhmastov.cdoitmo.object.preference.PreferenceSwitch;
 import com.bukhmastov.cdoitmo.provider.InjectProvider;
 import com.bukhmastov.cdoitmo.util.NotificationMessage;
 
-import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.LinkedList;
 import java.util.List;
 
 import androidx.fragment.app.Fragment;
@@ -25,29 +25,27 @@ import androidx.fragment.app.Fragment;
 public class SettingsGeneralFragment extends SettingsTemplatePreferencesFragment {
 
     private static final String TAG = "SettingsGeneralFragment";
-    public static final ArrayList<Preference> preferences;
+    public static final List<Preference> preferences;
     static {
-        preferences = new ArrayList<>();
+        preferences = new LinkedList<>();
         preferences.add(new PreferenceList("pref_lang", "default", R.string.pref_lang_title, R.string.pref_lang_title_summary, R.array.pref_lang_titles, R.array.pref_lang_values, false));
         preferences.add(new PreferenceList("pref_default_fragment", "e_journal", R.string.pref_default_fragment, R.array.pref_general_default_fragment_titles, R.array.pref_general_default_fragment_values, true));
         preferences.add(new PreferenceBasic("pref_theme", "light", R.string.theme, true, new PreferenceBasic.Callback() {
             @Override
-            public void onPreferenceClicked(final ConnectedActivity activity, final Preference preference, final InjectProvider injectProvider, final PreferenceBasic.OnPreferenceClickedCallback callback) {
-                injectProvider.getThread().standalone(() -> {
-                    String theme = injectProvider.getStoragePref().get(activity, "pref_theme", "light");
-                    new ThemeDialog(activity, theme, (theme1, desc) -> injectProvider.getThread().standalone(() -> {
-                        injectProvider.getStoragePref().put(activity, "pref_theme", theme1);
-                        callback.onSetSummary(activity, desc);
-                        injectProvider.getNotificationMessage().snackBar(activity, activity.getString(R.string.restart_required), activity.getString(R.string.restart), NotificationMessage.LENGTH_LONG, view -> {
-                            injectProvider.getTheme().updateAppTheme(activity);
-                            injectProvider.getStaticUtil().reLaunch(activity);
-                        });
-                    })).show();
-                });
+            public void onPreferenceClicked(ConnectedActivity activity, Preference preference, InjectProvider injectProvider, PreferenceBasic.OnPreferenceClickedCallback callback) {
+                String theme = injectProvider.getStoragePref().get(activity, "pref_theme", "light");
+                new ThemeDialog(activity, theme, (thm, desc) -> {
+                    injectProvider.getStoragePref().put(activity, "pref_theme", thm);
+                    callback.onSetSummary(activity, desc);
+                    injectProvider.getNotificationMessage().snackBar(activity, activity.getString(R.string.restart_required), activity.getString(R.string.restart), NotificationMessage.LENGTH_LONG, view -> {
+                        injectProvider.getTheme().updateAppTheme(activity);
+                        injectProvider.getStaticUtil().reLaunch(activity);
+                    });
+                }).show();
             }
             @Override
-            public String onGetSummary(final ConnectedActivity activity, final String value) {
-                return ThemeDialog.getThemeDesc(activity, value);
+            public String onGetSummary(Context context, String value) {
+                return ThemeDialog.getThemeDesc(context, value);
             }
         }));
         preferences.add(new PreferenceSwitch("pref_auto_logout", false, R.string.pref_auto_logout, R.string.pref_auto_logout_summary, null, null));
@@ -95,33 +93,31 @@ public class SettingsGeneralFragment extends SettingsTemplatePreferencesFragment
         }));
         preferences.add(new PreferenceBasic("pref_open_system_settings", null, R.string.pref_open_system_settings, false, new PreferenceBasic.Callback() {
             @Override
-            public void onPreferenceClicked(final ConnectedActivity activity, final Preference preference, final InjectProvider injectProvider, final PreferenceBasic.OnPreferenceClickedCallback callback) {
-                injectProvider.getThread().runOnUI(() -> {
+            public void onPreferenceClicked(ConnectedActivity activity, Preference preference, InjectProvider injectProvider, PreferenceBasic.OnPreferenceClickedCallback callback) {
+                try {
+                    Intent intent = new Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+                    intent.setData(android.net.Uri.parse("package:" + activity.getPackageName()));
+                    intent.addCategory(Intent.CATEGORY_DEFAULT);
+                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    injectProvider.getEventBus().fire(new OpenIntentEvent(intent));
+                } catch (Exception e) {
                     try {
-                        Intent intent = new Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
-                        intent.setData(android.net.Uri.parse("package:" + activity.getPackageName()));
-                        intent.addCategory(Intent.CATEGORY_DEFAULT);
+                        Intent intent = new Intent(android.provider.Settings.ACTION_MANAGE_APPLICATIONS_SETTINGS);
                         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                         injectProvider.getEventBus().fire(new OpenIntentEvent(intent));
-                    } catch (Exception e) {
-                        try {
-                            Intent intent = new Intent(android.provider.Settings.ACTION_MANAGE_APPLICATIONS_SETTINGS);
-                            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                            injectProvider.getEventBus().fire(new OpenIntentEvent(intent));
-                        } catch (Exception ignore) {
-                            injectProvider.getNotificationMessage().snackBar(activity, activity.getString(R.string.something_went_wrong));
-                        }
+                    } catch (Exception ignore) {
+                        injectProvider.getNotificationMessage().snackBar(activity, activity.getString(R.string.something_went_wrong));
                     }
-                });
+                }
             }
             @Override
-            public String onGetSummary(ConnectedActivity activity, String value) {
+            public String onGetSummary(Context context, String value) {
                 return null;
             }
         }));
         preferences.add(new PreferenceBasic("pref_reset_application", null, R.string.pref_reset_application_summary, false, new PreferenceBasic.Callback() {
             @Override
-            public void onPreferenceClicked(final ConnectedActivity activity, final Preference preference, final InjectProvider injectProvider, final PreferenceBasic.OnPreferenceClickedCallback callback) {
+            public void onPreferenceClicked(ConnectedActivity activity, Preference preference, InjectProvider injectProvider, PreferenceBasic.OnPreferenceClickedCallback callback) {
                 injectProvider.getThread().runOnUI(() -> {
                     if (activity.isFinishing() || activity.isDestroyed()) {
                         return;
@@ -140,7 +136,7 @@ public class SettingsGeneralFragment extends SettingsTemplatePreferencesFragment
                 });
             }
             @Override
-            public String onGetSummary(ConnectedActivity activity, String value) {
+            public String onGetSummary(Context context, String value) {
                 return null;
             }
         }));

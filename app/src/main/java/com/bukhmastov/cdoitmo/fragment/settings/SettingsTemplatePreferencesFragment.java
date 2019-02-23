@@ -1,7 +1,6 @@
 package com.bukhmastov.cdoitmo.fragment.settings;
 
 import android.os.Bundle;
-import androidx.fragment.app.Fragment;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
@@ -15,11 +14,13 @@ import com.bukhmastov.cdoitmo.object.preference.Preference;
 import com.bukhmastov.cdoitmo.object.preference.PreferenceSwitch;
 import com.bukhmastov.cdoitmo.provider.InjectProvider;
 import com.bukhmastov.cdoitmo.util.Log;
+import com.bukhmastov.cdoitmo.util.StoragePref;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import javax.inject.Inject;
+
+import androidx.fragment.app.Fragment;
 
 public abstract class SettingsTemplatePreferencesFragment extends ConnectedFragment {
 
@@ -27,6 +28,8 @@ public abstract class SettingsTemplatePreferencesFragment extends ConnectedFragm
 
     @Inject
     Log log;
+    @Inject
+    StoragePref storagePref;
     @Inject
     InjectProvider injectProvider;
     @Inject
@@ -88,18 +91,18 @@ public abstract class SettingsTemplatePreferencesFragment extends ConnectedFragm
             if (activity() == null) {
                 return;
             }
-            ViewGroup settings_container = activity().findViewById(getRootId());
-            if (settings_container != null) {
-                settings_container.removeAllViews();
+            ViewGroup settingsContainer = activity().findViewById(getRootId());
+            if (settingsContainer != null) {
+                settingsContainer.removeAllViews();
                 for (Preference preference : getPreferences()) {
-                    settings_container.addView(Preference.getView(activity(), preference, injectProvider));
+                    settingsContainer.addView(Preference.getView(activity(), preference, injectProvider));
                 }
                 for (Preference preference : getPreferences()) {
                     if (preference instanceof PreferenceSwitch) {
                         final PreferenceSwitch preferenceSwitch = (PreferenceSwitch) preference;
-                        final ArrayList<String> dependencies = preferenceSwitch.getDependencies();
+                        final List<String> dependencies = preferenceSwitch.getDependencies();
                         if (dependencies.size() > 0) {
-                            PreferenceSwitch.toggleDependencies(activity(), preferenceSwitch, injectProvider.getStoragePref().get(activity(), preference.key, (Boolean) preference.defaultValue));
+                            PreferenceSwitch.toggleDependencies(activity(), preferenceSwitch, storagePref.get(activity(), preference.key, (Boolean) preference.defaultValue));
                             for (Preference pref : getPreferences()) {
                                 if (dependencies.contains(pref.key)) {
                                     pref.addPreferenceDependency(preferenceSwitch);

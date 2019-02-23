@@ -512,7 +512,7 @@ public class ProtocolFragmentPresenterImpl extends ConnectedFragmentWithDataPres
     }
 
     private void share(Map<String, List<PChange>> subjects) {
-        thread.standalone(() -> {
+        thread.run(PR, () -> {
             if (subjects == null) {
                 return;
             }

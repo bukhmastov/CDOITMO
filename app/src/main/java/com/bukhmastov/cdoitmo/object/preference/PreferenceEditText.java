@@ -15,24 +15,26 @@ import androidx.annotation.StringRes;
 
 public class PreferenceEditText extends Preference {
 
-    public @StringRes int message;
-    public @StringRes int hint;
-    public boolean changeSummary;
-    public Callback callback;
+    private @StringRes int message;
+    private @StringRes int hint;
+    private boolean changeSummary;
+    private Callback callback;
 
     public interface Callback {
-        String onSetText(final Context context, final InjectProvider injectProvider, final String value);
-        String onGetText(final Context context, final InjectProvider injectProvider, final String value);
+        String onSetText(Context context, InjectProvider injectProvider, String value);
+        String onGetText(Context context, InjectProvider injectProvider, String value);
     }
 
-    public PreferenceEditText(String key, Object defaultValue, @StringRes int title, @StringRes int summary, @StringRes int message, @StringRes int hint, boolean changeSummary, @Nullable Callback callback) {
+    public PreferenceEditText(String key, Object defaultValue, @StringRes int title, @StringRes int summary,
+                              @StringRes int message, @StringRes int hint, boolean changeSummary, @Nullable Callback callback) {
         super(key, defaultValue, title, summary);
         this.message = message;
         this.hint = hint;
         this.changeSummary = changeSummary;
         this.callback = callback;
     }
-    public PreferenceEditText(String key, Object defaultValue, @StringRes int title, @StringRes int message, @StringRes int hint, boolean changeSummary, @Nullable Callback callback) {
+    public PreferenceEditText(String key, Object defaultValue, @StringRes int title, @StringRes int message,
+                              @StringRes int hint, boolean changeSummary, @Nullable Callback callback) {
         super(key, defaultValue, title);
         this.message = message;
         this.hint = hint;
@@ -41,37 +43,37 @@ public class PreferenceEditText extends Preference {
     }
 
     @Nullable
-    public static View getView(final ConnectedActivity activity, final PreferenceEditText preference, final InjectProvider injectProvider) {
-        final View preference_layout = inflate(activity, R.layout.preference_basic);
-        if (preference_layout == null) {
+    public static View getView(ConnectedActivity activity, PreferenceEditText preference, InjectProvider injectProvider) {
+        View preferenceLayout = inflate(activity, R.layout.preference_basic);
+        if (preferenceLayout == null) {
             return null;
         }
-        final View preference_basic = preference_layout.findViewById(R.id.preference_basic);
-        final TextView preference_basic_title = preference_layout.findViewById(R.id.preference_basic_title);
-        final TextView preference_basic_summary = preference_layout.findViewById(R.id.preference_basic_summary);
-        preference_basic_title.setText(preference.title);
+        View preferenceBasic = preferenceLayout.findViewById(R.id.preference_basic);
+        TextView preferenceBasicTitle = preferenceLayout.findViewById(R.id.preference_basic_title);
+        TextView preferenceBasicSummary = preferenceLayout.findViewById(R.id.preference_basic_summary);
+        preferenceBasicTitle.setText(preference.title);
         if (preference.summary != 0) {
-            preference_basic_summary.setVisibility(View.VISIBLE);
-            preference_basic_summary.setText(preference.summary);
+            preferenceBasicSummary.setVisibility(View.VISIBLE);
+            preferenceBasicSummary.setText(preference.summary);
         } else {
             String value = injectProvider.getStoragePref().get(activity, preference.key, (String) preference.defaultValue);
             if (preference.callback != null) {
                 value = preference.callback.onSetText(activity, injectProvider, value);
             }
             if (preference.changeSummary && !value.isEmpty()) {
-                preference_basic_summary.setVisibility(View.VISIBLE);
-                preference_basic_summary.setText(value);
+                preferenceBasicSummary.setVisibility(View.VISIBLE);
+                preferenceBasicSummary.setText(value);
             } else {
-                preference_basic_summary.setVisibility(View.GONE);
+                preferenceBasicSummary.setVisibility(View.GONE);
             }
         }
-        preference_basic.setOnClickListener(v -> {
+        preferenceBasic.setOnClickListener(v -> {
             if (activity.isFinishing() || activity.isDestroyed() || preference.isDisabled()) {
                 return;
             }
-            final View view = inflate(activity, R.layout.preference_dialog_input);
-            final TextView message = view.findViewById(R.id.message);
-            final EditText edittext = view.findViewById(R.id.edittext);
+            View view = inflate(activity, R.layout.preference_dialog_input);
+            TextView message = view.findViewById(R.id.message);
+            EditText edittext = view.findViewById(R.id.edittext);
             String value = injectProvider.getStoragePref().get(activity, preference.key, preference.defaultValue == null ? "" : (String) preference.defaultValue);
             if (preference.callback != null) {
                 value = preference.callback.onSetText(activity, injectProvider, value);
@@ -95,14 +97,14 @@ public class PreferenceEditText extends Preference {
                         injectProvider.getStoragePref().put(activity, preference.key, val);
                         preference.onPreferenceChanged(activity);
                         if (preference.changeSummary) {
-                            preference_basic_summary.setVisibility(View.VISIBLE);
-                            preference_basic_summary.setText(val);
+                            preferenceBasicSummary.setVisibility(View.VISIBLE);
+                            preferenceBasicSummary.setText(val);
                         }
                     })
                     .setNegativeButton(R.string.cancel, null)
                     .create().show();
         });
-        preference_basic.setTag(preference.key);
-        return preference_layout;
+        preferenceBasic.setTag(preference.key);
+        return preferenceLayout;
     }
 }

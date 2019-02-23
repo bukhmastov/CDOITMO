@@ -508,7 +508,7 @@ public class ScheduleLessonsTabFragmentPresenterImpl implements ScheduleLessonsT
                 }
             }
             popup.setOnMenuItemClickListener(menuItem -> {
-                thread.standalone(() -> {
+                thread.run(SL, () -> {
                     switch (menuItem.getItemId()) {
                         case R.id.share_all_schedule: shareSchedule(entity.getDays()); break;
                         case R.id.monday: shareSchedule(entity.getDays(), 0); break;

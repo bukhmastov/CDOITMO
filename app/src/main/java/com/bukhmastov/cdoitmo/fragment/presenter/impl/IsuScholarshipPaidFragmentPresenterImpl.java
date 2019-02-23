@@ -49,7 +49,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
-import static com.bukhmastov.cdoitmo.util.Thread.ISSP;
+import static com.bukhmastov.cdoitmo.util.Thread.ISP;
 
 public class IsuScholarshipPaidFragmentPresenterImpl extends ConnectedFragmentWithDataPresenterImpl<SSPaidList>
         implements IsuScholarshipPaidFragmentPresenter, SwipeRefreshLayout.OnRefreshListener {
@@ -96,16 +96,16 @@ public class IsuScholarshipPaidFragmentPresenterImpl extends ConnectedFragmentWi
                 return;
             }
             MenuItem share = menu.findItem(R.id.action_share);
-            thread.run(ISSP, () -> {
+            thread.run(ISP, () -> {
                 if (share == null) {
                     return;
                 }
                 SSPaidList data = getData();
                 if (data == null || CollectionUtils.isEmpty(data.getList())) {
-                    thread.runOnUI(ISSP, () -> share.setVisible(false));
+                    thread.runOnUI(ISP, () -> share.setVisible(false));
                     return;
                 }
-                thread.runOnUI(ISSP, () -> {
+                thread.runOnUI(ISP, () -> {
                     share.setVisible(true);
                     share.setOnMenuItemClickListener(menuItem -> {
                         share();
@@ -120,14 +120,14 @@ public class IsuScholarshipPaidFragmentPresenterImpl extends ConnectedFragmentWi
 
     @Override
     public void onRefresh() {
-        thread.run(ISSP, () -> {
+        thread.run(ISP, () -> {
             log.v(TAG, "refreshing");
             load(true);
         });
     }
 
     protected void load() {
-        thread.run(ISSP, () -> {
+        thread.run(ISP, () -> {
             load(storagePref.get(activity, "pref_use_cache", true) ?
                     Integer.parseInt(storagePref.get(activity, "pref_dynamic_refresh", "0")) :
                     0);
@@ -135,7 +135,7 @@ public class IsuScholarshipPaidFragmentPresenterImpl extends ConnectedFragmentWi
     }
 
     private void load(int refresh_rate) {
-        thread.run(ISSP, () -> {
+        thread.run(ISP, () -> {
             log.v(TAG, "load | refresh_rate=", refresh_rate);
             if (!storagePref.get(activity, "pref_use_cache", true)) {
                 load(false);
@@ -156,11 +156,11 @@ public class IsuScholarshipPaidFragmentPresenterImpl extends ConnectedFragmentWi
     }
 
     private void load(boolean force) {
-        thread.run(ISSP, () -> load(force, null));
+        thread.run(ISP, () -> load(force, null));
     }
 
     private void load(boolean force, SSPaidList cached) {
-        thread.run(ISSP, () -> {
+        thread.run(ISP, () -> {
             log.v(TAG, "load | force=", force);
             if ((!force || !Client.isOnline(activity)) && storagePref.get(activity, "pref_use_cache", true)) {
                 try {
@@ -180,7 +180,7 @@ public class IsuScholarshipPaidFragmentPresenterImpl extends ConnectedFragmentWi
                     display();
                     return;
                 }
-                thread.runOnUI(ISSP, () -> {
+                thread.runOnUI(ISP, () -> {
                     fragment.draw(R.layout.state_offline_text);
                     View reload = fragment.container().findViewById(R.id.offline_reload);
                     if (reload != null) {
@@ -190,7 +190,7 @@ public class IsuScholarshipPaidFragmentPresenterImpl extends ConnectedFragmentWi
                 return;
             }
             if (StringUtils.isBlank(storage.get(activity, Storage.PERMANENT, Storage.USER, "user#isu#access_token", ""))) {
-                thread.runOnUI(ISSP, () -> {
+                thread.runOnUI(ISP, () -> {
                     fragment.draw(R.layout.layout_isu_required);
                     View openIsuAuth = fragment.container().findViewById(R.id.open_isu_auth);
                     if (openIsuAuth != null) {
@@ -223,7 +223,7 @@ public class IsuScholarshipPaidFragmentPresenterImpl extends ConnectedFragmentWi
                 }
                 @Override
                 public void onFailure(int statusCode, Client.Headers headers, int state) {
-                    thread.run(ISSP, () -> {
+                    thread.run(ISP, () -> {
                         log.v(TAG, "load | failure ", state);
                         switch (state) {
                             case IsuPrivateRestClient.FAILED_OFFLINE:
@@ -231,7 +231,7 @@ public class IsuScholarshipPaidFragmentPresenterImpl extends ConnectedFragmentWi
                                     display();
                                     return;
                                 }
-                                thread.runOnUI(ISSP, () -> {
+                                thread.runOnUI(ISP, () -> {
                                     fragment.draw(R.layout.state_offline_text);
                                     View reload = fragment.container().findViewById(R.id.offline_reload);
                                     if (reload != null) {
@@ -245,7 +245,7 @@ public class IsuScholarshipPaidFragmentPresenterImpl extends ConnectedFragmentWi
                             case IsuPrivateRestClient.FAILED_SERVER_ERROR:
                             case IsuPrivateRestClient.FAILED_CORRUPTED_JSON:
                             case IsuPrivateRestClient.FAILED_AUTH_TRY_AGAIN:
-                                thread.runOnUI(ISSP, () -> {
+                                thread.runOnUI(ISP, () -> {
                                     fragment.draw(R.layout.state_failed_button);
                                     TextView message = fragment.container().findViewById(R.id.try_again_message);
                                     if (message != null) {
@@ -272,7 +272,7 @@ public class IsuScholarshipPaidFragmentPresenterImpl extends ConnectedFragmentWi
                                 break;
                             case IsuPrivateRestClient.FAILED_AUTH_CREDENTIALS_REQUIRED:
                             case IsuPrivateRestClient.FAILED_AUTH_CREDENTIALS_FAILED:
-                                thread.runOnUI(ISSP, () -> {
+                                thread.runOnUI(ISP, () -> {
                                     fragment.draw(R.layout.layout_isu_required);
                                     View openIsuAuth = fragment.container().findViewById(R.id.open_isu_auth);
                                     if (openIsuAuth != null) {
@@ -289,7 +289,7 @@ public class IsuScholarshipPaidFragmentPresenterImpl extends ConnectedFragmentWi
                 }
                 @Override
                 public void onProgress(int state) {
-                    thread.runOnUI(ISSP, () -> {
+                    thread.runOnUI(ISP, () -> {
                         log.v(TAG, "load | progress ", state);
                         fragment.draw(R.layout.state_loading_text);
                         TextView message = fragment.container().findViewById(R.id.loading_message);
@@ -314,7 +314,7 @@ public class IsuScholarshipPaidFragmentPresenterImpl extends ConnectedFragmentWi
     }
 
     private void loadFailed() {
-        thread.runOnUI(ISSP, () -> {
+        thread.runOnUI(ISP, () -> {
             log.v(TAG, "loadFailed");
             fragment.draw(R.layout.state_failed_button);
             TextView message = fragment.container().findViewById(R.id.try_again_message);
@@ -329,7 +329,7 @@ public class IsuScholarshipPaidFragmentPresenterImpl extends ConnectedFragmentWi
     }
 
     protected void display() {
-        thread.run(ISSP, () -> {
+        thread.run(ISP, () -> {
             log.v(TAG, "display");
             SSPaidList data = getData();
             if (data == null) {
@@ -338,7 +338,7 @@ public class IsuScholarshipPaidFragmentPresenterImpl extends ConnectedFragmentWi
             }
             ScholarshipPaidRVA adapter = new ScholarshipPaidRVA(activity, data);
             adapter.setClickListener(R.id.scholarship_assigned_container, (v, ssPaid) -> {
-                thread.runOnUI(ISSP, () -> {
+                thread.runOnUI(ISP, () -> {
                     activity.openActivityOrFragment(IsuScholarshipAssignedFragment.class, null);
                 }, throwable -> {
                     notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
@@ -348,16 +348,16 @@ public class IsuScholarshipPaidFragmentPresenterImpl extends ConnectedFragmentWi
                 if (ssPaid == null || ssPaid.getMonth() == 0 || ssPaid.getYear() == 0) {
                     return;
                 }
-                thread.runOnUI(ISSP, () -> {
+                thread.runOnUI(ISP, () -> {
                     Bundle extras = new Bundle();
                     extras.putInt("month", ssPaid.getMonth());
                     extras.putInt("year", ssPaid.getYear());
-                    thread.runOnUI(ISSP, () -> activity.openActivityOrFragment(IsuScholarshipPaidDetailsFragment.class, extras));
+                    thread.runOnUI(ISP, () -> activity.openActivityOrFragment(IsuScholarshipPaidDetailsFragment.class, extras));
                 }, throwable -> {
                     notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
                 });
             });
-            thread.runOnUI(ISSP, () -> {
+            thread.runOnUI(ISP, () -> {
                 onToolbarSetup(fragment.toolbar());
                 fragment.draw(R.layout.layout_rva);
                 // set adapter to recycler view
@@ -386,7 +386,7 @@ public class IsuScholarshipPaidFragmentPresenterImpl extends ConnectedFragmentWi
     }
 
     private void share() {
-        thread.standalone(() -> {
+        thread.run(ISP, () -> {
             SSPaidList data = getData();
             if (data == null || CollectionUtils.isEmpty(data.getList())) {
                 return;
@@ -434,6 +434,6 @@ public class IsuScholarshipPaidFragmentPresenterImpl extends ConnectedFragmentWi
 
     @Override
     protected String getThreadToken() {
-        return ISSP;
+        return ISP;
     }
 }

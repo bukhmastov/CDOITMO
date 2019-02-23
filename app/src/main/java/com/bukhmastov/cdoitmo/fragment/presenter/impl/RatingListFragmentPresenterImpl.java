@@ -387,7 +387,7 @@ public class RatingListFragmentPresenterImpl extends ConnectedFragmentWithDataPr
         }
         share.setVisible(true);
         share.setOnMenuItemClickListener(menuItem -> {
-            thread.standalone(() -> {
+            thread.run(RAL, () -> {
                 eventBus.fire(new ShareTextEvent("Я на %position% позиции в рейтинге %faculty%!"
                         .replace("%position%", String.valueOf(minePosition))
                         .replace("%faculty%", mineFaculty.isEmpty() ? "факультета" : mineFaculty)

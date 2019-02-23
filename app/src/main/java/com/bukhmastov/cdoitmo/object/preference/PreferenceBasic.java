@@ -2,6 +2,8 @@ package com.bukhmastov.cdoitmo.object.preference;
 
 import androidx.annotation.Nullable;
 import androidx.annotation.StringRes;
+
+import android.content.Context;
 import android.view.View;
 import android.widget.TextView;
 
@@ -11,16 +13,16 @@ import com.bukhmastov.cdoitmo.provider.InjectProvider;
 
 public class PreferenceBasic extends Preference {
 
-    private boolean changeSummary;
+    private final boolean changeSummary;
     private final Callback callback;
 
     public interface OnPreferenceClickedCallback {
-        void onSetSummary(final ConnectedActivity activity, final String value);
+        void onSetSummary(ConnectedActivity activity, String value);
     }
 
     public interface Callback {
-        void onPreferenceClicked(final ConnectedActivity activity, final Preference preference, final InjectProvider injectProvider, final OnPreferenceClickedCallback callback);
-        String onGetSummary(final ConnectedActivity activity, final String value);
+        void onPreferenceClicked(ConnectedActivity activity, Preference preference, InjectProvider injectProvider, OnPreferenceClickedCallback callback);
+        String onGetSummary(Context context, String value);
     }
 
     public PreferenceBasic(String key, Object defaultValue, @StringRes int title, @StringRes int summary, boolean changeSummary, Callback callback) {
@@ -35,43 +37,51 @@ public class PreferenceBasic extends Preference {
     }
 
     @Nullable
-    public static View getView(final ConnectedActivity activity, final PreferenceBasic preference, final InjectProvider injectProvider) {
-        final View preference_layout = inflate(activity, R.layout.preference_basic);
-        if (preference_layout == null) {
+    public static View getView(ConnectedActivity activity, PreferenceBasic preference, InjectProvider injectProvider) {
+        View preferenceLayout = inflate(activity, R.layout.preference_basic);
+        if (preferenceLayout == null) {
             return null;
         }
-        final View preference_basic = preference_layout.findViewById(R.id.preference_basic);
-        final TextView preference_basic_title = preference_layout.findViewById(R.id.preference_basic_title);
-        final TextView preference_basic_summary = preference_layout.findViewById(R.id.preference_basic_summary);
-        preference_basic_title.setText(preference.title);
+        View preferenceBasic = preferenceLayout.findViewById(R.id.preference_basic);
+        TextView preferenceBasicTitle = preferenceLayout.findViewById(R.id.preference_basic_title);
+        TextView preferenceBasicSummary = preferenceLayout.findViewById(R.id.preference_basic_summary);
+        preferenceBasicTitle.setText(preference.title);
         if (preference.summary != 0) {
-            preference_basic_summary.setVisibility(View.VISIBLE);
-            preference_basic_summary.setText(preference.summary);
+            preferenceBasicSummary.setVisibility(View.VISIBLE);
+            preferenceBasicSummary.setText(preference.summary);
         } else {
             if (preference.changeSummary) {
-                preference_basic_summary.setVisibility(View.VISIBLE);
-                preference_basic_summary.setText(preference.callback.onGetSummary(activity, injectProvider.getStoragePref().get(activity, preference.key, preference.defaultValue == null ? "" : (String) preference.defaultValue)));
+                String summary = preference.callback.onGetSummary(
+                        activity,
+                        injectProvider.getStoragePref().get(activity, preference.key, preference.defaultValue == null ? "" : (String) preference.defaultValue)
+                );
+                preferenceBasicSummary.setText(summary);
+                preferenceBasicSummary.setVisibility(View.VISIBLE);
             } else {
-                preference_basic_summary.setVisibility(View.GONE);
+                preferenceBasicSummary.setVisibility(View.GONE);
             }
         }
-        preference_basic.setOnClickListener(view -> {
-            if (preference.isDisabled()) return;
-            preference.callback.onPreferenceClicked(activity, preference, injectProvider, (a, v) -> injectProvider.getThread().runOnUI(() -> {
+        preferenceBasic.setOnClickListener(view -> {
+            if (preference.isDisabled()) {
+                return;
+            }
+            preference.callback.onPreferenceClicked(activity, preference, injectProvider, (a, v) -> {
                 if (preference.changeSummary && v != null) {
-                    final String summary = preference.callback.onGetSummary(a, v);
+                    String summary = preference.callback.onGetSummary(a, v);
                     if (summary != null) {
-                        preference_basic_summary.setVisibility(View.VISIBLE);
-                        preference_basic_summary.setText(summary);
-                    } else {
-                        preference_basic_summary.setVisibility(View.GONE);
+                        injectProvider.getThread().runOnUI(() -> {
+                            preferenceBasicSummary.setVisibility(View.VISIBLE);
+                            preferenceBasicSummary.setText(summary);
+                        });
+                        return;
                     }
-                } else {
-                    preference_basic_summary.setVisibility(View.GONE);
                 }
-            }));
+                injectProvider.getThread().runOnUI(() -> {
+                    preferenceBasicSummary.setVisibility(View.GONE);
+                });
+            });
         });
-        preference_basic.setTag(preference.key);
-        return preference_layout;
+        preferenceBasic.setTag(preference.key);
+        return preferenceLayout;
     }
 }

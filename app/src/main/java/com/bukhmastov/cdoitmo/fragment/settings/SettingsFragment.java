@@ -17,7 +17,7 @@ import com.bukhmastov.cdoitmo.util.StoragePref;
 import com.bukhmastov.cdoitmo.util.Theme;
 import com.bukhmastov.cdoitmo.util.Thread;
 
-import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
 import javax.inject.Inject;
@@ -28,9 +28,9 @@ import dagger.Lazy;
 public class SettingsFragment extends SettingsTemplateHeadersFragment {
 
     private static final String TAG = "SettingsFragment";
-    public static final List<PreferenceHeader> preferenceHeaders;
+    private static final List<PreferenceHeader> preferenceHeaders;
     static {
-        preferenceHeaders = new ArrayList<>();
+        preferenceHeaders = new LinkedList<>();
         preferenceHeaders.add(new PreferenceHeader(R.string.general_settings, R.drawable.ic_settings_applications, SettingsGeneralFragment.class));
         preferenceHeaders.add(new PreferenceHeader(R.string.linked_accounts, R.drawable.ic_account_box, LinkedAccountsFragment.class));
         preferenceHeaders.add(new PreferenceHeader(R.string.cache_and_refresh, R.drawable.ic_save, SettingsCacheFragment.class));

@@ -642,9 +642,10 @@ public class LoginActivityPresenterImpl implements LoginActivityPresenter {
                         List<String> groups = StringUtils.isNotBlank(userData.getGroup()) ?
                                 Arrays.asList(userData.getGroup().split(",\\s|\\s|,")) :
                                 null;
-                        String avatar = StringUtils.defaultIfBlank(userData.getAvatar(), null);
+                        // Avatar from de.ifmo not supported (it's buggy)
+                        // String avatar = StringUtils.defaultIfBlank(userData.getAvatar(), null);
                         Integer week = userData.getWeek() < 0 ? null : userData.getWeek();
-                        setupInformationMeta.onDeIfmoReady(name, groups, avatar, week);
+                        setupInformationMeta.onDeIfmoReady(name, groups, null, week);
                     } catch (Throwable throwable) {
                         setupInformationMeta.onDeIfmoFailed();
                     }
@@ -903,43 +904,23 @@ public class LoginActivityPresenterImpl implements LoginActivityPresenter {
                 return;
             }
 
-            String groupOverride = storagePref.get(activity, "pref_group_force_override", "");
-            List<String> groupsOverride = StringUtils.isNotBlank(groupOverride) ?
-                    Arrays.asList(groupOverride.split(",\\s|\\s|,")) :
-                    null;
             String name = StringUtils.nvlt(isuName, deIfmoName, login);
-            List<String> groups = StringUtils.nvlt(groupsOverride, isuGroups, deIfmoGroups);
-            String avatar = StringUtils.nvlt(isuAvatar, deIfmoAvatar);
+            List<String> groups = StringUtils.nvlt(isuGroups, deIfmoGroups, new ArrayList<>());
+            String avatar = StringUtils.nvlt(isuAvatar, deIfmoAvatar, "");
             Integer week = StringUtils.nvlt(isuWeek, deIfmoWeek);
 
-            if (groups == null) {
-                groups = new ArrayList<>();
-            }
-            String groupCurrent = storage.get(activity, Storage.PERMANENT, Storage.USER, "user#group");
-            boolean gFound = false;
-            for (String g1 : groups) {
-                if (Objects.equals(g1, groupCurrent)) {
-                    gFound = true;
-                    break;
-                }
-            }
-            if (!gFound) {
-                groupCurrent = groups.size() > 0 ? groups.get(0) : "";
-            }
+            account.setUserInfo(activity, name, groups, avatar);
 
-            String weekStr = "";
-            try {
-                if (week != null) {
-                    weekStr = new UserWeek(week, time.get().getTimeInMillis()).toJsonString();
+            if (week != null) {
+                try {
+                    String w = new UserWeek(week, time.get().getTimeInMillis()).toJsonString();
+                    storage.put(activity, Storage.PERMANENT, Storage.GLOBAL, "user#week", w);
+                } catch (Exception ignore) {
+                    storage.delete(activity, Storage.PERMANENT, Storage.GLOBAL, "user#week");
                 }
-            } catch (Exception ignore) {}
-
-            storage.put(activity, Storage.PERMANENT, Storage.USER, "user#name", name);
-            storage.put(activity, Storage.PERMANENT, Storage.USER, "user#group", groupCurrent);
-            storage.put(activity, Storage.PERMANENT, Storage.USER, "user#groups", TextUtils.join(", ", groups));
-            storage.put(activity, Storage.PERMANENT, Storage.USER, "user#avatar", avatar);
-            storage.put(activity, Storage.PERMANENT, Storage.GLOBAL, "user#week", weekStr);
-            firebaseAnalyticsProvider.setUserProperties(activity, groupCurrent);
+            } else {
+                storage.delete(activity, Storage.PERMANENT, Storage.GLOBAL, "user#week");
+            }
 
             onDone.run();
         }

@@ -5,7 +5,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.bukhmastov.cdoitmo.function.Callable;
-import com.bukhmastov.cdoitmo.network.DeIfmoRestClient;
 
 public interface ProtocolTracker {
 
@@ -29,5 +28,5 @@ public interface ProtocolTracker {
 
     ProtocolTracker reset(@NonNull Context context, @Nullable Callable callback);
 
-    void setup(@NonNull Context context, @NonNull DeIfmoRestClient deIfmoRestClient);
+    void setup(@NonNull Context context);
 }

@@ -322,7 +322,7 @@ public class TimeRemainingWidgetActivityPresenterImpl implements TimeRemainingWi
                     new BottomSheetDialog.Entry(data.current != null ? activity.getString(R.string.current_lesson) : null, "current"),
                     new BottomSheetDialog.Entry(data.next != null ? activity.getString(R.string.next_lesson) : null, "next"),
                     new BottomSheetDialog.Entry(data.day != null ? activity.getString(R.string.lessons_day_end) : null, "day")
-            ).setListener(tag -> thread.standalone(() -> {
+            ).setListener(tag -> thread.run(WTR, () -> {
                 switch (tag) {
                     case "current":
                         eventBus.fire(new ShareTextEvent(activity.getString(R.string.time_remaining_widget_share_2) + " " + time2readable(data.current), "txt_widget_remaining_time"));

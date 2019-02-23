@@ -83,11 +83,13 @@ public abstract class SettingsSchedule<T extends ScheduleJsonEntity> extends Set
                         teacherPickerAdapter.clear();
                         searchTextView.dismissDropDown();
                     });
-                    thread.standalone(() -> {
-                        if (requestHandle != null) {
-                            requestHandle.cancel();
-                        }
-                    });
+                    if (requestHandle != null) {
+                        thread.standalone(() -> {
+                            if (requestHandle != null) {
+                                requestHandle.cancel();
+                            }
+                        });
+                    }
                 }
             });
             searchAction.setOnClickListener(view -> thread.standalone(() -> {

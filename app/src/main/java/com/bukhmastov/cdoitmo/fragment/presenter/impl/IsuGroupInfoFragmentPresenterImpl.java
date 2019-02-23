@@ -51,7 +51,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
-import static com.bukhmastov.cdoitmo.util.Thread.IGR;
+import static com.bukhmastov.cdoitmo.util.Thread.IG;
 
 public class IsuGroupInfoFragmentPresenterImpl extends ConnectedFragmentWithDataPresenterImpl<GList>
         implements IsuGroupInfoFragmentPresenter, SwipeRefreshLayout.OnRefreshListener {
@@ -97,16 +97,16 @@ public class IsuGroupInfoFragmentPresenterImpl extends ConnectedFragmentWithData
                 return;
             }
             MenuItem share = menu.findItem(R.id.action_share);
-            thread.run(IGR, () -> {
+            thread.run(IG, () -> {
                 if (share == null) {
                     return;
                 }
                 GList data = getData();
                 if (data == null || CollectionUtils.isEmpty(data.getList())) {
-                    thread.runOnUI(IGR, () -> share.setVisible(false));
+                    thread.runOnUI(IG, () -> share.setVisible(false));
                     return;
                 }
-                thread.runOnUI(IGR, () -> {
+                thread.runOnUI(IG, () -> {
                     share.setVisible(true);
                     share.setOnMenuItemClickListener(menuItem -> {
                         View view = activity.findViewById(R.id.action_share);
@@ -127,14 +127,14 @@ public class IsuGroupInfoFragmentPresenterImpl extends ConnectedFragmentWithData
 
     @Override
     public void onRefresh() {
-        thread.run(IGR, () -> {
+        thread.run(IG, () -> {
             log.v(TAG, "refreshing");
             load(true);
         });
     }
 
     protected void load() {
-        thread.run(IGR, () -> {
+        thread.run(IG, () -> {
             load(storagePref.get(activity, "pref_use_cache", true) ?
                     Integer.parseInt(storagePref.get(activity, "pref_static_refresh", "168"))
                     : 0);
@@ -142,7 +142,7 @@ public class IsuGroupInfoFragmentPresenterImpl extends ConnectedFragmentWithData
     }
 
     private void load(int refresh_rate) {
-        thread.run(IGR, () -> {
+        thread.run(IG, () -> {
             log.v(TAG, "load | refresh_rate=", refresh_rate);
             if (!storagePref.get(activity, "pref_use_cache", true)) {
                 load(false);
@@ -163,11 +163,11 @@ public class IsuGroupInfoFragmentPresenterImpl extends ConnectedFragmentWithData
     }
 
     private void load(boolean force) {
-        thread.run(IGR, () -> load(force, null));
+        thread.run(IG, () -> load(force, null));
     }
 
     private void load(boolean force, GList cached) {
-        thread.run(IGR, () -> {
+        thread.run(IG, () -> {
             log.v(TAG, "load | force=", force);
             if ((!force || !Client.isOnline(activity)) && storagePref.get(activity, "pref_use_cache", true)) {
                 try {
@@ -187,7 +187,7 @@ public class IsuGroupInfoFragmentPresenterImpl extends ConnectedFragmentWithData
                     display();
                     return;
                 }
-                thread.runOnUI(IGR, () -> {
+                thread.runOnUI(IG, () -> {
                     fragment.draw(R.layout.state_offline_text);
                     View reload = fragment.container().findViewById(R.id.offline_reload);
                     if (reload != null) {
@@ -197,7 +197,7 @@ public class IsuGroupInfoFragmentPresenterImpl extends ConnectedFragmentWithData
                 return;
             }
             if (StringUtils.isBlank(storage.get(activity, Storage.PERMANENT, Storage.USER, "user#isu#access_token", ""))) {
-                thread.runOnUI(IGR, () -> {
+                thread.runOnUI(IG, () -> {
                     fragment.draw(R.layout.layout_isu_required);
                     View openIsuAuth = fragment.container().findViewById(R.id.open_isu_auth);
                     if (openIsuAuth != null) {
@@ -228,7 +228,7 @@ public class IsuGroupInfoFragmentPresenterImpl extends ConnectedFragmentWithData
                 }
                 @Override
                 public void onFailure(int statusCode, Client.Headers headers, int state) {
-                    thread.run(IGR, () -> {
+                    thread.run(IG, () -> {
                         log.v(TAG, "load | failure ", state);
                         switch (state) {
                             case IsuPrivateRestClient.FAILED_OFFLINE:
@@ -236,7 +236,7 @@ public class IsuGroupInfoFragmentPresenterImpl extends ConnectedFragmentWithData
                                     display();
                                     return;
                                 }
-                                thread.runOnUI(IGR, () -> {
+                                thread.runOnUI(IG, () -> {
                                     fragment.draw(R.layout.state_offline_text);
                                     View reload = fragment.container().findViewById(R.id.offline_reload);
                                     if (reload != null) {
@@ -250,7 +250,7 @@ public class IsuGroupInfoFragmentPresenterImpl extends ConnectedFragmentWithData
                             case IsuPrivateRestClient.FAILED_SERVER_ERROR:
                             case IsuPrivateRestClient.FAILED_CORRUPTED_JSON:
                             case IsuPrivateRestClient.FAILED_AUTH_TRY_AGAIN:
-                                thread.runOnUI(IGR, () -> {
+                                thread.runOnUI(IG, () -> {
                                     fragment.draw(R.layout.state_failed_button);
                                     TextView message = fragment.container().findViewById(R.id.try_again_message);
                                     if (message != null) {
@@ -277,7 +277,7 @@ public class IsuGroupInfoFragmentPresenterImpl extends ConnectedFragmentWithData
                                 break;
                             case IsuPrivateRestClient.FAILED_AUTH_CREDENTIALS_REQUIRED:
                             case IsuPrivateRestClient.FAILED_AUTH_CREDENTIALS_FAILED:
-                                thread.runOnUI(IGR, () -> {
+                                thread.runOnUI(IG, () -> {
                                     fragment.draw(R.layout.layout_isu_required);
                                     View openIsuAuth = fragment.container().findViewById(R.id.open_isu_auth);
                                     if (openIsuAuth != null) {
@@ -294,7 +294,7 @@ public class IsuGroupInfoFragmentPresenterImpl extends ConnectedFragmentWithData
                 }
                 @Override
                 public void onProgress(int state) {
-                    thread.runOnUI(IGR, () -> {
+                    thread.runOnUI(IG, () -> {
                         log.v(TAG, "load | progress ", state);
                         fragment.draw(R.layout.state_loading_text);
                         TextView message = fragment.container().findViewById(R.id.loading_message);
@@ -319,7 +319,7 @@ public class IsuGroupInfoFragmentPresenterImpl extends ConnectedFragmentWithData
     }
 
     private void loadFailed() {
-        thread.runOnUI(IGR, () -> {
+        thread.runOnUI(IG, () -> {
             log.v(TAG, "loadFailed");
             fragment.draw(R.layout.state_failed_button);
             TextView message = fragment.container().findViewById(R.id.try_again_message);
@@ -334,7 +334,7 @@ public class IsuGroupInfoFragmentPresenterImpl extends ConnectedFragmentWithData
     }
 
     protected void display() {
-        thread.run(IGR, () -> {
+        thread.run(IG, () -> {
             log.v(TAG, "display");
             GList data = getData();
             if (data == null) {
@@ -353,7 +353,7 @@ public class IsuGroupInfoFragmentPresenterImpl extends ConnectedFragmentWithData
                     notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
                 });
             });
-            thread.runOnUI(IGR, () -> {
+            thread.runOnUI(IG, () -> {
                 onToolbarSetup(fragment.toolbar());
                 fragment.draw(R.layout.layout_rva);
                 // set adapter to recycler view
@@ -382,7 +382,7 @@ public class IsuGroupInfoFragmentPresenterImpl extends ConnectedFragmentWithData
     }
 
     private void share(View view) {
-        thread.run(IGR, () -> {
+        thread.run(IG, () -> {
             GList data = getData();
             if (data == null || CollectionUtils.isEmpty(data.getList())) {
                 return;
@@ -398,7 +398,7 @@ public class IsuGroupInfoFragmentPresenterImpl extends ConnectedFragmentWithData
                 }
                 groups.get(group).add(gGroup);
             }
-            thread.runOnUI(IGR, () -> {
+            thread.runOnUI(IG, () -> {
                 SparseArray<Map<String, List<GGroup>>> menuGroupsMap = new SparseArray<>();
                 PopupMenu popup = new PopupMenu(activity, view);
                 popup.inflate(R.menu.group_share);
@@ -417,7 +417,7 @@ public class IsuGroupInfoFragmentPresenterImpl extends ConnectedFragmentWithData
                     }
                 }
                 popup.setOnMenuItemClickListener(menuItem -> {
-                    thread.run(IGR, () -> {
+                    thread.run(IG, () -> {
                         switch (menuItem.getItemId()) {
                             case R.id.share_all_groups: share(groups); break;
                             default:
@@ -446,7 +446,7 @@ public class IsuGroupInfoFragmentPresenterImpl extends ConnectedFragmentWithData
     }
 
     private void share(Map<String, List<GGroup>> groups) {
-        thread.standalone(() -> {
+        thread.run(IG, () -> {
             if (groups == null) {
                 return;
             }
@@ -494,6 +494,6 @@ public class IsuGroupInfoFragmentPresenterImpl extends ConnectedFragmentWithData
 
     @Override
     protected String getThreadToken() {
-        return IGR;
+        return IG;
     }
 }

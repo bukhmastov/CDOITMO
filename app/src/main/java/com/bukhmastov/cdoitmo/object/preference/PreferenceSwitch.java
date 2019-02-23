@@ -14,6 +14,8 @@ import com.bukhmastov.cdoitmo.provider.InjectProvider;
 import com.bukhmastov.cdoitmo.util.Log;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
 
 import javax.inject.Inject;
 
@@ -27,13 +29,13 @@ public class PreferenceSwitch extends Preference {
     }
 
     private Callback callback;
-    private ArrayList<String> dependencies = new ArrayList<>();
+    private List<String> dependencies = new LinkedList<>();
     public boolean enabled = false;
 
     @Inject
     Log log;
 
-    public PreferenceSwitch(String key, Object defaultValue, @StringRes int title, @StringRes int summary, ArrayList<String> dependencies, Callback callback) {
+    public PreferenceSwitch(String key, Object defaultValue, @StringRes int title, @StringRes int summary, List<String> dependencies, Callback callback) {
         super(key, defaultValue, title, summary);
         AppComponentProvider.getComponent().inject(this);
         this.callback = callback;
@@ -44,7 +46,7 @@ public class PreferenceSwitch extends Preference {
             log.w(TAG, "PreferenceSwitch | defaultValue should not be null!");
         }
     }
-    public PreferenceSwitch(String key, Object defaultValue, @StringRes int title, ArrayList<String> dependencies, Callback callback) {
+    public PreferenceSwitch(String key, Object defaultValue, @StringRes int title, List<String> dependencies, Callback callback) {
         super(key, defaultValue, title);
         AppComponentProvider.getComponent().inject(this);
         this.callback = callback;
@@ -56,11 +58,11 @@ public class PreferenceSwitch extends Preference {
         }
     }
 
-    public ArrayList<String> getDependencies() {
+    public List<String> getDependencies() {
         return dependencies;
     }
 
-    public static void toggleDependencies(final ConnectedActivity activity, final PreferenceSwitch preference, final boolean enabled) {
+    public static void toggleDependencies(ConnectedActivity activity, PreferenceSwitch preference, boolean enabled) {
         if (preference.dependencies != null && preference.dependencies.size() > 0) {
             View content = activity.findViewById(android.R.id.content);
             if (content != null) {
@@ -75,27 +77,27 @@ public class PreferenceSwitch extends Preference {
     }
 
     @Nullable
-    public static View getView(final ConnectedActivity activity, final PreferenceSwitch preference, final InjectProvider injectProvider) {
-        final View preference_layout = inflate(activity, R.layout.preference_switcher);
-        if (preference_layout == null) {
+    public static View getView(ConnectedActivity activity, PreferenceSwitch preference, InjectProvider injectProvider) {
+        View preferenceLayout = inflate(activity, R.layout.preference_switcher);
+        if (preferenceLayout == null) {
             return null;
         }
-        final ViewGroup preference_switcher = preference_layout.findViewById(R.id.preference_switcher);
-        final Switch preference_switcher_switch = preference_layout.findViewById(R.id.preference_switcher_switch);
-        final TextView preference_switcher_title = preference_layout.findViewById(R.id.preference_switcher_title);
-        final TextView preference_switcher_summary = preference_layout.findViewById(R.id.preference_switcher_summary);
-        preference_switcher_title.setText(preference.title);
+        ViewGroup preferenceSwitcher = preferenceLayout.findViewById(R.id.preference_switcher);
+        Switch preferenceSwitcherSwitch = preferenceLayout.findViewById(R.id.preference_switcher_switch);
+        TextView preferenceSwitcherTitle = preferenceLayout.findViewById(R.id.preference_switcher_title);
+         TextView preferenceSwitcherSummary = preferenceLayout.findViewById(R.id.preference_switcher_summary);
+        preferenceSwitcherTitle.setText(preference.title);
         if (preference.summary != 0) {
-            preference_switcher_summary.setVisibility(View.VISIBLE);
-            preference_switcher_summary.setText(preference.summary);
+            preferenceSwitcherSummary.setVisibility(View.VISIBLE);
+            preferenceSwitcherSummary.setText(preference.summary);
         } else {
-            preference_switcher_summary.setVisibility(View.GONE);
+            preferenceSwitcherSummary.setVisibility(View.GONE);
         }
         if (preference.defaultValue != null) {
             preference.enabled = injectProvider.getStoragePref().get(activity, preference.key, (Boolean) preference.defaultValue);
-            preference_switcher_switch.setChecked(preference.enabled);
+            preferenceSwitcherSwitch.setChecked(preference.enabled);
         }
-        preference_switcher_switch.setOnCheckedChangeListener((buttonView, isChecked) -> {
+        preferenceSwitcherSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
             if (preference.isDisabled()) {
                 buttonView.setChecked(!isChecked);
                 return;
@@ -113,16 +115,18 @@ public class PreferenceSwitch extends Preference {
                         preference1.onPreferenceChanged(activity1);
                         toggleDependencies(activity1, preference1, isChecked);
                     } else {
-                        preference_switcher_switch.setChecked(!isChecked);
+                        preferenceSwitcherSwitch.setChecked(!isChecked);
                     }
                 });
             }
         });
-        preference_switcher.setOnClickListener(v -> {
-            if (preference.isDisabled()) return;
-            preference_switcher_switch.setChecked(!preference_switcher_switch.isChecked());
+        preferenceSwitcher.setOnClickListener(v -> {
+            if (preference.isDisabled()) {
+                return;
+            }
+            preferenceSwitcherSwitch.setChecked(!preferenceSwitcherSwitch.isChecked());
         });
-        preference_switcher.setTag(preference.key);
-        return preference_layout;
+        preferenceSwitcher.setTag(preference.key);
+        return preferenceLayout;
     }
 }

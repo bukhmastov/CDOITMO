@@ -280,7 +280,7 @@ public class DaysRemainingWidgetActivityPresenterImpl implements DaysRemainingWi
     }
 
     private void share() {
-        thread.standalone(() -> {
+        thread.run(WDR, () -> {
             if (data == null) {
                 notificationMessage.snackBar(activity, activity.getString(R.string.share_unable));
                 return;
