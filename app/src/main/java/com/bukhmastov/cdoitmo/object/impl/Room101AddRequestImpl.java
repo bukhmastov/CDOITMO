@@ -223,11 +223,7 @@ public class Room101AddRequestImpl implements Room101AddRequest {
                     }
                     @Override
                     public void onFailure(int code, Client.Headers headers, int state) {
-                        if (state == Room101Client.FAILED_SERVER_ERROR) {
-                            failed(Room101Client.getFailureMessage(activity, code));
-                        } else {
-                            failed();
-                        }
+                        failed(room101Client.getFailedMessage(activity, code, state));
                     }
                     @Override
                     public void onProgress(int state) {}
@@ -267,11 +263,7 @@ public class Room101AddRequestImpl implements Room101AddRequest {
                     }
                     @Override
                     public void onFailure(int code, Client.Headers headers, int state) {
-                        if (state == Room101Client.FAILED_SERVER_ERROR) {
-                            failed(Room101Client.getFailureMessage(activity, code));
-                        } else {
-                            failed();
-                        }
+                        failed(room101Client.getFailedMessage(activity, code, state));
                     }
                     @Override
                     public void onProgress(int state) {}
@@ -321,11 +313,7 @@ public class Room101AddRequestImpl implements Room101AddRequest {
                 }
                 @Override
                 public void onFailure(int code, Client.Headers headers, int state) {
-                    if (state == Room101Client.FAILED_SERVER_ERROR) {
-                        failed(Room101Client.getFailureMessage(activity, code));
-                    } else {
-                        failed();
-                    }
+                    failed(room101Client.getFailedMessage(activity, code, state));
                 }
                 @Override
                 public void onProgress(int state) {}
@@ -372,11 +360,7 @@ public class Room101AddRequestImpl implements Room101AddRequest {
                 }
                 @Override
                 public void onFailure(int code, Client.Headers headers, int state) {
-                    if (state == Room101Client.FAILED_SERVER_ERROR) {
-                        failed(Room101Client.getFailureMessage(activity, code));
-                    } else {
-                        failed();
-                    }
+                    failed(room101Client.getFailedMessage(activity, code, state));
                 }
                 @Override
                 public void onProgress(int state) {}
@@ -425,7 +409,8 @@ public class Room101AddRequestImpl implements Room101AddRequest {
                 public void onFailure(int code, Client.Headers headers, int state) {
                     data = new Room101Request();
                     data.setDone(false);
-                    data.setMessage(state == Room101Client.FAILED_SERVER_ERROR ? Room101Client.getFailureMessage(activity, code) : activity.getString(R.string.request_denied));
+                    data.setMessage(activity.getString(R.string.request_denied) + "\n" +
+                            room101Client.getFailedMessage(activity, code, state));
                     currentStage++;
                     proceedStage();
                 }

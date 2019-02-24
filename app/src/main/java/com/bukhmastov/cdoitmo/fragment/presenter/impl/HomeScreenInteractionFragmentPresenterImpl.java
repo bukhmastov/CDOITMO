@@ -764,18 +764,18 @@ public class HomeScreenInteractionFragmentPresenterImpl extends ConnectedFragmen
                         onSuccess.accept(schedule);
                     }
                     @Override
-                    public void onFailure(int statusCode, Client.Headers headers, int state) {
+                    public void onFailure(int code, Client.Headers headers, int state) {
                         thread.runOnUI(AHS, () -> {
                             log.v(TAG, "getSchedule | search action | onFailure | state=", state);
                             searchLoading.setVisibility(View.GONE);
                             searchAction.setVisibility(View.VISIBLE);
-                            notificationMessage.toast(activity, state == Client.FAILED_SERVER_ERROR ? Client.getFailureMessage(activity, statusCode) : activity.getString(R.string.schedule_not_found));
+                            notificationMessage.toast(activity, scheduleLessons.getFailedMessage(code, state));
                         });
                     }
                     @Override
-                    public void onProgress(final int state) {
+                    public void onProgress(int state) {
                         thread.runOnUI(AHS, () -> {
-                            log.v(TAG, "getSchedule | search action | onProgress | state=" + state);
+                            log.v(TAG, "getSchedule | search action | onProgress | state=", state);
                             searchLoading.setVisibility(View.VISIBLE);
                             searchAction.setVisibility(View.GONE);
                         });

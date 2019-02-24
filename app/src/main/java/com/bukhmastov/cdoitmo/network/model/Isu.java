@@ -2,8 +2,9 @@ package com.bukhmastov.cdoitmo.network.model;
 
 import android.content.Context;
 
-import com.bukhmastov.cdoitmo.network.handlers.RawHandler;
-import com.bukhmastov.cdoitmo.network.handlers.RawJsonHandler;
+import com.bukhmastov.cdoitmo.model.JsonEntity;
+import com.bukhmastov.cdoitmo.network.handlers.ResponseHandler;
+import com.bukhmastov.cdoitmo.network.handlers.RestResponseHandler;
 import com.bukhmastov.cdoitmo.util.Storage;
 import com.bukhmastov.cdoitmo.util.singleton.PropertiesUtils;
 
@@ -16,13 +17,6 @@ import androidx.annotation.Nullable;
 
 public abstract class Isu extends Client {
 
-    public static final int STATE_CHECKING = 10;
-    public static final int STATE_AUTHORIZATION = 11;
-    public static final int STATE_AUTHORIZED = 12;
-    public static final int FAILED_AUTH_TRY_AGAIN = 10;
-    public static final int FAILED_AUTH_CREDENTIALS_REQUIRED = 11;
-    public static final int FAILED_AUTH_CREDENTIALS_FAILED = 12;
-
     public Isu() {
         super();
     }
@@ -33,33 +27,41 @@ public abstract class Isu extends Client {
      * @param url to be requested, cannot be null
      * @param query of request
      * @param params of request
-     * @param rawHandler of request, cannot be null
-     * @see RawHandler
+     * @param handler of request, cannot be null
+     * @see ResponseHandler
      */
     protected void doPost(@NonNull Context context, @NonNull String url, @Nullable Map<String, String> query,
-                          @Nullable Map<String, String> params, @NonNull RawHandler rawHandler) {
+                          @Nullable Map<String, String> params, @NonNull ResponseHandler handler) {
         try {
-            doPost(url, getHeaders(context), query, params, rawHandler);
-        } catch (Throwable throwable) {
-            rawHandler.onError(STATUS_CODE_EMPTY, null, throwable);
+            doPost(url, getHeaders(context), query, params, handler);
+        } catch (Exception exception) {
+            handler.onFailure(STATUS_CODE_EMPTY, null, getFailedStatus(exception));
         }
     }
 
     /**
-     * Performs GET request and parse result as json
+     * Performs GET request and parse result as {@link JsonEntity}
      * @param context context, cannot be null
      * @param url to be requested, cannot be null
      * @param query of request
-     * @param rawJsonHandler of request, cannot be null
-     * @see RawJsonHandler
+     * @param restHandler of request, cannot be null
+     * @see RestResponseHandler
      */
-    protected void gJson(@NonNull Context context, @NonNull String url,
-                         @Nullable Map<String, String> query, @NonNull RawJsonHandler rawJsonHandler) {
+    protected <T extends JsonEntity> void doGetJson(@NonNull Context context, @NonNull String url,
+                        @Nullable Map<String, String> query, @NonNull RestResponseHandler<T> restHandler) {
         try {
-            doGetJson(getUrl(context, url), getHeaders(context), query, rawJsonHandler);
-        } catch (Throwable throwable) {
-            rawJsonHandler.onError(STATUS_CODE_EMPTY, null, throwable);
+            doGetJson(getUrl(context, url), getHeaders(context), query, restHandler);
+        } catch (Exception exception) {
+            restHandler.onFailure(STATUS_CODE_EMPTY, null, getFailedStatus(exception));
         }
+    }
+
+    @Override
+    protected Integer getFailedState(@NonNull Context context, int code) {
+        if (code == 401) {
+            return FAILED_AUTH_REQUIRED;
+        }
+        return super.getFailedState(context, code);
     }
 
     @NonNull

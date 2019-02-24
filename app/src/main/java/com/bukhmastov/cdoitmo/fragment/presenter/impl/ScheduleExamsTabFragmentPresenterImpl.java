@@ -59,10 +59,9 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import static com.bukhmastov.cdoitmo.util.Thread.SE;
 
-public class ScheduleExamsTabFragmentPresenterImpl implements ScheduleExamsTabFragmentPresenter {
+public class ScheduleExamsTabFragmentPresenterImpl implements Schedule.Handler<SExams>, ScheduleExamsTabFragmentPresenter {
 
     private static final String TAG = "SETabFragment";
-    private final Schedule.Handler<SExams> scheduleHandler;
     private ConnectedActivity activity = null;
     private SExams schedule = null;
     private boolean loaded = false;
@@ -95,181 +94,6 @@ public class ScheduleExamsTabFragmentPresenterImpl implements ScheduleExamsTabFr
 
     public ScheduleExamsTabFragmentPresenterImpl() {
         AppComponentProvider.getComponent().inject(this);
-        scheduleHandler = new Schedule.Handler<SExams>() {
-            @Override
-            public void onSuccess(SExams schedule, boolean fromCache) {
-                thread.run(SE, () -> {
-                    ScheduleExamsTabFragmentPresenterImpl.this.schedule = schedule;
-                    if ("teachers".equals(schedule.getType()) && schedule.getTeachers() != null &&
-                        CollectionUtils.isNotEmpty(schedule.getTeachers().getTeachers()) &&
-                        schedule.getTeachers().getTeachers().size() == 1
-                    ) {
-                        tabHostPresenter.setQuery(schedule.getTeachers().getTeachers().get(0).getPersonId());
-                        tabHostPresenter.invalidate(false);
-                        return;
-                    }
-                    // fetch only right exams
-                    ArrayList<SSubject> subjects = new ArrayList<>();
-                    for (SSubject subject : CollectionUtils.emptyIfNull(schedule.getSchedule())) {
-                        if (ScheduleExamsTabFragmentPresenterImpl.this.type == 0 && "exam".equals(StringUtils.defaultIfBlank(subject.getType(), "exam")) ||
-                            ScheduleExamsTabFragmentPresenterImpl.this.type == 1 && "credit".equals(StringUtils.defaultIfBlank(subject.getType(), "exam"))
-                        ) {
-                            subjects.add(subject);
-                        }
-                    }
-                    // get rva adapter
-                    ScheduleExamsRVA adapter = new ScheduleExamsRVA(schedule, subjects, type);
-                    adapter.setClickListener(R.id.schedule_lessons_menu, ScheduleExamsTabFragmentPresenterImpl.this::examsMenuMore);
-                    adapter.setClickListener(R.id.schedule_lessons_share, ScheduleExamsTabFragmentPresenterImpl.this::examsMenuShare);
-                    adapter.setClickListener(R.id.exam_touch_icon, ScheduleExamsTabFragmentPresenterImpl.this::subjectMenu);
-                    adapter.setClickListener(R.id.teacher_picker_item, ScheduleExamsTabFragmentPresenterImpl.this::teacherSelected);
-                    thread.runOnUI(SE, () -> {
-                        draw(activity, R.layout.layout_schedule_both_recycle_list);
-                        // prepare
-                        SwipeRefreshLayout swipe = container.findViewById(R.id.schedule_swipe);
-                        RecyclerView recyclerView = container.findViewById(R.id.schedule_list);
-                        if (swipe == null || recyclerView == null) {
-                            return;
-                        }
-                        LinearLayoutManager layoutManager = new LinearLayoutManager(activity, RecyclerView.VERTICAL, false);
-                        // swipe
-                        swipe.setColorSchemeColors(Color.resolve(activity, R.attr.colorAccent));
-                        swipe.setProgressBackgroundColorSchemeColor(Color.resolve(activity, R.attr.colorBackgroundRefresh));
-                        swipe.setOnRefreshListener(() -> {
-                            swipe.setRefreshing(false);
-                            tabHostPresenter.invalidate(true);
-                        });
-                        // recycle view (list)
-                        recyclerView.setLayoutManager(layoutManager);
-                        recyclerView.setAdapter(adapter);
-                        recyclerView.setHasFixedSize(true);
-                        // scroll to prev position listener (only android 23+)
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                            recyclerView.setOnScrollChangeListener((view, scrollX, scrollY, oldScrollX, oldScrollY) -> {
-                                int position = layoutManager.findFirstVisibleItemPosition();
-                                View v = recyclerView.getChildAt(0);
-                                int offset = (v == null) ? 0 : (v.getTop() - recyclerView.getPaddingTop());
-                                ScheduleExamsTabHostFragmentPresenter.Scroll scroll = tabHostPresenter.scroll().get(type, null);
-                                if (scroll == null) {
-                                    scroll = new ScheduleExamsTabHostFragmentPresenter.Scroll();
-                                }
-                                scroll.position = position;
-                                scroll.offset = offset;
-                                tabHostPresenter.scroll().put(type, scroll);
-                            });
-                        }
-                        // scroll to previous position
-                        ScheduleExamsTabHostFragmentPresenter.Scroll scroll = tabHostPresenter.scroll().get(type, null);
-                        if (scroll != null) {
-                            layoutManager.scrollToPositionWithOffset(scroll.position, scroll.offset);
-                        }
-                    }, throwable -> {
-                        log.exception(throwable);
-                        failed(activity);
-                    });
-                }, throwable -> {
-                    log.exception(throwable);
-                    failed(activity);
-                });
-            }
-            @Override
-            public void onFailure(int code, Client.Headers headers, int state) {
-                thread.runOnUI(SE, () -> {
-                    ScheduleExamsTabFragmentPresenterImpl.this.schedule = null;
-                    log.v(TAG, "onFailure | code=", code, " | state=", state);
-                    switch (state) {
-                        case Client.FAILED_OFFLINE:
-                        case Schedule.FAILED_OFFLINE: {
-                            final ViewGroup view = (ViewGroup) inflate(activity, R.layout.state_offline_text);
-                            if (view != null) {
-                                view.findViewById(R.id.offline_reload).setOnClickListener(v -> load(false));
-                                draw(view);
-                            }
-                            break;
-                        }
-                        case Client.FAILED_TRY_AGAIN:
-                        case Client.FAILED_SERVER_ERROR:
-                        case Client.FAILED_CORRUPTED_JSON:
-                        case Schedule.FAILED_LOAD: {
-                            final ViewGroup view = (ViewGroup) inflate(activity, R.layout.state_failed_button);
-                            if (view != null) {
-                                switch (state) {
-                                    case Client.FAILED_SERVER_ERROR:
-                                        ((TextView) view.findViewById(R.id.try_again_message)).setText(Client.getFailureMessage(activity, code));
-                                        break;
-                                    case Client.FAILED_CORRUPTED_JSON:
-                                        ((TextView) view.findViewById(R.id.try_again_message)).setText(R.string.server_provided_corrupted_json);
-                                        break;
-                                }
-                                view.findViewById(R.id.try_again_reload).setOnClickListener(v -> load(false));
-                                draw(view);
-                            }
-                            break;
-                        }
-                        case Schedule.FAILED_EMPTY_QUERY: {
-                            final ViewGroup view = (ViewGroup) inflate(activity, R.layout.layout_schedule_empty_query);
-                            if (view != null) {
-                                view.findViewById(R.id.open_search).setOnClickListener(v -> eventBus.fire(new OpenActivityEvent(ScheduleExamsSearchActivity.class)));
-                                view.findViewById(R.id.open_settings).setOnClickListener(v -> activity.openActivity(ConnectedActivity.TYPE.STACKABLE, SettingsScheduleExamsFragment.class, null));
-                                draw(view);
-                            }
-                            break;
-                        }
-                        case Schedule.FAILED_NOT_FOUND: {
-                            final ViewGroup view = (ViewGroup) inflate(activity, R.layout.state_nothing_to_display_compact);
-                            if (view != null) {
-                                ((TextView) view.findViewById(R.id.ntd_text)).setText(R.string.no_schedule);
-                                draw(view);
-                            }
-                            break;
-                        }
-                        case Schedule.FAILED_INVALID_QUERY: {
-                            final ViewGroup view = (ViewGroup) inflate(activity, R.layout.state_failed_text);
-                            if (view != null) {
-                                ((TextView) view.findViewById(R.id.text)).setText(R.string.incorrect_query);
-                                draw(view);
-                            }
-                            break;
-                        }
-                        case Schedule.FAILED_PERSONAL_NEED_ISU: {
-                            final ViewGroup view = (ViewGroup) inflate(activity, R.layout.layout_schedule_isu_required);
-                            if (view != null) {
-                                view.findViewById(R.id.open_isu_auth).setOnClickListener(v -> activity.openActivity(ConnectedActivity.TYPE.STACKABLE, LinkedAccountsFragment.class, null));
-                                view.findViewById(R.id.open_search).setOnClickListener(v -> eventBus.fire(new OpenActivityEvent(ScheduleExamsSearchActivity.class)));
-                                view.findViewById(R.id.open_settings).setOnClickListener(v -> activity.openActivity(ConnectedActivity.TYPE.STACKABLE, SettingsScheduleExamsFragment.class, null));
-                                draw(view);
-                            }
-                            break;
-                        }
-                    }
-                }, throwable -> {
-                    log.exception(throwable);
-                });
-            }
-            @Override
-            public void onProgress(int state) {
-                thread.runOnUI(SE, () -> {
-                    log.v(TAG, "onProgress | state=", state);
-                    final ViewGroup view = (ViewGroup) inflate(activity, R.layout.state_loading_text);
-                    if (view != null) {
-                        ((TextView) view.findViewById(R.id.loading_message)).setText(R.string.loading);
-                        draw(view);
-                    }
-                }, throwable -> {
-                    log.exception(throwable);
-                });
-            }
-            @Override
-            public void onNewRequest(Client.Request request) {
-                requestHandle = request;
-            }
-            @Override
-            public void onCancelRequest() {
-                if (requestHandle != null) {
-                    requestHandle.cancel();
-                }
-            }
-        };
     }
 
     @Override
@@ -364,9 +188,9 @@ public class ScheduleExamsTabFragmentPresenterImpl implements ScheduleExamsTabFr
                     tabHostPresenter.scroll().clear();
                 }
                 if (refresh) {
-                    scheduleExams.search(tabHostPresenter.getQuery(), 0, scheduleHandler);
+                    scheduleExams.search(tabHostPresenter.getQuery(), 0, this);
                 } else {
-                    scheduleExams.search(tabHostPresenter.getQuery(), scheduleHandler);
+                    scheduleExams.search(tabHostPresenter.getQuery(), this);
                 }
             }, throwable -> {
                 log.exception(throwable);
@@ -391,6 +215,169 @@ public class ScheduleExamsTabFragmentPresenterImpl implements ScheduleExamsTabFr
             }
         } catch (Exception e) {
             log.exception(e);
+        }
+    }
+
+    @Override
+    public void onSuccess(SExams schedule, boolean fromCache) {
+        thread.run(SE, () -> {
+            ScheduleExamsTabFragmentPresenterImpl.this.schedule = schedule;
+            if ("teachers".equals(schedule.getType()) && schedule.getTeachers() != null &&
+                    CollectionUtils.isNotEmpty(schedule.getTeachers().getTeachers()) &&
+                    schedule.getTeachers().getTeachers().size() == 1
+            ) {
+                tabHostPresenter.setQuery(schedule.getTeachers().getTeachers().get(0).getPersonId());
+                tabHostPresenter.invalidate(false);
+                return;
+            }
+            // fetch only right exams
+            ArrayList<SSubject> subjects = new ArrayList<>();
+            for (SSubject subject : CollectionUtils.emptyIfNull(schedule.getSchedule())) {
+                if (ScheduleExamsTabFragmentPresenterImpl.this.type == 0 && "exam".equals(StringUtils.defaultIfBlank(subject.getType(), "exam")) ||
+                        ScheduleExamsTabFragmentPresenterImpl.this.type == 1 && "credit".equals(StringUtils.defaultIfBlank(subject.getType(), "exam"))
+                ) {
+                    subjects.add(subject);
+                }
+            }
+            // get rva adapter
+            ScheduleExamsRVA adapter = new ScheduleExamsRVA(schedule, subjects, type);
+            adapter.setClickListener(R.id.schedule_lessons_menu, ScheduleExamsTabFragmentPresenterImpl.this::examsMenuMore);
+            adapter.setClickListener(R.id.schedule_lessons_share, ScheduleExamsTabFragmentPresenterImpl.this::examsMenuShare);
+            adapter.setClickListener(R.id.exam_touch_icon, ScheduleExamsTabFragmentPresenterImpl.this::subjectMenu);
+            adapter.setClickListener(R.id.teacher_picker_item, ScheduleExamsTabFragmentPresenterImpl.this::teacherSelected);
+            thread.runOnUI(SE, () -> {
+                draw(activity, R.layout.layout_schedule_both_recycle_list);
+                // prepare
+                SwipeRefreshLayout swipe = container.findViewById(R.id.schedule_swipe);
+                RecyclerView recyclerView = container.findViewById(R.id.schedule_list);
+                if (swipe == null || recyclerView == null) {
+                    return;
+                }
+                LinearLayoutManager layoutManager = new LinearLayoutManager(activity, RecyclerView.VERTICAL, false);
+                // swipe
+                swipe.setColorSchemeColors(Color.resolve(activity, R.attr.colorAccent));
+                swipe.setProgressBackgroundColorSchemeColor(Color.resolve(activity, R.attr.colorBackgroundRefresh));
+                swipe.setOnRefreshListener(() -> {
+                    swipe.setRefreshing(false);
+                    tabHostPresenter.invalidate(true);
+                });
+                // recycle view (list)
+                recyclerView.setLayoutManager(layoutManager);
+                recyclerView.setAdapter(adapter);
+                recyclerView.setHasFixedSize(true);
+                // scroll to prev position listener (only android 23+)
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    recyclerView.setOnScrollChangeListener((view, scrollX, scrollY, oldScrollX, oldScrollY) -> {
+                        int position = layoutManager.findFirstVisibleItemPosition();
+                        View v = recyclerView.getChildAt(0);
+                        int offset = (v == null) ? 0 : (v.getTop() - recyclerView.getPaddingTop());
+                        ScheduleExamsTabHostFragmentPresenter.Scroll scroll = tabHostPresenter.scroll().get(type, null);
+                        if (scroll == null) {
+                            scroll = new ScheduleExamsTabHostFragmentPresenter.Scroll();
+                        }
+                        scroll.position = position;
+                        scroll.offset = offset;
+                        tabHostPresenter.scroll().put(type, scroll);
+                    });
+                }
+                // scroll to previous position
+                ScheduleExamsTabHostFragmentPresenter.Scroll scroll = tabHostPresenter.scroll().get(type, null);
+                if (scroll != null) {
+                    layoutManager.scrollToPositionWithOffset(scroll.position, scroll.offset);
+                }
+            }, throwable -> {
+                log.exception(throwable);
+                failed(activity);
+            });
+        }, throwable -> {
+            log.exception(throwable);
+            failed(activity);
+        });
+    }
+
+    @Override
+    public void onFailure(int code, Client.Headers headers, int state) {
+        thread.runOnUI(SE, () -> {
+            ScheduleExamsTabFragmentPresenterImpl.this.schedule = null;
+            log.v(TAG, "onFailure | code=", code, " | state=", state);
+            if (state == Client.FAILED_OFFLINE) {
+                ViewGroup view = (ViewGroup) inflate(activity, R.layout.state_offline_text);
+                if (view != null) {
+                    view.findViewById(R.id.offline_reload).setOnClickListener(v -> load(false));
+                    draw(view);
+                }
+                return;
+            }
+            if (state == Schedule.FAILED_NOT_FOUND) {
+                ViewGroup view = (ViewGroup) inflate(activity, R.layout.state_nothing_to_display_compact);
+                if (view != null) {
+                    ((TextView) view.findViewById(R.id.ntd_text)).setText(scheduleExams.getFailedMessage(code, state));
+                    draw(view);
+                }
+                return;
+            }
+            if (state == Schedule.FAILED_PERSONAL_NEED_ISU) {
+                ViewGroup view = (ViewGroup) inflate(activity, R.layout.layout_schedule_isu_required);
+                if (view != null) {
+                    view.findViewById(R.id.open_isu_auth).setOnClickListener(v -> activity.openActivity(ConnectedActivity.TYPE.STACKABLE, LinkedAccountsFragment.class, null));
+                    view.findViewById(R.id.open_search).setOnClickListener(v -> eventBus.fire(new OpenActivityEvent(ScheduleExamsSearchActivity.class)));
+                    view.findViewById(R.id.open_settings).setOnClickListener(v -> activity.openActivity(ConnectedActivity.TYPE.STACKABLE, SettingsScheduleExamsFragment.class, null));
+                }
+                draw(view);
+                return;
+            }
+            if (state == Schedule.FAILED_EMPTY_QUERY) {
+                ViewGroup view = (ViewGroup) inflate(activity, R.layout.layout_schedule_empty_query);
+                if (view != null) {
+                    view.findViewById(R.id.open_search).setOnClickListener(v -> eventBus.fire(new OpenActivityEvent(ScheduleExamsSearchActivity.class)));
+                    view.findViewById(R.id.open_settings).setOnClickListener(v -> activity.openActivity(ConnectedActivity.TYPE.STACKABLE, SettingsScheduleExamsFragment.class, null));
+                    draw(view);
+                }
+                return;
+            }
+            if (state == Schedule.FAILED_INVALID_QUERY) {
+                ViewGroup view = (ViewGroup) inflate(activity, R.layout.state_failed_text);
+                if (view != null) {
+                    ((TextView) view.findViewById(R.id.text)).setText(scheduleExams.getFailedMessage(code, state));
+                    draw(view);
+                }
+                return;
+            }
+            ViewGroup view = (ViewGroup) inflate(activity, R.layout.state_failed_button);
+            if (view != null) {
+                ((TextView) view.findViewById(R.id.try_again_message)).setText(scheduleExams.getFailedMessage(code, state));
+                view.findViewById(R.id.try_again_reload).setOnClickListener(v -> load(false));
+                draw(view);
+            }
+        }, throwable -> {
+            log.exception(throwable);
+        });
+    }
+
+    @Override
+    public void onProgress(int state) {
+        thread.runOnUI(SE, () -> {
+            log.v(TAG, "onProgress | state=", state);
+            ViewGroup view = (ViewGroup) inflate(activity, R.layout.state_loading_text);
+            if (view != null) {
+                String message = scheduleExams.getProgressMessage(state);
+                ((TextView) view.findViewById(R.id.loading_message)).setText(message);
+                draw(view);
+            }
+        }, throwable -> {
+            log.exception(throwable);
+        });
+    }
+
+    @Override
+    public void onNewRequest(Client.Request request) {
+        requestHandle = request;
+    }
+
+    @Override
+    public void onCancelRequest() {
+        if (requestHandle != null) {
+            requestHandle.cancel();
         }
     }
 

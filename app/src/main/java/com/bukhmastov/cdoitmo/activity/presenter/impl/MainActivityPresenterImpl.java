@@ -429,7 +429,7 @@ public class MainActivityPresenterImpl implements MainActivityPresenter, Navigat
             firebaseAnalyticsProvider.setUserProperty(activity, FirebaseAnalyticsProvider.Property.DEVICE, App.tablet ? "tablet" : "mobile");
             // setup static variables
             App.OFFLINE_MODE = "offline".equals(activity.getIntent().getStringExtra("mode")) ||
-                    !Client.isOnline(activity) ||
+                    Client.isOffline(activity) ||
                     (App.firstLaunch && storagePref.get(activity, "pref_initial_offline", false));
             App.firstLaunch = false;
             App.isFirstLaunchEver = false;

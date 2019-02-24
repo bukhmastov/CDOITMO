@@ -582,5 +582,29 @@
     <string name="hidden_preference_hard_reset">Сбросить системные настройки</string>
     <string name="hidden_preference_hard_reset_message">Вы собираетесь стереть системные настройки приложения. НЕ СТОИТ этого делать, если вы не знаете для чего и что за этим последует. Закройте это предупреждение, если вы передумали.</string>
 
+    <string name="network_state_loading">Загрузка</string>
+    <string name="network_state_authorization">Авторизация</string>
+    <string name="network_state_authorized">Авторизован</string>
+    <string name="network_failed">Загрузка не удалась</string>
+    <string name="network_failed_denied">Запрос не был выполнен</string>
+    <string name="network_failed_interrupted">Запрос прерван</string>
+    <string name="network_failed_corrupted">Не удалось разобрать ответ сервера</string>
+    <string name="network_failed_error_4xx">Сервер отклонил запрос [http code: %d]</string>
+    <string name="network_failed_error_5xx">Серверу не удалось обработать запрос [http code: %d]</string>
+    <string name="network_failed_offline">Нет доступа к интернету</string>
+    <string name="network_failed_empty_response">Сервер вернул пустой ответ</string>
+    <string name="network_failed_expected_redirection">Запрос не удался, ожидалось перенаправление</string>
+    <string name="network_failed_auth">Авторизация не удалась</string>
+    <string name="network_failed_auth_required">Необходима авторизация</string>
+    <string name="network_failed_credentials_required">Необходимо указать логин/пароль</string>
+    <string name="network_failed_credentials_failed">Неверный логин/пароль</string>
+
+    <string name="schedule_failed_load">Не удалось загрузить расписание</string>
+    <string name="schedule_failed_empty_query">Задан пустой запрос</string>
+    <string name="schedule_failed_invalid_query">Задан неверный запрос</string>
+    <string name="schedule_failed_need_isu">Необходима авторизация в ИСУ</string>
+    <string name="schedule_failed_not_found">Расписание не найдено</string>
+
+
 
 </resources>

@@ -70,4 +70,9 @@ public class SettingsScheduleAttestationsImpl extends SettingsSchedule<SAttestat
     protected String getHint() {
         return activity.getString(R.string.schedule_attestations_search_view_hint);
     }
+
+    @Override
+    protected String getFailedMessage(int code, int state) {
+        return scheduleAttestations.getFailedMessage(code, state);
+    }
 }

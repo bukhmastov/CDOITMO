@@ -53,6 +53,7 @@ public abstract class UniversityRVA extends RVA<RVAUniversity> {
         }
     }
 
+    @SuppressWarnings("unchecked")
     public void setState(@IdRes int type) {
         removeState();
         Item item = new Item(TYPE_STATE);

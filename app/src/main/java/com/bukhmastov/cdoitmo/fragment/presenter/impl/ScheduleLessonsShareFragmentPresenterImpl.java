@@ -277,10 +277,6 @@ public class ScheduleLessonsShareFragmentPresenterImpl extends ConnectedFragment
                 }
             }
             @Override
-            public void onFailure(int state) {
-                this.onFailure(0, null, state);
-            }
-            @Override
             public void onFailure(int code, Client.Headers headers, int state) {
                 thread.runOnUI(SLS, () -> {
                     log.v(TAG, "loadHandle | failure ", state);
@@ -289,32 +285,13 @@ public class ScheduleLessonsShareFragmentPresenterImpl extends ConnectedFragment
                         return;
                     }
                     shareContent.removeAllViews();
-                    View view;
-                    switch (state) {
-                        case Client.FAILED_OFFLINE:
-                        case ScheduleLessons.FAILED_OFFLINE:
-                            shareContent.addView(fragment.inflate(R.layout.state_offline_text_compact));
-                            break;
-                        case Client.FAILED_SERVER_ERROR:
-                            view = fragment.inflate(R.layout.state_failed_text_compact);
-                            ((TextView) view.findViewById(R.id.text)).setText(Client.getFailureMessage(activity, code));
-                            shareContent.addView(view);
-                            break;
-                        case Client.FAILED_CORRUPTED_JSON:
-                            view = fragment.inflate(R.layout.state_failed_text_compact);
-                            ((TextView) view.findViewById(R.id.text)).setText(R.string.server_provided_corrupted_json);
-                            shareContent.addView(view);
-                            break;
-                        case Client.FAILED_TRY_AGAIN:
-                        case ScheduleLessons.FAILED_LOAD:
-                        case ScheduleLessons.FAILED_EMPTY_QUERY:
-                        case ScheduleLessons.FAILED_NOT_FOUND:
-                        case ScheduleLessons.FAILED_INVALID_QUERY:
-                        case ScheduleLessons.FAILED_PERSONAL_NEED_ISU:
-                        default:
-                            shareContent.addView(fragment.inflate(R.layout.state_failed_text_compact));
-                            break;
+                    if (state == Client.FAILED_OFFLINE) {
+                        shareContent.addView(fragment.inflate(R.layout.state_offline_text_compact));
+                        return;
                     }
+                    View view = fragment.inflate(R.layout.state_failed_text_compact);
+                    ((TextView) view.findViewById(R.id.text)).setText(scheduleLessons.getFailedMessage(code, state));
+                    shareContent.addView(view);
                 }, throwable -> {
                     log.exception(throwable);
                     notificationMessage.toast(activity, activity.getString(R.string.something_went_wrong));
@@ -432,10 +409,6 @@ public class ScheduleLessonsShareFragmentPresenterImpl extends ConnectedFragment
                 }
             }
             @Override
-            public void onFailure(int state) {
-                this.onFailure(0, null, state);
-            }
-            @Override
             public void onFailure(int code, Client.Headers headers, int state) {
                 thread.runOnUI(SLS, () -> {
                     log.v(TAG, "loadShare | failure ", state);
@@ -444,32 +417,13 @@ public class ScheduleLessonsShareFragmentPresenterImpl extends ConnectedFragment
                         return;
                     }
                     shareContent.removeAllViews();
-                    View view;
-                    switch (state) {
-                        case Client.FAILED_OFFLINE:
-                        case ScheduleLessons.FAILED_OFFLINE:
-                            shareContent.addView(fragment.inflate(R.layout.state_offline_text_compact));
-                            break;
-                        case Client.FAILED_SERVER_ERROR:
-                            view = fragment.inflate(R.layout.state_failed_text_compact);
-                            ((TextView) view.findViewById(R.id.text)).setText(Client.getFailureMessage(activity, code));
-                            shareContent.addView(view);
-                            break;
-                        case Client.FAILED_CORRUPTED_JSON:
-                            view = fragment.inflate(R.layout.state_failed_text_compact);
-                            ((TextView) view.findViewById(R.id.text)).setText(R.string.server_provided_corrupted_json);
-                            shareContent.addView(view);
-                            break;
-                        case Client.FAILED_TRY_AGAIN:
-                        case ScheduleLessons.FAILED_LOAD:
-                        case ScheduleLessons.FAILED_EMPTY_QUERY:
-                        case ScheduleLessons.FAILED_NOT_FOUND:
-                        case ScheduleLessons.FAILED_INVALID_QUERY:
-                        case ScheduleLessons.FAILED_PERSONAL_NEED_ISU:
-                        default:
-                            shareContent.addView(fragment.inflate(R.layout.state_failed_text_compact));
-                            break;
+                    if (state == Client.FAILED_OFFLINE) {
+                        shareContent.addView(fragment.inflate(R.layout.state_offline_text_compact));
+                        return;
                     }
+                    View view = fragment.inflate(R.layout.state_failed_text_compact);
+                    ((TextView) view.findViewById(R.id.text)).setText(scheduleLessons.getFailedMessage(code, state));
+                    shareContent.addView(view);
                 }, throwable -> {
                     log.exception(throwable);
                     notificationMessage.toast(activity, activity.getString(R.string.something_went_wrong));

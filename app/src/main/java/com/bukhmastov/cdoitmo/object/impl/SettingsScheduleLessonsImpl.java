@@ -104,4 +104,9 @@ public class SettingsScheduleLessonsImpl extends SettingsSchedule<SLessons> impl
     protected String getHint() {
         return activity.getString(R.string.schedule_lessons_search_view_hint);
     }
+
+    @Override
+    protected String getFailedMessage(int code, int state) {
+        return scheduleLessons.getFailedMessage(code, state);
+    }
 }

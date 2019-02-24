@@ -48,6 +48,7 @@ public class RatingListRVA extends RVA<RStudent> {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     protected void onBind(View container, Item item) {
         switch (item.type) {
             case TYPE_ENTRY:

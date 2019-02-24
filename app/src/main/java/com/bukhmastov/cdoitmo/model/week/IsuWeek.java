@@ -36,7 +36,7 @@ public class IsuWeek extends JsonEntity {
         if (this == o) return true;
         if (!(o instanceof IsuWeek)) return false;
         IsuWeek isuWeek = (IsuWeek) o;
-        return week == isuWeek.week &&
+        return Objects.equals(week, isuWeek.week) &&
                 Objects.equals(parity, isuWeek.parity);
     }
 

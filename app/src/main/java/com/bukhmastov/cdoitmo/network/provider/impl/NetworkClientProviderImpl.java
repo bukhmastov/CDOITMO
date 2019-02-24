@@ -39,8 +39,8 @@ import okhttp3.Response;
 public class NetworkClientProviderImpl implements NetworkClientProvider {
 
     private static final String TAG = "NetworkClientProvider";
-    private static final int CONNECT_TIMEOUT = 10;
-    private static final int READ_TIMEOUT = 30;
+    private static final int CONNECT_TIMEOUT_SEC = 10;
+    private static final int READ_TIMEOUT_SEC = 20;
     private OkHttpClient client = null;
 
     @Inject
@@ -55,24 +55,25 @@ public class NetworkClientProviderImpl implements NetworkClientProvider {
     @Override
     public OkHttpClient get() {
         if (client == null) {
-            client = trustDefinedCertificates(
-                    new OkHttpClient().newBuilder()
-                            .addInterceptor(new LoggingInterceptor())
-                            .followRedirects(false)
-                            .connectTimeout(CONNECT_TIMEOUT, TimeUnit.SECONDS)
-                            .readTimeout(READ_TIMEOUT, TimeUnit.SECONDS)
-            ).build();
+            OkHttpClient.Builder builder = new OkHttpClient().newBuilder();
+            builder.addInterceptor(new LoggingInterceptor());
+            builder.followRedirects(false);
+            builder.connectTimeout(CONNECT_TIMEOUT_SEC, TimeUnit.SECONDS);
+            builder.readTimeout(READ_TIMEOUT_SEC, TimeUnit.SECONDS);
+            addTrustedCertificates(builder);
+            client = builder.build();
         }
         return client;
     }
 
-    private OkHttpClient.Builder trustDefinedCertificates(OkHttpClient.Builder builder) {
+    private void addTrustedCertificates(OkHttpClient.Builder builder) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            // Started from android N (24), trusting to certificates delegated to networkSecurityConfig
-            return builder;
+            // Started from android N (24), trusting to certificates delegated
+            // to networkSecurityConfig (at AndroidManifest.xml -> application.networkSecurityConfig)
+            return;
         }
         try {
-            X509TrustManager trustManager = trustManagerForCertificates(trustedCertificatesInputStream());
+            X509TrustManager trustManager = makeTrustManagerForCertificates(trustedCertificatesInputStream());
             SSLContext sslContext = SSLContext.getInstance("TLS");
             sslContext.init(null, new TrustManager[] {trustManager}, null);
             SSLSocketFactory sslSocketFactory = sslContext.getSocketFactory();
@@ -81,7 +82,6 @@ public class NetworkClientProviderImpl implements NetworkClientProvider {
             log.get().w(TAG, "Failed to add trusted certificates");
             log.get().exception(e);
         }
-        return builder;
     }
 
     private InputStream trustedCertificatesInputStream() {
@@ -89,7 +89,7 @@ public class NetworkClientProviderImpl implements NetworkClientProvider {
         return res.openRawResource(R.raw.trusted_certificates);
     }
 
-    private X509TrustManager trustManagerForCertificates(InputStream in) throws Exception {
+    private X509TrustManager makeTrustManagerForCertificates(InputStream in) throws Exception {
         CertificateFactory certificateFactory = CertificateFactory.getInstance("X.509");
         Collection<? extends Certificate> certificates = certificateFactory.generateCertificates(in);
         if (certificates.isEmpty()) {
@@ -97,7 +97,7 @@ public class NetworkClientProviderImpl implements NetworkClientProvider {
         }
         // Put the certificates a key store.
         char[] password = "password".toCharArray(); // Any password will work.
-        KeyStore keyStore = newEmptyKeyStore(password);
+        KeyStore keyStore = makeEmptyKeyStore(password);
         int index = 0;
         for (Certificate certificate : certificates) {
             String certificateAlias = Integer.toString(index++);
@@ -115,7 +115,7 @@ public class NetworkClientProviderImpl implements NetworkClientProvider {
         return (X509TrustManager) trustManagers[0];
     }
 
-    private KeyStore newEmptyKeyStore(char[] password) throws Exception {
+    private KeyStore makeEmptyKeyStore(char[] password) throws Exception {
         try {
             KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
             InputStream in = null;

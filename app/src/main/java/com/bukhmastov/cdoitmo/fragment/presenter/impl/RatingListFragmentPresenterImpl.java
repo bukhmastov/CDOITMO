@@ -220,7 +220,8 @@ public class RatingListFragmentPresenterImpl extends ConnectedFragmentWithDataPr
                 loadFailed();
                 return;
             }
-            deIfmoClient.get(activity, "index.php?node=rating&std&depId=" + faculty + "&year=" + course + "&app=" + years, null, new ResponseHandler() {
+            String url = String.format("index.php?node=rating&std&depId=%s&year=%s&app=%s", faculty, course, years);
+            deIfmoClient.get(activity, url, null, new ResponseHandler() {
                 @Override
                 public void onSuccess(int code, Client.Headers headers, String response) {
                     log.v(TAG, "load | success | code=", code);
@@ -236,34 +237,22 @@ public class RatingListFragmentPresenterImpl extends ConnectedFragmentWithDataPr
                 public void onFailure(int code, Client.Headers headers, int state) {
                     thread.runOnUI(RAL, () -> {
                         log.v(TAG, "load | failure ", state);
-                        switch (state) {
-                            case DeIfmoClient.FAILED_OFFLINE: {
-                                fragment.draw(R.layout.state_offline_text);
-                                View reload = fragment.container().findViewById(R.id.offline_reload);
-                                if (reload != null) {
-                                    reload.setOnClickListener(v -> load());
-                                }
-                                break;
+                        if (state == Client.FAILED_OFFLINE) {
+                            fragment.draw(R.layout.state_offline_text);
+                            View reload = fragment.container().findViewById(R.id.offline_reload);
+                            if (reload != null) {
+                                reload.setOnClickListener(v -> load());
                             }
-                            case DeIfmoClient.FAILED_TRY_AGAIN:
-                            case DeIfmoClient.FAILED_SERVER_ERROR: {
-                                fragment.draw(R.layout.state_failed_button);
-                                if (state == DeIfmoClient.FAILED_SERVER_ERROR) {
-                                    TextView message = fragment.container().findViewById(R.id.try_again_message);
-                                    if (message != null) {
-                                        if (activity != null) {
-                                            message.setText(DeIfmoClient.getFailureMessage(activity, code));
-                                        } else {
-                                            message.setText(DeIfmoClient.getFailureMessage(code));
-                                        }
-                                    }
-                                }
-                                View reload = fragment.container().findViewById(R.id.try_again_reload);
-                                if (reload != null) {
-                                    reload.setOnClickListener(v -> load());
-                                }
-                                break;
-                            }
+                            return;
+                        }
+                        fragment.draw(R.layout.state_failed_button);
+                        TextView message = fragment.container().findViewById(R.id.try_again_message);
+                        if (message != null) {
+                            message.setText(deIfmoClient.getFailedMessage(activity, code, state));
+                        }
+                        View reload = fragment.container().findViewById(R.id.try_again_reload);
+                        if (reload != null) {
+                            reload.setOnClickListener(v -> load());
                         }
                     }, throwable -> {
                         loadFailed();
@@ -276,11 +265,7 @@ public class RatingListFragmentPresenterImpl extends ConnectedFragmentWithDataPr
                         fragment.draw(R.layout.state_loading_text);
                         TextView message = fragment.container().findViewById(R.id.loading_message);
                         if (message != null) {
-                            switch (state) {
-                                case DeIfmoClient.STATE_HANDLING:
-                                    message.setText(R.string.loading);
-                                    break;
-                            }
+                            message.setText(deIfmoClient.getProgressMessage(activity, state));
                         }
                     });
                 }

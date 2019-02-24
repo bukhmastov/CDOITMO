@@ -34,9 +34,6 @@ import com.bukhmastov.cdoitmo.util.singleton.Color;
 import com.bukhmastov.cdoitmo.util.singleton.NumberUtils;
 import com.bukhmastov.cdoitmo.util.singleton.StringUtils;
 
-import org.json.JSONArray;
-import org.json.JSONObject;
-
 import javax.inject.Inject;
 
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -170,7 +167,7 @@ public class IsuScholarshipPaidDetailsFragmentPresenterImpl extends ConnectedFra
     private void load(boolean force) {
         thread.run(ISPD, () -> {
             log.v(TAG, "load | force=", force);
-            if ((!force || !Client.isOnline(activity))) {
+            if ((!force || Client.isOffline(activity))) {
                 try {
                     if (getData() != null) {
                         log.v(TAG, "load | from cache");
@@ -209,14 +206,14 @@ public class IsuScholarshipPaidDetailsFragmentPresenterImpl extends ConnectedFra
                 thread.runOnUI(ISPD, () -> fragment.draw(R.layout.state_failed_text));
                 return;
             }
-            isuPrivateRestClient.get(activity, "scholarship/details/%apikey%/%isutoken%/" + year + "/" + month, null, new RestResponseHandler() {
+            String url = "scholarship/details/%apikey%/%isutoken%/" + year + "/" + month;
+            isuPrivateRestClient.get(activity, url, null, new RestResponseHandler<SSDetailedList>() {
                 @Override
-                public void onSuccess(int statusCode, Client.Headers headers, JSONObject obj, JSONArray arr) throws Exception {
-                    log.v(TAG, "load | success | statusCode=", statusCode, " | obj=", obj);
-                    if (statusCode == 200 && obj != null) {
-                        SSDetailedList data = new SSDetailedList().fromJson(obj);
-                        data.setTimestamp(time.getTimeInMillis());
-                        setData(data);
+                public void onSuccess(int code, Client.Headers headers, SSDetailedList response) throws Exception {
+                    log.v(TAG, "load | success | code=", code, " | response=", response);
+                    if (code == 200 && response != null) {
+                        response.setTimestamp(time.getTimeInMillis());
+                        setData(response);
                         display();
                         return;
                     }
@@ -227,67 +224,50 @@ public class IsuScholarshipPaidDetailsFragmentPresenterImpl extends ConnectedFra
                     loadFailed();
                 }
                 @Override
-                public void onFailure(int statusCode, Client.Headers headers, int state) {
+                public void onFailure(int code, Client.Headers headers, int state) {
                     thread.run(ISPD, () -> {
                         log.v(TAG, "load | failure ", state);
-                        switch (state) {
-                            case IsuPrivateRestClient.FAILED_OFFLINE:
-                                if (getData() != null) {
-                                    display();
-                                    return;
+                        if (state == Client.FAILED_OFFLINE) {
+                            if (getData() != null) {
+                                display();
+                                return;
+                            }
+                            thread.runOnUI(ISPD, () -> {
+                                fragment.draw(R.layout.state_offline_text);
+                                View reload = fragment.container().findViewById(R.id.offline_reload);
+                                if (reload != null) {
+                                    reload.setOnClickListener(v -> load());
                                 }
-                                thread.runOnUI(ISPD, () -> {
-                                    fragment.draw(R.layout.state_offline_text);
-                                    View reload = fragment.container().findViewById(R.id.offline_reload);
-                                    if (reload != null) {
-                                        reload.setOnClickListener(v -> load());
-                                    }
-                                }, throwable -> {
-                                    loadFailed();
-                                });
-                                break;
-                            case IsuPrivateRestClient.FAILED_TRY_AGAIN:
-                            case IsuPrivateRestClient.FAILED_SERVER_ERROR:
-                            case IsuPrivateRestClient.FAILED_CORRUPTED_JSON:
-                            case IsuPrivateRestClient.FAILED_AUTH_TRY_AGAIN:
-                                thread.runOnUI(ISPD, () -> {
-                                    fragment.draw(R.layout.state_failed_button);
-                                    TextView message = fragment.container().findViewById(R.id.try_again_message);
-                                    if (message != null) {
-                                        switch (state) {
-                                            case IsuPrivateRestClient.FAILED_SERVER_ERROR:
-                                                if (activity == null) {
-                                                    message.setText(IsuPrivateRestClient.getFailureMessage());
-                                                } else {
-                                                    message.setText(IsuPrivateRestClient.getFailureMessage(activity, statusCode));
-                                                }
-                                                break;
-                                            case IsuPrivateRestClient.FAILED_CORRUPTED_JSON:
-                                                message.setText(R.string.server_provided_corrupted_json);
-                                                break;
-                                        }
-                                    }
-                                    View reload = fragment.container().findViewById(R.id.try_again_reload);
-                                    if (reload != null) {
-                                        reload.setOnClickListener(v -> load());
-                                    }
-                                }, throwable -> {
-                                    loadFailed();
-                                });
-                                break;
-                            case IsuPrivateRestClient.FAILED_AUTH_CREDENTIALS_REQUIRED:
-                            case IsuPrivateRestClient.FAILED_AUTH_CREDENTIALS_FAILED:
-                                thread.runOnUI(ISPD, () -> {
-                                    fragment.draw(R.layout.layout_isu_required);
-                                    View openIsuAuth = fragment.container().findViewById(R.id.open_isu_auth);
-                                    if (openIsuAuth != null) {
-                                        openIsuAuth.setOnClickListener(v -> activity.openActivity(ConnectedActivity.TYPE.STACKABLE, LinkedAccountsFragment.class, null));
-                                    }
-                                }, throwable -> {
-                                    loadFailed();
-                                });
-                                break;
+                            }, throwable -> {
+                                loadFailed();
+                            });
+                            return;
                         }
+                        if (isuPrivateRestClient.isFailedAuth(state)) {
+                            thread.runOnUI(ISPD, () -> {
+                                fragment.draw(R.layout.layout_isu_required);
+                                View openIsuAuth = fragment.container().findViewById(R.id.open_isu_auth);
+                                if (openIsuAuth != null) {
+                                    openIsuAuth.setOnClickListener(v -> activity.openActivity(ConnectedActivity.TYPE.STACKABLE, LinkedAccountsFragment.class, null));
+                                }
+                            }, throwable -> {
+                                loadFailed();
+                            });
+                            return;
+                        }
+                        thread.runOnUI(ISPD, () -> {
+                            fragment.draw(R.layout.state_failed_button);
+                            TextView message = fragment.container().findViewById(R.id.try_again_message);
+                            if (message != null) {
+                                message.setText(isuPrivateRestClient.getFailedMessage(activity, code, state));
+                            }
+                            View reload = fragment.container().findViewById(R.id.try_again_reload);
+                            if (reload != null) {
+                                reload.setOnClickListener(v -> load());
+                            }
+                        }, throwable -> {
+                            loadFailed();
+                        });
                     }, throwable -> {
                         loadFailed();
                     });
@@ -299,18 +279,17 @@ public class IsuScholarshipPaidDetailsFragmentPresenterImpl extends ConnectedFra
                         fragment.draw(R.layout.state_loading_text);
                         TextView message = fragment.container().findViewById(R.id.loading_message);
                         if (message != null) {
-                            switch (state) {
-                                case IsuPrivateRestClient.STATE_HANDLING: message.setText(R.string.loading); break;
-                                case IsuPrivateRestClient.STATE_CHECKING: message.setText(R.string.auth_check); break;
-                                case IsuPrivateRestClient.STATE_AUTHORIZATION: message.setText(R.string.authorization); break;
-                                case IsuPrivateRestClient.STATE_AUTHORIZED: message.setText(R.string.authorized); break;
-                            }
+                            message.setText(isuPrivateRestClient.getProgressMessage(activity, state));
                         }
                     });
                 }
                 @Override
                 public void onNewRequest(Client.Request request) {
                     requestHandle = request;
+                }
+                @Override
+                public SSDetailedList newInstance() {
+                    return new SSDetailedList();
                 }
             });
         }, throwable -> {

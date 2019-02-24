@@ -2,9 +2,6 @@ package com.bukhmastov.cdoitmo.activity.presenter.impl;
 
 import android.content.Context;
 import android.os.Bundle;
-import androidx.annotation.LayoutRes;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import android.view.InflateException;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -35,6 +32,10 @@ import com.bukhmastov.cdoitmo.util.singleton.StringUtils;
 import java.util.ArrayList;
 
 import javax.inject.Inject;
+
+import androidx.annotation.LayoutRes;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import static com.bukhmastov.cdoitmo.util.Thread.WDR;
 
@@ -149,12 +150,6 @@ public class DaysRemainingWidgetActivityPresenterImpl implements DaysRemainingWi
     }
 
     @Override
-    public void onProgress(int state) {
-        log.v(TAG, "progress ", state);
-        message(activity.getString(R.string.loading));
-    }
-
-    @Override
     public void onSuccess(SExams data, boolean fromCache) {
         thread.run(WDR, () -> {
             log.v(TAG, "success");
@@ -181,30 +176,14 @@ public class DaysRemainingWidgetActivityPresenterImpl implements DaysRemainingWi
 
     @Override
     public void onFailure(int code, Client.Headers headers, int state) {
-        log.v(TAG, "failure " + state);
-        switch (state) {
-            case Client.FAILED_OFFLINE:
-            case ScheduleExams.FAILED_OFFLINE:
-                message(activity.getString(R.string.no_connection));
-                break;
-            case Client.FAILED_SERVER_ERROR:
-                message(Client.getFailureMessage(activity, code));
-                break;
-            case Client.FAILED_TRY_AGAIN:
-            case ScheduleExams.FAILED_LOAD:
-            case ScheduleExams.FAILED_EMPTY_QUERY:
-                message(activity.getString(R.string.load_failed));
-                break;
-            case ScheduleExams.FAILED_NOT_FOUND:
-                message(activity.getString(R.string.no_schedule));
-                break;
-            case ScheduleExams.FAILED_INVALID_QUERY:
-                message(activity.getString(R.string.incorrect_query));
-                break;
-            case ScheduleExams.FAILED_PERSONAL_NEED_ISU:
-                message(activity.getString(R.string.load_failed_need_isu));
-                break;
-        }
+        log.v(TAG, "failure ", state);
+        message(scheduleExams.getFailedMessage(code, state));
+    }
+
+    @Override
+    public void onProgress(int state) {
+        log.v(TAG, "progress ", state);
+        message(scheduleExams.getProgressMessage(state));
     }
 
     @Override

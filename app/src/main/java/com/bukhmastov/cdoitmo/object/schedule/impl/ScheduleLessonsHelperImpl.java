@@ -3,10 +3,8 @@ package com.bukhmastov.cdoitmo.object.schedule.impl;
 import android.content.Context;
 import android.os.Bundle;
 
-import com.bukhmastov.cdoitmo.activity.ConnectedActivity;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
-import com.bukhmastov.cdoitmo.fragment.ScheduleLessonsModifyFragment;
 import com.bukhmastov.cdoitmo.fragment.presenter.ScheduleLessonsModifyFragmentPresenter;
 import com.bukhmastov.cdoitmo.function.Callable;
 import com.bukhmastov.cdoitmo.function.Consumer;

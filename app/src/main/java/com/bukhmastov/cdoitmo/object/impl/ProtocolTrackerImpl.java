@@ -27,6 +27,7 @@ import com.bukhmastov.cdoitmo.util.Thread;
 import com.bukhmastov.cdoitmo.util.Time;
 
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import javax.inject.Inject;
@@ -243,17 +244,17 @@ public class ProtocolTrackerImpl implements ProtocolTracker {
             log.v(TAG, "setup | failed to setup, number of attempts exceeded the limit");
             return;
         }
-        deIfmoRestClient.get().get(context, "eregisterlog?days=126", null, new RestResponseHandler() {
+        deIfmoRestClient.get().get(context, "eregisterlog?days=126", null, new RestResponseHandler<Protocol>() {
             @Override
-            public void onSuccess(int code, Client.Headers headers, JSONObject obj, JSONArray arr) {
-                if (code != 200 || arr == null) {
+            public void onSuccess(int code, Client.Headers headers, Protocol response) throws Exception {
+                if (code != 200 || response == null) {
                     setup(context, attempt + 1);
+                    return;
                 }
                 try {
-                    Protocol protocol = new Protocol().fromJson(new JSONObject().put("protocol", arr));
-                    protocol.setTimestamp(time.get().getTimeInMillis());
-                    protocol.setNumberOfWeeks(18);
-                    new ProtocolConverter(protocol).convert();
+                    response.setTimestamp(time.get().getTimeInMillis());
+                    response.setNumberOfWeeks(18);
+                    new ProtocolConverter(response).convert();
                     log.i(TAG, "setup | uploaded");
                 } catch (Exception e) {
                     setup(context, attempt + 1);
@@ -267,6 +268,14 @@ public class ProtocolTrackerImpl implements ProtocolTracker {
             public void onProgress(int state) {}
             @Override
             public void onNewRequest(Client.Request request) {}
+            @Override
+            public Protocol newInstance() {
+                return new Protocol();
+            }
+            @Override
+            public JSONObject convertArray(JSONArray arr) throws JSONException {
+                return new JSONObject().put("protocol", arr);
+            }
         });
     }
 }

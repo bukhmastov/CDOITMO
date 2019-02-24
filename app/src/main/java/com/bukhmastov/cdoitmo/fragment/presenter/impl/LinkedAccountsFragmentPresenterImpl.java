@@ -19,7 +19,6 @@ import com.bukhmastov.cdoitmo.fragment.presenter.LinkedAccountsFragmentPresenter
 import com.bukhmastov.cdoitmo.network.IsuPrivateRestClient;
 import com.bukhmastov.cdoitmo.network.handlers.ResponseHandler;
 import com.bukhmastov.cdoitmo.network.model.Client;
-import com.bukhmastov.cdoitmo.network.model.Isu;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.NotificationMessage;
 import com.bukhmastov.cdoitmo.util.Storage;
@@ -123,9 +122,9 @@ public class LinkedAccountsFragmentPresenterImpl extends ConnectedFragmentPresen
     private void isuLogin() {
         thread.standalone(() -> isuPrivateRestClient.authorize(activity, new ResponseHandler() {
             @Override
-            public void onSuccess(int statusCode, Client.Headers headers, String response) {
+            public void onSuccess(int code, Client.Headers headers, String response) {
                 thread.runOnUI(() -> {
-                    log.v(TAG, "isuLogin | success | statusCode=", statusCode, " | response=", response);
+                    log.v(TAG, "isuLogin | success | code=", code, " | response=", response);
                     if ("authorized".equals(response)) {
                         notificationMessage.snackBar(activity, activity.getString(R.string.authorized));
                         initIsu();
@@ -135,31 +134,14 @@ public class LinkedAccountsFragmentPresenterImpl extends ConnectedFragmentPresen
                 });
             }
             @Override
-            public void onFailure(final int statusCode, final Client.Headers headers, final int state) {
+            public void onFailure(int code, Client.Headers headers, int state) {
                 thread.runOnUI(() -> {
-                    log.v(TAG, "isuLogin | failure | state=", state, " | statusCode=", statusCode);
-                    switch (state) {
-                        case Isu.FAILED_OFFLINE:
-                            notificationMessage.snackBar(activity, activity.getString(R.string.device_offline_action_refused));
-                            break;
-                        case Isu.FAILED_SERVER_ERROR:
-                            notificationMessage.snackBar(activity, activity.getString(R.string.auth_failed) + ". " + Isu.getFailureMessage(activity, statusCode));
-                            break;
-                        case Isu.FAILED_TRY_AGAIN:
-                        case Isu.FAILED_AUTH_TRY_AGAIN:
-                            notificationMessage.snackBar(activity, activity.getString(R.string.auth_failed));
-                            break;
-                        case Isu.FAILED_AUTH_CREDENTIALS_REQUIRED:
-                            notificationMessage.snackBar(activity, activity.getString(R.string.required_login_password));
-                            break;
-                        case Isu.FAILED_AUTH_CREDENTIALS_FAILED:
-                            notificationMessage.snackBar(activity, activity.getString(R.string.invalid_login_password));
-                            break;
-                    }
+                    log.v(TAG, "isuLogin | failure | state=", state, " | code=", code);
+                    notificationMessage.snackBar(activity, isuPrivateRestClient.getFailedMessage(activity, code, state));
                 });
             }
             @Override
-            public void onProgress(final int state) {
+            public void onProgress(int state) {
                 log.v(TAG, "isuLogin | progress | state=", state);
             }
             @Override

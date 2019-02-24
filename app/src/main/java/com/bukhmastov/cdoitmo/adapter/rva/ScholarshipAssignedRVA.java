@@ -43,6 +43,7 @@ public class ScholarshipAssignedRVA extends RVA<SSAssigned> {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     protected void onBind(View container, Item item) {
         switch (item.type) {
             case TYPE_HEADER: break;

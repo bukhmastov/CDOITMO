@@ -112,7 +112,7 @@ public class AccountImpl implements Account {
             loginInvokeSuccess(context, handler, trace, login, isNewUser, true);
             return;
         }
-        if (!Client.isOnline(context)) {
+        if (Client.isOffline(context)) {
             loginInvokeFailed(context, handler, isNewUser, trace,
                     "failed_network_unavailable", R.string.network_unavailable);
             return;
@@ -128,72 +128,44 @@ public class AccountImpl implements Account {
             }
             @Override
             public void onProgress(int state) {
-                if (state == DeIfmoClient.STATE_AUTHORIZED) {
-                    thread.runOnUI(() -> handler.onProgress(context.getString(R.string.authorized)));
-                } else {
-                    thread.runOnUI(() -> handler.onProgress(context.getString(R.string.authorization)));
-                }
+                thread.runOnUI(() -> {
+                    handler.onProgress(deIfmoClient.getProgressMessage(context, state));
+                });
             }
             @Override
             public void onFailure(int code, Client.Headers headers, int state) {
-                switch (state) {
-                    case DeIfmoClient.FAILED_OFFLINE: {
-                        if (isNewUser) {
-                            logoutTemporarily(context, () -> {
-                                loginInvokeFailed(context, handler, isNewUser, trace,
-                                        "failed_network_unavailable", R.string.network_unavailable);
-                            });
-                        } else {
-                            loginInvokeOffline(context, handler, trace, "failed_offline", login, true);
-                        }
-                        break;
+                if (state == Client.FAILED_OFFLINE) {
+                    if (isNewUser) {
+                        loginInvokeOffline(context, handler, trace, "failed_offline", login, true);
+                        return;
                     }
-                    default:
-                    case DeIfmoClient.FAILED_TRY_AGAIN:
-                    case DeIfmoClient.FAILED_AUTH_TRY_AGAIN:
-                    case DeIfmoClient.FAILED_SERVER_ERROR: {
-                        logoutTemporarily(context, () -> {
-                            String message = context.getString(R.string.auth_failed);
-                            if (state == DeIfmoClient.FAILED_SERVER_ERROR) {
-                                message += ". " + DeIfmoClient.getFailureMessage(context, code);
-                            }
-                            loginInvokeFailed(context, handler, isNewUser, trace,
-                                    "failed_auth", message);
-                        });
-                        break;
-                    }
-                    case DeIfmoClient.FAILED_INTERRUPTED: {
-                        handler.onInterrupted();
-                        break;
-                    }
-                    case DeIfmoClient.FAILED_AUTH_CREDENTIALS_REQUIRED: {
-                        if (isNewUser) {
-                            logoutPermanently(context, login, () -> {
-                                loginInvokeFailed(context, handler, isNewUser, trace,
-                                        "failed_credentials_required", R.string.required_login_password);
-                            });
-                        } else {
-                            logoutTemporarily(context, login, () -> {
-                                loginInvokeFailed(context, handler, isNewUser, trace,
-                                        "failed_credentials_required", R.string.required_login_password);
-                            });
-                        }
-                        break;
-                    }
-                    case DeIfmoClient.FAILED_AUTH_CREDENTIALS_FAILED: {
-                        if (isNewUser) {
-                            logoutPermanently(context, login, () -> {
-                                loginInvokeFailed(context, handler, isNewUser, trace,
-                                        "failed_credentials_failed", R.string.invalid_login_password);
-                            });
-                        } else {
-                            logoutTemporarily(context, login, () -> {
-                                loginInvokeFailed(context, handler, isNewUser, trace,
-                                        "failed_credentials_failed", R.string.invalid_login_password);
-                            });
-                        }
-                        break;
-                    }
+                    logoutTemporarily(context, () -> {
+                        loginInvokeFailed(context, handler, isNewUser, trace,
+                                "failed_network_unavailable", R.string.network_failed_offline);
+                    });
+                    return;
+                }
+                if (state == Client.FAILED_INTERRUPTED) {
+                    handler.onInterrupted();
+                    return;
+                }
+                String authState = "failed_auth";
+                if (state == Client.FAILED_AUTH_CREDENTIALS_FAILED) {
+                    authState = "failed_credentials_failed";
+                }
+                if (state == Client.FAILED_AUTH_CREDENTIALS_REQUIRED) {
+                    authState = "failed_credentials_required";
+                }
+                String finalAuthState = authState;
+                String message = deIfmoClient.getFailedMessage(context, code, state);
+                if (isNewUser) {
+                    logoutPermanently(context, () -> {
+                        loginInvokeFailed(context, handler, isNewUser, trace, finalAuthState, message);
+                    });
+                } else {
+                    logoutTemporarily(context, () -> {
+                        loginInvokeFailed(context, handler, isNewUser, trace, finalAuthState, message);
+                    });
                 }
             }
             @Override
@@ -291,7 +263,7 @@ public class AccountImpl implements Account {
                 });
             }
             @Override
-            public void onProgress(final int state) {
+            public void onProgress(int state) {
                 thread.runOnUI(() -> logoutHandler.onProgress(context.getString(R.string.exiting) + "\n" + uName));
             }
             @Override

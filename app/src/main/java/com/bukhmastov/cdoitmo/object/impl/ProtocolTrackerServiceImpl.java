@@ -4,7 +4,6 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
-import androidx.annotation.NonNull;
 
 import com.bukhmastov.cdoitmo.App;
 import com.bukhmastov.cdoitmo.R;
@@ -29,6 +28,7 @@ import com.bukhmastov.cdoitmo.util.singleton.CollectionUtils;
 import com.bukhmastov.cdoitmo.util.singleton.StringUtils;
 
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
@@ -40,6 +40,7 @@ import java.util.concurrent.TimeUnit;
 
 import javax.inject.Inject;
 
+import androidx.annotation.NonNull;
 import dagger.Lazy;
 
 public class ProtocolTrackerServiceImpl implements ProtocolTrackerService {
@@ -109,28 +110,22 @@ public class ProtocolTrackerServiceImpl implements ProtocolTrackerService {
                 finish();
                 return;
             }
-            log.v(TAG, "request | attempt #" + attempt);
-            deIfmoRestClient.get(context, "eregisterlog?days=2", null, new RestResponseHandler() {
+            log.v(TAG, "request | attempt #", attempt);
+            deIfmoRestClient.get(context, "eregisterlog?days=2", null, new RestResponseHandler<Protocol>() {
                 @Override
-                public void onSuccess(int code, Client.Headers headers, JSONObject obj, JSONArray arr) {
-                    try {
-                        if (code != 200 || arr == null) {
-                            w8andRequest(context);
-                            return;
-                        }
-                        Protocol protocol = new Protocol().fromJson(new JSONObject().put("protocol", arr));
-                        protocol.setTimestamp(time.get().getTimeInMillis());
-                        protocol.setNumberOfWeeks(0);
-                        protocol = new ProtocolConverter(protocol).convert();
-                        handle(context, protocol);
-                    } catch (Throwable throwable) {
-                        log.w(TAG, "request | catch(onSuccess) | ", throwable.getMessage());
-                        finish();
+                public void onSuccess(int code, Client.Headers headers, Protocol response) throws Exception {
+                    if (code != 200 || response == null) {
+                        w8andRequest(context);
+                        return;
                     }
+                    response.setTimestamp(time.get().getTimeInMillis());
+                    response.setNumberOfWeeks(0);
+                    response = new ProtocolConverter(response).convert();
+                    handle(context, response);
                 }
                 @Override
                 public void onFailure(int code, Client.Headers headers, int state) {
-                    if (state != DeIfmoRestClient.FAILED_INTERRUPTED) {
+                    if (state != Client.FAILED_INTERRUPTED) {
                         w8andRequest(context);
                     } else {
                         finish();
@@ -141,6 +136,14 @@ public class ProtocolTrackerServiceImpl implements ProtocolTrackerService {
                 @Override
                 public void onNewRequest(Client.Request request) {
                     requestHandle = request;
+                }
+                @Override
+                public Protocol newInstance() {
+                    return new Protocol();
+                }
+                @Override
+                public JSONObject convertArray(JSONArray arr) throws JSONException {
+                    return new JSONObject().put("protocol", arr);
                 }
             });
         } catch (Throwable throwable) {

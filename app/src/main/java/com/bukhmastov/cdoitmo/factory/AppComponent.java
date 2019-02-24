@@ -64,7 +64,6 @@ import com.bukhmastov.cdoitmo.firebase.impl.FirebaseConfigProviderImpl;
 import com.bukhmastov.cdoitmo.firebase.impl.FirebaseCrashlyticsProviderImpl;
 import com.bukhmastov.cdoitmo.firebase.impl.FirebasePerformanceProviderImpl;
 import com.bukhmastov.cdoitmo.fragment.AboutFragment;
-import com.bukhmastov.cdoitmo.fragment.ConnectedFragment;
 import com.bukhmastov.cdoitmo.fragment.ConnectedFragmentBase;
 import com.bukhmastov.cdoitmo.fragment.ERegisterFragment;
 import com.bukhmastov.cdoitmo.fragment.ERegisterSubjectFragment;

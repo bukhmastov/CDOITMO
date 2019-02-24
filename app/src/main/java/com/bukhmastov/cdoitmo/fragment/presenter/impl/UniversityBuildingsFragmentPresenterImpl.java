@@ -10,13 +10,6 @@ import android.graphics.PorterDuff;
 import android.graphics.PorterDuffColorFilter;
 import android.net.Uri;
 import android.os.Bundle;
-import androidx.annotation.DrawableRes;
-import androidx.annotation.LayoutRes;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentActivity;
-import androidx.fragment.app.FragmentManager;
 import android.view.InflateException;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -62,14 +55,19 @@ import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.squareup.picasso.Picasso;
 
-import org.json.JSONArray;
-import org.json.JSONObject;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
 import javax.inject.Inject;
+
+import androidx.annotation.DrawableRes;
+import androidx.annotation.LayoutRes;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentActivity;
+import androidx.fragment.app.FragmentManager;
 
 import static com.bukhmastov.cdoitmo.util.Thread.UB;
 
@@ -236,7 +234,7 @@ public class UniversityBuildingsFragmentPresenterImpl implements UniversityBuild
     private void load(boolean force) {
         thread.run(UB, () -> {
             log.v(TAG, "load | force=", force);
-            if ((!force || !Client.isOnline(activity)) && uBuildings != null) {
+            if ((!force || Client.isOffline(activity)) && uBuildings != null) {
                 display();
                 return;
             }
@@ -244,16 +242,15 @@ public class UniversityBuildingsFragmentPresenterImpl implements UniversityBuild
                 indicatorLoadOffline();
                 return;
             }
-            loadProvider(new RestResponseHandler() {
+            loadProvider(new RestResponseHandler<UBuildings>() {
                 @Override
-                public void onSuccess(int code, Client.Headers headers, JSONObject obj, JSONArray arr) throws Exception {
-                    if (code == 200 && obj != null) {
-                        UBuildings data = new UBuildings().fromJson(obj);
-                        data.setTimestamp(time.getTimeInMillis());
+                public void onSuccess(int code, Client.Headers headers, UBuildings response) throws Exception {
+                    if (code == 200 && response != null) {
+                        response.setTimestamp(time.getTimeInMillis());
                         if (storagePref.get(activity, "pref_use_cache", true) && storagePref.get(activity, "pref_use_university_cache", false)) {
-                            storage.put(activity, Storage.CACHE, Storage.GLOBAL, "university#buildings", data.toJsonString());
+                            storage.put(activity, Storage.CACHE, Storage.GLOBAL, "university#buildings", response.toJsonString());
                         }
-                        uBuildings = data;
+                        uBuildings = response;
                         display();
                         return;
                     }
@@ -262,16 +259,11 @@ public class UniversityBuildingsFragmentPresenterImpl implements UniversityBuild
                 @Override
                 public void onFailure(int code, Client.Headers headers, int state) {
                     log.v(TAG, "forceLoad | failure ", state);
-                    switch (state) {
-                        case IfmoRestClient.FAILED_OFFLINE:
-                            indicatorLoadOffline();
-                            break;
-                        case IfmoRestClient.FAILED_CORRUPTED_JSON:
-                        case IfmoRestClient.FAILED_SERVER_ERROR:
-                        case IfmoRestClient.FAILED_TRY_AGAIN:
-                            indicatorLoadFailed();
-                            break;
+                    if (state == Client.FAILED_OFFLINE) {
+                        indicatorLoadOffline();
+                        return;
                     }
+                    indicatorLoadFailed();
                 }
                 @Override
                 public void onProgress(int state) {
@@ -282,13 +274,17 @@ public class UniversityBuildingsFragmentPresenterImpl implements UniversityBuild
                 public void onNewRequest(Client.Request request) {
                     requestHandle = request;
                 }
+                @Override
+                public UBuildings newInstance() {
+                    return new UBuildings();
+                }
             });
         }, throwable -> {
             indicatorLoadFailed();
         });
     }
 
-    private void loadProvider(RestResponseHandler handler) {
+    private void loadProvider(RestResponseHandler<UBuildings> handler) {
         log.v(TAG, "loadProvider");
         ifmoRestClient.get(activity, "building_map", null, handler);
     }

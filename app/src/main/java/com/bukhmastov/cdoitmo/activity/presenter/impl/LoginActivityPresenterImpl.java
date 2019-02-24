@@ -57,14 +57,10 @@ import com.bukhmastov.cdoitmo.util.singleton.CollectionUtils;
 import com.bukhmastov.cdoitmo.util.singleton.StringUtils;
 import com.bukhmastov.cdoitmo.view.Message;
 
-import org.json.JSONArray;
-import org.json.JSONObject;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 
 import javax.inject.Inject;
 
@@ -661,19 +657,18 @@ public class LoginActivityPresenterImpl implements LoginActivityPresenter {
             });
         });
         thread.standalone(() -> {
-            isuRestClient.get(activity, "schedule/week/%apikey%", null, new RestResponseHandler() {
+            isuRestClient.get(activity, "schedule/week/%apikey%", null, new RestResponseHandler<IsuWeek>() {
                 @Override
-                public void onSuccess(int code, Client.Headers headers, JSONObject obj, JSONArray arr) {
+                public void onSuccess(int code, Client.Headers headers, IsuWeek isuWeek) {
                     try {
-                        if (obj == null) {
+                        if (isuWeek == null) {
                             setupInformationMeta.onIsuWeekFailed();
                             return;
                         }
-                        IsuWeek isuWeek = new IsuWeek().fromJson(obj);
                         setupInformationMeta.onIsuWeekReady(isuWeek.getWeek());
                     } catch (Throwable throwable) {
                         setupInformationMeta.onIsuWeekFailed();
-                    };
+                    }
                 }
                 @Override
                 public void onFailure(int code, Client.Headers headers, int state) {
@@ -683,6 +678,10 @@ public class LoginActivityPresenterImpl implements LoginActivityPresenter {
                 public void onProgress(int state) {}
                 @Override
                 public void onNewRequest(Client.Request request) {}
+                @Override
+                public IsuWeek newInstance() {
+                    return new IsuWeek();
+                }
             });
         });
         thread.standalone(() -> {
@@ -690,15 +689,14 @@ public class LoginActivityPresenterImpl implements LoginActivityPresenter {
                 setupInformationMeta.onIsuUserFailed();
                 return;
             }
-            isuPrivateRestClient.get(activity, "userdata/%apikey%/%isutoken%", null, new RestResponseHandler() {
+            isuPrivateRestClient.get(activity, "userdata/%apikey%/%isutoken%", null, new RestResponseHandler<IsuUserData>() {
                 @Override
-                public void onSuccess(int code, Client.Headers headers, JSONObject obj, JSONArray arr) {
+                public void onSuccess(int code, Client.Headers headers, IsuUserData isuUserData) {
                     try {
-                        if (obj == null) {
+                        if (isuUserData == null) {
                             setupInformationMeta.onIsuUserFailed();
                             return;
                         }
-                        IsuUserData isuUserData = new IsuUserData().fromJson(obj);
                         String surname = StringUtils.defaultIfBlank(isuUserData.getSurname(), null);
                         String nameO = StringUtils.defaultIfBlank(isuUserData.getName(), null);
                         String patronymic = StringUtils.defaultIfBlank(isuUserData.getPatronymic(), null);
@@ -744,6 +742,10 @@ public class LoginActivityPresenterImpl implements LoginActivityPresenter {
                 public void onProgress(int state) {}
                 @Override
                 public void onNewRequest(Client.Request request) {}
+                @Override
+                public IsuUserData newInstance() {
+                    return new IsuUserData();
+                }
             });
         });
     }

@@ -20,7 +20,6 @@ import com.bukhmastov.cdoitmo.object.schedule.ScheduleExams;
 import com.bukhmastov.cdoitmo.object.schedule.ScheduleLessons;
 import com.bukhmastov.cdoitmo.provider.InjectProvider;
 import com.bukhmastov.cdoitmo.util.Storage;
-import com.bukhmastov.cdoitmo.util.Thread;
 import com.bukhmastov.cdoitmo.widget.ScheduleLessonsWidget;
 
 import org.json.JSONArray;

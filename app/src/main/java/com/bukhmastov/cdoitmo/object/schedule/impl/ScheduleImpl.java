@@ -1,8 +1,5 @@
 package com.bukhmastov.cdoitmo.object.schedule.impl;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.StringDef;
-
 import com.bukhmastov.cdoitmo.App;
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.firebase.FirebasePerformanceProvider;
@@ -15,9 +12,6 @@ import com.bukhmastov.cdoitmo.util.Storage;
 import com.bukhmastov.cdoitmo.util.singleton.CollectionUtils;
 import com.bukhmastov.cdoitmo.util.singleton.StringUtils;
 
-import org.json.JSONArray;
-import org.json.JSONObject;
-
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.text.ParseException;
@@ -29,6 +23,11 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.StringDef;
 
 public abstract class ScheduleImpl<T extends ScheduleJsonEntity> extends ScheduleBase implements Schedule<T> {
 
@@ -76,48 +75,49 @@ public abstract class ScheduleImpl<T extends ScheduleJsonEntity> extends Schedul
                 handler.onFailure(FAILED_EMPTY_QUERY);
                 return;
             }
-            String q = query.trim();
-            log.v(TAG, "search | query=", q, " | refreshRate=", refreshRate, " | forceToCache=", forceToCache, " | withUserChanges=", withUserChanges);
-            if ("personal".equals(q) && StringUtils.isBlank(storage.get(context, Storage.PERMANENT, Storage.USER, "user#isu#access_token", ""))) {
+            query = query.trim();
+            log.v(TAG, "search | query=", query, " | refreshRate=", refreshRate, " | forceToCache=", forceToCache, " | withUserChanges=", withUserChanges);
+            if ("personal".equals(query) && !isuPrivateRestClient.get().isAuthorized(context)) {
                 log.v(TAG, "search | personal | isu auth required");
                 handler.onFailure(FAILED_PERSONAL_NEED_ISU);
                 return;
             }
             handler.onCancelRequest();
-            if (q.contains(" ")) {
-                q = q.split(" ")[0].trim();
+            if (query.contains(" ")) {
+                query = query.split(" ")[0].trim();
             }
-            if (!addPending(q, withUserChanges, handler)) {
-                log.v(TAG, "search | query=", q, " | attached to the pending stack");
+            if (!addPending(query, withUserChanges, handler)) {
+                log.v(TAG, "search | query=", query, " | attached to the pending stack");
                 return;
             }
-            log.v(TAG, "search | query=", q, " | added to the pending stack | starting the search procedure");
-            if (q.equals("personal")) {
+            log.v(TAG, "search | query=", query, " | added to the pending stack | starting the search procedure");
+            if (query.equals("personal")) {
                 searchPersonal(refreshRate, forceToCache, withUserChanges);
                 return;
             }
-            if (q.matches("^[0-9]{6}$")) {
-                searchTeacher(q, refreshRate, forceToCache, withUserChanges);
+            if (query.matches("^[0-9]{6}$")) {
+                searchTeacher(query, refreshRate, forceToCache, withUserChanges);
                 return;
             }
-            if (q.matches("^[0-9](.)*$")) {
-                searchRoom(q, refreshRate, forceToCache, withUserChanges);
+            if (query.matches("^[0-9](.)*$")) {
+                searchRoom(query, refreshRate, forceToCache, withUserChanges);
                 return;
             }
-            if (q.matches("^[a-zA-Z](.)*$")) {
-                if (q.matches("^[a-zA-Z][0-9]{4}[a-zA-Z]?$")) {
-                    q = q.substring(0, 1).toUpperCase() + q.substring(1).toLowerCase();
+            if (query.matches("^[a-zA-Z](.)*$")) {
+                Matcher m = Pattern.compile("^([a-z])(\\d+.*)", Pattern.CASE_INSENSITIVE).matcher(query);
+                if (m.find()) {
+                    query = m.group(1).toUpperCase() + m.group(2).toLowerCase();
                 }
-                searchGroup(q, refreshRate, forceToCache, withUserChanges);
+                searchGroup(query, refreshRate, forceToCache, withUserChanges);
                 return;
             }
-            if (q.matches("^[а-яА-Я\\s]+$")) {
-                q = q.toLowerCase();
-                searchTeachers(q, withUserChanges);
+            if (query.matches("^[а-яА-Я\\s]+$")) {
+                query = query.toLowerCase();
+                searchTeachers(query, withUserChanges);
                 return;
             }
-            log.v(TAG, "search | got invalid query: " + q);
-            invokePendingAndClose(q, withUserChanges, h -> h.onFailure(FAILED_INVALID_QUERY));
+            log.v(TAG, "search | got invalid query: " + query);
+            invokePendingAndClose(query, withUserChanges, h -> h.onFailure(FAILED_INVALID_QUERY));
         } catch (Throwable throwable) {
             log.exception(throwable);
             invokePendingAndClose(query, withUserChanges, h -> h.onFailure(FAILED_LOAD));
@@ -207,7 +207,9 @@ public abstract class ScheduleImpl<T extends ScheduleJsonEntity> extends Schedul
      */
     protected int getRefreshRate() {
         try {
-            return storagePref.get(context, "pref_use_cache", true) ? Integer.parseInt(storagePref.get(context, "pref_static_refresh", "168")) : 0;
+            return storagePref.get(context, "pref_use_cache", true) ?
+                    Integer.parseInt(storagePref.get(context, "pref_static_refresh", "168")) :
+                    0;
         } catch (Exception e) {
             return 0;
         }
@@ -287,6 +289,23 @@ public abstract class ScheduleImpl<T extends ScheduleJsonEntity> extends Schedul
         }
     }
 
+    @Override
+    public String getProgressMessage(int state) {
+        return isuRestClient.get().getProgressMessage(context, state);
+    }
+
+    @Override
+    public String getFailedMessage(int code, int state) {
+        switch (state) {
+            case FAILED_LOAD: return context.getString(R.string.schedule_failed_load);
+            case FAILED_EMPTY_QUERY: return context.getString(R.string.schedule_failed_empty_query);
+            case FAILED_INVALID_QUERY: return context.getString(R.string.schedule_failed_invalid_query);
+            case FAILED_PERSONAL_NEED_ISU: return context.getString(R.string.schedule_failed_need_isu);
+            case FAILED_NOT_FOUND: return context.getString(R.string.schedule_failed_not_found);
+        }
+        return isuRestClient.get().getFailedMessage(context, code, state);
+    }
+
     // -->- Pending mechanism ->--
 
     /**
@@ -303,21 +322,23 @@ public abstract class ScheduleImpl<T extends ScheduleJsonEntity> extends Schedul
      * @return true - initialized new stack, false - attached to existing one
      */
     private boolean addPending(@NonNull String query, boolean withUserChanges, @NonNull Handler<T> handler) {
-        log.v(TAG, "addPending | query=", query, " | withUserChanges=", withUserChanges);
-        String token = getType() + "_" + query.toLowerCase() + "_" + (withUserChanges ? "t" : "f");
-        if (pendingStack.containsKey(token)) {
-            List<Handler<T>> handlers = pendingStack.get(token);
-            if (CollectionUtils.isEmpty(handlers)) {
-                pendingStack.remove(token);
-                return addPending(query, withUserChanges, handler);
+        synchronized (pendingStack) {
+            log.v(TAG, "addPending | query=", query, " | withUserChanges=", withUserChanges);
+            String token = getType() + "_" + query.toLowerCase() + "_" + (withUserChanges ? "t" : "f");
+            if (pendingStack.containsKey(token)) {
+                List<Handler<T>> handlers = pendingStack.get(token);
+                if (CollectionUtils.isEmpty(handlers)) {
+                    pendingStack.remove(token);
+                    return addPending(query, withUserChanges, handler);
+                }
+                handlers.add(handler);
+                return false;
             }
+            List<Handler<T>> handlers = new ArrayList<>();
             handlers.add(handler);
-            return false;
+            trace.put(token, firebasePerformanceProvider.startTrace(getTraceName()));
+            pendingStack.put(token, handlers);
         }
-        List<Handler<T>> handlers = new ArrayList<>();
-        handlers.add(handler);
-        trace.put(token, firebasePerformanceProvider.startTrace(getTraceName()));
-        pendingStack.put(token, handlers);
         return true;
     }
 
@@ -325,23 +346,25 @@ public abstract class ScheduleImpl<T extends ScheduleJsonEntity> extends Schedul
      * Invokes new state on all handlers from related stack. Then clears stack, if remove=true
      */
     private void invokePending(String query, boolean withUserChanges, boolean remove, Pending<T> pending) {
-        log.v(TAG, "invokePending | query=", query, " | withUserChanges=", withUserChanges, " | remove=", remove);
-        String token = getType() + "_" + query.toLowerCase() + "_" + (withUserChanges ? "t" : "f");
-        List<Handler<T>> handlers = pendingStack.get(token);
-        if (handlers != null) {
-            for (int i = handlers.size() - 1; i >= 0; i--) {
-                Handler<T> handler = handlers.get(i);
-                if (handler != null) {
-                    log.v(TAG, "invokePending | query=", query, " | invoke");
-                    pending.invoke(handler);
+        synchronized (pendingStack) {
+            log.v(TAG, "invokePending | query=", query, " | withUserChanges=", withUserChanges, " | remove=", remove);
+            String token = getType() + "_" + query.toLowerCase() + "_" + (withUserChanges ? "t" : "f");
+            List<Handler<T>> handlers = pendingStack.get(token);
+            if (handlers != null) {
+                for (int i = handlers.size() - 1; i >= 0; i--) {
+                    Handler<T> handler = handlers.get(i);
+                    if (handler != null) {
+                        log.v(TAG, "invokePending | query=", query, " | invoke");
+                        pending.invoke(handler);
+                    }
                 }
             }
-        }
-        if (remove) {
-            pendingStack.remove(token);
-            if (trace.containsKey(token)) {
-                firebasePerformanceProvider.stopTrace(trace.get(token));
-                trace.remove(token);
+            if (remove) {
+                pendingStack.remove(token);
+                if (trace.containsKey(token)) {
+                    firebasePerformanceProvider.stopTrace(trace.get(token));
+                    trace.remove(token);
+                }
             }
         }
     }
@@ -431,28 +454,26 @@ public abstract class ScheduleImpl<T extends ScheduleJsonEntity> extends Schedul
             if (cached != null) {
                 search.onFound(query, cached, true);
             } else {
-                invokePendingAndClose(query, withUserChanges, handler -> handler.onFailure(FAILED_OFFLINE));
+                invokePendingAndClose(query, withUserChanges, handler -> handler.onFailure(Client.FAILED_OFFLINE));
             }
             return;
         }
-        RestResponseHandler restResponseHandler = new RestResponseHandler() {
+        if (cached != null && !isForceRefresh(cached, refreshRate)) {
+            search.onFound(query, cached, true);
+            return;
+        }
+        log.v(TAG, "searchByQuery | query=", query, " | force refresh");
+        search.onWebRequest(query, source, new RestResponseHandler<T>() {
             @Override
-            public void onSuccess(int code, Client.Headers headers, JSONObject obj, JSONArray arr) {
-                try {
-                    log.v(TAG, "searchByQuery | query=", query, " || onSuccess | code=", code, " | data=", obj);
-                    if (code == 200 && obj != null) {
-                        T schedule = search.onGetScheduleFromJson(query, source, obj);
-                        if (schedule != null) {
-                            search.onFound(query, schedule, false);
-                            return;
-                        }
-                    }
-                    if (cached != null) {
-                        search.onFound(query, cached, true);
-                    } else {
-                        invokePendingAndClose(query, withUserChanges, handler -> handler.onFailure(code, headers, FAILED_LOAD));
-                    }
-                } catch (Throwable throwable) {
+            public void onSuccess(int code, Client.Headers headers, T schedule) throws Exception {
+                log.v(TAG, "searchByQuery | query=", query, " || onSuccess | code=", code, " | schedule=", schedule);
+                if (code == 200 && schedule != null) {
+                    search.onFound(query, schedule, false);
+                    return;
+                }
+                if (cached != null) {
+                    search.onFound(query, cached, true);
+                } else {
                     invokePendingAndClose(query, withUserChanges, handler -> handler.onFailure(code, headers, FAILED_LOAD));
                 }
             }
@@ -461,9 +482,13 @@ public abstract class ScheduleImpl<T extends ScheduleJsonEntity> extends Schedul
                 log.v(TAG, "searchByQuery | query=", query, " || onFailure | code=", code, " | state=", state);
                 if (cached != null && state != Client.FAILED_INTERRUPTED) {
                     search.onFound(query, cached, true);
-                } else {
-                    invokePendingAndClose(query, withUserChanges, handler -> handler.onFailure(code, headers, state));
+                    return;
                 }
+                if (code == 404) {
+                    invokePendingAndClose(query, withUserChanges, handler -> handler.onFailure(code, headers, FAILED_NOT_FOUND));
+                    return;
+                }
+                invokePendingAndClose(query, withUserChanges, handler -> handler.onFailure(code, headers, state));
             }
             @Override
             public void onProgress(int state) {
@@ -474,22 +499,15 @@ public abstract class ScheduleImpl<T extends ScheduleJsonEntity> extends Schedul
             public void onNewRequest(final Client.Request request) {
                 invokePending(query, withUserChanges, handler -> handler.onNewRequest(request));
             }
-        };
-        if (isForceRefresh(cached, refreshRate)) {
-            log.v(TAG, "searchByQuery | query=", query, " | force refresh");
-            search.onWebRequest(query, source, restResponseHandler);
-            return;
-        }
-        if (cached != null) {
-            search.onFound(query, cached, true);
-        } else {
-            search.onWebRequest(query, source, restResponseHandler);
-        }
+            @Override
+            public T newInstance() {
+                return getNewInstance();
+            }
+        });
     }
 
-    protected interface SearchByQuery<J extends ScheduleJsonEntity> {
-        void onWebRequest(String query, @Source String source, RestResponseHandler restResponseHandler);
-        J onGetScheduleFromJson(String query, @Source String source, JSONObject json) throws Exception;
-        void onFound(String query, J schedule, boolean fromCache);
+    protected interface SearchByQuery<S extends ScheduleJsonEntity> {
+        void onWebRequest(String query, @Source String source, RestResponseHandler<S> restResponseHandler);
+        void onFound(String query, S schedule, boolean fromCache);
     }
 }

@@ -106,6 +106,7 @@ public class ScheduleLessonsRVA extends RVA<RVALessons> {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     protected void onBind(View container, RVA.Item item) {
         switch (item.type) {
             case TYPE_HEADER: {
@@ -362,6 +363,7 @@ public class ScheduleLessonsRVA extends RVA<RVALessons> {
                     type = TYPE_LESSON_BOTTOM;
                 }
                 Item item = new Item<>(type, lesson);
+                //noinspection unchecked
                 item.extras.put("weekday", day.getWeekday());
                 dataset.add(item);
                 index++;

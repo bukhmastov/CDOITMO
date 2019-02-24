@@ -1,6 +1,5 @@
 package com.bukhmastov.cdoitmo.fragment.presenter.impl;
 
-import android.content.Context;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
@@ -19,7 +18,6 @@ import com.bukhmastov.cdoitmo.network.IsuPrivateRestClient;
 import com.bukhmastov.cdoitmo.network.handlers.ResponseHandler;
 import com.bukhmastov.cdoitmo.network.handlers.RestResponseHandler;
 import com.bukhmastov.cdoitmo.network.model.Client;
-import com.bukhmastov.cdoitmo.network.model.Isu;
 import com.bukhmastov.cdoitmo.util.Account;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.NotificationMessage;
@@ -27,9 +25,6 @@ import com.bukhmastov.cdoitmo.util.Storage;
 import com.bukhmastov.cdoitmo.util.Thread;
 import com.bukhmastov.cdoitmo.util.singleton.CollectionUtils;
 import com.bukhmastov.cdoitmo.util.singleton.StringUtils;
-
-import org.json.JSONArray;
-import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -45,8 +40,6 @@ public class LinkAccountFragmentPresenterImpl extends ConnectedFragmentPresenter
     private View linkAccountForm = null;
     private View linkAccountProgress = null;
 
-    @Inject
-    Context context;
     @Inject
     Log log;
     @Inject
@@ -167,14 +160,13 @@ public class LinkAccountFragmentPresenterImpl extends ConnectedFragmentPresenter
                         });
                         return;
                     }
-                    isuPrivateRestClient.get(activity, "userdata/%apikey%/%isutoken%", null, new RestResponseHandler() {
+                    isuPrivateRestClient.get(activity, "userdata/%apikey%/%isutoken%", null, new RestResponseHandler<IsuUserData>() {
                         @Override
-                        public void onSuccess(int code, Client.Headers headers, JSONObject obj, JSONArray arr) throws Exception {
-                            if (obj == null) {
+                        public void onSuccess(int code, Client.Headers headers, IsuUserData isuUserData) throws Exception {
+                            if (isuUserData == null) {
                                 onDone();
                                 return;
                             }
-                            IsuUserData isuUserData = new IsuUserData().fromJson(obj);
                             String surname = StringUtils.defaultIfBlank(isuUserData.getSurname(), null);
                             String nameO = StringUtils.defaultIfBlank(isuUserData.getName(), null);
                             String patronymic = StringUtils.defaultIfBlank(isuUserData.getPatronymic(), null);
@@ -216,7 +208,7 @@ public class LinkAccountFragmentPresenterImpl extends ConnectedFragmentPresenter
                                 avatar = null;
                             }
 
-                            account.setUserInfo(context, name, groups, avatar);
+                            account.setUserInfo(activity, name, groups, avatar);
                             eventBus.fire(new UserInfoChangedEvent());
 
                             onDone();
@@ -227,7 +219,7 @@ public class LinkAccountFragmentPresenterImpl extends ConnectedFragmentPresenter
                         }
                         @Override
                         public void onProgress(int state) {
-                            onProgressMessage(R.string.data_initializing);
+                            onProgressMessage(activity.getString(R.string.data_initializing));
                         }
                         @Override
                         public void onNewRequest(Client.Request request) {
@@ -235,6 +227,10 @@ public class LinkAccountFragmentPresenterImpl extends ConnectedFragmentPresenter
                                 requestHandle.cancel();
                             }
                             requestHandle = request;
+                        }
+                        @Override
+                        public IsuUserData newInstance() {
+                            return new IsuUserData();
                         }
                         private void onDone() {
                             thread.runOnUI(() -> {
@@ -256,35 +252,13 @@ public class LinkAccountFragmentPresenterImpl extends ConnectedFragmentPresenter
                         );
                         linkAccountForm.setVisibility(View.VISIBLE);
                         linkAccountProgress.setVisibility(View.GONE);
-                        switch (state) {
-                            case Isu.FAILED_OFFLINE:
-                                notificationMessage.snackBar(activity, activity.getString(R.string.device_offline_action_refused));
-                                break;
-                            case Isu.FAILED_SERVER_ERROR:
-                                notificationMessage.snackBar(activity, activity.getString(R.string.auth_failed) + ". " + Isu.getFailureMessage(activity, code));
-                                break;
-                            case Isu.FAILED_TRY_AGAIN:
-                            case Isu.FAILED_AUTH_TRY_AGAIN:
-                                notificationMessage.snackBar(activity, activity.getString(R.string.auth_failed));
-                                break;
-                            case Isu.FAILED_AUTH_CREDENTIALS_REQUIRED:
-                                notificationMessage.snackBar(activity, activity.getString(R.string.required_login_password));
-                                break;
-                            case Isu.FAILED_AUTH_CREDENTIALS_FAILED:
-                                notificationMessage.snackBar(activity, activity.getString(R.string.invalid_login_password));
-                                break;
-                        }
+                        notificationMessage.snackBar(activity, isuPrivateRestClient.getFailedMessage(activity, code, state));
                     });
                 }
                 @Override
                 public void onProgress(int state) {
                     log.v(TAG, "isuAuth | progress | state=", state);
-                    switch (state) {
-                        default:
-                        case Isu.STATE_HANDLING: onProgressMessage(R.string.loading); break;
-                        case Isu.STATE_AUTHORIZED: onProgressMessage(R.string.authorized); break;
-                        case Isu.STATE_AUTHORIZATION: onProgressMessage(R.string.authorization); break;
-                    }
+                    onProgressMessage(isuPrivateRestClient.getProgressMessage(activity, state));
                 }
                 @Override
                 public void onNewRequest(Client.Request request) {
@@ -293,13 +267,13 @@ public class LinkAccountFragmentPresenterImpl extends ConnectedFragmentPresenter
                     }
                     requestHandle = request;
                 }
-                private void onProgressMessage(int resId) {
+                private void onProgressMessage(String msg) {
                     thread.runOnUI(() -> {
                         linkAccountForm.setVisibility(View.GONE);
                         linkAccountProgress.setVisibility(View.VISIBLE);
                         TextView message = activity.findViewById(R.id.link_account_progress_message);
                         if (message != null) {
-                            message.setText(resId);
+                            message.setText(msg);
                         }
                     });
                 }

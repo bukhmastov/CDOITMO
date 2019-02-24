@@ -49,6 +49,7 @@ public class GroupRVA extends RVA<GPerson> {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     protected void onBind(View container, Item item) {
         switch (item.type) {
             case TYPE_GROUP: bindGroup(container, item); break;

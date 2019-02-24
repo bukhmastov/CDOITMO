@@ -52,7 +52,7 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import static com.bukhmastov.cdoitmo.util.Thread.SA;
 
 public class ScheduleAttestationsFragmentPresenterImpl extends ConnectedFragmentPresenterImpl
-        implements ScheduleAttestationsFragmentPresenter {
+        implements Schedule.Handler<SAttestations>, ScheduleAttestationsFragmentPresenter {
 
     private static final String TAG = "SAFragment";
 
@@ -64,7 +64,6 @@ public class ScheduleAttestationsFragmentPresenterImpl extends ConnectedFragment
         public int offset = 0;
     }
 
-    private final Schedule.Handler<SAttestations> scheduleHandler;
     private SAttestations schedule = null;
     private String lastQuery = null;
     private String query = null;
@@ -93,141 +92,6 @@ public class ScheduleAttestationsFragmentPresenterImpl extends ConnectedFragment
     public ScheduleAttestationsFragmentPresenterImpl() {
         super();
         AppComponentProvider.getComponent().inject(this);
-        scheduleHandler = new Schedule.Handler<SAttestations>() {
-            @Override
-            public void onSuccess(SAttestations schedule, boolean fromCache) {
-                thread.run(SA, () -> {
-                    ScheduleAttestationsFragmentPresenterImpl.this.schedule = schedule;
-                    int week = time.getWeek(activity);
-                    ScheduleAttestationsRVA adapter = new ScheduleAttestationsRVA(schedule, week);
-                    adapter.setClickListener(R.id.schedule_lessons_menu, ScheduleAttestationsFragmentPresenterImpl.this::attestationsMenuMore);
-                    adapter.setClickListener(R.id.schedule_lessons_share, ScheduleAttestationsFragmentPresenterImpl.this::attestationsMenuShare);
-                    thread.runOnUI(SA, () -> {
-                        fragment.draw(R.layout.layout_schedule_both_recycle_list);
-                        // prepare
-                        SwipeRefreshLayout swipe = fragment.container().findViewById(R.id.schedule_swipe);
-                        RecyclerView recyclerView = fragment.container().findViewById(R.id.schedule_list);
-                        if (swipe == null || recyclerView == null) {
-                            return;
-                        }
-                        LinearLayoutManager layoutManager = new LinearLayoutManager(activity, RecyclerView.VERTICAL, false);
-                        // swipe
-                        swipe.setColorSchemeColors(Color.resolve(activity, R.attr.colorAccent));
-                        swipe.setProgressBackgroundColorSchemeColor(Color.resolve(activity, R.attr.colorBackgroundRefresh));
-                        swipe.setOnRefreshListener(() -> {
-                            swipe.setRefreshing(false);
-                            load(true);
-                        });
-                        // recycle view (list)
-                        recyclerView.setLayoutManager(layoutManager);
-                        recyclerView.setAdapter(adapter);
-                        recyclerView.setHasFixedSize(true);
-                        // scroll to prev position listener (only android 23+)
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                            recyclerView.setOnScrollChangeListener((view, scrollX, scrollY, oldScrollX, oldScrollY) -> {
-                                final int position = layoutManager.findFirstVisibleItemPosition();
-                                final View v = recyclerView.getChildAt(0);
-                                final int offset = (v == null) ? 0 : (v.getTop() - recyclerView.getPaddingTop());
-                                if (scroll == null) {
-                                    scroll = new Scroll();
-                                }
-                                scroll.position = position;
-                                scroll.offset = offset;
-                            });
-                        }
-                        // scroll to previous position
-                        if (scroll != null) {
-                            layoutManager.scrollToPositionWithOffset(scroll.position, scroll.offset);
-                        }
-                    }, throwable -> {
-                        log.exception(throwable);
-                        failed(activity);
-                    });
-                }, throwable -> {
-                    log.exception(throwable);
-                    failed(activity);
-                });
-            }
-            @Override
-            public void onFailure(int statusCode, Client.Headers headers, int state) {
-                thread.runOnUI(SA, () -> {
-                    ScheduleAttestationsFragmentPresenterImpl.this.schedule = null;
-                    log.v(TAG, "onFailure | statusCode=", statusCode, " | state=", state);
-                    switch (state) {
-                        case Client.FAILED_OFFLINE:
-                        case Schedule.FAILED_OFFLINE: {
-                            final ViewGroup view = (ViewGroup) fragment.inflate(R.layout.state_offline_text);
-                            view.findViewById(R.id.offline_reload).setOnClickListener(v -> load(false));
-                            fragment.draw(view);
-                            break;
-                        }
-                        case Client.FAILED_TRY_AGAIN:
-                        case Client.FAILED_SERVER_ERROR:
-                        case Schedule.FAILED_LOAD: {
-                            final ViewGroup view = (ViewGroup) fragment.inflate(R.layout.state_failed_button);
-                            if (state == Client.FAILED_TRY_AGAIN) {
-                                ((TextView) view.findViewById(R.id.try_again_message)).setText(Client.getFailureMessage(activity, statusCode));
-                            }
-                            view.findViewById(R.id.try_again_reload).setOnClickListener(v -> load(false));
-                            fragment.draw(view);
-                            break;
-                        }
-                        case Schedule.FAILED_EMPTY_QUERY: {
-                            final ViewGroup view = (ViewGroup) fragment.inflate(R.layout.layout_schedule_empty_query);
-                            view.findViewById(R.id.open_search).setOnClickListener(v -> eventBus.fire(new OpenActivityEvent(ScheduleAttestationsSearchActivity.class)));
-                            view.findViewById(R.id.open_settings).setOnClickListener(v -> activity.openActivity(ConnectedActivity.TYPE.STACKABLE, SettingsScheduleAttestationsFragment.class, null));
-                            fragment.draw(view);
-                            break;
-                        }
-                        case Schedule.FAILED_NOT_FOUND: {
-                            final ViewGroup view = (ViewGroup) fragment.inflate(R.layout.state_nothing_to_display_compact);
-                            ((TextView) view.findViewById(R.id.ntd_text)).setText(R.string.no_schedule);
-                            fragment.draw(view);
-                            break;
-                        }
-                        case Schedule.FAILED_INVALID_QUERY: {
-                            final ViewGroup view = (ViewGroup) fragment.inflate(R.layout.state_failed_text);
-                            ((TextView) view.findViewById(R.id.text)).setText(R.string.incorrect_query);
-                            fragment.draw(view);
-                            break;
-                        }
-                        case Schedule.FAILED_PERSONAL_NEED_ISU: {
-                            final ViewGroup view = (ViewGroup) fragment.inflate(R.layout.layout_schedule_isu_required);
-                            view.findViewById(R.id.open_isu_auth).setOnClickListener(v -> activity.openActivity(ConnectedActivity.TYPE.STACKABLE, LinkedAccountsFragment.class, null));
-                            view.findViewById(R.id.open_search).setOnClickListener(v -> eventBus.fire(new OpenActivityEvent(ScheduleAttestationsSearchActivity.class)));
-                            view.findViewById(R.id.open_settings).setOnClickListener(v -> activity.openActivity(ConnectedActivity.TYPE.STACKABLE, SettingsScheduleAttestationsFragment.class, null));
-                            fragment.draw(view);
-                            break;
-                        }
-                    }
-                }, throwable -> {
-                    log.exception(throwable);
-                });
-            }
-            @Override
-            public void onProgress(int state) {
-                thread.runOnUI(SA, () -> {
-                    log.v(TAG, "onProgress | state=", state);
-                    ViewGroup view = (ViewGroup) fragment.inflate(R.layout.state_loading_text);
-                    if (view != null) {
-                        ((TextView) view.findViewById(R.id.loading_message)).setText(R.string.loading);
-                        fragment.draw(view);
-                    }
-                }, throwable -> {
-                    log.exception(throwable);
-                });
-            }
-            @Override
-            public void onNewRequest(Client.Request request) {
-                requestHandle = request;
-            }
-            @Override
-            public void onCancelRequest() {
-                if (requestHandle != null) {
-                    requestHandle.cancel();
-                }
-            }
-        };
     }
 
     @Override
@@ -340,9 +204,9 @@ public class ScheduleAttestationsFragmentPresenterImpl extends ConnectedFragment
                     scroll.offset = 0;
                 }
                 if (refresh) {
-                    scheduleAttestations.search(getQuery(), 0, scheduleHandler);
+                    scheduleAttestations.search(getQuery(), 0, this);
                 } else {
-                    scheduleAttestations.search(getQuery(), scheduleHandler);
+                    scheduleAttestations.search(getQuery(), this);
                 }
             }, throwable -> {
                 log.exception(throwable);
@@ -365,6 +229,135 @@ public class ScheduleAttestationsFragmentPresenterImpl extends ConnectedFragment
             fragment.draw(state_try_again);
         } catch (Exception e) {
             log.exception(e);
+        }
+    }
+
+    @Override
+    public void onSuccess(SAttestations schedule, boolean fromCache) {
+        thread.run(SA, () -> {
+            ScheduleAttestationsFragmentPresenterImpl.this.schedule = schedule;
+            int week = time.getWeek(activity);
+            ScheduleAttestationsRVA adapter = new ScheduleAttestationsRVA(schedule, week);
+            adapter.setClickListener(R.id.schedule_lessons_menu, ScheduleAttestationsFragmentPresenterImpl.this::attestationsMenuMore);
+            adapter.setClickListener(R.id.schedule_lessons_share, ScheduleAttestationsFragmentPresenterImpl.this::attestationsMenuShare);
+            thread.runOnUI(SA, () -> {
+                fragment.draw(R.layout.layout_schedule_both_recycle_list);
+                // prepare
+                SwipeRefreshLayout swipe = fragment.container().findViewById(R.id.schedule_swipe);
+                RecyclerView recyclerView = fragment.container().findViewById(R.id.schedule_list);
+                if (swipe == null || recyclerView == null) {
+                    return;
+                }
+                LinearLayoutManager layoutManager = new LinearLayoutManager(activity, RecyclerView.VERTICAL, false);
+                // swipe
+                swipe.setColorSchemeColors(Color.resolve(activity, R.attr.colorAccent));
+                swipe.setProgressBackgroundColorSchemeColor(Color.resolve(activity, R.attr.colorBackgroundRefresh));
+                swipe.setOnRefreshListener(() -> {
+                    swipe.setRefreshing(false);
+                    load(true);
+                });
+                // recycle view (list)
+                recyclerView.setLayoutManager(layoutManager);
+                recyclerView.setAdapter(adapter);
+                recyclerView.setHasFixedSize(true);
+                // scroll to prev position listener (only android 23+)
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    recyclerView.setOnScrollChangeListener((view, scrollX, scrollY, oldScrollX, oldScrollY) -> {
+                        final int position = layoutManager.findFirstVisibleItemPosition();
+                        final View v = recyclerView.getChildAt(0);
+                        final int offset = (v == null) ? 0 : (v.getTop() - recyclerView.getPaddingTop());
+                        if (scroll == null) {
+                            scroll = new Scroll();
+                        }
+                        scroll.position = position;
+                        scroll.offset = offset;
+                    });
+                }
+                // scroll to previous position
+                if (scroll != null) {
+                    layoutManager.scrollToPositionWithOffset(scroll.position, scroll.offset);
+                }
+            }, throwable -> {
+                log.exception(throwable);
+                failed(activity);
+            });
+        }, throwable -> {
+            log.exception(throwable);
+            failed(activity);
+        });
+    }
+
+    @Override
+    public void onFailure(int code, Client.Headers headers, int state) {
+        thread.runOnUI(SA, () -> {
+            ScheduleAttestationsFragmentPresenterImpl.this.schedule = null;
+            log.v(TAG, "onFailure | code=", code, " | state=", state);
+            if (state == Client.FAILED_OFFLINE) {
+                ViewGroup view = (ViewGroup) fragment.inflate(R.layout.state_offline_text);
+                view.findViewById(R.id.offline_reload).setOnClickListener(v -> load(false));
+                fragment.draw(view);
+                return;
+            }
+            if (state == Schedule.FAILED_NOT_FOUND) {
+                ViewGroup view = (ViewGroup) fragment.inflate(R.layout.state_nothing_to_display_compact);
+                ((TextView) view.findViewById(R.id.ntd_text)).setText(scheduleAttestations.getFailedMessage(code, state));
+                fragment.draw(view);
+                return;
+            }
+            if (state == Schedule.FAILED_PERSONAL_NEED_ISU) {
+                ViewGroup view = (ViewGroup) fragment.inflate(R.layout.layout_schedule_isu_required);
+                view.findViewById(R.id.open_isu_auth).setOnClickListener(v -> activity.openActivity(ConnectedActivity.TYPE.STACKABLE, LinkedAccountsFragment.class, null));
+                view.findViewById(R.id.open_search).setOnClickListener(v -> eventBus.fire(new OpenActivityEvent(ScheduleAttestationsSearchActivity.class)));
+                view.findViewById(R.id.open_settings).setOnClickListener(v -> activity.openActivity(ConnectedActivity.TYPE.STACKABLE, SettingsScheduleAttestationsFragment.class, null));
+                fragment.draw(view);
+                return;
+            }
+            if (state == Schedule.FAILED_EMPTY_QUERY) {
+                ViewGroup view = (ViewGroup) fragment.inflate(R.layout.layout_schedule_empty_query);
+                view.findViewById(R.id.open_search).setOnClickListener(v -> eventBus.fire(new OpenActivityEvent(ScheduleAttestationsSearchActivity.class)));
+                view.findViewById(R.id.open_settings).setOnClickListener(v -> activity.openActivity(ConnectedActivity.TYPE.STACKABLE, SettingsScheduleAttestationsFragment.class, null));
+                fragment.draw(view);
+                return;
+            }
+            if (state == Schedule.FAILED_INVALID_QUERY) {
+                ViewGroup view = (ViewGroup) fragment.inflate(R.layout.state_failed_text);
+                ((TextView) view.findViewById(R.id.text)).setText(scheduleAttestations.getFailedMessage(code, state));
+                fragment.draw(view);
+                return;
+            }
+            ViewGroup view = (ViewGroup) fragment.inflate(R.layout.state_failed_button);
+            ((TextView) view.findViewById(R.id.try_again_message)).setText(scheduleAttestations.getFailedMessage(code, state));
+            view.findViewById(R.id.try_again_reload).setOnClickListener(v -> load(false));
+            fragment.draw(view);
+        }, throwable -> {
+            log.exception(throwable);
+        });
+    }
+
+    @Override
+    public void onProgress(int state) {
+        thread.runOnUI(SA, () -> {
+            log.v(TAG, "onProgress | state=", state);
+            ViewGroup view = (ViewGroup) fragment.inflate(R.layout.state_loading_text);
+            if (view != null) {
+                String message = scheduleAttestations.getProgressMessage(state);
+                ((TextView) view.findViewById(R.id.loading_message)).setText(message);
+                fragment.draw(view);
+            }
+        }, throwable -> {
+            log.exception(throwable);
+        });
+    }
+
+    @Override
+    public void onNewRequest(Client.Request request) {
+        requestHandle = request;
+    }
+
+    @Override
+    public void onCancelRequest() {
+        if (requestHandle != null) {
+            requestHandle.cancel();
         }
     }
 

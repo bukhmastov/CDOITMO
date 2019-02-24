@@ -50,6 +50,7 @@ public class UniversityUnitsRVA extends UniversityRVA {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     protected void onBind(View container, Item item) {
         switch (item.type) {
             case TYPE_INFO_ABOUT_UPDATE_TIME: bindInfoAboutUpdateTime(container, item); break;

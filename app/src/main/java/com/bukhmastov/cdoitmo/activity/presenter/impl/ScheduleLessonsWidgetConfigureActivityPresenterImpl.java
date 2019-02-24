@@ -377,14 +377,7 @@ public class ScheduleLessonsWidgetConfigureActivityPresenterImpl implements Sche
                         thread.runOnUI(WSLC, () -> {
                             searchLoading.setVisibility(View.GONE);
                             searchAction.setVisibility(View.VISIBLE);
-                            String text = activity.getString(R.string.schedule_not_found);
-                            switch (state) {
-                                case Client.FAILED_OFFLINE: text = activity.getString(R.string.offline_mode_on); break;
-                                case Client.FAILED_TRY_AGAIN: text = activity.getString(R.string.load_failed); break;
-                                case Client.FAILED_SERVER_ERROR: text = Client.getFailureMessage(activity, code); break;
-                                case Client.FAILED_CORRUPTED_JSON: text = activity.getString(R.string.server_provided_corrupted_json); break;
-                            }
-                            notificationMessage.snackBar(activity, text);
+                            notificationMessage.snackBar(activity, scheduleLessons.getFailedMessage(code, state));
                         });
                     }
                     @Override

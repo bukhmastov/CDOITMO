@@ -40,9 +40,6 @@ import com.bukhmastov.cdoitmo.util.singleton.Color;
 import com.bukhmastov.cdoitmo.util.singleton.NumberUtils;
 import com.bukhmastov.cdoitmo.util.singleton.StringUtils;
 
-import org.json.JSONArray;
-import org.json.JSONObject;
-
 import java.util.AbstractSet;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -211,7 +208,7 @@ public class ERegisterFragmentPresenterImpl extends ConnectedFragmentWithDataPre
     private void load(boolean force, ERegister cached) {
         thread.run(ER, () -> {
             log.v(TAG, "load | force=" + (force ? "true" : "false"));
-            if ((!force || !Client.isOnline(activity)) && storagePref.get(activity, "pref_use_cache", true)) {
+            if ((!force || Client.isOffline(activity)) && storagePref.get(activity, "pref_use_cache", true)) {
                 try {
                     ERegister cache = cached == null ? getFromCache() : cached;
                     if (cache != null) {
@@ -238,15 +235,14 @@ public class ERegisterFragmentPresenterImpl extends ConnectedFragmentWithDataPre
                 });
                 return;
             }
-            deIfmoRestClient.get(activity, "eregister", null, new RestResponseHandler() {
+            deIfmoRestClient.get(activity, "eregister", null, new RestResponseHandler<ERegister>() {
                 @Override
-                public void onSuccess(int code, Client.Headers headers, JSONObject obj, JSONArray arr) throws Exception {
-                    log.v(TAG, "load | success | code=", code, " | obj=", obj);
-                    if (code == 200 && obj != null) {
-                        ERegister data = new ERegister().fromJson(obj);
-                        data.setTimestamp(time.getTimeInMillis());
-                        putToCache(data);
-                        setData(data);
+                public void onSuccess(int code, Client.Headers headers, ERegister response) throws Exception {
+                    log.v(TAG, "load | success | code=", code, " | response=", response == null ? "<null>" : "<notnull>");
+                    if (code == 200 && response != null) {
+                        response.setTimestamp(time.getTimeInMillis());
+                        putToCache(response);
+                        setData(response);
                         display();
                         return;
                     }
@@ -257,74 +253,59 @@ public class ERegisterFragmentPresenterImpl extends ConnectedFragmentWithDataPre
                     loadFailed();
                 }
                 @Override
-                public void onFailure(int statusCode, Client.Headers headers, int state) {
+                public void onFailure(int code, Client.Headers headers, int state) {
                     try {
                         log.v(TAG, "load | failure ", state);
-                        switch (state) {
-                            case DeIfmoRestClient.FAILED_OFFLINE:
-                                if (getData() != null) {
-                                    display();
-                                    return;
+                        if (state == Client.FAILED_OFFLINE) {
+                            if (getData() != null) {
+                                display();
+                                return;
+                            }
+                            thread.runOnUI(ER, () -> {
+                                fragment.draw(R.layout.state_offline_text);
+                                View reload = fragment.container().findViewById(R.id.offline_reload);
+                                if (reload != null) {
+                                    reload.setOnClickListener(v -> load());
                                 }
-                                thread.runOnUI(ER, () -> {
-                                    fragment.draw(R.layout.state_offline_text);
-                                    View reload = fragment.container().findViewById(R.id.offline_reload);
-                                    if (reload != null) {
-                                        reload.setOnClickListener(v -> load());
-                                    }
-                                }, throwable -> {
-                                    loadFailed();
-                                });
-                                break;
-                            case DeIfmoRestClient.FAILED_TRY_AGAIN:
-                            case DeIfmoRestClient.FAILED_SERVER_ERROR:
-                            case DeIfmoRestClient.FAILED_CORRUPTED_JSON:
-                                thread.runOnUI(ER, () -> {
-                                    fragment.draw(R.layout.state_failed_button);
-                                    TextView message = fragment.container().findViewById(R.id.try_again_message);
-                                    if (message != null) {
-                                        switch (state) {
-                                            case DeIfmoRestClient.FAILED_SERVER_ERROR:
-                                                if (activity == null) {
-                                                    message.setText(DeIfmoRestClient.getFailureMessage(statusCode));
-                                                } else {
-                                                    message.setText(DeIfmoRestClient.getFailureMessage(activity, statusCode));
-                                                }
-                                                break;
-                                            case DeIfmoRestClient.FAILED_CORRUPTED_JSON:
-                                                message.setText(R.string.server_provided_corrupted_json);
-                                                break;
-                                        }
-                                    }
-                                    View reload = fragment.container().findViewById(R.id.try_again_reload);
-                                    if (reload != null) {
-                                        reload.setOnClickListener(v -> load());
-                                    }
-                                }, throwable -> {
-                                    loadFailed();
-                                });
-                                break;
+                            }, throwable -> {
+                                loadFailed();
+                            });
                         }
+                        thread.runOnUI(ER, () -> {
+                            fragment.draw(R.layout.state_failed_button);
+                            TextView message = fragment.container().findViewById(R.id.try_again_message);
+                            if (message != null) {
+                                message.setText(deIfmoRestClient.getFailedMessage(activity, code, state));
+                            }
+                            View reload = fragment.container().findViewById(R.id.try_again_reload);
+                            if (reload != null) {
+                                reload.setOnClickListener(v -> load());
+                            }
+                        }, throwable -> {
+                            loadFailed();
+                        });
                     } catch (Throwable throwable) {
                         loadFailed();
                     }
                 }
                 @Override
-                public void onProgress(final int state) {
+                public void onProgress(int state) {
                     thread.runOnUI(ER, () -> {
                         log.v(TAG, "load | progress ", state);
                         fragment.draw(R.layout.state_loading_text);
-                        TextView loadingMessage = fragment.container().findViewById(R.id.loading_message);
-                        if (loadingMessage != null) {
-                            switch (state) {
-                                case DeIfmoRestClient.STATE_HANDLING: loadingMessage.setText(R.string.loading); break;
-                            }
+                        TextView message = fragment.container().findViewById(R.id.loading_message);
+                        if (message != null) {
+                            message.setText(deIfmoRestClient.getProgressMessage(activity, state));
                         }
                     });
                 }
                 @Override
                 public void onNewRequest(Client.Request request) {
                     requestHandle = request;
+                }
+                @Override
+                public ERegister newInstance() {
+                    return new ERegister();
                 }
             });
         }, throwable -> {

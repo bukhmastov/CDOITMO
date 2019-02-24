@@ -90,6 +90,7 @@ public class ScheduleExamsRVA extends RVA<RVAExams> {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     protected void onBind(View container, RVA.Item item) {
         switch (item.type) {
             case TYPE_HEADER: {

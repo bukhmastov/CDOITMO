@@ -51,6 +51,8 @@ public abstract class SettingsSchedule<T extends ScheduleJsonEntity> extends Set
 
     protected abstract String getHint();
 
+    protected abstract String getFailedMessage(int code, int state);
+
     protected void show(ConnectedActivity activity, Preference preference, Consumer<String> callback) {
         this.activity = activity;
         this.preference = preference;
@@ -191,16 +193,10 @@ public abstract class SettingsSchedule<T extends ScheduleJsonEntity> extends Set
     }
 
     @Override
-    public void onFailure(int statusCode, Client.Headers headers, int state) {
+    public void onFailure(int code, Client.Headers headers, int state) {
         log.v(TAG, "search | onFailure | state=", state);
         toggleSearchState("action");
-        switch (state) {
-            case Client.FAILED_OFFLINE:
-            case Schedule.FAILED_OFFLINE: notificationMessage.snackBar(activity, activity.getString(R.string.offline_mode_on)); break;
-            case Client.FAILED_SERVER_ERROR: notificationMessage.snackBar(activity, Client.getFailureMessage(activity, statusCode)); break;
-            case Client.FAILED_CORRUPTED_JSON: notificationMessage.snackBar(activity, activity.getString(R.string.server_provided_corrupted_json)); break;
-            default: notificationMessage.snackBar(activity, activity.getString(R.string.schedule_not_found)); break;
-        }
+        notificationMessage.snackBar(activity, getFailedMessage(code, state));
     }
 
     @Override

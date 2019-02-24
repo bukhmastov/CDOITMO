@@ -45,6 +45,7 @@ public class ERegisterSubjectsRVA extends RVA<ERSubject> {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     protected void onBind(View container, Item item) {
         switch (item.type) {
             case TYPE_SUBJECT: bindSubject(container, item); break;

@@ -103,4 +103,9 @@ public class SettingsScheduleExamsImpl extends SettingsSchedule<SExams> implemen
     protected String getHint() {
         return activity.getString(R.string.schedule_exams_search_view_hint);
     }
+
+    @Override
+    protected String getFailedMessage(int code, int state) {
+        return scheduleExams.getFailedMessage(code, state);
+    }
 }

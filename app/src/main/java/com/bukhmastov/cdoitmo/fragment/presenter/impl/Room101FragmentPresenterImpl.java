@@ -23,8 +23,8 @@ import com.bukhmastov.cdoitmo.model.parser.Room101RequestsParser;
 import com.bukhmastov.cdoitmo.model.room101.requests.Room101Requests;
 import com.bukhmastov.cdoitmo.network.Room101Client;
 import com.bukhmastov.cdoitmo.network.handlers.ResponseHandler;
+import com.bukhmastov.cdoitmo.network.handlers.joiner.ResponseHandlerJoiner;
 import com.bukhmastov.cdoitmo.network.model.Client;
-import com.bukhmastov.cdoitmo.network.model.Room101;
 import com.bukhmastov.cdoitmo.object.Room101AddRequest;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.NotificationMessage;
@@ -152,7 +152,7 @@ public class Room101FragmentPresenterImpl extends ConnectedFragmentWithDataPrese
     }
 
     @Override
-    public void execute(Context context, String scope, ResponseHandler responseHandler) {
+    public void execute(Context context, String scope, ResponseHandler handler) {
         thread.assertNotUI();
         log.v(TAG, "execute | scope=" + scope);
         HashMap<String, String> params = new HashMap<>();
@@ -160,38 +160,29 @@ public class Room101FragmentPresenterImpl extends ConnectedFragmentWithDataPrese
         params.put("view", scope);
         params.put("login", storage.get(context, Storage.PERMANENT, Storage.USER, "user#deifmo#login"));
         params.put("password", storage.get(context, Storage.PERMANENT, Storage.USER, "user#deifmo#password"));
-        room101Client.post(context, "index.php", params, new ResponseHandler() {
+        room101Client.post(context, "index.php", params, new ResponseHandlerJoiner(handler) {
             @Override
-            public void onSuccess(int code, Client.Headers headers, String response) {
+            public void onSuccess(int code, Client.Headers headers, String response) throws Exception {
                 if (code == 302) {
                     log.v(TAG, "execute | scope=", scope, " | success | code=", code);
                     String location = headers.getValue("Location");
                     if (StringUtils.isBlank(location)) {
-                        responseHandler.onFailure(code, headers, Room101.FAILED_EXPECTED_REDIRECTION);
+                        handler.onFailure(code, headers, Client.FAILED_EXPECTED_REDIRECTION);
                         return;
                     }
-                    room101Client.get(context, location, null, responseHandler);
+                    room101Client.get(context, location, null, handler);
                     return;
                 }
                 log.v(TAG, "execute | scope=", scope, " | success(not really) | code=", code);
-                if (response != null && (response.contains("Доступ запрещен") || (response.contains("Неверный") && response.contains("логин/пароль")))) {
-                    responseHandler.onFailure(code, headers, Room101.FAILED_AUTH);
-                } else {
-                    responseHandler.onFailure(code, headers, Room101.FAILED_EXPECTED_REDIRECTION);
+                if (response != null && response.contains("Доступ запрещен")) {
+                    if (response.contains("Неверный") && response.contains("логин/пароль")) {
+                        handler.onFailure(code, headers, Client.FAILED_AUTH_CREDENTIALS_FAILED);
+                        return;
+                    }
+                    handler.onFailure(code, headers, Client.FAILED_AUTH_REQUIRED);
+                    return;
                 }
-            }
-            @Override
-            public void onFailure(int code, Client.Headers headers, int state) {
-                responseHandler.onFailure(code, headers, state);
-            }
-            @Override
-            public void onProgress(int state) {
-                log.v(TAG, "execute | scope=", scope, " | progress ", state);
-                responseHandler.onProgress(state);
-            }
-            @Override
-            public void onNewRequest(Client.Request request) {
-                responseHandler.onNewRequest(request);
+                handler.onFailure(code, headers, Client.FAILED_EXPECTED_REDIRECTION);
             }
         });
     }
@@ -245,23 +236,19 @@ public class Room101FragmentPresenterImpl extends ConnectedFragmentWithDataPrese
                             FirebaseAnalyticsProvider.Event.ROOM101_REQUEST_DENIED
                     );
                     staticUtil.lockOrientation(activity, false);
-                } else {
-                    log.v(TAG, "denyRequest | reid=", reid, " | status=", status, " | success(not really) | code=", code);
-                    onFailure(code, headers, Room101Client.FAILED_TRY_AGAIN);
+                    return;
                 }
+                log.v(TAG, "denyRequest | reid=", reid, " | status=", status, " | success(not really) | code=", code);
+                onFailure(code, headers, Client.FAILED);
             }
             @Override
             public void onFailure(int code, Client.Headers headers, int state) {
                 thread.runOnUI(R101, () -> {
-                    log.v(TAG, "denyRequest | reid=", reid, " | status=", status, " | failure | code=", code);
+                    log.v(TAG, "denyRequest | reid=", reid, " | status=", status, " | failure | code=", code, " | state=", state);
                     fragment.draw(R.layout.state_failed_button);
                     TextView message = fragment.container().findViewById(R.id.try_again_message);
                     if (message != null) {
-                        if (state == Room101Client.FAILED_SERVER_ERROR) {
-                            message.setText(Room101Client.getFailureMessage(activity, code));
-                        } else {
-                            message.setText(R.string.wrong_response_from_server);
-                        }
+                        message.setText(room101Client.getFailedMessage(activity, code, state));
                     }
                     View reload = fragment.container().findViewById(R.id.try_again_reload);
                     if (reload != null) {
@@ -275,13 +262,15 @@ public class Room101FragmentPresenterImpl extends ConnectedFragmentWithDataPrese
             @Override
             public void onProgress(int state) {
                 thread.runOnUI(R101, () -> {
-                    log.v(TAG, "denyRequest | reid=", reid, " | status=", status, " | progress ", state);
+                    log.v(TAG, "denyRequest | reid=", reid, " | status=", status, " | progress | state=", state);
                     fragment.draw(R.layout.state_loading_text);
                     TextView message = fragment.container().findViewById(R.id.loading_message);
                     if (message != null) {
-                        switch (state) {
-                            case Room101Client.STATE_HANDLING: message.setText(R.string.deny_request); break;
+                        if (state == Client.STATE_HANDLING) {
+                            message.setText(R.string.deny_request);
+                            return;
                         }
+                        message.setText(room101Client.getProgressMessage(activity, state));
                     }
                 });
             }
@@ -445,7 +434,7 @@ public class Room101FragmentPresenterImpl extends ConnectedFragmentWithDataPrese
     private void load(boolean force, Room101Requests cached) {
         thread.run(R101, () -> {
             log.v(TAG, "load | force=" + (force ? "true" : "false"));
-            if ((!force || !Client.isOnline(activity)) && storagePref.get(activity, "pref_use_cache", true)) {
+            if ((!force || Client.isOffline(activity)) && storagePref.get(activity, "pref_use_cache", true)) {
                 try {
                     Room101Requests cache = cached == null ? getFromCache() : cached;
                     if (cache != null) {
@@ -501,63 +490,51 @@ public class Room101FragmentPresenterImpl extends ConnectedFragmentWithDataPrese
                 @Override
                 public void onFailure(int code, Client.Headers headers, int state) {
                     thread.run(R101, () -> {
-                        log.v(TAG, "load | failure " + state);
-                        switch (state) {
-                            case Room101Client.FAILED_OFFLINE:
-                                if (getData() != null) {
-                                    display();
-                                    return;
+                        log.v(TAG, "load | failure | code=", code, " | state=", state);
+                        if (state == Client.FAILED_OFFLINE) {
+                            if (getData() != null) {
+                                display();
+                                return;
+                            }
+                            thread.runOnUI(R101, () -> {
+                                fragment.draw(R.layout.state_offline_text);
+                                View reload = fragment.container().findViewById(R.id.offline_reload);
+                                if (reload != null) {
+                                    reload.setOnClickListener(v -> load(true));
                                 }
-                                thread.runOnUI(R101, () -> {
-                                    fragment.draw(R.layout.state_offline_text);
-                                    View reload = fragment.container().findViewById(R.id.offline_reload);
-                                    if (reload != null) {
-                                        reload.setOnClickListener(v -> load(true));
-                                    }
-                                });
-                                break;
-                            case Room101Client.FAILED_SERVER_ERROR:
-                            case Room101Client.FAILED_TRY_AGAIN:
-                            case Room101Client.FAILED_EXPECTED_REDIRECTION:
-                                thread.runOnUI(R101, () -> {
-                                    fragment.draw(R.layout.state_failed_button);
-                                    if (state == Room101Client.FAILED_EXPECTED_REDIRECTION) {
-                                        TextView message = fragment.container().findViewById(R.id.try_again_message);
-                                        if (message != null) {
-                                            message.setText(R.string.wrong_response_from_server);
-                                        }
-                                    }
-                                    if (state == Room101Client.FAILED_SERVER_ERROR) {
-                                        TextView message = fragment.container().findViewById(R.id.try_again_message);
-                                        if (message != null) {
-                                            if (activity != null) {
-                                                message.setText(Room101Client.getFailureMessage(activity, code));
-                                            } else {
-                                                message.setText(Room101Client.getFailureMessage(code));
-                                            }
-                                        }
-                                    }
-                                    View reload = fragment.container().findViewById(R.id.try_again_reload);
-                                    if (reload != null) {
-                                        reload.setOnClickListener(v -> load(true));
-                                    }
-                                });
-
-                                break;
-                            case Room101Client.FAILED_AUTH:
-                                thread.runOnUI(R101, () -> {
-                                    fragment.draw(R.layout.state_failed_button);
-                                    TextView message = fragment.container().findViewById(R.id.try_again_message);
-                                    if (message != null) {
-                                        message.setText(R.string.room101_auth_failed);
-                                    }
-                                    View reload = fragment.container().findViewById(R.id.try_again_reload);
-                                    if (reload != null) {
-                                        ((ViewGroup) reload.getParent()).removeView(reload);
-                                    }
-                                });
-                                break;
+                            });
+                            return;
                         }
+                        if (room101Client.isFailedAuth(state)) {
+                            thread.runOnUI(R101, () -> {
+                                fragment.draw(R.layout.state_failed_button);
+                                TextView message = fragment.container().findViewById(R.id.try_again_message);
+                                if (message != null) {
+                                    message.setText(activity.getString(R.string.room101_auth_failed) + "\n" +
+                                            room101Client.getFailedMessage(activity, code, state));
+                                }
+                                View reload = fragment.container().findViewById(R.id.try_again_reload);
+                                if (reload != null) {
+                                    ((ViewGroup) reload.getParent()).removeView(reload);
+                                }
+                            });
+                            return;
+                        }
+                        thread.runOnUI(R101, () -> {
+                            fragment.draw(R.layout.state_failed_button);
+                            TextView message = fragment.container().findViewById(R.id.try_again_message);
+                            if (message != null) {
+                                if (state == Client.FAILED_EXPECTED_REDIRECTION) {
+                                    message.setText(R.string.wrong_response_from_server);
+                                } else {
+                                    message.setText(room101Client.getFailedMessage(activity, code, state));
+                                }
+                            }
+                            View reload = fragment.container().findViewById(R.id.try_again_reload);
+                            if (reload != null) {
+                                reload.setOnClickListener(v -> load(true));
+                            }
+                        });
                     }, throwable -> {
                         loadFailed();
                     });
@@ -565,15 +542,11 @@ public class Room101FragmentPresenterImpl extends ConnectedFragmentWithDataPrese
                 @Override
                 public void onProgress(int state) {
                     thread.runOnUI(R101, () -> {
-                        log.v(TAG, "load | progress " + state);
+                        log.v(TAG, "load | progress | state=", state);
                         fragment.draw(R.layout.state_loading_text);
                         TextView message = fragment.container().findViewById(R.id.loading_message);
                         if (message != null) {
-                            switch (state) {
-                                case Room101Client.STATE_HANDLING:
-                                    message.setText(R.string.loading);
-                                    break;
-                            }
+                            message.setText(room101Client.getProgressMessage(activity, state));
                         }
                     });
                 }

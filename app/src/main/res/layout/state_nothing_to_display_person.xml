@@ -1,13 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:paddingTop="@dimen/item_padding"
     android:paddingBottom="@dimen/item_padding"
     android:paddingStart="@dimen/item_padding"
-    android:paddingEnd="@dimen/item_padding" >
+    android:paddingEnd="@dimen/item_padding">
 
     <LinearLayout
         android:orientation="vertical"

@@ -2,9 +2,6 @@ package com.bukhmastov.cdoitmo.activity.presenter.impl;
 
 import android.content.Context;
 import android.os.Bundle;
-import androidx.annotation.LayoutRes;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import android.view.InflateException;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -24,7 +21,6 @@ import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.model.entity.ShortcutQuery;
 import com.bukhmastov.cdoitmo.model.schedule.lessons.SLessons;
-import com.bukhmastov.cdoitmo.network.IfmoRestClient;
 import com.bukhmastov.cdoitmo.network.model.Client;
 import com.bukhmastov.cdoitmo.object.TimeRemainingWidget;
 import com.bukhmastov.cdoitmo.object.schedule.ScheduleLessons;
@@ -37,6 +33,10 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.inject.Inject;
+
+import androidx.annotation.LayoutRes;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import static com.bukhmastov.cdoitmo.util.Thread.WTR;
 
@@ -178,39 +178,14 @@ public class TimeRemainingWidgetActivityPresenterImpl implements TimeRemainingWi
 
     @Override
     public void onFailure(int code, Client.Headers headers, int state) {
-        log.v(TAG, "failure " + state);
-        switch (state) {
-            case IfmoRestClient.FAILED_OFFLINE:
-            case ScheduleLessons.FAILED_OFFLINE:
-                message(activity.getString(R.string.no_connection));
-                break;
-            case IfmoRestClient.FAILED_SERVER_ERROR:
-                message(IfmoRestClient.getFailureMessage(activity, code));
-                break;
-            case IfmoRestClient.FAILED_CORRUPTED_JSON:
-                message(activity.getString(R.string.server_provided_corrupted_json));
-                break;
-            case IfmoRestClient.FAILED_TRY_AGAIN:
-            case ScheduleLessons.FAILED_LOAD:
-            case ScheduleLessons.FAILED_EMPTY_QUERY:
-                message(activity.getString(R.string.load_failed));
-                break;
-            case ScheduleLessons.FAILED_NOT_FOUND:
-                message(activity.getString(R.string.no_schedule));
-                break;
-            case ScheduleLessons.FAILED_INVALID_QUERY:
-                message(activity.getString(R.string.incorrect_query));
-                break;
-            case ScheduleLessons.FAILED_PERSONAL_NEED_ISU:
-                message(activity.getString(R.string.load_failed_need_isu));
-                break;
-        }
+        log.v(TAG, "failure ", state);
+        message(scheduleLessons.getFailedMessage(code, state));
     }
 
     @Override
     public void onProgress(int state) {
-        log.v(TAG, "progress " + state);
-        message(activity.getString(R.string.loading));
+        log.v(TAG, "progress ", state);
+        message(scheduleLessons.getProgressMessage(state));
     }
 
     @Override

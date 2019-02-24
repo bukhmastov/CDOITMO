@@ -31,7 +31,6 @@ import com.bukhmastov.cdoitmo.model.schedule.lessons.SLesson;
 import com.bukhmastov.cdoitmo.model.schedule.lessons.SLessons;
 import com.bukhmastov.cdoitmo.model.widget.schedule.lessons.WSLSettings;
 import com.bukhmastov.cdoitmo.model.widget.schedule.lessons.WSLTheme;
-import com.bukhmastov.cdoitmo.network.IfmoRestClient;
 import com.bukhmastov.cdoitmo.network.model.Client;
 import com.bukhmastov.cdoitmo.object.schedule.Schedule;
 import com.bukhmastov.cdoitmo.object.schedule.ScheduleLessons;
@@ -195,13 +194,7 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
                         }
                         @Override
                         public void onFailure(int code, Client.Headers headers, int state) {
-                            //R.string.server_provided_corrupted_json
-                            String message;
-                            switch (state) {
-                                case IfmoRestClient.FAILED_SERVER_ERROR: message = IfmoRestClient.getFailureMessage(context, code); break;
-                                case IfmoRestClient.FAILED_CORRUPTED_JSON: message = context.getString(R.string.server_provided_corrupted_json); break;
-                                default: message = context.getString(R.string.failed_to_load_schedule); break;
-                            }
+                            String message = scheduleLessons.getFailedMessage(code, state);
                             failed(context, appWidgetManager, appWidgetId, settings, message);
                         }
                         @Override

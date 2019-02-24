@@ -7,17 +7,16 @@ import com.bukhmastov.cdoitmo.firebase.FirebasePerformanceProvider;
 import com.bukhmastov.cdoitmo.model.converter.ScheduleLessonsAdditionalConverter;
 import com.bukhmastov.cdoitmo.model.converter.ScheduleLessonsIsuConverter;
 import com.bukhmastov.cdoitmo.model.converter.ScheduleLessonsItmoConverter;
-import com.bukhmastov.cdoitmo.model.schedule.lessons.SDay;
 import com.bukhmastov.cdoitmo.model.schedule.lessons.SLessons;
 import com.bukhmastov.cdoitmo.model.schedule.remote.isu.ISUScheduleApiResponse;
 import com.bukhmastov.cdoitmo.model.schedule.remote.itmo.ITMOSLessons;
 import com.bukhmastov.cdoitmo.model.schedule.teachers.STeachers;
 import com.bukhmastov.cdoitmo.network.handlers.RestResponseHandler;
+import com.bukhmastov.cdoitmo.network.handlers.joiner.RestRestResponseHandlerJoiner;
+import com.bukhmastov.cdoitmo.network.model.Client;
 import com.bukhmastov.cdoitmo.object.schedule.ScheduleLessons;
 import com.bukhmastov.cdoitmo.util.singleton.CollectionUtils;
 import com.bukhmastov.cdoitmo.util.singleton.StringUtils;
-
-import org.json.JSONObject;
 
 public class ScheduleLessonsImpl extends ScheduleImpl<SLessons> implements ScheduleLessons {
 
@@ -43,15 +42,24 @@ public class ScheduleLessonsImpl extends ScheduleImpl<SLessons> implements Sched
                 " | withUserChanges=", withUserChanges, " | source=", source);
         searchByQuery("personal", source, refreshRate, withUserChanges, new SearchByQuery<SLessons>() {
             @Override
-            public void onWebRequest(String query, String source, RestResponseHandler handler) {
+            public void onWebRequest(String query, String source, RestResponseHandler<SLessons> handler) {
                 switch (source) {
                     case SOURCE.IFMO: // not available, using isu source
-                    case SOURCE.ISU: isuPrivateRestClient.get().get(context, "schedule/personal/student/%apikey%/%isutoken%", null, handler); break;
+                    case SOURCE.ISU: {
+                        String url = "schedule/personal/student/%apikey%/%isutoken%";
+                        isuPrivateRestClient.get().get(context, url, null, new RestRestResponseHandlerJoiner<SLessons, ISUScheduleApiResponse>(handler) {
+                            @Override
+                            public void onSuccess(int code, Client.Headers headers, ISUScheduleApiResponse response) throws Exception {
+                                handler.onSuccess(code, headers, convertIsuSchedule("personal", query, response));
+                            }
+                            @Override
+                            public ISUScheduleApiResponse newInstance() {
+                                return new ISUScheduleApiResponse();
+                            }
+                        });
+                        break;
+                    }
                 }
-            }
-            @Override
-            public SLessons onGetScheduleFromJson(String query, String source, JSONObject json) throws Exception {
-                return makeSchedule(query, source, "personal", json);
             }
             @Override
             public void onFound(String query, SLessons schedule, boolean fromCache) {
@@ -67,15 +75,37 @@ public class ScheduleLessonsImpl extends ScheduleImpl<SLessons> implements Sched
                 " | forceToCache=", forceToCache, " | withUserChanges=", withUserChanges, " | source=", source);
         searchByQuery(group, source, refreshRate, withUserChanges, new SearchByQuery<SLessons>() {
             @Override
-            public void onWebRequest(String query, String source, RestResponseHandler handler) {
+            public void onWebRequest(String query, String source, RestResponseHandler<SLessons> handler) {
                 switch (source) {
-                    case SOURCE.ISU: isuRestClient.get().get(context, "schedule/common/group/%apikey%/" + query, null, handler); break;
-                    case SOURCE.IFMO: ifmoRestClient.get().get(context, "schedule_lesson_group/" + query, null, handler); break;
+                    case SOURCE.ISU: {
+                        String url = "schedule/common/group/%apikey%/" + query;
+                        isuRestClient.get().get(context, url, null, new RestRestResponseHandlerJoiner<SLessons, ISUScheduleApiResponse>(handler) {
+                            @Override
+                            public void onSuccess(int code, Client.Headers headers, ISUScheduleApiResponse response) throws Exception {
+                                handler.onSuccess(code, headers, convertIsuSchedule("group", query, response));
+                            }
+                            @Override
+                            public ISUScheduleApiResponse newInstance() {
+                                return new ISUScheduleApiResponse();
+                            }
+                        });
+                        break;
+                    }
+                    case SOURCE.IFMO: {
+                        String url = "schedule_lesson_group/" + query;
+                        ifmoRestClient.get().get(context, url, null, new RestRestResponseHandlerJoiner<SLessons, ITMOSLessons>(handler) {
+                            @Override
+                            public void onSuccess(int code, Client.Headers headers, ITMOSLessons response) throws Exception {
+                                handler.onSuccess(code, headers, convertIfmoSchedule("group", query, response));
+                            }
+                            @Override
+                            public ITMOSLessons newInstance() {
+                                return new ITMOSLessons();
+                            }
+                        });
+                        break;
+                    }
                 }
-            }
-            @Override
-            public SLessons onGetScheduleFromJson(String query, String source, JSONObject json) throws Exception {
-                return makeSchedule(query, source, "group", json);
             }
             @Override
             public void onFound(String query, SLessons schedule, boolean fromCache) {
@@ -91,15 +121,24 @@ public class ScheduleLessonsImpl extends ScheduleImpl<SLessons> implements Sched
                 " | forceToCache=", forceToCache, " | withUserChanges=", withUserChanges, " | source=", source);
         searchByQuery(room, source, refreshRate, withUserChanges, new SearchByQuery<SLessons>() {
             @Override
-            public void onWebRequest(String query, String source, RestResponseHandler handler) {
+            public void onWebRequest(String query, String source, RestResponseHandler<SLessons> handler) {
                 switch (source) {
                     case SOURCE.ISU: // not available, using ifmo source
-                    case SOURCE.IFMO: ifmoRestClient.get().get(context, "schedule_lesson_room/" + query, null, handler); break;
+                    case SOURCE.IFMO: {
+                        String url = "schedule_lesson_room/" + query;
+                        ifmoRestClient.get().get(context, url, null, new RestRestResponseHandlerJoiner<SLessons, ITMOSLessons>(handler) {
+                            @Override
+                            public void onSuccess(int code, Client.Headers headers, ITMOSLessons response) throws Exception {
+                                handler.onSuccess(code, headers, convertIfmoSchedule("room", query, response));
+                            }
+                            @Override
+                            public ITMOSLessons newInstance() {
+                                return new ITMOSLessons();
+                            }
+                        });
+                        break;
+                    }
                 }
-            }
-            @Override
-            public SLessons onGetScheduleFromJson(String query, String source, JSONObject json) throws Exception {
-                return makeSchedule(query, source, "room", json);
             }
             @Override
             public void onFound(String query, SLessons schedule, boolean fromCache) {
@@ -115,15 +154,37 @@ public class ScheduleLessonsImpl extends ScheduleImpl<SLessons> implements Sched
                 " | forceToCache=", forceToCache, " | withUserChanges=", withUserChanges, " | source=", source);
         searchByQuery(teacherId, source, refreshRate, withUserChanges, new SearchByQuery<SLessons>() {
             @Override
-            public void onWebRequest(String query, String source, RestResponseHandler handler) {
+            public void onWebRequest(String query, String source, RestResponseHandler<SLessons> handler) {
                 switch (source) {
-                    case SOURCE.ISU: isuRestClient.get().get(context, "schedule/common/teacher/%apikey%/" + query, null, handler); break;
-                    case SOURCE.IFMO: ifmoRestClient.get().get(context, "schedule_lesson_person/" + query, null, handler); break;
+                    case SOURCE.ISU: {
+                        String url = "schedule/common/teacher/%apikey%/" + query;
+                        isuRestClient.get().get(context, url, null, new RestRestResponseHandlerJoiner<SLessons, ISUScheduleApiResponse>(handler) {
+                            @Override
+                            public void onSuccess(int code, Client.Headers headers, ISUScheduleApiResponse response) throws Exception {
+                                handler.onSuccess(code, headers, convertIsuSchedule("teacher", query, response));
+                            }
+                            @Override
+                            public ISUScheduleApiResponse newInstance() {
+                                return new ISUScheduleApiResponse();
+                            }
+                        });
+                        break;
+                    }
+                    case SOURCE.IFMO: {
+                        String url = "schedule_lesson_person/" + query;
+                        ifmoRestClient.get().get(context, url, null, new RestRestResponseHandlerJoiner<SLessons, ITMOSLessons>(handler) {
+                            @Override
+                            public void onSuccess(int code, Client.Headers headers, ITMOSLessons response) throws Exception {
+                                handler.onSuccess(code, headers, convertIfmoSchedule("teacher", query, response));
+                            }
+                            @Override
+                            public ITMOSLessons newInstance() {
+                                return new ITMOSLessons();
+                            }
+                        });
+                        break;
+                    }
                 }
-            }
-            @Override
-            public SLessons onGetScheduleFromJson(String query, String source, JSONObject json) throws Exception {
-                return makeSchedule(query, source, "teacher", json);
             }
             @Override
             public void onFound(String query, SLessons schedule, boolean fromCache) {
@@ -138,24 +199,33 @@ public class ScheduleLessonsImpl extends ScheduleImpl<SLessons> implements Sched
         log.v(TAG, "searchTeachers | lastname=", lastname);
         searchByQuery(lastname, source, 0, withUserChanges, new SearchByQuery<SLessons>() {
             @Override
-            public void onWebRequest(String query, String source, RestResponseHandler handler) {
+            public void onWebRequest(String query, String source, RestResponseHandler<SLessons> handler) {
                 switch (source) {
                     case SOURCE.ISU: // not available, using ifmo source
-                    case SOURCE.IFMO: ifmoRestClient.get().get(context, "schedule_person?lastname=" + lastname, null, handler); break;
+                    case SOURCE.IFMO: {
+                        String url = "schedule_person?lastname=" + lastname;
+                        ifmoRestClient.get().get(context, url, null, new RestRestResponseHandlerJoiner<SLessons, STeachers>(handler) {
+                            @Override
+                            public void onSuccess(int code, Client.Headers headers, STeachers response) throws Exception {
+                                if (response == null) {
+                                    onFailure(code, headers, FAILED_LOAD);
+                                    return;
+                                }
+                                SLessons schedule = new SLessons();
+                                schedule.setQuery(query);
+                                schedule.setType("teachers");
+                                schedule.setTimestamp(time.getTimeInMillis());
+                                schedule.setTeachers(response);
+                                handler.onSuccess(code, headers, schedule);
+                            }
+                            @Override
+                            public STeachers newInstance() {
+                                return new STeachers();
+                            }
+                        });
+                        break;
+                    }
                 }
-            }
-            @Override
-            public SLessons onGetScheduleFromJson(String query, String source, JSONObject json) throws Exception {
-                STeachers teachers = new STeachers().fromJson(json);
-                if (teachers == null) {
-                    return null;
-                }
-                SLessons schedule = new SLessons();
-                schedule.setQuery(query);
-                schedule.setType("teachers");
-                schedule.setTimestamp(time.getTimeInMillis());
-                schedule.setTeachers(teachers);
-                return schedule;
             }
             @Override
             public void onFound(String query, SLessons schedule, boolean fromCache) {
@@ -184,29 +254,31 @@ public class ScheduleLessonsImpl extends ScheduleImpl<SLessons> implements Sched
         return FirebasePerformanceProvider.Trace.Schedule.LESSONS;
     }
 
-    private SLessons makeSchedule(String query, String source, String type, JSONObject json) throws Exception {
-        SLessons schedule = null;
-        switch (source) {
-            case SOURCE.ISU: {
-                ISUScheduleApiResponse isuScheduleApiResponse = new ISUScheduleApiResponse().fromJson(json);
-                if (isuScheduleApiResponse != null) {
-                    schedule = new ScheduleLessonsIsuConverter(isuScheduleApiResponse).setType(type).convert();
-                    if (schedule != null && StringUtils.isBlank(schedule.getTitle())) {
-                        schedule.setTitle(query);
-                    }
-                }
-                break;
-            }
-            case SOURCE.IFMO: {
-                ITMOSLessons itmoSchedule = new ITMOSLessons().fromJson(json);
-                if (itmoSchedule != null) {
-                    schedule = new ScheduleLessonsItmoConverter(itmoSchedule).convert();
-                }
-                break;
-            }
+    private SLessons convertIsuSchedule(String type, String query, ISUScheduleApiResponse isuSchedule) {
+        if (isuSchedule == null) {
+            return null;
         }
+        SLessons schedule = new ScheduleLessonsIsuConverter(isuSchedule)
+                .setType(type)
+                .convert();
+        return setupSchedule(schedule, type, query);
+    }
+
+    private SLessons convertIfmoSchedule(String type, String query, ITMOSLessons itmoSchedule) {
+        if (itmoSchedule == null) {
+            return null;
+        }
+        SLessons schedule = new ScheduleLessonsItmoConverter(itmoSchedule)
+                .convert();
+        return setupSchedule(schedule, type, query);
+    }
+
+    private SLessons setupSchedule(SLessons schedule, String type, String query) {
         if (schedule == null) {
             return null;
+        }
+        if (StringUtils.isBlank(schedule.getTitle())) {
+            schedule.setTitle(query);
         }
         if ("personal".equals(type)) {
             schedule.setTitle(context.getString(R.string.personal_schedule));
@@ -219,15 +291,15 @@ public class ScheduleLessonsImpl extends ScheduleImpl<SLessons> implements Sched
 
     private void onScheduleFound(String query, SLessons schedule, boolean forceToCache, boolean fromCache, boolean withUserChanges) {
         try {
-            if (context == null || query == null || schedule == null) {
-                log.w(TAG, "onFound | some values are null | context=", context, " | query=", query, " | data=", schedule);
-                if (query == null) {
-                    return;
-                }
-                invokePendingAndClose(query, withUserChanges, handler -> handler.onFailure(FAILED_LOAD));
+            if (schedule == null) {
+                invokePendingAndClose(query, withUserChanges, handler -> handler.onFailure(FAILED_NOT_FOUND));
                 return;
             }
-            if ("teachers".equals(schedule.getType()) && schedule.getTeachers() != null) {
+            if ("teachers".equals(schedule.getType())) {
+                if (schedule.getTeachers() == null) {
+                    invokePendingAndClose(query, withUserChanges, handler -> handler.onFailure(FAILED_LOAD));
+                    return;
+                }
                 if (CollectionUtils.isNotEmpty(schedule.getTeachers().getTeachers())) {
                     invokePendingAndClose(query, withUserChanges, handler -> handler.onSuccess(schedule, fromCache));
                 } else {
@@ -235,34 +307,15 @@ public class ScheduleLessonsImpl extends ScheduleImpl<SLessons> implements Sched
                 }
                 return;
             }
-            boolean valid = false;
-            if (CollectionUtils.isNotEmpty(schedule.getSchedule())) {
-                for (SDay day : schedule.getSchedule()) {
-                    if (day == null) {
-                        continue;
-                    }
-                    if (CollectionUtils.isNotEmpty(day.getLessons())) {
-                        valid = true;
-                        break;
-                    }
-                }
-            }
-            if (valid) {
-                if (!fromCache) {
-                    putToCache(query, schedule, forceToCache);
-                }
-                if (withUserChanges) {
-                    SLessons converted = new ScheduleLessonsAdditionalConverter(schedule.copy()).convert();
-                    invokePendingAndClose(query, true, handler -> handler.onSuccess(converted != null ? converted : schedule, fromCache));
-                } else {
-                    invokePendingAndClose(query, false, handler -> handler.onSuccess(schedule, fromCache));
-                }
-                return;
-            }
             if (!fromCache) {
-                putToLocalCache(query, schedule);
+                putToCache(query, schedule, forceToCache);
             }
-            invokePendingAndClose(query, withUserChanges, handler -> handler.onFailure(FAILED_NOT_FOUND));
+            if (withUserChanges) {
+                SLessons converted = new ScheduleLessonsAdditionalConverter(schedule.copy()).convert();
+                invokePendingAndClose(query, true, handler -> handler.onSuccess(converted != null ? converted : schedule, fromCache));
+            } else {
+                invokePendingAndClose(query, false, handler -> handler.onSuccess(schedule, fromCache));
+            }
         } catch (Throwable throwable) {
             log.exception(throwable);
             invokePendingAndClose(query, withUserChanges, handler -> handler.onFailure(FAILED_LOAD));

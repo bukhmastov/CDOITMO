@@ -55,9 +55,6 @@ import com.bukhmastov.cdoitmo.util.singleton.CollectionUtils;
 import com.bukhmastov.cdoitmo.util.singleton.Color;
 import com.bukhmastov.cdoitmo.util.singleton.StringUtils;
 
-import org.json.JSONArray;
-import org.json.JSONObject;
-
 import java.util.ArrayList;
 import java.util.Collection;
 
@@ -212,7 +209,7 @@ public class UniversityFacultiesFragmentPresenterImpl implements UniversityFacul
                 display(history.get(fid));
                 return;
             }
-            if ((!force || !Client.isOnline(activity)) && storagePref.get(activity, "pref_use_cache", true) && storagePref.get(activity, "pref_use_university_cache", false)) {
+            if ((!force || Client.isOffline(activity)) && storagePref.get(activity, "pref_use_cache", true) && storagePref.get(activity, "pref_use_university_cache", false)) {
                 UFaculties cache = cached == null ? getFromCache(fid) : cached;
                 if (cache != null) {
                     log.v(TAG, "load | from cache");
@@ -232,18 +229,17 @@ public class UniversityFacultiesFragmentPresenterImpl implements UniversityFacul
                 });
                 return;
             }
-            loadProvider(new RestResponseHandler() {
+            loadProvider(new RestResponseHandler<UFaculties>() {
                 @Override
-                public void onSuccess(int code, Client.Headers headers, JSONObject obj, JSONArray arr) throws Exception {
-                    if (code == 200 && obj != null) {
-                        UFaculties data = new UFaculties().fromJson(obj);
-                        data.setTimestamp(time.getTimeInMillis());
+                public void onSuccess(int code, Client.Headers headers, UFaculties response) throws Exception {
+                    if (code == 200 && response != null) {
+                        response.setTimestamp(time.getTimeInMillis());
                         if (storagePref.get(activity, "pref_use_cache", true) && storagePref.get(activity, "pref_use_university_cache", false)) {
-                            storage.put(activity, Storage.CACHE, Storage.GLOBAL, "university#faculties#" + fid, data.toJsonString());
+                            storage.put(activity, Storage.CACHE, Storage.GLOBAL, "university#faculties#" + fid, response.toJsonString());
                         }
-                        timestamp = data.getTimestamp();
-                        history.put(fid, data);
-                        display(data);
+                        timestamp = response.getTimestamp();
+                        history.put(fid, response);
+                        display(response);
                         return;
                     }
                     loadFailed();
@@ -251,33 +247,23 @@ public class UniversityFacultiesFragmentPresenterImpl implements UniversityFacul
                 @Override
                 public void onFailure(int code, Client.Headers headers, int state) {
                     thread.runOnUI(UF, () -> {
-                        log.v(TAG, "forceLoad | failure ", state);
-                        switch (state) {
-                            case IfmoRestClient.FAILED_OFFLINE: {
-                                draw(R.layout.state_offline_text);
-                                View reload = container.findViewById(R.id.offline_reload);
-                                if (reload != null) {
-                                    reload.setOnClickListener(v -> load());
-                                }
-                                break;
+                        log.v(TAG, "load | failure ", state);
+                        if (state == Client.FAILED_OFFLINE) {
+                            draw(R.layout.state_offline_text);
+                            View reload = container.findViewById(R.id.offline_reload);
+                            if (reload != null) {
+                                reload.setOnClickListener(v -> load());
                             }
-                            case IfmoRestClient.FAILED_CORRUPTED_JSON:
-                            case IfmoRestClient.FAILED_SERVER_ERROR:
-                            case IfmoRestClient.FAILED_TRY_AGAIN: {
-                                draw(R.layout.state_failed_button);
-                                TextView message = activity.findViewById(R.id.try_again_message);
-                                if (message != null) {
-                                    switch (state) {
-                                        case IfmoRestClient.FAILED_SERVER_ERROR:   message.setText(IfmoRestClient.getFailureMessage(activity, code)); break;
-                                        case IfmoRestClient.FAILED_CORRUPTED_JSON: message.setText(R.string.server_provided_corrupted_json); break;
-                                    }
-                                }
-                                View reload = container.findViewById(R.id.try_again_reload);
-                                if (reload != null) {
-                                    reload.setOnClickListener(v -> load());
-                                }
-                                break;
-                            }
+                            return;
+                        }
+                        draw(R.layout.state_failed_button);
+                        TextView message = activity.findViewById(R.id.try_again_message);
+                        if (message != null) {
+                            message.setText(ifmoRestClient.getFailedMessage(activity, code, state));
+                        }
+                        View reload = container.findViewById(R.id.try_again_reload);
+                        if (reload != null) {
+                            reload.setOnClickListener(v -> load());
                         }
                     }, throwable -> {
                         loadFailed();
@@ -286,13 +272,11 @@ public class UniversityFacultiesFragmentPresenterImpl implements UniversityFacul
                 @Override
                 public void onProgress(int state) {
                     thread.runOnUI(UF, () -> {
-                        log.v(TAG, "forceLoad | progress ", state);
+                        log.v(TAG, "load | progress ", state);
                         draw(R.layout.state_loading_text);
                         TextView message = container.findViewById(R.id.loading_message);
                         if (message != null) {
-                            switch (state) {
-                                case IfmoRestClient.STATE_HANDLING: message.setText(R.string.loading); break;
-                            }
+                            message.setText(ifmoRestClient.getProgressMessage(activity, state));
                         }
                     });
                 }
@@ -300,13 +284,17 @@ public class UniversityFacultiesFragmentPresenterImpl implements UniversityFacul
                 public void onNewRequest(Client.Request request) {
                     requestHandle = request;
                 }
+                @Override
+                public UFaculties newInstance() {
+                    return new UFaculties();
+                }
             });
         }, throwable -> {
             loadFailed();
         });
     }
 
-    private void loadProvider(RestResponseHandler handler) {
+    private void loadProvider(RestResponseHandler<UFaculties> handler) {
         log.v(TAG, "loadProvider");
         String dep_id = "";
         if (stack.size() > 0) {

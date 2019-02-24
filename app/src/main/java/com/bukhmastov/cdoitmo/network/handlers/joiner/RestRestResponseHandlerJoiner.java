@@ -8,18 +8,16 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-public class RestResponseHandlerJoiner<T extends JsonEntity> implements RestResponseHandler<T> {
+public abstract class RestRestResponseHandlerJoiner<J extends JsonEntity, T extends JsonEntity> implements RestResponseHandler<T> {
 
-    private final RestResponseHandler<T> handler;
+    private final RestResponseHandler<J> handler;
 
-    public RestResponseHandlerJoiner(RestResponseHandler<T> handler) {
+    public RestRestResponseHandlerJoiner(RestResponseHandler<J> handler) {
         this.handler = handler;
     }
 
     @Override
-    public void onSuccess(int code, Client.Headers headers, T response) throws Exception {
-        handler.onSuccess(code, headers, response);
-    }
+    public abstract void onSuccess(int code, Client.Headers headers, T response) throws Exception;
 
     @Override
     public void onFailure(int code, Client.Headers headers, int state) {
@@ -37,9 +35,7 @@ public class RestResponseHandlerJoiner<T extends JsonEntity> implements RestResp
     }
 
     @Override
-    public T newInstance() {
-        return handler.newInstance();
-    }
+    public abstract T newInstance();
 
     @Override
     public JSONObject convertArray(JSONArray arr) throws JSONException {

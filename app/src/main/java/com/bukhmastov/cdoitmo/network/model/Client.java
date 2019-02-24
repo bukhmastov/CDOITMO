@@ -3,16 +3,13 @@ package com.bukhmastov.cdoitmo.network.model;
 import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.StringDef;
-import androidx.annotation.StringRes;
 
 import com.bukhmastov.cdoitmo.R;
+import com.bukhmastov.cdoitmo.exception.CorruptedException;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
-import com.bukhmastov.cdoitmo.network.handlers.RawHandler;
-import com.bukhmastov.cdoitmo.network.handlers.RawJsonHandler;
-import com.bukhmastov.cdoitmo.network.handlers.ResponseHasFailed;
+import com.bukhmastov.cdoitmo.model.JsonEntity;
+import com.bukhmastov.cdoitmo.network.handlers.ResponseHandler;
+import com.bukhmastov.cdoitmo.network.handlers.RestResponseHandler;
 import com.bukhmastov.cdoitmo.network.provider.NetworkClientProvider;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Storage;
@@ -22,13 +19,14 @@ import com.bukhmastov.cdoitmo.util.singleton.CollectionUtils;
 import com.bukhmastov.cdoitmo.util.singleton.StringUtils;
 
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.JSONTokener;
 
+import java.io.IOException;
 import java.io.Reader;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
-import java.text.ParseException;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -36,6 +34,9 @@ import java.util.regex.Pattern;
 
 import javax.inject.Inject;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.StringDef;
 import okhttp3.Call;
 import okhttp3.FormBody;
 import okhttp3.HttpUrl;
@@ -50,14 +51,41 @@ public abstract class Client {
     private static final String[] LOG_SECURED_HEADERS = new String[] {"route", "JSESSIONID", "PHPSESSID", "access_token", "refresh_token"};
     private static final String[] LOG_SECURED_REQUEST_BODY = new String[] {"passwd", "pass", "password"};
 
+    /**
+     * Empty http status code
+     * Used when no info available about response's http status code
+     */
     public static final int STATUS_CODE_EMPTY = -1;
-    public static final int STATE_HANDLING = 0;
-    public static final int FAILED_OFFLINE = 0;
-    public static final int FAILED_TRY_AGAIN = 1;
-    public static final int FAILED_SERVER_ERROR = 2;
-    public static final int FAILED_INTERRUPTED = 3;
-    public static final int FAILED_CORRUPTED_JSON = 4;
 
+    /**
+     * Progress states of request
+     * Value of each state should be less that 100
+     */
+    public static final int STATE_HANDLING = 0;
+    public static final int STATE_AUTHORIZATION = 1;
+    public static final int STATE_AUTHORIZED = 2;
+
+    /**
+     * Failure states of request
+     * Value of each state should be less that 100
+     */
+    public static final int FAILED = 0;
+    public static final int FAILED_DENIED = 1;
+    public static final int FAILED_INTERRUPTED = 2;
+    public static final int FAILED_CORRUPTED = 3;
+    public static final int FAILED_ERROR_4XX = 4;
+    public static final int FAILED_ERROR_5XX = 5;
+    public static final int FAILED_OFFLINE = 6;
+    public static final int FAILED_EMPTY_RESPONSE = 7;
+    public static final int FAILED_EXPECTED_REDIRECTION = 8;
+    public static final int FAILED_AUTH = 9;
+    public static final int FAILED_AUTH_REQUIRED = 10;
+    public static final int FAILED_AUTH_CREDENTIALS_REQUIRED = 11;
+    public static final int FAILED_AUTH_CREDENTIALS_FAILED = 12;
+
+    /**
+     * Protocol of request
+     */
     @Retention(RetentionPolicy.SOURCE)
     @StringDef({HTTP, HTTPS})
     public @interface Protocol {}
@@ -84,11 +112,11 @@ public abstract class Client {
      * @param url to be requested, cannot be null
      * @param headers of request
      * @param query of request
-     * @param rawHandler of request, cannot be null
-     * @see RawHandler
+     * @param handler of request, cannot be null
+     * @see ResponseHandler
      */
     protected void doGet(@NonNull String url, @Nullable okhttp3.Headers headers,
-                         @Nullable Map<String, String> query, @NonNull RawHandler rawHandler) {
+                         @Nullable Map<String, String> query, @NonNull ResponseHandler handler) {
         try {
             HttpUrl httpUrl = HttpUrl.parse(url);
             if (httpUrl == null) {
@@ -99,11 +127,11 @@ public abstract class Client {
                 for (Map.Entry<String, String> entry : query.entrySet()) {
                     builder.addQueryParameter(entry.getKey(), entry.getValue());
                 }
-                execute(builder.build(), headers, null, rawHandler);
+                execute(builder.build(), headers, null, handler);
             }
-            execute(httpUrl, headers, null, rawHandler);
-        } catch (Throwable throwable) {
-            rawHandler.onError(STATUS_CODE_EMPTY, null, throwable);
+            execute(httpUrl, headers, null, handler);
+        } catch (Exception exception) {
+            handler.onFailure(STATUS_CODE_EMPTY, null, getFailedStatus(exception));
         }
     }
 
@@ -113,12 +141,12 @@ public abstract class Client {
      * @param headers of request
      * @param query of request
      * @param params of request
-     * @param rawHandler of request, cannot be null
-     * @see RawHandler
+     * @param handler of request, cannot be null
+     * @see ResponseHandler
      */
     protected void doPost(@NonNull String url, @Nullable okhttp3.Headers headers,
                           @Nullable Map<String, String> query, @Nullable Map<String, String> params,
-                          @NonNull RawHandler rawHandler) {
+                          @NonNull ResponseHandler handler) {
         try {
             HttpUrl httpUrl = HttpUrl.parse(url);
             if (httpUrl == null) {
@@ -135,104 +163,83 @@ public abstract class Client {
                 for (Map.Entry<String, String> param : params.entrySet()) {
                     formBody.add(param.getKey(), param.getValue());
                 }
-                execute(builder.build(), headers, formBody.build(), rawHandler);
+                execute(builder.build(), headers, formBody.build(), handler);
             } else {
-                execute(builder.build(), headers, null, rawHandler);
+                execute(builder.build(), headers, null, handler);
             }
-        } catch (Throwable throwable) {
-            rawHandler.onError(STATUS_CODE_EMPTY, null, throwable);
+        } catch (Exception exception) {
+            handler.onFailure(STATUS_CODE_EMPTY, null, getFailedStatus(exception));
         }
     }
 
     /**
-     * Performs GET request and parse result as json
+     * Performs GET request and parse result as {@link JsonEntity}
      * @param url to be requested, cannot be null
      * @param headers of request
      * @param query of request
-     * @param rawJsonHandler of request, cannot be null
-     * @see RawJsonHandler
+     * @param restHandler of request, cannot be null
+     * @see RestResponseHandler
      */
-    protected void doGetJson(@NonNull String url, @Nullable okhttp3.Headers headers,
-                             @Nullable Map<String, String> query, @NonNull RawJsonHandler rawJsonHandler) {
-        try {
-            HttpUrl httpUrl = HttpUrl.parse(url);
-            if (httpUrl == null) {
-                throw new NullPointerException("httpUrl is null");
-            }
-            RawHandler rawHandler = new RawHandler() {
-                @Override
-                public void onDone(int code, okhttp3.Headers responseHeaders, String response) {
-                    try {
-                        if (code >= 400) {
-                            rawJsonHandler.onDone(code, headers, response, null, null);
-                            return;
-                        }
-                        if (StringUtils.isBlank(response)) {
-                            rawJsonHandler.onDone(code, headers, response, new JSONObject(), new JSONArray());
-                            return;
-                        }
-                        try {
-                            Object object = new JSONTokener(response).nextValue();
-                            if (object instanceof JSONObject) {
-                                rawJsonHandler.onDone(code, headers, response, (JSONObject) object, null);
-                            } else if (object instanceof JSONArray) {
-                                rawJsonHandler.onDone(code, headers, response, null, (JSONArray) object);
-                            } else {
-                                throw new Exception("Failed to use JSONTokener");
-                            }
-                        } catch (Exception e) {
-                            if (response.startsWith("{") && response.endsWith("}")) {
-                                try {
-                                    JSONObject jsonObject;
-                                    try {
-                                        jsonObject = new JSONObject(response);
-                                    } catch (Throwable throwable) {
-                                        jsonObject = new JSONObject(tryFixInvalidJsonResponse(response));
-                                    }
-                                    rawJsonHandler.onDone(code, headers, response, jsonObject, null);
-                                } catch (Throwable throwable) {
-                                    rawJsonHandler.onError(code, headers, new ParseException("Failed to parse JSONObject", 0));
-                                }
-                            } else if (response.startsWith("[") && response.endsWith("]")) {
-                                try {
-                                    JSONArray jsonArray;
-                                    try {
-                                        jsonArray = new JSONArray(response);
-                                    } catch (Throwable throwable) {
-                                        jsonArray = new JSONArray(tryFixInvalidJsonResponse(response));
-                                    }
-                                    rawJsonHandler.onDone(code, headers, response, null, jsonArray);
-                                } catch (Throwable throwable) {
-                                    rawJsonHandler.onError(code, headers, new ParseException("Failed to parse JSONArray", 0));
-                                }
-                            } else {
-                                rawJsonHandler.onError(code, headers, new Exception("Response is not recognized as JSONObject or JSONArray"));
-                            }
-                        }
-                    } catch (Throwable throwable) {
-                        rawJsonHandler.onError(code, headers, throwable);
+    protected <T extends JsonEntity> void doGetJson(@NonNull String url, @Nullable okhttp3.Headers headers,
+                            @Nullable Map<String, String> query, @NonNull RestResponseHandler<T> restHandler) {
+        ResponseHandler handler = new ResponseHandler() {
+            @Override
+            public void onSuccess(int code, Headers headers, String response) throws Exception {
+                try {
+                    if (StringUtils.isBlank(response)) {
+                        restHandler.onFailure(code, headers, FAILED_EMPTY_RESPONSE);
+                        return;
                     }
+                    Object object;
+                    try {
+                        object = new JSONTokener(response).nextValue();
+                    } catch (JSONException e) {
+                        try {
+                            // Sometimes de.ifmo server provides corrupted json response
+                            // Let's try to fix it
+                            object = new JSONTokener(tryFixInvalidJsonResponse(response)).nextValue();
+                        } catch (JSONException e1) {
+                            throw new CorruptedException(e1);
+                        }
+                    }
+                    if (object == null || object == JSONObject.NULL) {
+                        throw new CorruptedException();
+                    }
+                    if (object instanceof JSONObject) {
+                        JSONObject obj = (JSONObject) object;
+                        T entity = restHandler.newInstance().fromJson(obj);
+                        restHandler.onSuccess(code, headers, entity);
+                        return;
+                    }
+                    if (object instanceof JSONArray) {
+                        JSONArray arr = (JSONArray) object;
+                        JSONObject obj = restHandler.convertArray(arr);
+                        if (obj == null) {
+                            throw new CorruptedException();
+                        }
+                        T entity = restHandler.newInstance().fromJson(obj);
+                        restHandler.onSuccess(code, headers, entity);
+                        return;
+                    }
+                    throw new CorruptedException();
+                } catch (Exception exception) {
+                    restHandler.onFailure(code, headers, getFailedStatus(exception));
                 }
-                @Override
-                public void onNewRequest(Request request) {
-                    rawJsonHandler.onNewRequest(request);
-                }
-                @Override
-                public void onError(int code, okhttp3.Headers headers, Throwable throwable) {
-                    rawJsonHandler.onError(code, headers, throwable);
-                }
-            };
-            if (query != null) {
-                HttpUrl.Builder builder = httpUrl.newBuilder();
-                for (Map.Entry<String, String> entry : query.entrySet()) {
-                    builder.addQueryParameter(entry.getKey(), entry.getValue());
-                }
-                execute(builder.build(), headers, null, rawHandler);
             }
-            execute(httpUrl, headers, null, rawHandler);
-        } catch (Throwable throwable) {
-            rawJsonHandler.onError(STATUS_CODE_EMPTY, null, throwable);
-        }
+            @Override
+            public void onFailure(int code, Headers headers, int state) {
+                restHandler.onFailure(code, headers, state);
+            }
+            @Override
+            public void onProgress(int state) {
+                restHandler.onProgress(state);
+            }
+            @Override
+            public void onNewRequest(Request request) {
+                restHandler.onNewRequest(request);
+            }
+        };
+        doGet(url, headers, query, handler);
     }
 
     /**
@@ -240,16 +247,18 @@ public abstract class Client {
      * @param url to be requested, cannot be null
      * @param headers of request
      * @param requestBody of request
-     * @param rawHandler of request, cannot be null
+     * @param handler of request, cannot be null
      * @see HttpUrl
      * @see okhttp3.Headers
      * @see RequestBody
-     * @see RawHandler
+     * @see ResponseHandler
      */
     private void execute(@NonNull HttpUrl url, @Nullable okhttp3.Headers headers,
-                         @Nullable RequestBody requestBody, @NonNull RawHandler rawHandler) {
+                         @Nullable RequestBody requestBody, @NonNull ResponseHandler handler) {
         try {
-            thread.assertNotUI();
+            if (!thread.assertNotUI()) {
+                throw new IllegalStateException("Network request was not executed. Currently on main thread.");
+            }
             log.v(TAG,
                     "execute | load | ",
                     "url=", getUrl(url), " | ",
@@ -273,7 +282,7 @@ public abstract class Client {
             okhttp3.Request request = builder.build();
             // perform request
             Call call = networkClientProvider.get().newCall(request);
-            rawHandler.onNewRequest(new Request(call));
+            handler.onNewRequest(new Request(call));
             Response response = call.execute();
             // fetch response as string
             String responseString = "";
@@ -301,16 +310,95 @@ public abstract class Client {
                     "response=", (responseString.isEmpty() ? "<empty>" : "<string>")
             );
             response.close();
-            rawHandler.onDone(code, responseHeaders, responseString);
-        } catch (Throwable throwable) {
-            rawHandler.onError(STATUS_CODE_EMPTY, null, throwable);
+            if (code >= 500) {
+                handler.onFailure(code, new Headers(responseHeaders), FAILED_ERROR_5XX);
+                return;
+            }
+            if (code >= 400) {
+                handler.onFailure(code, new Headers(responseHeaders), FAILED_ERROR_4XX);
+                return;
+            }
+            handler.onSuccess(code, new Headers(responseHeaders), responseString);
+        } catch (Exception exception) {
+            handler.onFailure(STATUS_CODE_EMPTY, null, getFailedStatus(exception));
         }
     }
 
-    @Nullable
+    public boolean isAuthorized(@NonNull Context context) {
+        return true;
+    }
+
+    public String getProgressMessage(@NonNull Context context, int state) {
+        switch (state) {
+            case STATE_HANDLING: return context.getString(R.string.network_state_loading);
+            case STATE_AUTHORIZATION: return context.getString(R.string.network_state_authorization);
+            case STATE_AUTHORIZED: return context.getString(R.string.network_state_authorized);
+        }
+        return context.getString(R.string.network_state_loading);
+    }
+
+    public String getFailedMessage(@NonNull Context context, int code, int failed) {
+        if (code != STATUS_CODE_EMPTY) {
+            String message = getFailedMessage(context, code);
+            if (StringUtils.isNotBlank(message)) {
+                return message;
+            }
+            Integer state = getFailedState(context, code);
+            if (state != null) {
+                failed = state;
+            }
+        }
+        switch (failed) {
+            case FAILED: return context.getString(R.string.network_failed);
+            case FAILED_DENIED: return context.getString(R.string.network_failed_denied);
+            case FAILED_INTERRUPTED: return context.getString(R.string.network_failed_interrupted);
+            case FAILED_CORRUPTED: return context.getString(R.string.network_failed_corrupted);
+            case FAILED_ERROR_4XX: return String.format(context.getString(R.string.network_failed_error_4xx), code);
+            case FAILED_ERROR_5XX: return String.format(context.getString(R.string.network_failed_error_5xx), code);
+            case FAILED_OFFLINE: return context.getString(R.string.network_failed_offline);
+            case FAILED_EMPTY_RESPONSE: return context.getString(R.string.network_failed_empty_response);
+            case FAILED_EXPECTED_REDIRECTION: return context.getString(R.string.network_failed_expected_redirection);
+            case FAILED_AUTH: return context.getString(R.string.network_failed_auth);
+            case FAILED_AUTH_REQUIRED: return context.getString(R.string.network_failed_auth_required);
+            case FAILED_AUTH_CREDENTIALS_REQUIRED: return context.getString(R.string.network_failed_credentials_required);
+            case FAILED_AUTH_CREDENTIALS_FAILED: return context.getString(R.string.network_failed_credentials_failed);
+        }
+        return context.getString(R.string.network_failed);
+    }
+
+    public boolean isFailedAuth(int failed) {
+        return failed == FAILED_AUTH ||
+                failed == FAILED_AUTH_REQUIRED ||
+                failed == FAILED_AUTH_CREDENTIALS_REQUIRED ||
+                failed == FAILED_AUTH_CREDENTIALS_FAILED;
+    }
+
+    protected String getFailedMessage(@NonNull Context context, int code) {
+        return null;
+    }
+
+    protected Integer getFailedState(@NonNull Context context, int code) {
+        return null;
+    }
+
+    protected int getFailedStatus(Exception exception) {
+        return getFailedStatus(exception, FAILED);
+    }
+
+    protected int getFailedStatus(Exception exception, int def) {
+        if (exception instanceof IllegalStateException) {
+            return FAILED_DENIED;
+        }
+        if (exception instanceof IOException) {
+            return FAILED_INTERRUPTED;
+        }
+        if (exception instanceof CorruptedException) {
+            return FAILED_CORRUPTED;
+        }
+        return def;
+    }
+
     private String tryFixInvalidJsonResponse(@Nullable String response) {
-        // _sometimes_ deifmo server provides corrupted json response
-        // let's try to fix it
         if (response == null) {
             return null;
         }
@@ -322,7 +410,6 @@ public abstract class Client {
         return response;
     }
 
-    @NonNull
     protected String getProtocol(@NonNull @Protocol String protocol) {
         switch (protocol) {
             case HTTP: return "http://";
@@ -334,7 +421,6 @@ public abstract class Client {
         }
     }
 
-    @Nullable
     protected JSONArray parseCookies(@Nullable okhttp3.Headers headers) {
         try {
             if (headers == null) {
@@ -379,47 +465,6 @@ public abstract class Client {
         }
     }
 
-    public boolean isAuthorized(@NonNull Context context) {
-        return true;
-    }
-
-    protected boolean isInterrupted(@Nullable Throwable throwable) {
-        return throwable != null && throwable.getMessage() != null && (
-                "socket closed".equalsIgnoreCase(throwable.getMessage()) ||
-                "canceled".equalsIgnoreCase(throwable.getMessage()) ||
-                "thread interrupted".equalsIgnoreCase(throwable.getMessage())
-        );
-    }
-
-    protected boolean isCorruptedJson(@Nullable Throwable throwable) {
-        return throwable != null && throwable.getMessage() != null && (
-                "Response is not recognized as JSONObject or JSONArray".equalsIgnoreCase(throwable.getMessage()) ||
-                "Failed to parse JSONArray".equalsIgnoreCase(throwable.getMessage()) ||
-                "Failed to parse JSONObject".equalsIgnoreCase(throwable.getMessage())
-        );
-    }
-
-    protected void invokeOnFailed(ResponseHasFailed handler, int code, okhttp3.Headers headers, int state) {
-        handler.onFailure(code, new Headers(headers), code >= 400 ? FAILED_SERVER_ERROR : state);
-    }
-
-    protected void invokeOnFailed(ResponseHasFailed handler, int code, Headers headers, int state) {
-        handler.onFailure(code, headers, code >= 400 ? FAILED_SERVER_ERROR : state);
-    }
-
-    protected void invokeOnFailed(ResponseHasFailed handler, int code, okhttp3.Headers headers,
-                                  Throwable throwable, int state) {
-        if (code >= 400) {
-            state = FAILED_SERVER_ERROR;
-        } else if (isInterrupted(throwable)) {
-            state = FAILED_INTERRUPTED;
-        } else if (isCorruptedJson(throwable)) {
-            state = FAILED_CORRUPTED_JSON;
-        }
-        handler.onFailure(code, new Headers(headers), state);
-    }
-
-    @NonNull
     private String getUrl(@Nullable HttpUrl httpUrl) {
         try {
             if (httpUrl == null) {
@@ -442,7 +487,6 @@ public abstract class Client {
         }
     }
 
-    @NonNull
     private String getLogRequestBody(@Nullable RequestBody requestBody) {
         try {
             if (requestBody == null) {
@@ -465,7 +509,6 @@ public abstract class Client {
         }
     }
 
-    @NonNull
     private String getLogHeaders(@Nullable okhttp3.Headers headers) {
         try {
             if (headers == null) {
@@ -484,25 +527,16 @@ public abstract class Client {
         }
     }
 
-    @NonNull
-    public static String getFailureMessage(@NonNull Context context, int statusCode) {
-        return context.getString(R.string.server_error) + (statusCode > 0 ? "\n[status code: " + statusCode + "]" : "");
-    }
-
-    public static @StringRes int getFailureMessage() {
-        return R.string.server_error;
-    }
-
-    public static boolean isOnline(@NonNull Context context) {
+    public static boolean isOffline(@NonNull Context context) {
         try {
             ConnectivityManager connectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
             if (connectivityManager == null) {
-                return true;
+                return false;
             }
             NetworkInfo networkInfo = connectivityManager.getActiveNetworkInfo();
-            return (networkInfo != null && networkInfo.isConnected());
+            return (networkInfo == null || !networkInfo.isConnected());
         } catch (Exception e) {
-            return true;
+            return false;
         }
     }
 

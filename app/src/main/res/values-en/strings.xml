@@ -574,4 +574,27 @@
     <string name="hidden_preference_hard_reset">Reset system preferences</string>
     <string name="hidden_preference_hard_reset_message">You are going to erase application\'s system preferences. DO NOT do this if you don\'t know why and what will be with app after that. Close this message if you changed your mind.</string>
 
+    <string name="network_state_loading">Loading</string>
+    <string name="network_state_authorization">Authorization</string>
+    <string name="network_state_authorized">Authorized</string>
+    <string name="network_failed">Load failed</string>
+    <string name="network_failed_denied">Request has been dropped</string>
+    <string name="network_failed_interrupted">Request has been interrupted</string>
+    <string name="network_failed_corrupted">Failed to parse server response</string>
+    <string name="network_failed_error_4xx">Request denied by server [http code: %d]</string>
+    <string name="network_failed_error_5xx">The server failed to process the request [http code: %d]</string>
+    <string name="network_failed_offline">No internet access</string>
+    <string name="network_failed_empty_response">Server returned an empty response</string>
+    <string name="network_failed_expected_redirection">Request failed, redirection expected</string>
+    <string name="network_failed_auth">Authorization failed</string>
+    <string name="network_failed_auth_required">Authorization required</string>
+    <string name="network_failed_credentials_required">Login/password required</string>
+    <string name="network_failed_credentials_failed">Invalid login/password</string>
+
+    <string name="schedule_failed_load">Failed to load schedule</string>
+    <string name="schedule_failed_empty_query">Empty query provided</string>
+    <string name="schedule_failed_invalid_query">Invalid query provided</string>
+    <string name="schedule_failed_need_isu">ISU authorization required</string>
+    <string name="schedule_failed_not_found">Schedule not found</string>
+
 </resources>

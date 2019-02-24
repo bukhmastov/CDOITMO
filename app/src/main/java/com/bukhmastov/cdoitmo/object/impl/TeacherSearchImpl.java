@@ -90,11 +90,7 @@ public class TeacherSearchImpl implements TeacherSearch {
                     callback.onSuccess(schedule.getTeachers());
                 }
                 @Override
-                public void onFailure(int state) {
-                    this.onFailure(0, null, state);
-                }
-                @Override
-                public void onFailure(int statusCode, Client.Headers headers, int state) {
+                public void onFailure(int code, Client.Headers headers, int state) {
                     log.v(TAG, "search | query = ", query, " | not found");
                     callback.onState(NOT_FOUND);
                 }

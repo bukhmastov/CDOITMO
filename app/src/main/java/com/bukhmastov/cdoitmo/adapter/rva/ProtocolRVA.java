@@ -61,6 +61,7 @@ public class ProtocolRVA extends RVA<RVAProtocolChange> {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     protected void onBind(View container, Item item) {
         switch (item.type) {
             case TYPE_HEADER: bindHeader(container, item); break;

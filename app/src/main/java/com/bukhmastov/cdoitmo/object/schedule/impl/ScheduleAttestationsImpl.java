@@ -7,12 +7,10 @@ import com.bukhmastov.cdoitmo.firebase.FirebasePerformanceProvider;
 import com.bukhmastov.cdoitmo.model.parser.ScheduleAttestationsParser;
 import com.bukhmastov.cdoitmo.model.schedule.attestations.SAttestations;
 import com.bukhmastov.cdoitmo.network.DeIfmoClient;
-import com.bukhmastov.cdoitmo.network.handlers.ResponseHandler;
 import com.bukhmastov.cdoitmo.network.handlers.RestResponseHandler;
+import com.bukhmastov.cdoitmo.network.handlers.joiner.RestStringResponseHandlerJoiner;
 import com.bukhmastov.cdoitmo.network.model.Client;
 import com.bukhmastov.cdoitmo.object.schedule.ScheduleAttestations;
-
-import org.json.JSONObject;
 
 import java.util.Calendar;
 
@@ -51,51 +49,31 @@ public class ScheduleAttestationsImpl extends ScheduleImpl<SAttestations> implem
                 " | forceToCache=", forceToCache, " | withUserChanges=", withUserChanges, " | source=", source);
         searchByQuery(group, source, refreshRate, withUserChanges, new SearchByQuery<SAttestations>() {
             @Override
-            public void onWebRequest(String query, String source, RestResponseHandler handler) {
+            public void onWebRequest(String query, String source, RestResponseHandler<SAttestations> handler) {
                 switch (source) {
-                    case SOURCE.ISU: invokePendingAndClose(query, withUserChanges, h -> h.onFailure(FAILED_INVALID_QUERY)); break;
+                    case SOURCE.ISU: // not available, using ifmo source
                     case SOURCE.IFMO: {
                         int term = getTerm();
-                        String url = "index.php?node=schedule&index=sched&semiId=" + String.valueOf(term) +
-                                "&group=" + textUtils.prettifyGroupNumber(group);
-                        deIfmoClient.get(context, url, null, new ResponseHandler() {
+                        String url = String.format("index.php?node=schedule&index=sched&semiId=%s&group=%s",
+                                String.valueOf(term), textUtils.prettifyGroupNumber(group));
+                        deIfmoClient.get(context, url, null, new RestStringResponseHandlerJoiner(handler) {
                             @Override
-                            public void onSuccess(int code, Client.Headers headers, String response) {
-                                try {
-                                    SAttestations schedule = new ScheduleAttestationsParser(response, term).parse();
-                                    if (schedule != null) {
-                                        schedule.setQuery(query);
-                                        schedule.setType("group");
-                                        schedule.setTitle(textUtils.prettifyGroupNumber(group));
-                                        schedule.setTimestamp(time.getTimeInMillis());
-                                        handler.onSuccess(code, headers, schedule.toJson(), null);
-                                    } else {
-                                        handler.onFailure(code, headers, FAILED_LOAD);
-                                    }
-                                } catch (Throwable throwable) {
+                            public void onSuccess(int code, Client.Headers headers, String response) throws Exception {
+                                SAttestations schedule = new ScheduleAttestationsParser(response, term).parse();
+                                if (schedule == null) {
                                     handler.onFailure(code, headers, FAILED_LOAD);
+                                    return;
                                 }
-                            }
-                            @Override
-                            public void onFailure(int code, Client.Headers headers, int state) {
-                                handler.onFailure(code, headers, state);
-                            }
-                            @Override
-                            public void onProgress(int state) {
-                                handler.onProgress(state);
-                            }
-                            @Override
-                            public void onNewRequest(Client.Request request) {
-                                handler.onNewRequest(request);
+                                schedule.setQuery(query);
+                                schedule.setType("group");
+                                schedule.setTitle(textUtils.prettifyGroupNumber(group));
+                                schedule.setTimestamp(time.getTimeInMillis());
+                                handler.onSuccess(code, headers, schedule);
                             }
                         });
                         break;
                     }
                 }
-            }
-            @Override
-            public SAttestations onGetScheduleFromJson(String query, String source, JSONObject json) throws Exception {
-                return getNewInstance().fromJson(json);
             }
             @Override
             public void onFound(String query, SAttestations schedule, boolean fromCache) {
@@ -166,12 +144,8 @@ public class ScheduleAttestationsImpl extends ScheduleImpl<SAttestations> implem
 
     private void onScheduleFound(String query, SAttestations schedule, boolean forceToCache, boolean fromCache, boolean withUserChanges) {
         try {
-            if (context == null || query == null || schedule == null) {
-                log.w(TAG, "onFound | some values are null | context=", context, " | query=", query, " | data=", schedule);
-                if (query == null) {
-                    return;
-                }
-                invokePendingAndClose(query, withUserChanges, handler -> handler.onFailure(FAILED_LOAD));
+            if (schedule == null) {
+                invokePendingAndClose(query, withUserChanges, handler -> handler.onFailure(FAILED_NOT_FOUND));
                 return;
             }
             if (!fromCache) {

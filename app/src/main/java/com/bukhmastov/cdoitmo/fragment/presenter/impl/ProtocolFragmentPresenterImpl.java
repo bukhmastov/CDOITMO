@@ -38,6 +38,7 @@ import com.bukhmastov.cdoitmo.util.singleton.CollectionUtils;
 import com.bukhmastov.cdoitmo.util.singleton.Color;
 
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
@@ -222,7 +223,7 @@ public class ProtocolFragmentPresenterImpl extends ConnectedFragmentWithDataPres
     private void load(boolean force, Protocol cached, int attempt) {
         thread.run(PR, () -> {
             log.v(TAG, "load | force=" + (force ? "true" : "false") + " | attempt=" + attempt);
-            if ((!force || !Client.isOnline(activity)) && storagePref.get(activity, "pref_use_cache", true)) {
+            if ((!force || Client.isOffline(activity)) && storagePref.get(activity, "pref_use_cache", true)) {
                 try {
                     Protocol cache = cached == null ? getFromCache() : cached;
                     if (cache != null) {
@@ -261,21 +262,21 @@ public class ProtocolFragmentPresenterImpl extends ConnectedFragmentWithDataPres
                 }
                 return;
             }
-            deIfmoRestClient.get(activity, "eregisterlog?days=" + String.valueOf(numberOfWeeks * 7), null, new RestResponseHandler() {
+            String url = "eregisterlog?days=" + String.valueOf(numberOfWeeks * 7);
+            deIfmoRestClient.get(activity, url, null, new RestResponseHandler<Protocol>() {
                 @Override
-                public void onSuccess(int code, Client.Headers headers, JSONObject obj, JSONArray arr) throws Exception {
-                    log.v(TAG, "load | success | code=" + code + " | arr=" + (arr == null ? "null" : "notnull"));
-                    if (code == 200 && arr != null) {
-                        Protocol data = new Protocol().fromJson(new JSONObject().put("protocol", arr));
-                        data.setTimestamp(time.getTimeInMillis());
-                        data.setNumberOfWeeks(numberOfWeeks);
-                        data = new ProtocolConverter(data).convert();
-                        if (data != null && storagePref.get(activity, "pref_use_cache", true)) {
-                            String json = data.toJsonString();
+                public void onSuccess(int code, Client.Headers headers, Protocol response) throws Exception {
+                    log.v(TAG, "load | success | code=", code, " | response=", response);
+                    if (code == 200 && response != null) {
+                        response.setTimestamp(time.getTimeInMillis());
+                        response.setNumberOfWeeks(numberOfWeeks);
+                        response = new ProtocolConverter(response).convert();
+                        if (response != null && storagePref.get(activity, "pref_use_cache", true)) {
+                            String json = response.toJsonString();
                             storage.put(activity, Storage.CACHE, Storage.USER, "protocol#core", json);
                             storage.put(activity, Storage.PERMANENT, Storage.USER, "protocol_tracker#protocol", json);
                         }
-                        setData(data);
+                        setData(response);
                         display();
                         return;
                     }
@@ -284,52 +285,36 @@ public class ProtocolFragmentPresenterImpl extends ConnectedFragmentWithDataPres
                 @Override
                 public void onFailure(int code, Client.Headers headers, int state) {
                     thread.run(PR, () -> {
-                        log.v(TAG, "load | failure " + state);
-                        switch (state) {
-                            case DeIfmoRestClient.FAILED_OFFLINE:
-                                if (getData() != null) {
-                                    display();
-                                    return;
+                        log.v(TAG, "load | failure ", state);
+                        if (state == Client.FAILED_OFFLINE) {
+                            if (getData() != null) {
+                                display();
+                                return;
+                            }
+                            thread.runOnUI(PR, () -> {
+                                fragment.draw(R.layout.state_offline_text);
+                                View reload = fragment.container().findViewById(R.id.offline_reload);
+                                if (reload != null) {
+                                    reload.setOnClickListener(v -> load());
                                 }
-                                thread.runOnUI(PR, () -> {
-                                    fragment.draw(R.layout.state_offline_text);
-                                    View reload = fragment.container().findViewById(R.id.offline_reload);
-                                    if (reload != null) {
-                                        reload.setOnClickListener(v -> load());
-                                    }
-                                }, throwable -> {
-                                    loadFailed();
-                                });
-                                break;
-                            case DeIfmoRestClient.FAILED_TRY_AGAIN:
-                            case DeIfmoRestClient.FAILED_SERVER_ERROR:
-                            case DeIfmoRestClient.FAILED_CORRUPTED_JSON:
-                                thread.runOnUI(PR, () -> {
-                                    fragment.draw(R.layout.state_failed_button);
-                                    TextView message = fragment.container().findViewById(R.id.try_again_message);
-                                    if (message != null) {
-                                        switch (state) {
-                                            case DeIfmoRestClient.FAILED_SERVER_ERROR:
-                                                if (activity == null) {
-                                                    message.setText(DeIfmoRestClient.getFailureMessage(code));
-                                                } else {
-                                                    message.setText(DeIfmoRestClient.getFailureMessage(activity, code));
-                                                }
-                                                break;
-                                            case DeIfmoRestClient.FAILED_CORRUPTED_JSON:
-                                                message.setText(R.string.server_provided_corrupted_json);
-                                                break;
-                                        }
-                                    }
-                                    View reload = fragment.container().findViewById(R.id.try_again_reload);
-                                    if (reload != null) {
-                                        reload.setOnClickListener(v -> load());
-                                    }
-                                }, throwable -> {
-                                    loadFailed();
-                                });
-                                break;
+                            }, throwable -> {
+                                loadFailed();
+                            });
+                            return;
                         }
+                        thread.runOnUI(PR, () -> {
+                            fragment.draw(R.layout.state_failed_button);
+                            TextView message = fragment.container().findViewById(R.id.try_again_message);
+                            if (message != null) {
+                                message.setText(deIfmoRestClient.getFailedMessage(activity, code, state));
+                            }
+                            View reload = fragment.container().findViewById(R.id.try_again_reload);
+                            if (reload != null) {
+                                reload.setOnClickListener(v -> load());
+                            }
+                        }, throwable -> {
+                            loadFailed();
+                        });
                     }, throwable -> {
                         loadFailed();
                     });
@@ -337,21 +322,25 @@ public class ProtocolFragmentPresenterImpl extends ConnectedFragmentWithDataPres
                 @Override
                 public void onProgress(int state) {
                     thread.runOnUI(PR, () -> {
-                        log.v(TAG, "load | progress " + state);
+                        log.v(TAG, "load | progress ", state);
                         fragment.draw(R.layout.state_loading_text);
                         TextView message = fragment.container().findViewById(R.id.loading_message);
                         if (message != null) {
-                            switch (state) {
-                                case DeIfmoRestClient.STATE_HANDLING:
-                                    message.setText(R.string.loading);
-                                    break;
-                            }
+                            message.setText(deIfmoRestClient.getProgressMessage(activity, state));
                         }
                     });
                 }
                 @Override
                 public void onNewRequest(Client.Request request) {
                     requestHandle = request;
+                }
+                @Override
+                public Protocol newInstance() {
+                    return new Protocol();
+                }
+                @Override
+                public JSONObject convertArray(JSONArray arr) throws JSONException {
+                    return new JSONObject().put("protocol", arr);
                 }
             });
         }, throwable -> {

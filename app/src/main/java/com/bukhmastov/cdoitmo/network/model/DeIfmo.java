@@ -5,9 +5,9 @@ import android.text.TextUtils;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
-import com.bukhmastov.cdoitmo.network.handlers.RawHandler;
-import com.bukhmastov.cdoitmo.network.handlers.RawJsonHandler;
-import com.bukhmastov.cdoitmo.network.handlers.ResponseHasFailed;
+import com.bukhmastov.cdoitmo.model.JsonEntity;
+import com.bukhmastov.cdoitmo.network.handlers.ResponseHandler;
+import com.bukhmastov.cdoitmo.network.handlers.RestResponseHandler;
 import com.bukhmastov.cdoitmo.network.provider.NetworkUserAgentProvider;
 import com.bukhmastov.cdoitmo.util.Storage;
 
@@ -20,24 +20,16 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import javax.inject.Inject;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.annotation.StringRes;
 
 public abstract class DeIfmo extends Client {
 
-    private static final long jsessionid_expiration_time_ms = 1200000L; // 20min // 20 * 60 * 1000
-
-    public static final int STATE_CHECKING = 10;
-    public static final int STATE_AUTHORIZATION = 11;
-    public static final int STATE_AUTHORIZED = 12;
-    public static final int FAILED_AUTH_TRY_AGAIN = 10;
-    public static final int FAILED_AUTH_CREDENTIALS_REQUIRED = 11;
-    public static final int FAILED_AUTH_CREDENTIALS_FAILED = 12;
-    public static final int FAILED_UNAUTHORIZED_MODE = 13;
+    private static final long JSESSIONID_EXPIRATION_TIME_MS = TimeUnit.MINUTES.toMillis(20);
 
     @Inject
     NetworkUserAgentProvider networkUserAgentProvider;
@@ -52,15 +44,15 @@ public abstract class DeIfmo extends Client {
      * @param context context, cannot be null
      * @param url to be requested, cannot be null
      * @param query of request
-     * @param rawHandler of request, cannot be null
-     * @see RawHandler
+     * @param handler of request, cannot be null
+     * @see ResponseHandler
      */
     protected void doGet(@NonNull Context context, @NonNull String url,
-                         @Nullable Map<String, String> query, @NonNull RawHandler rawHandler) {
+                         @Nullable Map<String, String> query, @NonNull ResponseHandler handler) {
         try {
-            doGet(url, getHeaders(context), query, rawHandler);
-        } catch (Throwable throwable) {
-            rawHandler.onError(STATUS_CODE_EMPTY, null, throwable);
+            doGet(url, getHeaders(context), query, handler);
+        } catch (Exception exception) {
+            handler.onFailure(STATUS_CODE_EMPTY, null, getFailedStatus(exception));
         }
     }
 
@@ -69,32 +61,32 @@ public abstract class DeIfmo extends Client {
      * @param context context, cannot be null
      * @param url to be requested, cannot be null
      * @param params of request
-     * @param rawHandler of request, cannot be null
-     * @see RawHandler
+     * @param handler of request, cannot be null
+     * @see ResponseHandler
      */
     protected void doPost(@NonNull Context context, @NonNull String url,
-                          @Nullable Map<String, String> params, @NonNull RawHandler rawHandler) {
+                          @Nullable Map<String, String> params, @NonNull ResponseHandler handler) {
         try {
-            doPost(url, getHeaders(context), null, params, rawHandler);
-        } catch (Throwable throwable) {
-            rawHandler.onError(STATUS_CODE_EMPTY, null, throwable);
+            doPost(url, getHeaders(context), null, params, handler);
+        } catch (Exception exception) {
+            handler.onFailure(STATUS_CODE_EMPTY, null, getFailedStatus(exception));
         }
     }
 
     /**
-     * Performs GET request and parse result as json
+     * Performs GET request and parse result as {@link JsonEntity}
      * @param context context, cannot be null
      * @param url to be requested, cannot be null
      * @param query of request
-     * @param rawJsonHandler of request, cannot be null
-     * @see RawJsonHandler
+     * @param restHandler of request, cannot be null
+     * @see RestResponseHandler
      */
-    protected void doGetJson(@NonNull Context context, @NonNull String url,
-                             @Nullable Map<String, String> query, @NonNull RawJsonHandler rawJsonHandler) {
+    protected <T extends JsonEntity> void doGetJson(@NonNull Context context, @NonNull String url,
+                       @Nullable Map<String, String> query, @NonNull RestResponseHandler<T> restHandler) {
         try {
-            doGetJson(url, getHeaders(context), query, rawJsonHandler);
-        } catch (Throwable throwable) {
-            rawJsonHandler.onError(STATUS_CODE_EMPTY, null, throwable);
+            doGetJson(url, getHeaders(context), query, restHandler);
+        } catch (Exception exception) {
+            restHandler.onFailure(STATUS_CODE_EMPTY, null, getFailedStatus(exception));
         }
     }
 
@@ -135,11 +127,34 @@ public abstract class DeIfmo extends Client {
         return isExpired;
     }
 
+    protected okhttp3.Headers getHeaders(@NonNull final Context context) {
+        HashMap<String, String> headers = new HashMap<>();
+        headers.put("User-Agent", networkUserAgentProvider.get(context));
+        JSONArray storedCookies;
+        try {
+            storedCookies = new JSONArray(storage.get(context, Storage.PERMANENT, Storage.USER, "user#deifmo#cookies", ""));
+        } catch (Exception ignore) {
+            storedCookies = new JSONArray();
+        }
+        ArrayList<String> cookies = new ArrayList<>();
+        for (int i = 0; i < storedCookies.length(); i++) {
+            try {
+                JSONObject storedCookie = storedCookies.getJSONObject(i);
+                cookies.add(storedCookie.getString("name") + "=" + storedCookie.getString("value"));
+            } catch (Exception ignore) {
+                // ignore
+            }
+        }
+        if (cookies.size() > 0) {
+            headers.put("Cookie", TextUtils.join("; ", cookies).trim());
+        }
+        return okhttp3.Headers.of(headers);
+    }
+
     @Override
-    @Nullable
     protected JSONArray parseCookies(@Nullable okhttp3.Headers headers) {
         try {
-            final JSONArray parsed = super.parseCookies(headers);
+            JSONArray parsed = super.parseCookies(headers);
             if (parsed == null) {
                 return null;
             }
@@ -167,7 +182,7 @@ public abstract class DeIfmo extends Client {
                         }
                     }
                     if (expires.isEmpty()) {
-                        expires = String.valueOf(System.currentTimeMillis() + jsessionid_expiration_time_ms);
+                        expires = String.valueOf(System.currentTimeMillis() + JSESSIONID_EXPIRATION_TIME_MS);
                     }
                     for (int j = 0; j < cookieAttrs.length(); j++) {
                         JSONObject attr = cookieAttrs.getJSONObject(j);
@@ -190,8 +205,8 @@ public abstract class DeIfmo extends Client {
         }
     }
 
-    protected void storeCookies(@NonNull Context context, okhttp3.Headers headers) {
-        storeCookies(context, headers, true);
+    protected void storeCookies(@NonNull Context context, Headers headers, boolean refreshJsessionid) {
+        storeCookies(context, headers.get(), refreshJsessionid);
     }
 
     protected void storeCookies(@NonNull Context context, okhttp3.Headers headers, boolean refreshJsessionid) {
@@ -200,7 +215,6 @@ public abstract class DeIfmo extends Client {
         storage.put(context, Storage.PERMANENT, Storage.USER, "user#deifmo#cookies", cookies.toString());
     }
 
-    @NonNull
     private JSONArray mergeCookies(@NonNull okhttp3.Headers headers, String stored, boolean refreshJsessionid) {
         JSONArray newCookies;
         JSONArray storedCookies;
@@ -249,7 +263,7 @@ public abstract class DeIfmo extends Client {
                         }
                         attrs.put(new JSONObject()
                                 .put("name", "expires")
-                                .put("value", String.valueOf(System.currentTimeMillis() + jsessionid_expiration_time_ms))
+                                .put("value", String.valueOf(System.currentTimeMillis() + JSESSIONID_EXPIRATION_TIME_MS))
                         );
                         storedCookie.put("attrs", attrs);
                         storedCookies.put(i, storedCookie);
@@ -263,45 +277,11 @@ public abstract class DeIfmo extends Client {
         }
     }
 
-    @NonNull
-    protected okhttp3.Headers getHeaders(@NonNull final Context context) {
-        HashMap<String, String> headers = new HashMap<>();
-        headers.put("User-Agent", networkUserAgentProvider.get(context));
-        JSONArray storedCookies;
-        try {
-            storedCookies = new JSONArray(storage.get(context, Storage.PERMANENT, Storage.USER, "user#deifmo#cookies", ""));
-        } catch (Exception ignore) {
-            storedCookies = new JSONArray();
-        }
-        ArrayList<String> cookies = new ArrayList<>();
-        for (int i = 0; i < storedCookies.length(); i++) {
-            try {
-                JSONObject storedCookie = storedCookies.getJSONObject(i);
-                cookies.add(storedCookie.getString("name") + "=" + storedCookie.getString("value"));
-            } catch (Exception ignore) {
-                // ignore
-            }
-        }
-        if (cookies.size() > 0) {
-            headers.put("Cookie", TextUtils.join("; ", cookies).trim());
-        }
-        return okhttp3.Headers.of(headers);
-    }
-
-    @NonNull
-    public static String getFailureMessage(@NonNull Context context, int statusCode) {
-        if (statusCode == 591) {
+    @Override
+    protected String getFailedMessage(@NonNull Context context, int code) {
+        if (code == 591) {
             return context.getString(R.string.server_maintenance);
-        } else {
-            return Client.getFailureMessage(context, statusCode);
         }
-    }
-
-    public static @StringRes int getFailureMessage(int statusCode) {
-        if (statusCode == 591) {
-            return R.string.server_maintenance;
-        } else {
-            return Client.getFailureMessage();
-        }
+        return null;
     }
 }

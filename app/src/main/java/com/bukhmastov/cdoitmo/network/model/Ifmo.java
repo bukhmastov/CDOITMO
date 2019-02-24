@@ -1,18 +1,20 @@
 package com.bukhmastov.cdoitmo.network.model;
 
 import android.content.Context;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
-import com.bukhmastov.cdoitmo.network.handlers.RawHandler;
-import com.bukhmastov.cdoitmo.network.handlers.RawJsonHandler;
+import com.bukhmastov.cdoitmo.model.JsonEntity;
+import com.bukhmastov.cdoitmo.network.handlers.ResponseHandler;
+import com.bukhmastov.cdoitmo.network.handlers.RestResponseHandler;
 import com.bukhmastov.cdoitmo.network.provider.NetworkUserAgentProvider;
 
 import java.util.HashMap;
 import java.util.Map;
 
 import javax.inject.Inject;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 public abstract class Ifmo extends Client {
 
@@ -29,15 +31,15 @@ public abstract class Ifmo extends Client {
      * @param context context, cannot be null
      * @param url to be requested, cannot be null
      * @param query of request
-     * @param rawHandler of request, cannot be null
-     * @see RawHandler
+     * @param handler of request, cannot be null
+     * @see ResponseHandler
      */
     protected void doGet(@NonNull Context context, @NonNull String url,
-                         @Nullable Map<String, String> query, @NonNull RawHandler rawHandler) {
+                         @Nullable Map<String, String> query, @NonNull ResponseHandler handler) {
         try {
-            doGet(url, getHeaders(context), query, rawHandler);
-        } catch (Throwable throwable) {
-            rawHandler.onError(STATUS_CODE_EMPTY, null, throwable);
+            doGet(url, getHeaders(context), query, handler);
+        } catch (Exception exception) {
+            handler.onFailure(STATUS_CODE_EMPTY, null, getFailedStatus(exception));
         }
     }
 
@@ -46,32 +48,32 @@ public abstract class Ifmo extends Client {
      * @param context context, cannot be null
      * @param url to be requested, cannot be null
      * @param params of request
-     * @param rawHandler of request, cannot be null
-     * @see RawHandler
+     * @param handler of request, cannot be null
+     * @see ResponseHandler
      */
     protected void doPost(@NonNull Context context, @NonNull String url,
-                          @Nullable Map<String, String> params, @NonNull RawHandler rawHandler) {
+                          @Nullable Map<String, String> params, @NonNull ResponseHandler handler) {
         try {
-            doPost(url, getHeaders(context), null, params, rawHandler);
-        } catch (Throwable throwable) {
-            rawHandler.onError(STATUS_CODE_EMPTY, null, throwable);
+            doPost(url, getHeaders(context), null, params, handler);
+        } catch (Exception exception) {
+            handler.onFailure(STATUS_CODE_EMPTY, null, getFailedStatus(exception));
         }
     }
 
     /**
-     * Performs GET request and parse result as json
+     * Performs GET request and parse result as {@link JsonEntity}
      * @param context context, cannot be null
      * @param url to be requested, cannot be null
      * @param query of request
-     * @param rawJsonHandler of request, cannot be null
-     * @see RawJsonHandler
+     * @param restHandler of request, cannot be null
+     * @see RestResponseHandler
      */
-    protected void gJson(@NonNull Context context, @NonNull String url,
-                         @Nullable Map<String, String> query, @NonNull RawJsonHandler rawJsonHandler) {
+    protected <T extends JsonEntity> void doGetJson(@NonNull Context context, @NonNull String url,
+                    @Nullable Map<String, String> query, @NonNull RestResponseHandler<T> restHandler) {
         try {
-            doGetJson(url, getHeaders(context), query, rawJsonHandler);
-        } catch (Throwable throwable) {
-            rawJsonHandler.onError(STATUS_CODE_EMPTY, null, throwable);
+            doGetJson(url, getHeaders(context), query, restHandler);
+        } catch (Exception exception) {
+            restHandler.onFailure(STATUS_CODE_EMPTY, null, getFailedStatus(exception));
         }
     }
 

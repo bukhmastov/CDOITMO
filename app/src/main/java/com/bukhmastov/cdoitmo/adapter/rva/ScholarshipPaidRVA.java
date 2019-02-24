@@ -52,6 +52,7 @@ public class ScholarshipPaidRVA extends RVA<SSPaid> {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     protected void onBind(View container, Item item) {
         switch (item.type) {
             case TYPE_HEADER: bindHeader(container); break;

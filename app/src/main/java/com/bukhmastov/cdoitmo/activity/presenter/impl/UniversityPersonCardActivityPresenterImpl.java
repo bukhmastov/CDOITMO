@@ -3,10 +3,6 @@ package com.bukhmastov.cdoitmo.activity.presenter.impl;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
-import androidx.annotation.DrawableRes;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
@@ -32,10 +28,12 @@ import com.bukhmastov.cdoitmo.util.singleton.StringUtils;
 import com.bukhmastov.cdoitmo.view.CircularTransformation;
 import com.squareup.picasso.Picasso;
 
-import org.json.JSONArray;
-import org.json.JSONObject;
-
 import javax.inject.Inject;
+
+import androidx.annotation.DrawableRes;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import static com.bukhmastov.cdoitmo.util.Thread.UPC;
 
@@ -161,9 +159,9 @@ public class UniversityPersonCardActivityPresenterImpl implements UniversityPers
                 display();
                 return;
             }
-            loadProvider(new RestResponseHandler() {
+            loadProvider(new RestResponseHandler<UPerson>() {
                 @Override
-                public void onSuccess(int code, Client.Headers headers, JSONObject obj, JSONArray arr) {
+                public void onSuccess(int code, Client.Headers headers, UPerson response) {
                     thread.runOnUI(UPC, () -> {
                         SwipeRefreshLayout swipe = activity.findViewById(R.id.person_swipe);
                         if (swipe != null) {
@@ -171,15 +169,14 @@ public class UniversityPersonCardActivityPresenterImpl implements UniversityPers
                         }
                     });
                     thread.run(UPC, () -> {
-                        if (code == 200 && obj != null) {
-                            UPerson data = new UPerson().fromJson(obj);
+                        if (code == 200 && response != null) {
                             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
-                                data.setPost(android.text.Html.fromHtml(data.getPost(), android.text.Html.FROM_HTML_MODE_LEGACY).toString());
+                                response.setPost(android.text.Html.fromHtml(response.getPost(), android.text.Html.FROM_HTML_MODE_LEGACY).toString());
                             } else {
                                 //noinspection deprecation
-                                data.setPost(android.text.Html.fromHtml(data.getPost()).toString());
+                                response.setPost(android.text.Html.fromHtml(response.getPost()).toString());
                             }
-                            person = data;
+                            person = response;
                             display();
                             return;
                         }
@@ -200,32 +197,22 @@ public class UniversityPersonCardActivityPresenterImpl implements UniversityPers
                             loadNotFound();
                             return;
                         }
-                        switch (state) {
-                            case IfmoRestClient.FAILED_OFFLINE: {
-                                activity.draw(R.layout.state_offline_text);
-                                View reload = activity.findViewById(R.id.offline_reload);
-                                if (reload != null) {
-                                    reload.setOnClickListener(v -> load());
-                                }
-                                break;
+                        if (state == Client.FAILED_OFFLINE) {
+                            activity.draw(R.layout.state_offline_text);
+                            View reload = activity.findViewById(R.id.offline_reload);
+                            if (reload != null) {
+                                reload.setOnClickListener(v -> load());
                             }
-                            case IfmoRestClient.FAILED_CORRUPTED_JSON:
-                            case IfmoRestClient.FAILED_SERVER_ERROR:
-                            case IfmoRestClient.FAILED_TRY_AGAIN: {
-                                activity.draw(R.layout.state_failed_button);
-                                TextView message = activity.findViewById(R.id.try_again_message);
-                                if (message != null) {
-                                    switch (state) {
-                                        case IfmoRestClient.FAILED_SERVER_ERROR:   message.setText(IfmoRestClient.getFailureMessage(activity, code)); break;
-                                        case IfmoRestClient.FAILED_CORRUPTED_JSON: message.setText(R.string.server_provided_corrupted_json); break;
-                                    }
-                                }
-                                View reload = activity.findViewById(R.id.try_again_reload);
-                                if (reload != null) {
-                                    reload.setOnClickListener(v -> load());
-                                }
-                                break;
-                            }
+                            return;
+                        }
+                        activity.draw(R.layout.state_failed_button);
+                        TextView message = activity.findViewById(R.id.try_again_message);
+                        if (message != null) {
+                            message.setText(ifmoRestClient.getFailedMessage(activity, code, state));
+                        }
+                        View reload = activity.findViewById(R.id.try_again_reload);
+                        if (reload != null) {
+                            reload.setOnClickListener(v -> load());
                         }
                     }, throwable -> {
                         loadFailed();
@@ -240,11 +227,8 @@ public class UniversityPersonCardActivityPresenterImpl implements UniversityPers
                         }
                         activity.draw(R.layout.state_loading_text);
                         TextView message = activity.findViewById(R.id.loading_message);
-                        if (message == null) {
-                            return;
-                        }
-                        switch (state) {
-                            case IfmoRestClient.STATE_HANDLING: message.setText(R.string.loading); break;
+                        if (message != null) {
+                            message.setText(ifmoRestClient.getProgressMessage(activity, state));
                         }
                     });
                 }
@@ -252,13 +236,17 @@ public class UniversityPersonCardActivityPresenterImpl implements UniversityPers
                 public void onNewRequest(Client.Request request) {
                     requestHandle = request;
                 }
+                @Override
+                public UPerson newInstance() {
+                    return new UPerson();
+                }
             });
         }, throwable -> {
             loadFailed();
         });
     }
 
-    private void loadProvider(RestResponseHandler handler) {
+    private void loadProvider(RestResponseHandler<UPerson> handler) {
         log.v(TAG, "loadProvider");
         ifmoRestClient.get(activity, "person/" + pid, null, handler);
     }

@@ -1,17 +1,16 @@
 package com.bukhmastov.cdoitmo.network.model;
 
 import android.content.Context;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
-import com.bukhmastov.cdoitmo.network.handlers.RawHandler;
+import com.bukhmastov.cdoitmo.network.handlers.ResponseHandler;
+import com.bukhmastov.cdoitmo.network.handlers.joiner.ResponseHandlerJoiner;
 
 import java.util.Map;
 
-public abstract class Room101 extends DeIfmo {
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
-    public static final int FAILED_AUTH = 10;
-    public static final int FAILED_EXPECTED_REDIRECTION = 11;
+public abstract class Room101 extends DeIfmo {
 
     public Room101() {
         super();
@@ -19,57 +18,43 @@ public abstract class Room101 extends DeIfmo {
 
     @Override
     protected void doGet(@NonNull Context context, @NonNull String url,
-                         @Nullable Map<String, String> query, @NonNull RawHandler rawHandler) {
+                         @Nullable Map<String, String> query, @NonNull ResponseHandler handler) {
         try {
-            doGet(url, getHeaders(context), query, new RawHandler() {
+            doGet(url, getHeaders(context), query, new ResponseHandlerJoiner(handler) {
                 @Override
-                public void onDone(final int code, final okhttp3.Headers headers, final String response) {
-                    try {
-                        storeCookies(context, headers, false);
-                        rawHandler.onDone(code, headers, response);
-                    } catch (Throwable throwable) {
-                        rawHandler.onError(code, headers, throwable);
-                    }
+                public void onSuccess(int code, Headers headers, String response) throws Exception {
+                    storeCookies(context, headers.get(), false);
+                    super.onSuccess(code, headers, response);
                 }
                 @Override
-                public void onError(final int code, final okhttp3.Headers headers, final Throwable throwable) {
-                    rawHandler.onError(code, headers, throwable);
-                }
-                @Override
-                public void onNewRequest(final Request request) {
-                    rawHandler.onNewRequest(request);
+                public void onFailure(int code, Headers headers, int state) {
+                    storeCookies(context, headers.get(), false);
+                    super.onFailure(code, headers, state);
                 }
             });
-        } catch (Throwable throwable) {
-            rawHandler.onError(STATUS_CODE_EMPTY, null, throwable);
+        } catch (Exception exception) {
+            handler.onFailure(STATUS_CODE_EMPTY, null, getFailedStatus(exception));
         }
     }
 
     @Override
     protected void doPost(@NonNull Context context, @NonNull String url,
-                          @Nullable Map<String, String> params, @NonNull RawHandler rawHandler) {
+                          @Nullable Map<String, String> params, @NonNull ResponseHandler handler) {
         try {
-            doPost(url, getHeaders(context), null, params, new RawHandler() {
+            doPost(url, getHeaders(context), null, params, new ResponseHandlerJoiner(handler) {
                 @Override
-                public void onDone(final int code, final okhttp3.Headers headers, final String response) {
-                    try {
-                        storeCookies(context, headers, false);
-                        rawHandler.onDone(code, headers, response);
-                    } catch (Throwable throwable) {
-                        rawHandler.onError(code, headers, throwable);
-                    }
+                public void onSuccess(int code, Headers headers, String response) throws Exception {
+                    storeCookies(context, headers.get(), false);
+                    super.onSuccess(code, headers, response);
                 }
                 @Override
-                public void onError(final int code, final okhttp3.Headers headers, final Throwable throwable) {
-                    rawHandler.onError(code, headers, throwable);
-                }
-                @Override
-                public void onNewRequest(final Request request) {
-                    rawHandler.onNewRequest(request);
+                public void onFailure(int code, Headers headers, int state) {
+                    storeCookies(context, headers.get(), false);
+                    super.onFailure(code, headers, state);
                 }
             });
-        } catch (Throwable throwable) {
-            rawHandler.onError(STATUS_CODE_EMPTY, null, throwable);
+        } catch (Exception exception) {
+            handler.onFailure(STATUS_CODE_EMPTY, null, getFailedStatus(exception));
         }
     }
 }

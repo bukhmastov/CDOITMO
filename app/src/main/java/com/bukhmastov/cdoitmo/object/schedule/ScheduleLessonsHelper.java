@@ -2,7 +2,6 @@ package com.bukhmastov.cdoitmo.object.schedule;
 
 import android.os.Bundle;
 
-import com.bukhmastov.cdoitmo.activity.ConnectedActivity;
 import com.bukhmastov.cdoitmo.function.Callable;
 import com.bukhmastov.cdoitmo.function.Consumer;
 import com.bukhmastov.cdoitmo.model.schedule.lessons.SDay;

@@ -2,14 +2,6 @@ package com.bukhmastov.cdoitmo.fragment.presenter.impl;
 
 import android.content.Context;
 import android.os.Bundle;
-import androidx.annotation.LayoutRes;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentActivity;
-import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
 import android.view.InflateException;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
@@ -48,13 +40,19 @@ import com.bukhmastov.cdoitmo.util.singleton.CollectionUtils;
 import com.bukhmastov.cdoitmo.util.singleton.Color;
 import com.bukhmastov.cdoitmo.util.singleton.StringUtils;
 
-import org.json.JSONArray;
-import org.json.JSONObject;
-
 import java.util.ArrayList;
 import java.util.Collection;
 
 import javax.inject.Inject;
+
+import androidx.annotation.LayoutRes;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import static com.bukhmastov.cdoitmo.util.Thread.UE;
 
@@ -193,7 +191,7 @@ public class UniversityEventsFragmentPresenterImpl implements UniversityEventsFr
     private void load(String search, boolean force) {
         thread.run(UE, () -> {
             log.v(TAG, "load | search=", search, " | force=", force);
-            if ((!force || !Client.isOnline(activity)) && events != null) {
+            if ((!force || Client.isOffline(activity)) && events != null) {
                 display();
                 return;
             }
@@ -211,16 +209,15 @@ public class UniversityEventsFragmentPresenterImpl implements UniversityEventsFr
             }
             this.offset = 0;
             this.search = search;
-            loadProvider(new RestResponseHandler() {
+            loadProvider(new RestResponseHandler<UEvents>() {
                 @Override
-                public void onSuccess(int code, Client.Headers headers, JSONObject obj, JSONArray arr) throws Exception {
-                    if (code == 200 && obj != null) {
-                        UEvents data = new UEvents().fromJson(obj);
-                        data.setTimestamp(time.getTimeInMillis());
+                public void onSuccess(int code, Client.Headers headers, UEvents response) throws Exception {
+                    if (code == 200 && response != null) {
+                        response.setTimestamp(time.getTimeInMillis());
                         if (storagePref.get(activity, "pref_use_cache", true) && storagePref.get(activity, "pref_use_university_cache", false)) {
-                            storage.put(activity, Storage.CACHE, Storage.GLOBAL, "university#events", data.toJsonString());
+                            storage.put(activity, Storage.CACHE, Storage.GLOBAL, "university#events", response.toJsonString());
                         }
-                        events = data;
+                        events = response;
                         display();
                         return;
                     }
@@ -230,32 +227,22 @@ public class UniversityEventsFragmentPresenterImpl implements UniversityEventsFr
                 public void onFailure(int code, Client.Headers headers, int state) {
                     thread.runOnUI(UE, () -> {
                         log.v(TAG, "load | failure ", state);
-                        switch (state) {
-                            case IfmoRestClient.FAILED_OFFLINE: {
-                                draw(R.layout.state_offline_text);
-                                View reload = container.findViewById(R.id.offline_reload);
-                                if (reload != null) {
-                                    reload.setOnClickListener(v -> load());
-                                }
-                                break;
+                        if (state == Client.FAILED_OFFLINE) {
+                            draw(R.layout.state_offline_text);
+                            View reload = container.findViewById(R.id.offline_reload);
+                            if (reload != null) {
+                                reload.setOnClickListener(v -> load());
                             }
-                            case IfmoRestClient.FAILED_CORRUPTED_JSON:
-                            case IfmoRestClient.FAILED_SERVER_ERROR:
-                            case IfmoRestClient.FAILED_TRY_AGAIN: {
-                                draw(R.layout.state_failed_button);
-                                TextView message = activity.findViewById(R.id.try_again_message);
-                                if (message != null) {
-                                    switch (state) {
-                                        case IfmoRestClient.FAILED_SERVER_ERROR: message.setText(IfmoRestClient.getFailureMessage(activity, code)); break;
-                                        case IfmoRestClient.FAILED_CORRUPTED_JSON: message.setText(R.string.server_provided_corrupted_json); break;
-                                    }
-                                }
-                                View reload = container.findViewById(R.id.try_again_reload);
-                                if (reload != null) {
-                                    reload.setOnClickListener(v -> load());
-                                }
-                                break;
-                            }
+                            return;
+                        }
+                        draw(R.layout.state_failed_button);
+                        TextView message = activity.findViewById(R.id.try_again_message);
+                        if (message != null) {
+                            message.setText(ifmoRestClient.getFailedMessage(activity, code, state));
+                        }
+                        View reload = container.findViewById(R.id.try_again_reload);
+                        if (reload != null) {
+                            reload.setOnClickListener(v -> load());
                         }
                     }, throwable -> {
                         loadFailed();
@@ -264,15 +251,11 @@ public class UniversityEventsFragmentPresenterImpl implements UniversityEventsFr
                 @Override
                 public void onProgress(int state) {
                     thread.runOnUI(UE, () -> {
-                        log.v(TAG, "load | progress " + state);
+                        log.v(TAG, "load | progress ", state);
                         draw(R.layout.state_loading_text);
                         TextView message = container.findViewById(R.id.loading_message);
                         if (message != null) {
-                            switch (state) {
-                                case IfmoRestClient.STATE_HANDLING:
-                                    message.setText(R.string.loading);
-                                    break;
-                            }
+                            message.setText(ifmoRestClient.getProgressMessage(activity, state));
                         }
                     });
                 }
@@ -280,13 +263,17 @@ public class UniversityEventsFragmentPresenterImpl implements UniversityEventsFr
                 public void onNewRequest(Client.Request request) {
                     requestHandle = request;
                 }
+                @Override
+                public UEvents newInstance() {
+                    return new UEvents();
+                }
             });
         }, throwable -> {
             loadFailed();
         });
     }
 
-    private void loadProvider(RestResponseHandler handler) {
+    private void loadProvider(RestResponseHandler<UEvents> handler) {
         log.v(TAG, "loadProvider");
         ifmoRestClient.get(activity, "event?limit=" + limit + "&offset=" + offset + "&search=" + search, null, handler);
     }
@@ -357,20 +344,19 @@ public class UniversityEventsFragmentPresenterImpl implements UniversityEventsFr
                 eventsRecyclerViewAdapter.setClickListener(R.id.load_more, (v, entity) -> thread.run(UE, () -> {
                     offset += limit;
                     thread.runOnUI(UE, () -> eventsRecyclerViewAdapter.setState(R.id.loading_more));
-                    loadProvider(new RestResponseHandler() {
+                    loadProvider(new RestResponseHandler<UEvents>() {
                         @Override
-                        public void onSuccess(int code, Client.Headers headers, JSONObject obj, JSONArray arr) throws Exception {
-                            if (code == 200 && obj != null) {
-                                UEvents data = new UEvents().fromJson(obj);
-                                events.getEvents().addAll(data.getEvents());
-                                events.setCount(data.getCount());
-                                events.setLimit(data.getLimit());
-                                events.setOffset(data.getOffset());
+                        public void onSuccess(int code, Client.Headers headers, UEvents response) throws Exception {
+                            if (code == 200 && response != null) {
+                                events.getEvents().addAll(response.getEvents());
+                                events.setCount(response.getCount());
+                                events.setLimit(response.getLimit());
+                                events.setOffset(response.getOffset());
                                 events.setTimestamp(time.getTimeInMillis());
                                 if (storagePref.get(activity, "pref_use_cache", true) && storagePref.get(activity, "pref_use_university_cache", false)) {
-                                    storage.put(activity, Storage.CACHE, Storage.GLOBAL, "university#events", data.toJsonString());
+                                    storage.put(activity, Storage.CACHE, Storage.GLOBAL, "university#events", events.toJsonString());
                                 }
-                                displayEvents(data.getEvents());
+                                displayEvents(response.getEvents());
                                 return;
                             }
                             thread.runOnUI(UE, () -> eventsRecyclerViewAdapter.setState(R.id.load_more));
@@ -384,6 +370,10 @@ public class UniversityEventsFragmentPresenterImpl implements UniversityEventsFr
                         @Override
                         public void onNewRequest(Client.Request request) {
                             requestHandle = request;
+                        }
+                        @Override
+                        public UEvents newInstance() {
+                            return new UEvents();
                         }
                     });
                 }));

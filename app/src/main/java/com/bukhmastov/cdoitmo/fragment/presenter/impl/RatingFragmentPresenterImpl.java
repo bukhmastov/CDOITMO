@@ -261,7 +261,7 @@ public class RatingFragmentPresenterImpl implements RatingFragmentPresenter, Swi
                 return;
             }
             log.v(TAG, "load | type=", type, " | force=", force);
-            if ((!force || !Client.isOnline(activity)) && storagePref.get(activity, "pref_use_cache", true)) {
+            if ((!force || Client.isOffline(activity)) && storagePref.get(activity, "pref_use_cache", true)) {
                 try {
                     JsonEntity cache = cached == null ? getFromCache(type) : cached;
                     if (cache != null) {
@@ -330,17 +330,18 @@ public class RatingFragmentPresenterImpl implements RatingFragmentPresenter, Swi
                     thread.run(RA, () -> {
                         log.v(TAG, "load | type=", type, " | failure ", state);
                         switch (state) {
-                            case DeIfmoClient.FAILED_AUTH_CREDENTIALS_REQUIRED: {
+                            case Client.FAILED_AUTH_CREDENTIALS_REQUIRED: {
                                 loaded = false;
                                 gotoLogin(LoginActivity.SIGNAL_CREDENTIALS_REQUIRED);
                                 break;
                             }
-                            case DeIfmoClient.FAILED_AUTH_CREDENTIALS_FAILED: {
+                            case Client.FAILED_AUTH_CREDENTIALS_FAILED: {
                                 loaded = false;
                                 gotoLogin(LoginActivity.SIGNAL_CREDENTIALS_FAILED);
                                 break;
                             }
-                            case DeIfmoClient.FAILED_SERVER_ERROR: {
+                            case Client.FAILED_ERROR_4XX:
+                            case Client.FAILED_ERROR_5XX: {
                                 data.put(type, new Info(SERVER_ERROR));
                                 loaded(type);
                                 break;
@@ -359,7 +360,7 @@ public class RatingFragmentPresenterImpl implements RatingFragmentPresenter, Swi
                     });
                 }
                 @Override
-                public void onProgress(final int state) {
+                public void onProgress(int state) {
                     log.v(TAG, "load | type=", type, " | progress ", state);
                 }
                 @Override

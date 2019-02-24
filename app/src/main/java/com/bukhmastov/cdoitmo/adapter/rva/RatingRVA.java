@@ -18,7 +18,6 @@ import com.bukhmastov.cdoitmo.model.rating.pickerown.RCourse;
 import com.bukhmastov.cdoitmo.model.rating.pickerown.RatingPickerOwn;
 import com.bukhmastov.cdoitmo.model.rva.RVARating;
 import com.bukhmastov.cdoitmo.model.rva.RVASingleValue;
-import com.bukhmastov.cdoitmo.network.DeIfmoClient;
 import com.bukhmastov.cdoitmo.util.Storage;
 import com.bukhmastov.cdoitmo.util.Time;
 import com.bukhmastov.cdoitmo.util.singleton.CollectionUtils;
@@ -76,6 +75,7 @@ public class RatingRVA extends RVA<RVARating> {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     protected void onBind(View container, Item item) {
         switch (item.type) {
             case TYPE_HEADER: bindHeader(container, item); break;
@@ -111,7 +111,7 @@ public class RatingRVA extends RVA<RVARating> {
             } else {
                 dataset.add(new Item<>(
                         common.status.equals(RatingFragmentPresenter.OFFLINE) ? TYPE_OFFLINE : TYPE_FAILED,
-                        new RVASingleValue(common.status.equals(RatingFragmentPresenter.SERVER_ERROR) ? DeIfmoClient.getFailureMessage(context, -1) : "")
+                        new RVASingleValue(common.status.equals(RatingFragmentPresenter.SERVER_ERROR) ? context.getString(R.string.server_error) : "")
                 ));
             }
             // setup own mode
@@ -156,7 +156,7 @@ public class RatingRVA extends RVA<RVARating> {
             } else {
                 dataset.add(new Item<>(
                         own.status.equals(RatingFragmentPresenter.OFFLINE) ? TYPE_OFFLINE : TYPE_FAILED,
-                        new RVASingleValue(own.status.equals(RatingFragmentPresenter.SERVER_ERROR) ? DeIfmoClient.getFailureMessage(context, -1) : "")
+                        new RVASingleValue(own.status.equals(RatingFragmentPresenter.SERVER_ERROR) ? context.getString(R.string.server_error) : "")
                 ));
             }
         } catch (Exception e) {
