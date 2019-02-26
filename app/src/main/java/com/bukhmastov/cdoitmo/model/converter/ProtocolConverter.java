@@ -38,7 +38,7 @@ public class ProtocolConverter extends Converter<Protocol, Protocol> {
             change.setMin(markConverter(change.getMin()));
             change.setMax(markConverter(change.getMax()));
             change.setThreshold(markConverter(change.getThreshold()));
-            String hash = textUtils.get().crypt(makeSignature(change));
+            String hash = StringUtils.crypt(makeSignature(change));
             Double value, oldValue, delta, oldDelta;
             if (storagePref.get().get(context.get(), "pref_protocol_changes_track_title", true)) {
                 String hashContent = storage.get().get(context.get(), Storage.CACHE, Storage.USER, "protocol#log#" + hash, null);

@@ -11,6 +11,7 @@ import com.bukhmastov.cdoitmo.network.handlers.RestResponseHandler;
 import com.bukhmastov.cdoitmo.network.handlers.joiner.RestStringResponseHandlerJoiner;
 import com.bukhmastov.cdoitmo.network.model.Client;
 import com.bukhmastov.cdoitmo.object.schedule.ScheduleAttestations;
+import com.bukhmastov.cdoitmo.util.singleton.StringUtils;
 
 import java.util.Calendar;
 
@@ -55,7 +56,7 @@ public class ScheduleAttestationsImpl extends ScheduleImpl<SAttestations> implem
                     case SOURCE.IFMO: {
                         int term = getTerm();
                         String url = String.format("index.php?node=schedule&index=sched&semiId=%s&group=%s",
-                                String.valueOf(term), textUtils.prettifyGroupNumber(group));
+                                String.valueOf(term), StringUtils.prettifyGroupNumber(group));
                         deIfmoClient.get(context, url, null, new RestStringResponseHandlerJoiner(handler) {
                             @Override
                             public void onSuccess(int code, Client.Headers headers, String response) throws Exception {
@@ -66,7 +67,7 @@ public class ScheduleAttestationsImpl extends ScheduleImpl<SAttestations> implem
                                 }
                                 schedule.setQuery(query);
                                 schedule.setType("group");
-                                schedule.setTitle(textUtils.prettifyGroupNumber(group));
+                                schedule.setTitle(StringUtils.prettifyGroupNumber(group));
                                 schedule.setTimestamp(time.getTimeInMillis());
                                 handler.onSuccess(code, headers, schedule);
                             }

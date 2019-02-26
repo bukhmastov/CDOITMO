@@ -15,8 +15,8 @@ import java.util.regex.Pattern;
 
 public class ScheduleExamsGroupParser extends Parser<SExams> {
 
-    private final Pattern groupPattern = Pattern.compile("[a-zа-яё]\\d{4}[a-zа-яё]?", Pattern.CASE_INSENSITIVE);
-    private final Pattern advicePattern = Pattern.compile("^Консультация (.{1,10}) в (\\d{1,2}:\\d{1,2}) Место:(.*)$", Pattern.CASE_INSENSITIVE);
+    private final Pattern groupPattern = Pattern.compile("[a-zа-яё]\\d{4,}[a-zа-яё]?", Pattern.CASE_INSENSITIVE);
+    private final Pattern advicePattern = Pattern.compile("^Консультация (.*?) в (\\d{1,2}:\\d{1,2}) Место:(.*?)$", Pattern.CASE_INSENSITIVE);
     private final String query;
 
     public ScheduleExamsGroupParser(@NonNull String html, @NonNull String query) {

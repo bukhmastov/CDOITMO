@@ -43,8 +43,8 @@ public class ScheduleLessonsItmoConverter extends Converter<ITMOSLessons, SLesso
     private SLesson convertLesson(ITMOSLesson itmoLesson) {
         SLesson lesson = new SLesson();
         // subject + note
-        lesson.setSubject(itmoLesson.getTitle());
-        lesson.setNote(itmoLesson.getNote());
+        lesson.setSubject(trim(itmoLesson.getTitle()));
+        lesson.setNote(trim(itmoLesson.getNote()));
         // type
         String type = itmoLesson.getType();
         if (StringUtils.isNotBlank(type)) {
@@ -98,5 +98,17 @@ public class ScheduleLessonsItmoConverter extends Converter<ITMOSLessons, SLesso
         day.setLessons(new ArrayList<>());
         day.getLessons().add(lesson);
         days.add(day);
+    }
+
+    private String trim(String value) {
+        if (StringUtils.isEmpty(value)) {
+            return value;
+        }
+        value = StringUtils.removeHtmlTags(value);
+        value = StringUtils.escapeString(value);
+        if (".".equals(value) || ",".equals(value)) {
+            value = "";
+        }
+        return value;
     }
 }

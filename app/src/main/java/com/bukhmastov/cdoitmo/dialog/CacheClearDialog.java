@@ -15,8 +15,8 @@ import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.NotificationMessage;
 import com.bukhmastov.cdoitmo.util.Storage;
 import com.bukhmastov.cdoitmo.util.StoragePref;
-import com.bukhmastov.cdoitmo.util.TextUtils;
 import com.bukhmastov.cdoitmo.util.Thread;
+import com.bukhmastov.cdoitmo.util.singleton.StringUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -39,8 +39,6 @@ public class CacheClearDialog extends Dialog {
     Storage storage;
     @Inject
     StoragePref storagePref;
-    @Inject
-    TextUtils textUtils;
     @Inject
     NotificationMessage notificationMessage;
 
@@ -77,6 +75,8 @@ public class CacheClearDialog extends Dialog {
         items.add(new Entry(activity.getString(R.string.schedule_exams), "schedule_exams", Storage.GLOBAL));
         items.add(new Entry(activity.getString(R.string.schedule_attestations), "schedule_attestations", Storage.GLOBAL));
         items.add(new Entry(activity.getString(R.string.room101), "room101", Storage.USER));
+        items.add(new Entry(activity.getString(R.string.study_groups), "group", Storage.USER));
+        items.add(new Entry(activity.getString(R.string.scholarship), "scholarship", Storage.USER));
         items.add(new Entry(activity.getString(R.string.university), "university", Storage.GLOBAL));
     }
 
@@ -119,20 +119,17 @@ public class CacheClearDialog extends Dialog {
                         eventBus.fire(new ClearCacheEvent());
                         notificationMessage.snackBar(activity, activity.getString(R.string.cache_cleared));
                         return;
+                    }
+                    if (item.bytes <= 0L) {
+                        return;
+                    }
+                    if ("_all_".equals(item.path)) {
+                        storage.clear(activity, Storage.CACHE, Storage.USER);
+                        storage.clear(activity, Storage.CACHE, Storage.GLOBAL);
+                        eventBus.fire(new ClearCacheEvent());
                     } else {
-                        if (item.bytes <= 0L) {
-                            return;
-                        }
-                        if ("_all_".equals(item.path)) {
-                            storage.clear(activity, Storage.CACHE, Storage.USER);
-                            storage.clear(activity, Storage.CACHE, Storage.GLOBAL);
-                        } else {
-                            switch (item.type) {
-                                case Storage.USER: storage.clear(activity, Storage.CACHE, Storage.USER, item.path); break;
-                                case Storage.GLOBAL: storage.clear(activity, Storage.CACHE, Storage.GLOBAL, item.path); break;
-                            }
-                            eventBus.fire(new ClearCacheEvent(item.path));
-                        }
+                        storage.clear(activity, Storage.CACHE, item.type, item.path);
+                        eventBus.fire(new ClearCacheEvent(item.path));
                     }
                     notificationMessage.snackBar(activity, activity.getString(R.string.cache_cleared));
                     calculateCacheSize(cacheList);
@@ -158,8 +155,8 @@ public class CacheClearDialog extends Dialog {
     }
 
     private void calculateCacheSize(ViewGroup cacheList) {
-        for (Entry item : items) {
-            thread.runOnUI(() -> {
+        thread.runOnUI(() -> {
+            for (Entry item : items) {
                 ViewGroup layoutItem = cacheList.findViewWithTag(TAG_PREFIX + item.path);
                 if (layoutItem == null) {
                     return;
@@ -168,41 +165,43 @@ public class CacheClearDialog extends Dialog {
                 TextView cacheItemSize = layoutItem.findViewById(R.id.cache_item_size);
                 cacheItemSizeContainer.setVisibility(View.VISIBLE);
                 cacheItemSize.setText("...");
-            });
-        }
-        for (Entry item : items) {
-            final Long size;
-            if ("_mem_".equals(item.path)) {
-                size = -1L;
-            } else if ("_all_".equals(item.path)) {
-                size =  storage.getDirSize(activity, Storage.CACHE, Storage.USER, "") +
-                        storage.getDirSize(activity, Storage.CACHE, Storage.GLOBAL, "");
-            } else {
-                switch (item.type) {
-                    case Storage.USER: size = storage.getDirSize(activity, Storage.CACHE, Storage.USER, item.path); break;
-                    case Storage.GLOBAL: size = storage.getDirSize(activity, Storage.CACHE, Storage.GLOBAL, item.path); break;
-                    default: size = -1L; break;
-                }
             }
-            thread.runOnUI(() -> {
+        });
+        for (Entry item : items) {
+            if ("_mem_".equals(item.path)) {
+                item.bytes = -1L;
+                return;
+            }
+            if ("_all_".equals(item.path)) {
+                item.bytes = storage.getDirSize(activity, Storage.CACHE, Storage.USER, "") +
+                        storage.getDirSize(activity, Storage.CACHE, Storage.GLOBAL, "");
+                return;
+            }
+            switch (item.type) {
+                case Storage.USER: item.bytes = storage.getDirSize(activity, Storage.CACHE, Storage.USER, item.path); break;
+                case Storage.GLOBAL: item.bytes = storage.getDirSize(activity, Storage.CACHE, Storage.GLOBAL, item.path); break;
+                default: item.bytes = -1L; break;
+            }
+        }
+        thread.runOnUI(() -> {
+            for (Entry item : items) {
                 ViewGroup layoutItem = cacheList.findViewWithTag(TAG_PREFIX + item.path);
                 if (layoutItem == null) {
                     return;
                 }
                 ViewGroup cacheItemSizeContainer = layoutItem.findViewById(R.id.cache_item_size_container);
                 TextView cacheItemSize = layoutItem.findViewById(R.id.cache_item_size);
-                item.bytes = size;
-                if (size < 0L) {
+                if (item.bytes < 0L) {
                     cacheItemSizeContainer.setVisibility(View.INVISIBLE);
-                } else if (size == 0L) {
+                } else if (item.bytes == 0L) {
                     cacheItemSize.setText(R.string.empty);
                     cacheItemSizeContainer.setVisibility(View.VISIBLE);
                 } else {
-                    cacheItemSize.setText(textUtils.bytes2readable(activity, storagePref, size));
+                    cacheItemSize.setText(StringUtils.bytes2readable(activity, storagePref, item.bytes));
                     cacheItemSizeContainer.setVisibility(View.VISIBLE);
                 }
                 cacheItemSizeContainer.invalidate();
-            });
-        }
+            }
+        });
     }
 }

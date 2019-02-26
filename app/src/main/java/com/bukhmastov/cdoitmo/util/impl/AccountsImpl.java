@@ -9,10 +9,10 @@ import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.model.user.UsersList;
 import com.bukhmastov.cdoitmo.util.Account;
 import com.bukhmastov.cdoitmo.util.Accounts;
+import com.bukhmastov.cdoitmo.util.DateUtils;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Storage;
 import com.bukhmastov.cdoitmo.util.Thread;
-import com.bukhmastov.cdoitmo.util.TextUtils;
 import com.bukhmastov.cdoitmo.util.singleton.CollectionUtils;
 import com.bukhmastov.cdoitmo.util.singleton.StringUtils;
 
@@ -33,7 +33,7 @@ public class AccountsImpl implements Accounts {
     @Inject
     Storage storage;
     @Inject
-    TextUtils textUtils;
+    DateUtils dateUtils;
     @Inject
     FirebaseAnalyticsProvider firebaseAnalyticsProvider;
 

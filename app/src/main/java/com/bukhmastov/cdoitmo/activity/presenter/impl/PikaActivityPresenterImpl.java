@@ -11,9 +11,9 @@ import com.bukhmastov.cdoitmo.activity.PikaActivity;
 import com.bukhmastov.cdoitmo.activity.presenter.PikaActivityPresenter;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
+import com.bukhmastov.cdoitmo.util.DateUtils;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.StoragePref;
-import com.bukhmastov.cdoitmo.util.TextUtils;
 import com.bukhmastov.cdoitmo.util.Thread;
 
 import java.util.Random;
@@ -34,7 +34,7 @@ public class PikaActivityPresenterImpl implements PikaActivityPresenter {
     @Inject
     StoragePref storagePref;
     @Inject
-    TextUtils textUtils;
+    DateUtils textUtils;
     @Inject
     FirebaseAnalyticsProvider firebaseAnalyticsProvider;
 

@@ -55,7 +55,7 @@ public class LoginActivity extends ConnectedActivity {
     @Override
     protected void attachBaseContext(Context context) {
         AppComponentProvider.getComponent().inject(this);
-        super.attachBaseContext(CtxWrapper.wrap(context, storagePref, log, textUtils));
+        super.attachBaseContext(CtxWrapper.wrap(context, storagePref));
     }
 
     @Override

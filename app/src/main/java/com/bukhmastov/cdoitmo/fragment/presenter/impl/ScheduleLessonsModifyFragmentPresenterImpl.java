@@ -27,7 +27,6 @@ import com.bukhmastov.cdoitmo.object.schedule.ScheduleLessons;
 import com.bukhmastov.cdoitmo.object.schedule.ScheduleLessonsHelper;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.NotificationMessage;
-import com.bukhmastov.cdoitmo.util.TextUtils;
 import com.bukhmastov.cdoitmo.util.Thread;
 import com.bukhmastov.cdoitmo.util.Time;
 import com.bukhmastov.cdoitmo.util.singleton.StringUtils;
@@ -72,8 +71,6 @@ public class ScheduleLessonsModifyFragmentPresenterImpl extends ConnectedFragmen
     NotificationMessage notificationMessage;
     @Inject
     Time time;
-    @Inject
-    TextUtils textUtils;
 
     public ScheduleLessonsModifyFragmentPresenterImpl() {
         super();
@@ -224,12 +221,12 @@ public class ScheduleLessonsModifyFragmentPresenterImpl extends ConnectedFragmen
                     st_calendar.set(Calendar.HOUR_OF_DAY, Integer.parseInt(t.group(1)));
                     st_calendar.set(Calendar.MINUTE, Integer.parseInt(t.group(2)));
                     st_calendar.set(Calendar.SECOND, 0);
-                    st = st_calendar.get(Calendar.HOUR_OF_DAY) + ":" + textUtils.ldgZero(st_calendar.get(Calendar.MINUTE));
+                    st = st_calendar.get(Calendar.HOUR_OF_DAY) + ":" + StringUtils.ldgZero(st_calendar.get(Calendar.MINUTE));
                     if (lessonTimeEnd.getText() == null || lessonTimeEnd.getText().toString().isEmpty()) {
                         Calendar nt_calendar = time.getCalendar();
                         nt_calendar.setTime(new Date(st_calendar.getTimeInMillis() + 5400000));
                         blockTimeEnd = true;
-                        String insert = nt_calendar.get(Calendar.HOUR_OF_DAY) + ":" + textUtils.ldgZero(nt_calendar.get(Calendar.MINUTE));
+                        String insert = nt_calendar.get(Calendar.HOUR_OF_DAY) + ":" + StringUtils.ldgZero(nt_calendar.get(Calendar.MINUTE));
                         lesson.setTimeEnd(insert);
                         int selection = lessonTimeEnd.getSelectionStart();
                         lessonTimeEnd.setText(insert);
@@ -249,7 +246,7 @@ public class ScheduleLessonsModifyFragmentPresenterImpl extends ConnectedFragmen
                             if (nt_calendar.getTimeInMillis() <= st_calendar.getTimeInMillis()) {
                                 nt_calendar.setTime(new Date(st_calendar.getTimeInMillis() + 5400000));
                                 blockTimeEnd = true;
-                                String insert = nt_calendar.get(Calendar.HOUR_OF_DAY) + ":" + textUtils.ldgZero(nt_calendar.get(Calendar.MINUTE));
+                                String insert = nt_calendar.get(Calendar.HOUR_OF_DAY) + ":" + StringUtils.ldgZero(nt_calendar.get(Calendar.MINUTE));
                                 lesson.setTimeEnd(insert);
                                 int selection = lessonTimeEnd.getSelectionStart();
                                 lessonTimeEnd.setText(insert);
@@ -293,12 +290,12 @@ public class ScheduleLessonsModifyFragmentPresenterImpl extends ConnectedFragmen
                     et_calendar.set(Calendar.HOUR_OF_DAY, Integer.parseInt(t.group(1)));
                     et_calendar.set(Calendar.MINUTE, Integer.parseInt(t.group(2)));
                     et_calendar.set(Calendar.SECOND, 0);
-                    et = et_calendar.get(Calendar.HOUR_OF_DAY) + ":" + textUtils.ldgZero(et_calendar.get(Calendar.MINUTE));
+                    et = et_calendar.get(Calendar.HOUR_OF_DAY) + ":" + StringUtils.ldgZero(et_calendar.get(Calendar.MINUTE));
                     if (lessonTimeStart.getText() == null || lessonTimeStart.getText().toString().isEmpty()) {
                         Calendar st_calendar = time.getCalendar();
                         st_calendar.setTime(new Date(et_calendar.getTimeInMillis() - 5400000));
                         blockTimeStart = true;
-                        String insert = st_calendar.get(Calendar.HOUR_OF_DAY) + ":" + textUtils.ldgZero(st_calendar.get(Calendar.MINUTE));
+                        String insert = st_calendar.get(Calendar.HOUR_OF_DAY) + ":" + StringUtils.ldgZero(st_calendar.get(Calendar.MINUTE));
                         lesson.setTimeStart(insert);
                         int selection = lessonTimeStart.getSelectionStart();
                         lessonTimeStart.setText(insert);
@@ -318,7 +315,7 @@ public class ScheduleLessonsModifyFragmentPresenterImpl extends ConnectedFragmen
                             if (st_calendar.getTimeInMillis() >= et_calendar.getTimeInMillis()) {
                                 st_calendar.setTime(new Date(et_calendar.getTimeInMillis() - 5400000));
                                 blockTimeStart = true;
-                                String insert = st_calendar.get(Calendar.HOUR_OF_DAY) + ":" + textUtils.ldgZero(st_calendar.get(Calendar.MINUTE));
+                                String insert = st_calendar.get(Calendar.HOUR_OF_DAY) + ":" + StringUtils.ldgZero(st_calendar.get(Calendar.MINUTE));
                                 lesson.setTimeStart(insert);
                                 int selection = lessonTimeStart.getSelectionStart();
                                 lessonTimeStart.setText(insert);

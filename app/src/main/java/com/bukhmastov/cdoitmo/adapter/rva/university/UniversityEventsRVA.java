@@ -51,7 +51,7 @@ public class UniversityEventsRVA extends UniversityRVA {
             tryRegisterClickListener(container, R.id.news_click, new RVAUniversity(event));
             View titleView = container.findViewById(R.id.title);
             if (titleView != null) {
-                ((TextView) titleView).setText(textUtils.escapeString(event.getName()));
+                ((TextView) titleView).setText(StringUtils.removeHtmlTags(event.getName()));
             }
             View categoriesView = container.findViewById(R.id.categories);
             if (categoriesView != null) {
@@ -70,11 +70,11 @@ public class UniversityEventsRVA extends UniversityRVA {
                 if (dateBeginExists || dateEndExists) {
                     String date;
                     if (dateBeginExists && dateEndExists) {
-                        date = textUtils.cuteDate(context, storagePref, "yyyy-MM-dd HH:mm:ss", event.getDateBegin(), event.getDateEnd());
+                        date = dateUtils.cuteDate(context, "yyyy-MM-dd HH:mm:ss", event.getDateBegin(), event.getDateEnd());
                     } else if (dateBeginExists) {
-                        date = textUtils.cuteDate(context, storagePref, "yyyy-MM-dd HH:mm:ss", event.getDateBegin());
+                        date = dateUtils.cuteDate(context, "yyyy-MM-dd HH:mm:ss", event.getDateBegin());
                     } else {
-                        date = textUtils.cuteDate(context, storagePref, "yyyy-MM-dd HH:mm:ss", event.getDateEnd());
+                        date = dateUtils.cuteDate(context, "yyyy-MM-dd HH:mm:ss", event.getDateEnd());
                     }
                     ((TextView) dateView).setText(date);
                 } else {

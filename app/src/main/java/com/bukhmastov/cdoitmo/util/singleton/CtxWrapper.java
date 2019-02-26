@@ -7,7 +7,6 @@ import android.os.Build;
 
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.StoragePref;
-import com.bukhmastov.cdoitmo.util.TextUtils;
 
 import java.util.Locale;
 
@@ -17,17 +16,17 @@ public class CtxWrapper extends ContextWrapper {
         super(base);
     }
 
-    public static ContextWrapper wrap(Context context, StoragePref storagePref, Log log, TextUtils textUtils) {
+    public static ContextWrapper wrap(Context context, StoragePref storagePref) {
         try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                Locale locale = textUtils.getLocale(context, storagePref);
+                Locale locale = StringUtils.getLocale(context, storagePref);
                 Locale.setDefault(locale);
                 Configuration config = context.getResources().getConfiguration();
                 config.setLocale(locale);
                 context = context.createConfigurationContext(config);
             }
-        } catch (Throwable e) {
-            log.exception(e);
+        } catch (Throwable ignore) {
+            // ignore
         }
         return new CtxWrapper(context);
     }

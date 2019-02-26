@@ -17,7 +17,6 @@ import com.bukhmastov.cdoitmo.firebase.FirebaseConfigProvider;
 import com.bukhmastov.cdoitmo.util.NavigationMenu;
 import com.bukhmastov.cdoitmo.util.NotificationMessage;
 import com.bukhmastov.cdoitmo.util.Storage;
-import com.bukhmastov.cdoitmo.util.TextUtils;
 import com.bukhmastov.cdoitmo.util.Thread;
 import com.bukhmastov.cdoitmo.util.singleton.StringUtils;
 import com.bukhmastov.cdoitmo.view.Message;
@@ -36,8 +35,6 @@ public class NavigationMenuImpl implements NavigationMenu {
     Thread thread;
     @Inject
     Lazy<NotificationMessage> notificationMessage;
-    @Inject
-    Lazy<TextUtils> textUtils;
 
     public NavigationMenuImpl() {
         AppComponentProvider.getComponent().inject(this);
@@ -100,7 +97,7 @@ public class NavigationMenuImpl implements NavigationMenu {
             if (StringUtils.isBlank(message)) {
                 return;
             }
-            String hash = textUtils.get().crypt(message);
+            String hash = StringUtils.crypt(message);
             if (hash != null && hash.equals(storage.get(activity, Storage.PERMANENT, Storage.GLOBAL, "firebase#remote_message#menu", ""))) {
                 return;
             }

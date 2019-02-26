@@ -146,7 +146,7 @@ public class ERegisterFragmentPresenterImpl extends ConnectedFragmentWithDataPre
                 if (share == null) {
                     return;
                 }
-                TreeSet<ERSubject> subjects = makeSubjectsSet(getData());
+                List<String> subjects = makeShareData(makeSubjectsSet(getData()));
                 if (CollectionUtils.isEmpty(subjects)) {
                     thread.runOnUI(ER, () -> share.setVisible(false));
                     return;
@@ -270,6 +270,15 @@ public class ERegisterFragmentPresenterImpl extends ConnectedFragmentWithDataPre
                             }, throwable -> {
                                 loadFailed();
                             });
+                            return;
+                        }
+                        if (code == 204) {
+                            if (getData() != null) {
+                                display();
+                            } else {
+                                loadFailed();
+                            }
+                            return;
                         }
                         thread.runOnUI(ER, () -> {
                             fragment.draw(R.layout.state_failed_button);
@@ -339,10 +348,10 @@ public class ERegisterFragmentPresenterImpl extends ConnectedFragmentWithDataPre
             applySelectedTermAndGroup(data);
             ERegisterSubjectsRVA adapter = new ERegisterSubjectsRVA(activity, makeSubjectsSet(data));
             adapter.setClickListener(R.id.subject, (v, subject) -> {
-                thread.standalone(() -> {
+                thread.runOnUI(ER, () -> {
                     Bundle extras = new Bundle();
                     extras.putSerializable("subject", subject);
-                    thread.runOnUI(ER, () -> activity.openActivityOrFragment(ERegisterSubjectFragment.class, extras));
+                    activity.openActivityOrFragment(ERegisterSubjectFragment.class, extras);
                 }, throwable -> {
                     notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
                 });

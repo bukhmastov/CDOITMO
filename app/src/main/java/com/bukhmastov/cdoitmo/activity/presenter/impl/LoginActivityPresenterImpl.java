@@ -105,8 +105,6 @@ public class LoginActivityPresenterImpl implements LoginActivityPresenter {
     @Inject
     Theme theme;
     @Inject
-    com.bukhmastov.cdoitmo.util.TextUtils textUtils;
-    @Inject
     FirebaseAnalyticsProvider firebaseAnalyticsProvider;
     @Inject
     FirebaseConfigProvider firebaseConfigProvider;
@@ -475,7 +473,7 @@ public class LoginActivityPresenterImpl implements LoginActivityPresenter {
         // not really danger zone ends
         anonymousUserTile.findViewById(R.id.login).setOnClickListener(view -> thread.run(AL, () -> {
             log.v(TAG, "anonymous_user_tile login clicked");
-            String group = textUtils.prettifyGroupNumber(inputGroup.getText().toString());
+            String group = StringUtils.prettifyGroupNumber(inputGroup.getText().toString());
             String[] groups = group.split(",\\s|\\s|,");
             // set anon user info
             // not really danger zone begins
@@ -799,7 +797,7 @@ public class LoginActivityPresenterImpl implements LoginActivityPresenter {
                 if (StringUtils.isBlank(message)) {
                     return;
                 }
-                String hash = textUtils.crypt(message);
+                String hash = StringUtils.crypt(message);
                 if (hash != null && hash.equals(storage.get(activity, Storage.PERMANENT, Storage.GLOBAL, "firebase#remote_message#login", ""))) {
                     return;
                 }

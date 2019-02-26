@@ -74,8 +74,8 @@ public class ScheduleLessonsIsuConverter extends Converter<ISUScheduleApiRespons
     private SLesson convertLesson(ISULesson isuLesson, String group) {
         SLesson lesson = new SLesson();
         // subject + note
-        lesson.setSubject(isuLesson.getSubject());
-        lesson.setNote(isuLesson.getNote());
+        lesson.setSubject(trim(isuLesson.getSubject()));
+        lesson.setNote(trim(isuLesson.getNote()));
         // type
         String type = isuLesson.getType();
         if (StringUtils.isNotBlank(type)) {
@@ -136,5 +136,17 @@ public class ScheduleLessonsIsuConverter extends Converter<ISUScheduleApiRespons
         day.setLessons(new ArrayList<>());
         day.getLessons().add(lesson);
         days.add(day);
+    }
+
+    private String trim(String value) {
+        if (StringUtils.isEmpty(value)) {
+            return value;
+        }
+        value = StringUtils.removeHtmlTags(value);
+        value = StringUtils.escapeString(value);
+        if (".".equals(value) || ",".equals(value)) {
+            value = "";
+        }
+        return value;
     }
 }

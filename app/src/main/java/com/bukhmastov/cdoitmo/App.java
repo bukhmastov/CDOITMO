@@ -19,7 +19,6 @@ import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.NotificationMessage;
 import com.bukhmastov.cdoitmo.util.Notifications;
 import com.bukhmastov.cdoitmo.util.StoragePref;
-import com.bukhmastov.cdoitmo.util.TextUtils;
 import com.bukhmastov.cdoitmo.util.Thread;
 import com.bukhmastov.cdoitmo.util.singleton.StringUtils;
 
@@ -54,8 +53,6 @@ public class App extends Application {
     @Inject
     StoragePref storagePref;
     @Inject
-    TextUtils textUtils;
-    @Inject
     NotificationMessage notificationMessage;
     @Inject
     FirebaseAnalyticsProvider firebaseAnalyticsProvider;
@@ -85,7 +82,7 @@ public class App extends Application {
                     notifications.get().init(this);
                 }
             }
-            locale = textUtils.getLocale(this, storagePref);
+            locale = StringUtils.getLocale(this, storagePref);
             log.i(TAG, "Language | locale=" + locale.toString());
             init();
             setUUID();

@@ -24,7 +24,6 @@ import com.bukhmastov.cdoitmo.event.bus.EventBus;
 import com.bukhmastov.cdoitmo.event.events.OpenActivityEvent;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.fragment.ConnectedFragment;
-import com.bukhmastov.cdoitmo.util.TextUtils;
 import com.bukhmastov.cdoitmo.util.singleton.Color;
 import com.bukhmastov.cdoitmo.util.singleton.CtxWrapper;
 import com.bukhmastov.cdoitmo.util.Log;
@@ -59,8 +58,6 @@ public abstract class ConnectedActivity extends AppCompatActivity {
     EventBus eventBus;
     @Inject
     StoragePref storagePref;
-    @Inject
-    TextUtils textUtils;
 
     @Retention(RetentionPolicy.SOURCE)
     @StringDef({TYPE.ROOT, TYPE.STACKABLE})
@@ -310,6 +307,6 @@ public abstract class ConnectedActivity extends AppCompatActivity {
     @Override
     protected void attachBaseContext(Context context) {
         AppComponentProvider.getComponent().inject(this);
-        super.attachBaseContext(CtxWrapper.wrap(context, storagePref, log, textUtils));
+        super.attachBaseContext(CtxWrapper.wrap(context, storagePref));
     }
 }

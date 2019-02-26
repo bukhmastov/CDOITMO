@@ -21,7 +21,6 @@ import com.bukhmastov.cdoitmo.network.handlers.RestResponseHandler;
 import com.bukhmastov.cdoitmo.network.model.Client;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Static;
-import com.bukhmastov.cdoitmo.util.TextUtils;
 import com.bukhmastov.cdoitmo.util.Thread;
 import com.bukhmastov.cdoitmo.util.singleton.Color;
 import com.bukhmastov.cdoitmo.util.singleton.StringUtils;
@@ -57,8 +56,6 @@ public class UniversityPersonCardActivityPresenterImpl implements UniversityPers
     IfmoRestClient ifmoRestClient;
     @Inject
     Static staticUtil;
-    @Inject
-    TextUtils textUtils;
     @Inject
     FirebaseAnalyticsProvider firebaseAnalyticsProvider;
 
@@ -304,7 +301,7 @@ public class UniversityPersonCardActivityPresenterImpl implements UniversityPers
             String name = (getStringIfExists(person.getLastName()) + " " + getStringIfExists(person.getFirstName()) + " " + getStringIfExists(person.getMiddleName())).trim();
             ((TextView) activity.findViewById(R.id.name)).setText(name);
             if (StringUtils.isNotBlank(person.getDegree())) {
-                ((TextView) activity.findViewById(R.id.degree)).setText(textUtils.capitalizeFirstLetter(person.getDegree()));
+                ((TextView) activity.findViewById(R.id.degree)).setText(StringUtils.capitalizeFirstLetter(person.getDegree()));
             } else {
                 staticUtil.removeView(activity.findViewById(R.id.degree));
             }
@@ -361,10 +358,10 @@ public class UniversityPersonCardActivityPresenterImpl implements UniversityPers
             ViewGroup infoAboutContainer = activity.findViewById(R.id.info_about_container);
             if (infoAboutContainer != null) {
                 if (StringUtils.isNotBlank(person.getRank())) {
-                    infoAboutContainer.addView(getAboutContainer(activity.getString(R.string.person_rank), textUtils.capitalizeFirstLetter(person.getRank())));
+                    infoAboutContainer.addView(getAboutContainer(activity.getString(R.string.person_rank), StringUtils.capitalizeFirstLetter(person.getRank())));
                 }
                 if (StringUtils.isNotBlank(person.getPost())) {
-                    infoAboutContainer.addView(getAboutContainer(activity.getString(R.string.person_post), textUtils.capitalizeFirstLetter(person.getPost())));
+                    infoAboutContainer.addView(getAboutContainer(activity.getString(R.string.person_post), StringUtils.capitalizeFirstLetter(person.getPost())));
                 }
                 if (StringUtils.isNotBlank(person.getText())) {
                     infoAboutContainer.addView(getAboutContainer(activity.getString(R.string.person_bio), person.getText()));

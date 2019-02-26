@@ -10,9 +10,9 @@ import com.bukhmastov.cdoitmo.adapter.rva.RVA;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.model.rva.RVASingleValue;
 import com.bukhmastov.cdoitmo.model.rva.RVAUniversity;
+import com.bukhmastov.cdoitmo.util.DateUtils;
 import com.bukhmastov.cdoitmo.util.Static;
 import com.bukhmastov.cdoitmo.util.StoragePref;
-import com.bukhmastov.cdoitmo.util.TextUtils;
 
 import java.util.Collection;
 
@@ -38,7 +38,7 @@ public abstract class UniversityRVA extends RVA<RVAUniversity> {
     @Inject
     Static staticUtil;
     @Inject
-    TextUtils textUtils;
+    DateUtils dateUtils;
 
     public UniversityRVA(Context context) {
         this(context, null);

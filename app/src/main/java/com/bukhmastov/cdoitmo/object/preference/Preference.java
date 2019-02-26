@@ -17,8 +17,8 @@ import com.bukhmastov.cdoitmo.util.NotificationMessage;
 import com.bukhmastov.cdoitmo.util.Static;
 import com.bukhmastov.cdoitmo.util.Storage;
 import com.bukhmastov.cdoitmo.util.StoragePref;
-import com.bukhmastov.cdoitmo.util.TextUtils;
 import com.bukhmastov.cdoitmo.util.Thread;
+import com.bukhmastov.cdoitmo.util.singleton.StringUtils;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -53,8 +53,6 @@ public abstract class Preference {
     Lazy<NotificationMessage> notificationMessage;
     @Inject
     Lazy<Static> staticUtil;
-    @Inject
-    Lazy<TextUtils> textUtils;
     @Inject
     Lazy<FirebaseAnalyticsProvider> firebaseAnalyticsProvider;
     @Inject
@@ -152,7 +150,7 @@ public abstract class Preference {
                 break;
             case "pref_group_force_override":
                 String group = storagePref.get().get(activity, "pref_group_force_override", "");
-                group = textUtils.get().prettifyGroupNumber(group);
+                group = StringUtils.prettifyGroupNumber(group);
                 storagePref.get().put(activity, "pref_group_force_override", group);
                 break;
             case "pref_lang":

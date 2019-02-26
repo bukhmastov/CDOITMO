@@ -8,8 +8,8 @@ import com.bukhmastov.cdoitmo.model.schedule.lessons.SLesson;
 import com.bukhmastov.cdoitmo.model.schedule.lessons.SLessons;
 import com.bukhmastov.cdoitmo.object.TimeRemainingWidget;
 import com.bukhmastov.cdoitmo.util.Log;
-import com.bukhmastov.cdoitmo.util.TextUtils;
 import com.bukhmastov.cdoitmo.util.Time;
+import com.bukhmastov.cdoitmo.util.singleton.StringUtils;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -29,8 +29,6 @@ public class TimeRemainingWidgetImpl implements TimeRemainingWidget {
     Context context;
     @Inject
     Time time;
-    @Inject
-    TextUtils textUtils;
 
     public TimeRemainingWidgetImpl() {
         AppComponentProvider.getComponent().inject(this);
@@ -172,12 +170,12 @@ public class TimeRemainingWidgetImpl implements TimeRemainingWidget {
             int seconds = (time - hours * 3600 - minutes * 60) % 60;
             String response;
             if (minutes > 0 || hours > 0) {
-                response = textUtils.ldgZero(seconds);
+                response = StringUtils.ldgZero(seconds);
             } else {
                 response = String.valueOf(seconds);
             }
             if (hours > 0) {
-                response = textUtils.ldgZero(minutes) + ":" + response;
+                response = StringUtils.ldgZero(minutes) + ":" + response;
             } else {
                 if (minutes > 0) {
                     response = String.valueOf(minutes) + ":" + response;

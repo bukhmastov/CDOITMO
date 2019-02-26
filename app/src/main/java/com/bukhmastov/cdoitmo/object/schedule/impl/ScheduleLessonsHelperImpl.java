@@ -17,7 +17,6 @@ import com.bukhmastov.cdoitmo.model.schedule.lessons.reduced.SLessonsReduced;
 import com.bukhmastov.cdoitmo.object.schedule.ScheduleLessonsHelper;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Storage;
-import com.bukhmastov.cdoitmo.util.TextUtils;
 import com.bukhmastov.cdoitmo.util.Thread;
 import com.bukhmastov.cdoitmo.util.Time;
 import com.bukhmastov.cdoitmo.util.singleton.CollectionUtils;
@@ -43,8 +42,6 @@ public class ScheduleLessonsHelperImpl implements ScheduleLessonsHelper {
     Context context;
     @Inject
     Storage storage;
-    @Inject
-    TextUtils textUtils;
     @Inject
     Time time;
     @Inject
@@ -356,7 +353,7 @@ public class ScheduleLessonsHelperImpl implements ScheduleLessonsHelper {
 
     @Override
     public String getLessonHash(SLesson lesson) throws Exception {
-        return textUtils.crypt(getLessonSignature(lesson));
+        return StringUtils.crypt(getLessonSignature(lesson));
     }
 
     @Override

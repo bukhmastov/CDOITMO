@@ -137,7 +137,10 @@ public class UniversityUnitsRVA extends UniversityRVA {
         try {
             UUnit unit = item.data;
             removeFirstSeparator(container);
-            ((TextView) container.findViewById(R.id.structure_header)).setText(StringUtils.isNotBlank(unit.getPost()) ? textUtils.capitalizeFirstLetter(unit.getPost().trim()) : context.getString(R.string.faculty_section_head));
+            String post = StringUtils.isNotBlank(unit.getPost()) ?
+                    StringUtils.capitalizeFirstLetter(unit.getPost().trim()) :
+                    context.getString(R.string.faculty_section_head);
+            ((TextView) container.findViewById(R.id.structure_header)).setText(post);
             ViewGroup structureContainer = container.findViewById(R.id.structure_container);
             if (structureContainer == null) {
                 return;

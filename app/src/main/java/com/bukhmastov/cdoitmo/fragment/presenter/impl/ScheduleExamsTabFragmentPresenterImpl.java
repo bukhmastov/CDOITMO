@@ -36,7 +36,7 @@ import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.NotificationMessage;
 import com.bukhmastov.cdoitmo.util.Storage;
 import com.bukhmastov.cdoitmo.util.StoragePref;
-import com.bukhmastov.cdoitmo.util.TextUtils;
+import com.bukhmastov.cdoitmo.util.DateUtils;
 import com.bukhmastov.cdoitmo.util.Thread;
 import com.bukhmastov.cdoitmo.util.Time;
 import com.bukhmastov.cdoitmo.util.singleton.CollectionUtils;
@@ -86,7 +86,7 @@ public class ScheduleExamsTabFragmentPresenterImpl implements Schedule.Handler<S
     @Inject
     StoragePref storagePref;
     @Inject
-    TextUtils textUtils;
+    DateUtils dateUtils;
     @Inject
     Time time;
     @Inject
@@ -722,7 +722,7 @@ public class ScheduleExamsTabFragmentPresenterImpl implements Schedule.Handler<S
         try {
             String date_format = "dd.MM.yyyy" + date_format_append;
             if (isValidFormat(date, date_format)) {
-                date = textUtils.cuteDate(activity, storagePref, date_format, date);
+                date = dateUtils.cuteDate(activity, date_format, date);
             } else {
                 Matcher m = ScheduleExamsRVA.patternBrokenDate.matcher(date);
                 if (m.find()) {
@@ -752,7 +752,7 @@ public class ScheduleExamsTabFragmentPresenterImpl implements Schedule.Handler<S
     }
 
     private String cuteDateWOYear(String date_format, String date_string) throws Exception {
-        SimpleDateFormat format_input = new SimpleDateFormat(date_format, textUtils.getLocale(activity, storagePref));
+        SimpleDateFormat format_input = new SimpleDateFormat(date_format, StringUtils.getLocale(activity, storagePref));
         Calendar date = time.getCalendar();
         date.setTime(format_input.parse(date_string));
         return (new StringBuilder())
@@ -760,15 +760,15 @@ public class ScheduleExamsTabFragmentPresenterImpl implements Schedule.Handler<S
                 .append(" ")
                 .append(time.getGenitiveMonth(activity, date.get(Calendar.MONTH)))
                 .append(" ")
-                .append(textUtils.ldgZero(date.get(Calendar.HOUR_OF_DAY)))
+                .append(StringUtils.ldgZero(date.get(Calendar.HOUR_OF_DAY)))
                 .append(":")
-                .append(textUtils.ldgZero(date.get(Calendar.MINUTE)))
+                .append(StringUtils.ldgZero(date.get(Calendar.MINUTE)))
                 .toString();
     }
 
     private boolean isValidFormat(String value, String format) {
         try {
-            SimpleDateFormat sdf = new SimpleDateFormat(format, textUtils.getLocale(activity, storagePref));
+            SimpleDateFormat sdf = new SimpleDateFormat(format, StringUtils.getLocale(activity, storagePref));
             Date date = sdf.parse(value);
             if (!value.equals(sdf.format(date))) {
                 date = null;

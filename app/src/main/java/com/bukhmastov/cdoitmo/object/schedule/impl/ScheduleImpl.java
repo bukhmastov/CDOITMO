@@ -282,7 +282,7 @@ public abstract class ScheduleImpl<T extends ScheduleJsonEntity> extends Schedul
             String pattern = "dd.MM.yyyy";
             String date = new SimpleDateFormat(pattern, Locale.ROOT).format(new Date(time.getCalendar().getTimeInMillis()));
             try {
-                return textUtils.cuteDateWithoutTime(context, storagePref, pattern, date);
+                return dateUtils.cuteDateWithoutTime(context, pattern, date);
             } catch (ParseException e) {
                 return date;
             }

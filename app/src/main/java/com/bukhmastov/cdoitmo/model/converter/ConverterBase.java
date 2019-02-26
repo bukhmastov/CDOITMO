@@ -8,7 +8,6 @@ import com.bukhmastov.cdoitmo.object.schedule.ScheduleLessonsHelper;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Storage;
 import com.bukhmastov.cdoitmo.util.StoragePref;
-import com.bukhmastov.cdoitmo.util.TextUtils;
 import com.bukhmastov.cdoitmo.util.Time;
 
 import javax.inject.Inject;
@@ -25,8 +24,6 @@ public abstract class ConverterBase {
     protected Lazy<StoragePref> storagePref;
     @Inject
     protected Lazy<Time> time;
-    @Inject
-    protected Lazy<TextUtils> textUtils;
     @Inject
     protected Lazy<Context> context;
     @Inject

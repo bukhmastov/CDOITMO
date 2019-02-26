@@ -15,9 +15,9 @@ import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Static;
 import com.bukhmastov.cdoitmo.util.StoragePref;
-import com.bukhmastov.cdoitmo.util.TextUtils;
 import com.bukhmastov.cdoitmo.util.Thread;
 import com.bukhmastov.cdoitmo.util.Time;
+import com.bukhmastov.cdoitmo.util.singleton.StringUtils;
 
 import java.util.Arrays;
 import java.util.Calendar;
@@ -64,8 +64,6 @@ public class ThemeDialog extends Dialog {
     Log log;
     @Inject
     Thread thread;
-    @Inject
-    TextUtils textUtils;
 
     public ThemeDialog(Context context, String value, Callback cb) {
         super(context);
@@ -168,22 +166,22 @@ public class ThemeDialog extends Dialog {
                     }
                 });
                 // setup automatic theme selector
-                t1Time.setText(t1_hour + ":" + textUtils.ldgZero(t1_minutes));
+                t1Time.setText(t1_hour + ":" + StringUtils.ldgZero(t1_minutes));
                 t1Time.setOnClickListener(view -> {
                     log.v(TAG, "t1Time clicked");
                     showTimePicker(t1_hour, t1_minutes, (hours, minutes) -> {
                         log.v(TAG, "t1Time showTimePicker done | " + hours + " | " + minutes);
                         t1_hour = hours;
                         t1_minutes = minutes;
-                        t1Time.setText(t1_hour + ":" + textUtils.ldgZero(t1_minutes));
+                        t1Time.setText(t1_hour + ":" + StringUtils.ldgZero(t1_minutes));
                     });
                 });
-                t2Time.setText(t2_hour + ":" + textUtils.ldgZero(t2_minutes));
+                t2Time.setText(t2_hour + ":" + StringUtils.ldgZero(t2_minutes));
                 t2Time.setOnClickListener(view -> showTimePicker(t2_hour, t2_minutes, (hours, minutes) -> {
                     log.v(TAG, "t2Time showTimePicker done | " + hours + " | " + minutes);
                     t2_hour = hours;
                     t2_minutes = minutes;
-                    t2Time.setText(t2_hour + ":" + textUtils.ldgZero(t2_minutes));
+                    t2Time.setText(t2_hour + ":" + StringUtils.ldgZero(t2_minutes));
                 }));
                 t1Spinner.setText(pref_theme_titles.get(pref_theme_values.indexOf(t1_value)));
                 t1Spinner.setOnClickListener(view -> showThemePicker(t1_value, theme -> {
@@ -205,8 +203,8 @@ public class ThemeDialog extends Dialog {
                             log.v(TAG, "show picker accepted");
                             String theme;
                             if (auto_enabled) {
-                                theme = t1_hour + ":" + textUtils.ldgZero(t1_minutes) + "#" + t1_value + "#" +
-                                        t2_hour + ":" + textUtils.ldgZero(t2_minutes) + "#" + t2_value;
+                                theme = t1_hour + ":" + StringUtils.ldgZero(t1_minutes) + "#" + t1_value + "#" +
+                                        t2_hour + ":" + StringUtils.ldgZero(t2_minutes) + "#" + t2_value;
                             } else {
                                 theme = static_value;
                             }

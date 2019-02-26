@@ -27,7 +27,6 @@ import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.NotificationMessage;
 import com.bukhmastov.cdoitmo.util.Storage;
 import com.bukhmastov.cdoitmo.util.StoragePref;
-import com.bukhmastov.cdoitmo.util.TextUtils;
 import com.bukhmastov.cdoitmo.util.Thread;
 import com.bukhmastov.cdoitmo.util.Time;
 import com.bukhmastov.cdoitmo.util.singleton.CollectionUtils;
@@ -73,8 +72,6 @@ public class RatingListFragmentPresenterImpl extends ConnectedFragmentWithDataPr
     NotificationMessage notificationMessage;
     @Inject
     Time time;
-    @Inject
-    TextUtils textUtils;
     @Inject
     FirebaseAnalyticsProvider firebaseAnalyticsProvider;
 
@@ -304,7 +301,7 @@ public class RatingListFragmentPresenterImpl extends ConnectedFragmentWithDataPr
                 loadFailed();
                 return;
             }
-            String title = StringUtils.isNotBlank(data.getHeader()) ? textUtils.capitalizeFirstLetter(data.getHeader()) : "";
+            String title = StringUtils.isNotBlank(data.getHeader()) ? StringUtils.capitalizeFirstLetter(data.getHeader()) : "";
             activity.updateToolbar(activity, title, R.drawable.ic_rating);
             minePosition = -1;
             mineFaculty = "";

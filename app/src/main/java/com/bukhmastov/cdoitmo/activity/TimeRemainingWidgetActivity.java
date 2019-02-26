@@ -6,9 +6,7 @@ import android.os.Bundle;
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activity.presenter.TimeRemainingWidgetActivityPresenter;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
-import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.StoragePref;
-import com.bukhmastov.cdoitmo.util.TextUtils;
 import com.bukhmastov.cdoitmo.util.Theme;
 import com.bukhmastov.cdoitmo.util.singleton.CtxWrapper;
 
@@ -21,13 +19,9 @@ public class TimeRemainingWidgetActivity extends AppCompatActivity {
     @Inject
     TimeRemainingWidgetActivityPresenter presenter;
     @Inject
-    Log log;
-    @Inject
     StoragePref storagePref;
     @Inject
     Theme theme;
-    @Inject
-    TextUtils textUtils;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -66,6 +60,6 @@ public class TimeRemainingWidgetActivity extends AppCompatActivity {
     @Override
     protected void attachBaseContext(Context context) {
         AppComponentProvider.getComponent().inject(this);
-        super.attachBaseContext(CtxWrapper.wrap(context, storagePref, log, textUtils));
+        super.attachBaseContext(CtxWrapper.wrap(context, storagePref));
     }
 }

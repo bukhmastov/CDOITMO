@@ -23,7 +23,6 @@ import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.NotificationMessage;
 import com.bukhmastov.cdoitmo.util.Storage;
 import com.bukhmastov.cdoitmo.util.StoragePref;
-import com.bukhmastov.cdoitmo.util.TextUtils;
 import com.bukhmastov.cdoitmo.util.Theme;
 import com.bukhmastov.cdoitmo.util.Thread;
 import com.bukhmastov.cdoitmo.util.singleton.CollectionUtils;
@@ -70,8 +69,6 @@ public abstract class SearchActivity extends AppCompatActivity {
     NotificationMessage notificationMessage;
     @Inject
     Theme theme;
-    @Inject
-    TextUtils textUtils;
 
     @Retention(RetentionPolicy.SOURCE)
     @StringDef({SPEECH_RECOGNITION, CLEAR, NONE})
@@ -137,7 +134,7 @@ public abstract class SearchActivity extends AppCompatActivity {
     @Override
     protected void attachBaseContext(Context context) {
         inject();
-        super.attachBaseContext(CtxWrapper.wrap(context, storagePref, log, textUtils));
+        super.attachBaseContext(CtxWrapper.wrap(context, storagePref));
     }
 
     private void setMode(@EXTRA_ACTION_MODE String mode) {
@@ -416,7 +413,7 @@ public abstract class SearchActivity extends AppCompatActivity {
         @Override
         public boolean onKey(View v, int keyCode, KeyEvent event) {
             if (event.getAction() == KeyEvent.ACTION_DOWN && keyCode == KeyEvent.KEYCODE_ENTER) {
-                String query = textUtils.prettifyGroupNumber(searchEditText.getText().toString().trim());
+                String query = StringUtils.prettifyGroupNumber(searchEditText.getText().toString().trim());
                 if (!query.isEmpty()) {
                     done(query, query);
                     return true;

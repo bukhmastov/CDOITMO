@@ -35,11 +35,11 @@ import com.bukhmastov.cdoitmo.model.rating.pickerown.RatingPickerOwn;
 import com.bukhmastov.cdoitmo.network.DeIfmoClient;
 import com.bukhmastov.cdoitmo.network.handlers.ResponseHandler;
 import com.bukhmastov.cdoitmo.network.model.Client;
+import com.bukhmastov.cdoitmo.util.DateUtils;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.NotificationMessage;
 import com.bukhmastov.cdoitmo.util.Storage;
 import com.bukhmastov.cdoitmo.util.StoragePref;
-import com.bukhmastov.cdoitmo.util.TextUtils;
 import com.bukhmastov.cdoitmo.util.Thread;
 import com.bukhmastov.cdoitmo.util.Time;
 import com.bukhmastov.cdoitmo.util.singleton.CollectionUtils;
@@ -78,7 +78,7 @@ public class RatingFragmentPresenterImpl implements RatingFragmentPresenter, Swi
     @Inject
     Time time;
     @Inject
-    TextUtils textUtils;
+    DateUtils textUtils;
     @Inject
     FirebaseAnalyticsProvider firebaseAnalyticsProvider;
 

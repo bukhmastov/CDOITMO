@@ -7,8 +7,8 @@ import com.bukhmastov.cdoitmo.firebase.FirebaseConfigProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebasePerformanceProvider;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Static;
-import com.bukhmastov.cdoitmo.util.TextUtils;
 import com.bukhmastov.cdoitmo.util.Thread;
+import com.bukhmastov.cdoitmo.util.singleton.StringUtils;
 import com.google.firebase.perf.FirebasePerformance;
 
 import java.util.HashMap;
@@ -32,8 +32,6 @@ public class FirebasePerformanceProviderImpl implements FirebasePerformanceProvi
     Thread thread;
     @Inject
     Lazy<Static> staticUtil;
-    @Inject
-    Lazy<TextUtils> textUtils;
     @Inject
     Lazy<FirebaseConfigProvider> firebaseConfigProvider;
 
@@ -80,7 +78,7 @@ public class FirebasePerformanceProviderImpl implements FirebasePerformanceProvi
             name = name != null ? name : Trace.UNKNOWN;
             String key;
             do {
-                key = name + "_" + textUtils.get().getRandomString(8);
+                key = name + "_" + StringUtils.getRandomString(8);
             } while (traceMap.containsKey(key));
             com.google.firebase.perf.metrics.Trace trace = getFirebasePerformance().newTrace(name);
             traceMap.put(key, trace);

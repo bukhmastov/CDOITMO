@@ -56,7 +56,7 @@ public class UniversityPersonsRVA extends UniversityRVA {
             View postView = container.findViewById(R.id.post);
             if (postView != null) {
                 if (StringUtils.isNotBlank(person.getDegree())) {
-                    ((TextView) postView).setText(textUtils.capitalizeFirstLetter(person.getDegree()));
+                    ((TextView) postView).setText(StringUtils.capitalizeFirstLetter(person.getDegree()));
                 } else {
                     staticUtil.removeView(container.findViewById(R.id.post));
                 }

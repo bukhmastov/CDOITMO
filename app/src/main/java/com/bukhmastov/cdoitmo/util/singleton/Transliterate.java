@@ -48,4 +48,20 @@ public class Transliterate {
             default: return String.valueOf(ch);
         }
     }
+
+    public static String letter2lat(String letter) {
+        if (StringUtils.isBlank(letter)) {
+            return letter;
+        }
+        char ch = letter.charAt(0);
+        switch (ch) {
+            case 'А': return "A";  case 'а': return "a";
+            case 'Е': return "E";  case 'е': return "e";
+            case 'К': return "K";  case 'к': return "k";
+            case 'М': return "M";  case 'м': return "m";
+            case 'О': return "O";  case 'о': return "o";
+            case 'Т': return "T";  case 'т': return "t";
+            default: return String.valueOf(ch);
+        }
+    }
 }

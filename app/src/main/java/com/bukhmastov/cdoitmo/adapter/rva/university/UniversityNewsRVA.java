@@ -81,7 +81,7 @@ public class UniversityNewsRVA extends UniversityRVA {
             }
             View titleView = container.findViewById(R.id.title);
             if (titleView != null) {
-                ((TextView) titleView).setText(textUtils.escapeString(newsItem.getTitle()));
+                ((TextView) titleView).setText(StringUtils.removeHtmlTags(newsItem.getTitle()));
             }
             View categoriesView = container.findViewById(R.id.categories);
             if (categoriesView != null) {
@@ -118,7 +118,7 @@ public class UniversityNewsRVA extends UniversityRVA {
             View anonsView = container.findViewById(R.id.anons);
             if (anonsView != null) {
                 if (StringUtils.isNotBlank(newsItem.getAnons())) {
-                    ((TextView) anonsView).setText(textUtils.escapeString(newsItem.getAnons()));
+                    ((TextView) anonsView).setText(StringUtils.removeHtmlTags(newsItem.getAnons()));
                 } else {
                     staticUtil.removeView(anonsView);
                 }
@@ -132,7 +132,7 @@ public class UniversityNewsRVA extends UniversityRVA {
             if (dateExists || countExists) {
                 if (dateView != null) {
                     if (dateExists) {
-                        ((TextView) dateView).setText(textUtils.cuteDate(context, storagePref, "yyyy-MM-dd HH:mm:ss", newsItem.getDatePublication()));
+                        ((TextView) dateView).setText(dateUtils.cuteDate(context, "yyyy-MM-dd HH:mm:ss", newsItem.getDatePublication()));
                     } else {
                         staticUtil.removeView(dateView);
                     }
@@ -188,7 +188,7 @@ public class UniversityNewsRVA extends UniversityRVA {
             }
             View titleView = container.findViewById(R.id.title);
             if (titleView != null) {
-                ((TextView) titleView).setText(textUtils.escapeString(newsItem.getTitle()));
+                ((TextView) titleView).setText(StringUtils.removeHtmlTags(newsItem.getTitle()));
             }
             View categoriesView = container.findViewById(R.id.categories);
             if (categoriesView != null) {
@@ -231,7 +231,7 @@ public class UniversityNewsRVA extends UniversityRVA {
             if (dateExists || countExists) {
                 if (dateView != null) {
                     if (dateExists) {
-                        ((TextView) dateView).setText(textUtils.cuteDate(context, storagePref, "yyyy-MM-dd HH:mm:ss", newsItem.getDatePublication()));
+                        ((TextView) dateView).setText(dateUtils.cuteDate(context, "yyyy-MM-dd HH:mm:ss", newsItem.getDatePublication()));
                     } else {
                         staticUtil.removeView(dateView);
                     }

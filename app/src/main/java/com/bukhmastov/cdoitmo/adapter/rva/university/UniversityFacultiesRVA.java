@@ -139,7 +139,7 @@ public class UniversityFacultiesRVA extends UniversityRVA {
             boolean isFirstContainer = true;
             removeFirstSeparator(container);
             if (StringUtils.isNotBlank(structureInfo.getPersonPost())) {
-                ((TextView) container.findViewById(R.id.structure_header)).setText(textUtils.capitalizeFirstLetter(structureInfo.getPersonPost().trim()));
+                ((TextView) container.findViewById(R.id.structure_header)).setText(StringUtils.capitalizeFirstLetter(structureInfo.getPersonPost().trim()));
             } else {
                 staticUtil.removeView(container.findViewById(R.id.structure_header));
             }

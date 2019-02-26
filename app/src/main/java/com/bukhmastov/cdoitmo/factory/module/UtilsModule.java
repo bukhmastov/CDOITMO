@@ -10,12 +10,13 @@ import com.bukhmastov.cdoitmo.util.Static;
 import com.bukhmastov.cdoitmo.util.Storage;
 import com.bukhmastov.cdoitmo.util.StorageLocalCache;
 import com.bukhmastov.cdoitmo.util.StoragePref;
-import com.bukhmastov.cdoitmo.util.TextUtils;
+import com.bukhmastov.cdoitmo.util.DateUtils;
 import com.bukhmastov.cdoitmo.util.Theme;
 import com.bukhmastov.cdoitmo.util.Thread;
 import com.bukhmastov.cdoitmo.util.Time;
 import com.bukhmastov.cdoitmo.util.impl.AccountImpl;
 import com.bukhmastov.cdoitmo.util.impl.AccountsImpl;
+import com.bukhmastov.cdoitmo.util.impl.DateUtilsImpl;
 import com.bukhmastov.cdoitmo.util.impl.LogImpl;
 import com.bukhmastov.cdoitmo.util.impl.NavigationMenuImpl;
 import com.bukhmastov.cdoitmo.util.impl.NotificationMessageImpl;
@@ -24,7 +25,6 @@ import com.bukhmastov.cdoitmo.util.impl.StaticImpl;
 import com.bukhmastov.cdoitmo.util.impl.StorageImpl;
 import com.bukhmastov.cdoitmo.util.impl.StorageLocalCacheImpl;
 import com.bukhmastov.cdoitmo.util.impl.StoragePrefImpl;
-import com.bukhmastov.cdoitmo.util.impl.TextUtilsImpl;
 import com.bukhmastov.cdoitmo.util.impl.ThemeImpl;
 import com.bukhmastov.cdoitmo.util.impl.ThreadImpl;
 import com.bukhmastov.cdoitmo.util.impl.TimeImpl;
@@ -99,8 +99,8 @@ public class UtilsModule {
 
     @Provides
     @Singleton
-    public TextUtils provideTextUtils() {
-        return new TextUtilsImpl();
+    public DateUtils provideDateUtils() {
+        return new DateUtilsImpl();
     }
 
     @Provides
