@@ -1,8 +1,6 @@
-package com.bukhmastov.cdoitmo.adapter;
+package com.bukhmastov.cdoitmo.adapter.array;
 
 import android.content.Context;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -15,19 +13,22 @@ import com.bukhmastov.cdoitmo.model.schedule.teachers.STeacher;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.singleton.StringUtils;
 
-import java.util.ArrayList;
+import java.util.List;
 
 import javax.inject.Inject;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 public class TeacherPickerAdapter extends ArrayAdapter<STeacher> {
 
     private final Context context;
-    private ArrayList<STeacher> teachers;
+    private List<STeacher> teachers;
 
     @Inject
     Log log;
 
-    public TeacherPickerAdapter(Context context, ArrayList<STeacher> teachers) {
+    public TeacherPickerAdapter(Context context, List<STeacher> teachers) {
         super(context, R.layout.spinner_teacher_picker, teachers);
         AppComponentProvider.getComponent().inject(this);
         this.context = context;
@@ -49,7 +50,7 @@ public class TeacherPickerAdapter extends ArrayAdapter<STeacher> {
         return position;
     }
 
-    public void addTeachers(ArrayList<STeacher> teachers){
+    public void addTeachers(List<STeacher> teachers){
         this.teachers = teachers;
     }
 

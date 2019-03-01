@@ -18,9 +18,12 @@ import com.bukhmastov.cdoitmo.util.singleton.StringUtils;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.List;
 import java.util.TreeSet;
 
 import javax.inject.Inject;
+
+import dagger.Lazy;
 
 public class ScheduleLessonsWidgetFactory implements RemoteViewsService.RemoteViewsFactory {
 
@@ -28,11 +31,11 @@ public class ScheduleLessonsWidgetFactory implements RemoteViewsService.RemoteVi
     private final int appWidgetId;
     private ScheduleLessonsWidget.Colors colors;
     private String type = "group";
-    private int week = -1;
-    private ArrayList<SLesson> lessons;
+    private int parity = -1;
+    private List<SLesson> lessons;
 
     @Inject
-    Log log;
+    Lazy<Log> log;
     @Inject
     Time time;
     @Inject
@@ -73,12 +76,14 @@ public class ScheduleLessonsWidgetFactory implements RemoteViewsService.RemoteVi
             if (shift != 0) {
                 calendar.add(Calendar.HOUR, shift * 24);
             }
-            TreeSet<SLesson> lessons = scheduleLessonsHelper.filterAndSortLessonsForWeekday(schedule, week, time.getWeekDay(calendar), true);
-            this.lessons.addAll(lessons);
-            this.week = time.getWeek(context, calendar) % 2;
+            this.parity = time.getWeek(context, calendar) % 2;
             this.type = schedule.getType();
+            Integer weekday = time.getWeekDay(calendar);
+            String customDay = time.getScheduleCustomDayRaw(calendar);
+            TreeSet<SLesson> lessons = scheduleLessonsHelper.filterAndSortLessonsForWeekday(schedule, parity, weekday, customDay, true);
+            this.lessons.addAll(lessons);
         } catch (Exception e) {
-            log.exception(e);
+            log.get().exception(e);
         }
     }
 
@@ -111,7 +116,7 @@ public class ScheduleLessonsWidgetFactory implements RemoteViewsService.RemoteVi
                     }
                     break;
             }
-            if (this.week == -1) {
+            if (this.parity == -1) {
                 switch (lesson.getParity()){
                     case 0: title += " (" + context.getString(R.string.tab_even) + ")"; break;
                     case 1: title += " (" + context.getString(R.string.tab_odd) + ")"; break;
@@ -174,7 +179,7 @@ public class ScheduleLessonsWidgetFactory implements RemoteViewsService.RemoteVi
             }
             return layout;
         } catch (Exception e) {
-            log.exception(e);
+            log.get().exception(e);
             return null;
         }
     }

@@ -61,14 +61,14 @@ public class ERegisterSubjectsRVA extends RVA<ERSubject> {
             ((TextView) container.findViewById(R.id.value)).setText(item.data.getValue());
             tryRegisterClickListener(container, R.id.subject, item.data.getSubject());
         } catch (Exception e) {
-            log.exception(e);
+            log.get().exception(e);
         }
     }
     private void bindNoSubjects(View container) {
         try {
             ((TextView) container.findViewById(R.id.ntd_text)).setText(R.string.no_subjects);
         } catch (Exception e) {
-            log.exception(e);
+            log.get().exception(e);
         }
     }
 
@@ -123,7 +123,7 @@ public class ERegisterSubjectsRVA extends RVA<ERSubject> {
                 ));
             }
         } catch (Exception e) {
-            log.exception(e);
+            log.get().exception(e);
         }
         return dataset;
     }

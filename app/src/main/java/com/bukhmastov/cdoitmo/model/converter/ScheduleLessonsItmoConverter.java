@@ -12,6 +12,8 @@ import com.bukhmastov.cdoitmo.util.singleton.CollectionUtils;
 import com.bukhmastov.cdoitmo.util.singleton.StringUtils;
 
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 
 public class ScheduleLessonsItmoConverter extends Converter<ITMOSLessons, SLessons> {
 
@@ -24,7 +26,10 @@ public class ScheduleLessonsItmoConverter extends Converter<ITMOSLessons, SLesso
         ArrayList<SDay> days = new ArrayList<>();
         if (CollectionUtils.isNotEmpty(entity.getSchedule())) {
             for (ITMOSLesson itmoLesson : entity.getSchedule()) {
-                int weekday = itmoLesson.getWeekday();
+                Integer weekday = itmoLesson.getWeekday();
+                if (weekday != null && (weekday < 0 || weekday > 6)) {
+                    weekday = null;
+                }
                 SLesson lesson = convertLesson(itmoLesson);
                 putLessonToDay(days, weekday, lesson);
             }
@@ -84,20 +89,19 @@ public class ScheduleLessonsItmoConverter extends Converter<ITMOSLessons, SLesso
         return lesson;
     }
 
-    private void putLessonToDay(ArrayList<SDay> days, int weekday, SLesson lesson) {
+    private void putLessonToDay(List<SDay> days, Integer weekday, SLesson lesson) {
+        String customDay = ""; // ISU api provides no info about custom date, although not surprising
         for (SDay day : days) {
-            if (day.getWeekday() == weekday) {
-                day.getLessons().add(lesson);
+            if (day.isMatched(weekday, customDay)) {
+                day.addLesson(lesson);
                 return;
             }
         }
-        SDay day = new SDay();
-        day.setWeekday(weekday);
-        day.setType("unknown");
-        day.setTitle("");
-        day.setLessons(new ArrayList<>());
-        day.getLessons().add(lesson);
-        days.add(day);
+        if (weekday != null) {
+            days.add(new SDay(weekday, lesson));
+        } else {
+            days.add(new SDay(customDay, lesson));
+        }
     }
 
     private String trim(String value) {
@@ -106,7 +110,7 @@ public class ScheduleLessonsItmoConverter extends Converter<ITMOSLessons, SLesso
         }
         value = StringUtils.removeHtmlTags(value);
         value = StringUtils.escapeString(value);
-        if (".".equals(value) || ",".equals(value)) {
+        if (".".equals(value) || ",".equals(value) || "-".equals(value)) {
             value = "";
         }
         return value;

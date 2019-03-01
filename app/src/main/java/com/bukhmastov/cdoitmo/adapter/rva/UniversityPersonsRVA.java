@@ -1,4 +1,4 @@
-package com.bukhmastov.cdoitmo.adapter.rva.university;
+package com.bukhmastov.cdoitmo.adapter.rva;
 
 import android.content.Context;
 import androidx.annotation.LayoutRes;
@@ -70,7 +70,7 @@ public class UniversityPersonsRVA extends UniversityRVA {
                         .into((ImageView) avatarView);
             }
         } catch (Exception e) {
-            log.exception(e);
+            log.get().exception(e);
         }
     }
     private void bindState(View container, Item item) {
@@ -88,14 +88,14 @@ public class UniversityPersonsRVA extends UniversityRVA {
                 }
             }
         } catch (Exception e) {
-            log.exception(e);
+            log.get().exception(e);
         }
     }
     private void bindNoData(View container) {
         try {
             ((TextView) container.findViewById(R.id.ntd_text)).setText(R.string.no_persons);
         } catch (Exception e) {
-            log.exception(e);
+            log.get().exception(e);
         }
     }
 

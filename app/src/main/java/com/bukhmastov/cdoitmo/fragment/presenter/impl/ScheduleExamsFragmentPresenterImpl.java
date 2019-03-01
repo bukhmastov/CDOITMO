@@ -8,7 +8,7 @@ import android.view.View;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activity.search.ScheduleExamsSearchActivity;
-import com.bukhmastov.cdoitmo.adapter.PagerExamsAdapter;
+import com.bukhmastov.cdoitmo.adapter.pager.PagerExamsAdapter;
 import com.bukhmastov.cdoitmo.event.bus.EventBus;
 import com.bukhmastov.cdoitmo.event.events.OpenActivityEvent;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;

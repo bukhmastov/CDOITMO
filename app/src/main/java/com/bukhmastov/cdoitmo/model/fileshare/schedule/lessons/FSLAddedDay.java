@@ -9,7 +9,10 @@ import java.util.Objects;
 public class FSLAddedDay extends JsonEntity {
 
     @JsonProperty("day")
-    private int day;
+    private Integer weekday;
+
+    @JsonProperty("custom")
+    private String customDay;
 
     @JsonProperty("lesson")
     private SLesson lesson;
@@ -18,12 +21,20 @@ public class FSLAddedDay extends JsonEntity {
         super();
     }
 
-    public int getDay() {
-        return day;
+    public Integer getDay() {
+        return weekday;
     }
 
-    public void setDay(int day) {
-        this.day = day;
+    public void setDay(Integer day) {
+        this.weekday = day;
+    }
+
+    public String getCustomDay() {
+        return customDay;
+    }
+
+    public void setCustomDay(String customDay) {
+        this.customDay = customDay;
     }
 
     public SLesson getLesson() {
@@ -39,19 +50,21 @@ public class FSLAddedDay extends JsonEntity {
         if (this == o) return true;
         if (!(o instanceof FSLAddedDay)) return false;
         FSLAddedDay fslAdded = (FSLAddedDay) o;
-        return day == fslAdded.day &&
+        return Objects.equals(weekday, fslAdded.weekday) &&
+                Objects.equals(customDay, fslAdded.customDay) &&
                 Objects.equals(lesson, fslAdded.lesson);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(day, lesson);
+        return Objects.hash(weekday, lesson);
     }
 
     @Override
     public String toString() {
         return "FSLAdded{" +
-                "day=" + day +
+                "weekday=" + weekday +
+                ", customDay='" + customDay + '\'' +
                 ", lesson=" + lesson +
                 '}';
     }

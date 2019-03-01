@@ -15,7 +15,7 @@
     <item name="friday" type="id"/>
     <item name="saturday" type="id"/>
     <item name="sunday" type="id"/>
-    <item name="undefined" type="id"/>
+    <item name="custom_day" type="id"/>
 
     <!-- Others -->
     <item name="visible" type="id"/>

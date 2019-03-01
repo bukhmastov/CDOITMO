@@ -1,4 +1,4 @@
-package com.bukhmastov.cdoitmo.dialog;
+package com.bukhmastov.cdoitmo.view.dialog;
 
 import android.content.Context;
 import androidx.annotation.LayoutRes;

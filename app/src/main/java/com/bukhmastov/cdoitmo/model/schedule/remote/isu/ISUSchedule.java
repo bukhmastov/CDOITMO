@@ -9,11 +9,12 @@ import java.util.Objects;
 public class ISUSchedule extends JsonEntity {
 
     /**
-     * 0 - Понедельник
+     * 0 - Расписание на определенный день
+     * 1 - Понедельник
      * 7 - Воскресенье
      */
     @JsonProperty("weekday")
-    private int weekday;
+    private Integer weekday;
 
     @JsonProperty("lessons")
     private ArrayList<ISULesson> lessons;
@@ -22,11 +23,11 @@ public class ISUSchedule extends JsonEntity {
         super();
     }
 
-    public int getWeekday() {
+    public Integer getWeekday() {
         return weekday;
     }
 
-    public void setWeekday(int weekday) {
+    public void setWeekday(Integer weekday) {
         this.weekday = weekday;
     }
 
@@ -43,7 +44,7 @@ public class ISUSchedule extends JsonEntity {
         if (this == o) return true;
         if (!(o instanceof ISUSchedule)) return false;
         ISUSchedule that = (ISUSchedule) o;
-        return weekday == that.weekday &&
+        return Objects.equals(weekday, that.weekday) &&
                 Objects.equals(lessons, that.lessons);
     }
 

@@ -20,6 +20,9 @@ import javax.inject.Inject;
 
 import dagger.Lazy;
 
+/**
+ * Not recommended to use. Some day it will be gone, but who knows when...
+ */
 public class InjectProvider {
 
     @Inject

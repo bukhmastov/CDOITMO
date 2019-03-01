@@ -61,7 +61,7 @@ public class SearchSuggestionsRVA extends RVA<Suggestion> {
             }
 
         } catch (Exception e) {
-            log.exception(e);
+            log.get().exception(e);
         }
     }
 

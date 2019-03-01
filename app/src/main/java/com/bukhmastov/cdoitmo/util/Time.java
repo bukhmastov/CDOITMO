@@ -27,4 +27,8 @@ public interface Time {
     String getDay(Context context, int day);
 
     String getUpdateTime(Context context, long time);
+
+    String getScheduleCustomDayRaw(Calendar calendar);
+
+    String getScheduleCustomDayTitle(Context context, String customDay);
 }

@@ -12,6 +12,7 @@ import java.util.HashMap;
 import java.util.List;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 public abstract class JsonEntity implements Entity {
 
@@ -187,8 +188,16 @@ public abstract class JsonEntity implements Entity {
     }
 
 
-    public <T extends JsonEntity> T copy() throws JSONException, IllegalAccessException, InstantiationException {
+    public @NonNull <T extends JsonEntity> T copy() throws JSONException, IllegalAccessException, InstantiationException {
         return getClass().newInstance().fromJson(toJson());
+    }
+
+    public @Nullable <T extends JsonEntity> T copySilently() {
+        try {
+            return copy();
+        } catch (JSONException | IllegalAccessException | InstantiationException e) {
+            return null;
+        }
     }
 
 

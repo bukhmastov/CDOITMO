@@ -1,21 +1,24 @@
-package com.bukhmastov.cdoitmo.adapter;
+package com.bukhmastov.cdoitmo.adapter.pager;
 
 import android.content.Context;
 import android.os.Bundle;
-import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentManager;
-import androidx.fragment.app.FragmentPagerAdapter;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
-import com.bukhmastov.cdoitmo.fragment.ScheduleLessonsTabFragment;
+import com.bukhmastov.cdoitmo.fragment.ScheduleExamsTabFragment;
 import com.bukhmastov.cdoitmo.util.Log;
 
-import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
 
 import javax.inject.Inject;
 
-public class PagerLessonsAdapter extends FragmentPagerAdapter {
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentPagerAdapter;
+import dagger.Lazy;
+
+public class PagerExamsAdapter extends FragmentPagerAdapter {
 
     private class Element {
         public final int id;
@@ -27,17 +30,16 @@ public class PagerLessonsAdapter extends FragmentPagerAdapter {
             this.type = type;
         }
     }
-    private final ArrayList<Element> tabs = new ArrayList<>();
+    private final List<Element> tabs = new LinkedList<>();
 
     @Inject
-    Log log;
+    Lazy<Log> log;
 
-    public PagerLessonsAdapter(FragmentManager fm, Context context) {
+    public PagerExamsAdapter(FragmentManager fm, Context context) {
         super(fm);
         AppComponentProvider.getComponent().inject(this);
-        tabs.add(new Element(0, context.getString(R.string.tab_all), 2));
-        tabs.add(new Element(1, context.getString(R.string.tab_even), 0));
-        tabs.add(new Element(2, context.getString(R.string.tab_odd), 1));
+        tabs.add(new Element(0, context.getString(R.string.exams), 0));
+        tabs.add(new Element(1, context.getString(R.string.credits), 1));
     }
 
     @Override
@@ -50,13 +52,13 @@ public class PagerLessonsAdapter extends FragmentPagerAdapter {
                     break;
                 }
             }
-            Fragment fragment = ScheduleLessonsTabFragment.class.newInstance();
+            Fragment fragment = ScheduleExamsTabFragment.class.newInstance();
             Bundle bundle = new Bundle();
             bundle.putInt("type", type);
             fragment.setArguments(bundle);
             return fragment;
         } catch (Exception e) {
-            log.exception(e);
+            log.get().exception(e);
             return null;
         }
     }

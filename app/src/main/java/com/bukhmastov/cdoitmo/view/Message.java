@@ -8,17 +8,17 @@ import android.view.View;
 import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
+import com.bukhmastov.cdoitmo.util.singleton.StringUtils;
 
 public class Message {
 
-    private static final String TAG = "Message";
     public interface RemoteMessageCallback {
         void dismiss(Context context, View view);
     }
 
-    public static View getRemoteMessage(final Context context, final int type, final String message, final RemoteMessageCallback callback) {
+    public static View getRemoteMessage(Context context, int type, String message, RemoteMessageCallback callback) {
         try {
-            if (message == null || message.trim().isEmpty()) {
+            if (StringUtils.isBlank(message)) {
                 return null;
             }
             int layoutId;
@@ -33,7 +33,7 @@ public class Message {
                     break;
                 }
             }
-            final View layout = inflate(context, layoutId);
+            View layout = inflate(context, layoutId);
             if (layout == null) {
                 return null;
             }

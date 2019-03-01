@@ -147,7 +147,7 @@ public class ScheduleExamsRVA extends RVA<RVAExams> {
             tryRegisterClickListener(container, R.id.schedule_lessons_menu, null);
             tryRegisterClickListener(container, R.id.schedule_lessons_share, new RVAExams(new ArrayList<>(events)));
         } catch (Exception e) {
-            log.exception(e);
+            log.get().exception(e);
         }
     }
     private void bindExam(View container, Item<SSubject> item) {
@@ -258,14 +258,14 @@ public class ScheduleExamsRVA extends RVA<RVAExams> {
             container.findViewById(R.id.separator_small).setVisibility((isAdviceExists && !isExamExists) || (!isAdviceExists && isExamExists) ? View.GONE : View.VISIBLE);
             container.findViewById(R.id.exam_info).setVisibility(isAdviceExists || isExamExists ? View.VISIBLE : View.GONE);
         } catch (Exception e) {
-            log.exception(e);
+            log.get().exception(e);
         }
     }
     private void bindUpdateTime(View container, Item<RVASingleValue> item) {
         try {
             ((TextView) container.findViewById(R.id.update_time)).setText(StringUtils.isNotBlank(item.data.getValue()) ? item.data.getValue() : Static.GLITCH);
         } catch (Exception e) {
-            log.exception(e);
+            log.get().exception(e);
         }
     }
     private void bindNoExams(View container) {
@@ -279,7 +279,7 @@ public class ScheduleExamsRVA extends RVA<RVAExams> {
             }
             ((TextView) container.findViewById(R.id.ntd_text)).setText((mode == 0 ? context.getText(R.string.no_exams) : context.getText(R.string.no_credits)) + info);
         } catch (Exception e) {
-            log.exception(e);
+            log.get().exception(e);
         }
     }
     private void bindPickerHeader(View container, Item<RVASingleValue> item) {
@@ -293,7 +293,7 @@ public class ScheduleExamsRVA extends RVA<RVAExams> {
             }
             ((TextView) container.findViewById(R.id.teacher_picker_header)).setText(text);
         } catch (Exception e) {
-            log.exception(e);
+            log.get().exception(e);
         }
     }
     private void bindPickerItem(View container, Item<STeacher> item) {
@@ -305,7 +305,7 @@ public class ScheduleExamsRVA extends RVA<RVAExams> {
             ((TextView) container.findViewById(R.id.teacher_picker_title)).setText(teacher);
             tryRegisterClickListener(container, R.id.teacher_picker_item, new RVAExams(item.data));
         } catch (Exception e) {
-            log.exception(e);
+            log.get().exception(e);
         }
     }
     private void bindPickerNoTeachers(View container, Item<RVASingleValue> item) {
@@ -319,7 +319,7 @@ public class ScheduleExamsRVA extends RVA<RVAExams> {
             }
             ((TextView) container.findViewById(R.id.ntd_text)).setText(text);
         } catch (Exception e) {
-            log.exception(e);
+            log.get().exception(e);
         }
     }
 

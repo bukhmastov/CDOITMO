@@ -1,4 +1,4 @@
-package com.bukhmastov.cdoitmo.dialog;
+package com.bukhmastov.cdoitmo.view.dialog;
 
 import android.app.AlertDialog;
 import android.app.TimePickerDialog;
@@ -38,27 +38,27 @@ public class ThemeDialog extends Dialog {
         void onDone(int hours, int minutes);
     }
     private final Callback cb;
-    private final List<String> pref_theme_titles;
-    private final List<String> pref_theme_values;
+    private final List<String> prefThemeTitles;
+    private final List<String> prefThemeValues;
 
     private final static String DEFAULT_THEME = "light";
     private final static String DEFAULT_THEME_DARK = "dark";
 
     // auto theme enabled
-    private boolean auto_enabled;
+    private boolean autoEnabled;
 
     // static theme value
-    private String static_value = DEFAULT_THEME;
+    private String staticValue = DEFAULT_THEME;
 
     // auto theme first value
-    private String t1_value = DEFAULT_THEME;
-    private int t1_hour = 6;
-    private int t1_minutes = 30;
+    private String t1Value = DEFAULT_THEME;
+    private int t1Hour = 6;
+    private int t1Minutes = 30;
 
     // auto theme second value
-    private String t2_value = DEFAULT_THEME_DARK;
-    private int t2_hour = 23;
-    private int t2_minutes = 0;
+    private String t2Value = DEFAULT_THEME_DARK;
+    private int t2Hour = 23;
+    private int t2Minutes = 0;
 
     @Inject
     Log log;
@@ -68,11 +68,11 @@ public class ThemeDialog extends Dialog {
     public ThemeDialog(Context context, String value, Callback cb) {
         super(context);
         AppComponentProvider.getComponent().inject(this);
-        this.pref_theme_titles = Arrays.asList(context.getResources().getStringArray(R.array.pref_theme_titles));
-        this.pref_theme_values = Arrays.asList(context.getResources().getStringArray(R.array.pref_theme_values));
+        this.prefThemeTitles = Arrays.asList(context.getResources().getStringArray(R.array.pref_theme_titles));
+        this.prefThemeValues = Arrays.asList(context.getResources().getStringArray(R.array.pref_theme_values));
         this.cb = cb;
-        this.auto_enabled = value.contains("#");
-        if (auto_enabled) {
+        this.autoEnabled = value.contains("#");
+        if (autoEnabled) {
             try {
                 final String[] values = value.split("#");
                 if (values.length != 4) {
@@ -85,29 +85,29 @@ public class ThemeDialog extends Dialog {
                 if (t1_values.length != 2 || t2_values.length != 2) {
                     throw new Exception("Invalid value");
                 }
-                this.t1_hour = Integer.parseInt(t1_values[0]);
-                this.t1_minutes = Integer.parseInt(t1_values[1]);
-                if (t1_hour < 0 || t1_hour > 23) t1_hour = 6;
-                if (t1_minutes < 0 || t1_minutes > 59) t1_minutes = 0;
-                this.t2_hour = Integer.parseInt(t2_values[0]);
-                this.t2_minutes = Integer.parseInt(t2_values[1]);
-                if (t2_hour < 0 || t2_hour > 23) t2_hour = 23;
-                if (t2_minutes < 0 || t2_minutes > 59) t2_minutes = 59;
-                if (pref_theme_values.contains(t1_value)) {
-                    this.t1_value = t1_value;
+                this.t1Hour = Integer.parseInt(t1_values[0]);
+                this.t1Minutes = Integer.parseInt(t1_values[1]);
+                if (t1Hour < 0 || t1Hour > 23) t1Hour = 6;
+                if (t1Minutes < 0 || t1Minutes > 59) t1Minutes = 0;
+                this.t2Hour = Integer.parseInt(t2_values[0]);
+                this.t2Minutes = Integer.parseInt(t2_values[1]);
+                if (t2Hour < 0 || t2Hour > 23) t2Hour = 23;
+                if (t2Minutes < 0 || t2Minutes > 59) t2Minutes = 59;
+                if (prefThemeValues.contains(t1_value)) {
+                    this.t1Value = t1_value;
                 }
-                if (pref_theme_values.contains(t2_value)) {
-                    this.t2_value = t2_value;
+                if (prefThemeValues.contains(t2_value)) {
+                    this.t2Value = t2_value;
                 }
             } catch (Exception ignore) {
-                this.static_value = DEFAULT_THEME;
-                this.auto_enabled = false;
+                this.staticValue = DEFAULT_THEME;
+                this.autoEnabled = false;
             }
         } else {
-            if (pref_theme_values.contains(value)) {
-                this.static_value = value;
+            if (prefThemeValues.contains(value)) {
+                this.staticValue = value;
             } else {
-                this.static_value = DEFAULT_THEME;
+                this.staticValue = DEFAULT_THEME;
             }
         }
     }
@@ -127,9 +127,9 @@ public class ThemeDialog extends Dialog {
                 TextView t2Spinner = themeLayout.findViewById(R.id.t2_spinner);
                 // setup switcher
                 switcher.setOnCheckedChangeListener((compoundButton, checked) -> {
-                    auto_enabled = checked;
-                    log.v(TAG, "switcher clicked | auto_enabled = " + (auto_enabled ? "true" : "false"));
-                    if (auto_enabled) {
+                    autoEnabled = checked;
+                    log.v(TAG, "switcher clicked | autoEnabled = " + (autoEnabled ? "true" : "false"));
+                    if (autoEnabled) {
                         themeContainerStatic.setVisibility(View.GONE);
                         themeContainerAuto.setVisibility(View.VISIBLE);
                     } else {
@@ -139,10 +139,10 @@ public class ThemeDialog extends Dialog {
                 });
                 switcherContainer.setOnClickListener(view -> {
                     log.v(TAG, "switcherContainer clicked");
-                    switcher.setChecked(!auto_enabled);
+                    switcher.setChecked(!autoEnabled);
                 });
-                switcher.setChecked(auto_enabled);
-                if (auto_enabled) {
+                switcher.setChecked(autoEnabled);
+                if (autoEnabled) {
                     themeContainerStatic.setVisibility(View.GONE);
                     themeContainerAuto.setVisibility(View.VISIBLE);
                 } else {
@@ -151,49 +151,49 @@ public class ThemeDialog extends Dialog {
                 }
                 // setup static theme selector
                 thread.runOnUI(() -> {
-                    for (int i = 0; i < pref_theme_titles.size(); i++) {
+                    for (int i = 0; i < prefThemeTitles.size(); i++) {
                         final RadioButton radioButton = (RadioButton) inflate(R.layout.dialog_theme_picker_static_item);
-                        radioButton.setText(pref_theme_titles.get(i));
+                        radioButton.setText(prefThemeTitles.get(i));
                         radioButton.setOnCheckedChangeListener((buttonView, isChecked) -> {
                             if (isChecked) {
-                                static_value = pref_theme_values.get(pref_theme_titles.indexOf(buttonView.getText().toString().trim()));
+                                staticValue = prefThemeValues.get(prefThemeTitles.indexOf(buttonView.getText().toString().trim()));
                             }
                         });
                         themeContainerStatic.addView(radioButton, RadioGroup.LayoutParams.MATCH_PARENT, RadioGroup.LayoutParams.WRAP_CONTENT);
-                        if (pref_theme_values.indexOf(static_value) == i) {
+                        if (prefThemeValues.indexOf(staticValue) == i) {
                             ((RadioGroup) themeContainerStatic).check(radioButton.getId());
                         }
                     }
                 });
                 // setup automatic theme selector
-                t1Time.setText(t1_hour + ":" + StringUtils.ldgZero(t1_minutes));
+                t1Time.setText(t1Hour + ":" + StringUtils.ldgZero(t1Minutes));
                 t1Time.setOnClickListener(view -> {
                     log.v(TAG, "t1Time clicked");
-                    showTimePicker(t1_hour, t1_minutes, (hours, minutes) -> {
+                    showTimePicker(t1Hour, t1Minutes, (hours, minutes) -> {
                         log.v(TAG, "t1Time showTimePicker done | " + hours + " | " + minutes);
-                        t1_hour = hours;
-                        t1_minutes = minutes;
-                        t1Time.setText(t1_hour + ":" + StringUtils.ldgZero(t1_minutes));
+                        t1Hour = hours;
+                        t1Minutes = minutes;
+                        t1Time.setText(t1Hour + ":" + StringUtils.ldgZero(t1Minutes));
                     });
                 });
-                t2Time.setText(t2_hour + ":" + StringUtils.ldgZero(t2_minutes));
-                t2Time.setOnClickListener(view -> showTimePicker(t2_hour, t2_minutes, (hours, minutes) -> {
+                t2Time.setText(t2Hour + ":" + StringUtils.ldgZero(t2Minutes));
+                t2Time.setOnClickListener(view -> showTimePicker(t2Hour, t2Minutes, (hours, minutes) -> {
                     log.v(TAG, "t2Time showTimePicker done | " + hours + " | " + minutes);
-                    t2_hour = hours;
-                    t2_minutes = minutes;
-                    t2Time.setText(t2_hour + ":" + StringUtils.ldgZero(t2_minutes));
+                    t2Hour = hours;
+                    t2Minutes = minutes;
+                    t2Time.setText(t2Hour + ":" + StringUtils.ldgZero(t2Minutes));
                 }));
-                t1Spinner.setText(pref_theme_titles.get(pref_theme_values.indexOf(t1_value)));
-                t1Spinner.setOnClickListener(view -> showThemePicker(t1_value, theme -> {
+                t1Spinner.setText(prefThemeTitles.get(prefThemeValues.indexOf(t1Value)));
+                t1Spinner.setOnClickListener(view -> showThemePicker(t1Value, theme -> {
                     log.v(TAG, "t1Spinner showThemePicker done | " + theme);
-                    t1_value = theme;
-                    t1Spinner.setText(pref_theme_titles.get(pref_theme_values.indexOf(t1_value)));
+                    t1Value = theme;
+                    t1Spinner.setText(prefThemeTitles.get(prefThemeValues.indexOf(t1Value)));
                 }));
-                t2Spinner.setText(pref_theme_titles.get(pref_theme_values.indexOf(t2_value)));
-                t2Spinner.setOnClickListener(view -> showThemePicker(t2_value, theme -> {
+                t2Spinner.setText(prefThemeTitles.get(prefThemeValues.indexOf(t2Value)));
+                t2Spinner.setOnClickListener(view -> showThemePicker(t2Value, theme -> {
                     log.v(TAG, "t2Spinner showThemePicker done | " + theme);
-                    t2_value = theme;
-                    t2Spinner.setText(pref_theme_titles.get(pref_theme_values.indexOf(t2_value)));
+                    t2Value = theme;
+                    t2Spinner.setText(prefThemeTitles.get(prefThemeValues.indexOf(t2Value)));
                 }));
                 // show picker
                 thread.runOnUI(() -> new AlertDialog.Builder(context)
@@ -202,11 +202,11 @@ public class ThemeDialog extends Dialog {
                         .setPositiveButton(R.string.accept, (dialog, which) -> {
                             log.v(TAG, "show picker accepted");
                             String theme;
-                            if (auto_enabled) {
-                                theme = t1_hour + ":" + StringUtils.ldgZero(t1_minutes) + "#" + t1_value + "#" +
-                                        t2_hour + ":" + StringUtils.ldgZero(t2_minutes) + "#" + t2_value;
+                            if (autoEnabled) {
+                                theme = t1Hour + ":" + StringUtils.ldgZero(t1Minutes) + "#" + t1Value + "#" +
+                                        t2Hour + ":" + StringUtils.ldgZero(t2Minutes) + "#" + t2Value;
                             } else {
-                                theme = static_value;
+                                theme = staticValue;
                             }
                             cb.onDone(theme, getThemeDesc(context, theme));
                         })
@@ -222,8 +222,8 @@ public class ThemeDialog extends Dialog {
             log.v(TAG, "showThemePicker | " + value);
             new AlertDialog.Builder(context)
                     .setTitle(R.string.theme)
-                    .setSingleChoiceItems(R.array.pref_theme_titles, pref_theme_values.indexOf(value), (dialogInterface, position) -> {
-                        callback.onDone(pref_theme_values.get(position));
+                    .setSingleChoiceItems(R.array.pref_theme_titles, prefThemeValues.indexOf(value), (dialogInterface, position) -> {
+                        callback.onDone(prefThemeValues.get(position));
                         dialogInterface.dismiss();
                     })
                     .setNegativeButton(R.string.cancel, null)

@@ -74,7 +74,7 @@ public abstract class RVA<J extends JsonEntity> extends RVABase {
         try {
             return new ViewHolder(LayoutInflater.from(parent.getContext()).inflate(onGetLayout(viewType), parent, false));
         } catch (NullPointerException npe) {
-            log.exception(npe);
+            log.get().exception(npe);
             throw npe;
         }
     }
@@ -114,7 +114,7 @@ public abstract class RVA<J extends JsonEntity> extends RVABase {
                     listener.onClick(v, entity);
                 }
             } catch (Exception e) {
-                log.exception(e);
+                log.get().exception(e);
             }
         });
     }

@@ -8,6 +8,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
+import android.widget.ImageButton;
 import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
@@ -29,6 +30,8 @@ import com.bukhmastov.cdoitmo.util.singleton.StringUtils;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.TreeSet;
 
 import javax.inject.Inject;
@@ -63,7 +66,8 @@ public class ScheduleLessonsRVA extends RVA<RVALessons> {
     private final String query;
     private final int parity;
     private final ArrayList<SDay> days;
-    private final SparseIntArray daysPositions;
+    private final SparseIntArray weekdaysPositions;
+    private final Map<String, Integer> customDaysPositions;
     private final String reducedLessonMode;
     private int colorScheduleFlagTEXT = -1, colorScheduleFlagCommonBG = -1, colorScheduleFlagPracticeBG = -1, colorScheduleFlagLectureBG = -1, colorScheduleFlagLabBG = -1, colorScheduleFlagIwsBG = -1;
 
@@ -75,13 +79,22 @@ public class ScheduleLessonsRVA extends RVA<RVALessons> {
         this.query = data.getQuery();
         this.parity = parity;
         this.days = new ArrayList<>();
-        this.daysPositions = new SparseIntArray();
+        this.weekdaysPositions = new SparseIntArray();
+        this.customDaysPositions = new HashMap<>();
         this.reducedLessonMode = reducedLessonMode;
         addItems(entity2dataset(data, weekday));
     }
 
-    public int getDayPosition(int weekday) {
-        return daysPositions.get(weekday, -1);
+    public int getWeekdayPosition(int weekday) {
+        return weekdaysPositions.get(weekday, -1);
+    }
+
+    public int getCustomDayPosition(String customDay) {
+        Integer position = customDaysPositions.get(customDay);
+        if (position == null) {
+            return -1;
+        }
+        return position;
     }
 
     @Override
@@ -171,20 +184,27 @@ public class ScheduleLessonsRVA extends RVA<RVALessons> {
             tryRegisterClickListener(container, R.id.schedule_lessons_share, new RVALessons(days));
             tryRegisterClickListener(container, R.id.schedule_lessons_create, new RVALessons(parity));
         } catch (Exception e) {
-            log.exception(e);
+            log.get().exception(e);
         }
     }
-    private void bindDay(View container, Item<RVASingleValue> item) {
+    private void bindDay(View container, Item<RVADualValue> item) {
         try {
-            ((TextView) container.findViewById(R.id.day_title)).setText(StringUtils.isNotBlank(item.data.getValue()) ? item.data.getValue() : Static.GLITCH);
+            String title = StringUtils.isNotBlank(item.data.getFirst()) ? item.data.getFirst() : Static.GLITCH;
+            boolean help = "true".equals(item.data.getSecond());
+            ((TextView) container.findViewById(R.id.day_title)).setText(title);
+            ((ImageButton) container.findViewById(R.id.day_info)).setVisibility(help ? View.VISIBLE : View.GONE);
+            if (help) {
+                tryRegisterClickListener(container, R.id.day_info, new RVALessons());
+            }
         } catch (Exception e) {
-            log.exception(e);
+            log.get().exception(e);
         }
     }
     private void bindLesson(View container, Item<SLesson> item) {
         try {
             SLesson lesson = item.data;
-            int weekday = (int) item.extras.get("weekday");
+            Integer weekday = (Integer) item.extras.get("weekday");
+            String customDay = (String) item.extras.get("custom_day");
             boolean isReduced = "reduced".equals(lesson.getCdoitmoType());
             boolean isCompact = isReduced && "compact".equals(reducedLessonMode);
             boolean isSynthetic = "synthetic".equals(lesson.getCdoitmoType());
@@ -201,7 +221,7 @@ public class ScheduleLessonsRVA extends RVA<RVALessons> {
             // badges
             container.findViewById(R.id.lesson_reduced_icon).setVisibility(isReduced ? View.VISIBLE : View.GONE);
             container.findViewById(R.id.lesson_synthetic_icon).setVisibility(isSynthetic ? View.VISIBLE : View.GONE);
-            tryRegisterClickListener(container, R.id.lesson_touch_icon, new RVALessons(lesson, weekday));
+            tryRegisterClickListener(container, R.id.lesson_touch_icon, new RVALessons(lesson, weekday, customDay));
             // title and time
             ((TextView) container.findViewById(R.id.lesson_title)).setText(lesson.getSubjectWithNote());
             ((TextView) container.findViewById(R.id.lesson_time_start)).setText(lesson.getTimeStart());
@@ -244,28 +264,28 @@ public class ScheduleLessonsRVA extends RVA<RVALessons> {
                 lessonMeta.setVisibility(View.GONE);
             }
         } catch (Exception e) {
-            log.exception(e);
+            log.get().exception(e);
         }
     }
     private void bindNotification(View container, Item<RVASingleValue> item) {
         try {
             ((TextView) container.findViewById(R.id.lessons_warning)).setText(StringUtils.isNotBlank(item.data.getValue()) ? item.data.getValue() : Static.GLITCH);
         } catch (Exception e) {
-            log.exception(e);
+            log.get().exception(e);
         }
     }
     private void bindUpdateTime(View container, Item<RVASingleValue> item) {
         try {
             ((TextView) container.findViewById(R.id.update_time)).setText(StringUtils.isNotBlank(item.data.getValue()) ? item.data.getValue() : Static.GLITCH);
         } catch (Exception e) {
-            log.exception(e);
+            log.get().exception(e);
         }
     }
     private void bindNoLessons(View container) {
         try {
             ((TextView) container.findViewById(R.id.ntd_text)).setText(R.string.no_lessons);
         } catch (Exception e) {
-            log.exception(e);
+            log.get().exception(e);
         }
     }
     private void bindPickerHeader(View container, Item<RVASingleValue> item) {
@@ -279,7 +299,7 @@ public class ScheduleLessonsRVA extends RVA<RVALessons> {
             }
             ((TextView) container.findViewById(R.id.teacher_picker_header)).setText(text);
         } catch (Exception e) {
-            log.exception(e);
+            log.get().exception(e);
         }
     }
     private void bindPickerItem(View container, Item<STeacher> item) {
@@ -291,7 +311,7 @@ public class ScheduleLessonsRVA extends RVA<RVALessons> {
             ((TextView) container.findViewById(R.id.teacher_picker_title)).setText(teacher);
             tryRegisterClickListener(container, R.id.teacher_picker_item, new RVALessons(item.data));
         } catch (Exception e) {
-            log.exception(e);
+            log.get().exception(e);
         }
     }
     private void bindPickerNoTeachers(View container, Item<RVASingleValue> item) {
@@ -305,7 +325,7 @@ public class ScheduleLessonsRVA extends RVA<RVALessons> {
             }
             ((TextView) container.findViewById(R.id.ntd_text)).setText(text);
         } catch (Exception e) {
-            log.exception(e);
+            log.get().exception(e);
         }
     }
 
@@ -346,9 +366,26 @@ public class ScheduleLessonsRVA extends RVA<RVALessons> {
             if (CollectionUtils.isEmpty(lessons)) {
                 continue;
             }
-            days.add(new SDay(day.getWeekday(), new ArrayList<>(lessons)));
-            daysPositions.append(day.getWeekday(), position++);
-            dataset.add(new Item<>(TYPE_DAY, new RVASingleValue(getDayTitle(day))));
+            SDay dayCopy = day.copySilently();
+            if (dayCopy == null) {
+                continue;
+            }
+            dayCopy.setLessons(new ArrayList<>(lessons));
+            days.add(dayCopy);
+            if (day.getWeekday() != null) {
+                weekdaysPositions.append(day.getWeekday(), position++);
+            } else if (day.getTitle() != null) {
+                customDaysPositions.put(day.getTitle(), position++);
+            } else {
+                position++;
+            }
+            String dayTitle = getDayTitle(day);
+            String dayTitleUndefined = "false";
+            if (StringUtils.isEmpty(dayTitle)) {
+                dayTitle = context.getString(R.string.unknown_day);
+                dayTitleUndefined = "true";
+            }
+            dataset.add(new Item<>(TYPE_DAY, new RVADualValue(dayTitle, dayTitleUndefined)));
             int lessonsLength = lessons.size();
             int index = 0;
             for (SLesson lesson : lessons) {
@@ -365,6 +402,8 @@ public class ScheduleLessonsRVA extends RVA<RVALessons> {
                 Item item = new Item<>(type, lesson);
                 //noinspection unchecked
                 item.extras.put("weekday", day.getWeekday());
+                //noinspection unchecked
+                item.extras.put("custom_day", day.getTitle());
                 dataset.add(item);
                 index++;
                 position++;
@@ -387,6 +426,12 @@ public class ScheduleLessonsRVA extends RVA<RVALessons> {
     }
 
     private String getDayTitle(SDay day) {
+        if (day.getWeekday() == null) {
+            if ("date".equals(day.getType()) && StringUtils.isNotBlank(day.getTitle())) {
+                return time.getScheduleCustomDayTitle(context, day.getTitle());
+            }
+            return "";
+        }
         switch (day.getWeekday()) {
             case 0: return context.getString(R.string.monday);
             case 1: return context.getString(R.string.tuesday);
@@ -395,12 +440,7 @@ public class ScheduleLessonsRVA extends RVA<RVALessons> {
             case 4: return context.getString(R.string.friday);
             case 5: return context.getString(R.string.saturday);
             case 6: return context.getString(R.string.sunday);
-            default:
-                // расписание из ису, когда есть расписания на определенный день
-                if ("date".equals(day.getType()) && StringUtils.isNotBlank(day.getTitle())) {
-                    return day.getTitle();
-                }
-                return context.getString(R.string.unknown_day);
+            default: return "";
         }
     }
 
@@ -458,12 +498,12 @@ public class ScheduleLessonsRVA extends RVA<RVALessons> {
 
     private View inflate(@LayoutRes int layout) throws InflateException {
         if (context == null) {
-            log.e(TAG, "Failed to inflate layout, context is null");
+            log.get().e(TAG, "Failed to inflate layout, context is null");
             return null;
         }
         LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         if (inflater == null) {
-            log.e(TAG, "Failed to inflate layout, inflater is null");
+            log.get().e(TAG, "Failed to inflate layout, inflater is null");
             return null;
         }
         return inflater.inflate(layout, null);

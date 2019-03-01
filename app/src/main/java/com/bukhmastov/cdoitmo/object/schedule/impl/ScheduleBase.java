@@ -9,7 +9,6 @@ import com.bukhmastov.cdoitmo.network.IfmoClient;
 import com.bukhmastov.cdoitmo.network.IfmoRestClient;
 import com.bukhmastov.cdoitmo.network.IsuPrivateRestClient;
 import com.bukhmastov.cdoitmo.network.IsuRestClient;
-import com.bukhmastov.cdoitmo.provider.StorageProvider;
 import com.bukhmastov.cdoitmo.util.DateUtils;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Storage;
@@ -35,8 +34,6 @@ public abstract class ScheduleBase {
     protected Storage storage;
     @Inject
     protected StoragePref storagePref;
-    @Inject
-    protected StorageProvider storageProvider;
     @Inject
     protected Lazy<IfmoRestClient> ifmoRestClient;
     @Inject

@@ -84,7 +84,7 @@ public class ScholarshipAssignedRVA extends RVA<SSAssigned> {
             ((TextView) container.findViewById(R.id.dates)).setText(dates);
             ((TextView) container.findViewById(R.id.amount)).setText(amount);
         } catch (Exception e) {
-            log.exception(e);
+            log.get().exception(e);
         }
     }
 
@@ -92,7 +92,7 @@ public class ScholarshipAssignedRVA extends RVA<SSAssigned> {
         try {
             ((TextView) container.findViewById(R.id.ntd_text)).setText(R.string.no_assigned_scholarship);
         } catch (Exception e) {
-            log.exception(e);
+            log.get().exception(e);
         }
     }
 
@@ -109,7 +109,7 @@ public class ScholarshipAssignedRVA extends RVA<SSAssigned> {
                 dataset.add(new Item<>(TYPE_ASSIGNED_ITEM, ssAssigned));
             }
         } catch (Exception e) {
-            log.exception(e);
+            log.get().exception(e);
         }
         return dataset;
     }

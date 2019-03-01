@@ -85,13 +85,14 @@ public class ScheduleLessonsHelperImpl implements ScheduleLessonsHelper {
     }
 
     @Override
-    public boolean reduceLesson(String query, int weekday, SLesson lesson, Callable callback) {
+    public boolean reduceLesson(String query, Integer weekday, String customDay, SLesson lesson, Callable callback) {
         try {
             thread.assertNotUI();
             if (StringUtils.isBlank(query) || lesson == null) {
                 return false;
             }
-            log.v(TAG, "reduceLesson | query=", query, " | weekday=", weekday, " | lesson=", lesson);
+            log.v(TAG, "reduceLesson | query=", query, " | weekday=", weekday,
+                    " | customDay=", customDay, " | lesson=", lesson);
             if (!Objects.equals(lesson.getCdoitmoType(), "normal")) {
                 throw new Exception("Wrong cdoitmo_type type: " + lesson.getCdoitmoType());
             }
@@ -107,7 +108,7 @@ public class ScheduleLessonsHelperImpl implements ScheduleLessonsHelper {
             }
             boolean found = false;
             for (SDayReduced dayReduced : lessonsReduced.getSchedule()) {
-                if (dayReduced.getWeekday() != weekday) {
+                if (!dayReduced.isMatched(weekday, customDay)) {
                     continue;
                 }
                 boolean foundLesson = false;
@@ -124,11 +125,11 @@ public class ScheduleLessonsHelperImpl implements ScheduleLessonsHelper {
                 break;
             }
             if (!found) {
-                SDayReduced dayReduced = new SDayReduced();
-                dayReduced.setWeekday(weekday);
-                dayReduced.setLessons(new ArrayList<>());
-                dayReduced.getLessons().add(lessonHash);
-                lessonsReduced.getSchedule().add(dayReduced);
+                if (weekday != null) {
+                    lessonsReduced.getSchedule().add(new SDayReduced(weekday, lessonHash));
+                } else {
+                    lessonsReduced.getSchedule().add(new SDayReduced(customDay, lessonHash));
+                }
             }
             lessonsReduced.setTimestamp(time.getTimeInMillis());
             storage.put(context, Storage.PERMANENT, Storage.USER, "schedule_lessons#reduced#" + token, lessonsReduced.toJsonString());
@@ -148,13 +149,14 @@ public class ScheduleLessonsHelperImpl implements ScheduleLessonsHelper {
     }
 
     @Override
-    public boolean restoreLesson(String query, int weekday, SLesson lesson, Callable callback) {
+    public boolean restoreLesson(String query, Integer weekday, String customDay, SLesson lesson, Callable callback) {
         try {
             thread.assertNotUI();
             if (StringUtils.isBlank(query) || lesson == null) {
                 return false;
             }
-            log.v(TAG, "restoreLesson | query=", query, " | weekday=", weekday, " | lesson=", lesson);
+            log.v(TAG, "restoreLesson | query=", query, " | weekday=", weekday,
+                    " | customDay=", customDay, " | lesson=", lesson);
             if (!Objects.equals(lesson.getCdoitmoType(), "reduced")) {
                 throw new Exception("Wrong cdoitmo_type type: " + lesson.getCdoitmoType());
             }
@@ -169,7 +171,7 @@ public class ScheduleLessonsHelperImpl implements ScheduleLessonsHelper {
                 return false;
             }
             for (SDayReduced dayReduced : lessonsReduced.getSchedule()) {
-                if (dayReduced.getWeekday() != weekday) {
+                if (!dayReduced.isMatched(weekday, customDay)) {
                     continue;
                 }
                 for (String hash : dayReduced.getLessons()) {
@@ -203,18 +205,20 @@ public class ScheduleLessonsHelperImpl implements ScheduleLessonsHelper {
     }
 
     @Override
-    public boolean createLesson(String query, String title, String type, int weekday, SLesson lesson, Consumer<Bundle> onOpen) {
+    public boolean createLesson(String query, String title, String type, Integer weekday, String customDay, SLesson lesson, Consumer<Bundle> onOpen) {
         try {
             if (StringUtils.isBlank(query) || StringUtils.isBlank(title) || StringUtils.isBlank(type) || lesson == null) {
                 return false;
             }
-            log.v(TAG, "createLesson | open fragment | query=", query, " | weekday=", weekday, " | lesson=", lesson);
+            log.v(TAG, "createLesson | open fragment | query=", query,
+                    " | weekday=", weekday, " | customDay=", customDay, " | lesson=", lesson);
             Bundle extras = new Bundle();
             extras.putString("action_type", ScheduleLessonsModifyFragmentPresenter.CREATE);
             extras.putString("query", query);
             extras.putString("type", type);
             extras.putString("title", title);
-            extras.putInt("weekday", weekday);
+            extras.putSerializable("weekday", weekday);
+            extras.putString("custom_day", customDay);
             extras.putSerializable("lesson", lesson);
             onOpen.accept(extras);
             return true;
@@ -225,13 +229,14 @@ public class ScheduleLessonsHelperImpl implements ScheduleLessonsHelper {
     }
 
     @Override
-    public boolean createLesson(String query, int weekday, SLesson lesson, Callable callback) {
+    public boolean createLesson(String query, Integer weekday, String customDay, SLesson lesson, Callable callback) {
         try {
             thread.assertNotUI();
             if (StringUtils.isBlank(query) || lesson == null) {
                 return false;
             }
-            log.v(TAG, "createLesson | query=", query, " | weekday=", weekday, " | lesson=", lesson);
+            log.v(TAG, "createLesson | query=", query, " | weekday=", weekday,
+                    " | customDay=", customDay, " | lesson=", lesson);
             lesson.setCdoitmoType("synthetic");
             String token = query.toLowerCase();
             String added = storage.get(context, Storage.PERMANENT, Storage.USER, "schedule_lessons#added#" + token, null);
@@ -244,18 +249,18 @@ public class ScheduleLessonsHelperImpl implements ScheduleLessonsHelper {
             }
             boolean found = false;
             for (SDay day : lessonsAdded.getSchedule()) {
-                if (day.getWeekday() != weekday) {
+                if (!day.isMatched(weekday, customDay)) {
                     continue;
                 }
-                day.getLessons().add(lesson);
+                day.addLesson(lesson);
                 found = true;
             }
             if (!found) {
-                SDay day = new SDay();
-                day.setWeekday(weekday);
-                day.setLessons(new ArrayList<>());
-                day.getLessons().add(lesson);
-                lessonsAdded.getSchedule().add(day);
+                if (weekday != null) {
+                    lessonsAdded.getSchedule().add(new SDay(weekday, lesson));
+                } else {
+                    lessonsAdded.getSchedule().add(new SDay(customDay, lesson));
+                }
             }
             lessonsAdded.setTimestamp(time.getTimeInMillis());
             storage.put(context, Storage.PERMANENT, Storage.USER, "schedule_lessons#added#" + token, lessonsAdded.toJsonString());
@@ -275,13 +280,14 @@ public class ScheduleLessonsHelperImpl implements ScheduleLessonsHelper {
     }
 
     @Override
-    public boolean deleteLesson(String query, int weekday, SLesson lesson, Callable callback) {
+    public boolean deleteLesson(String query, Integer weekday, String customDay, SLesson lesson, Callable callback) {
         try {
             thread.assertNotUI();
             if (StringUtils.isBlank(query) || lesson == null) {
                 return false;
             }
-            log.v(TAG, "deleteLesson | query=", query, " | weekday=", weekday, " | lesson=", lesson);
+            log.v(TAG, "deleteLesson | query=", query, " | weekday=", weekday,
+                    " | customDay=", customDay, " | lesson=", lesson);
             if (!Objects.equals(lesson.getCdoitmoType(), "synthetic")) {
                 throw new Exception("Wrong cdoitmo_type type: " + lesson.getCdoitmoType());
             }
@@ -297,7 +303,7 @@ public class ScheduleLessonsHelperImpl implements ScheduleLessonsHelper {
             }
             for (Iterator<SDay> it = lessonsAdded.getSchedule().iterator(); it.hasNext(); ) {
                 SDay day = it.next();
-                if (day.getWeekday() != weekday) {
+                if (!day.isMatched(weekday, customDay)) {
                     continue;
                 }
                 for (SLesson sLesson : day.getLessons()) {
@@ -330,18 +336,20 @@ public class ScheduleLessonsHelperImpl implements ScheduleLessonsHelper {
     }
 
     @Override
-    public boolean editLesson(String query, String title, String type, int weekday, SLesson lesson, Consumer<Bundle> onOpen) {
+    public boolean editLesson(String query, String title, String type, Integer weekday, String customDay, SLesson lesson, Consumer<Bundle> onOpen) {
         try {
             if (StringUtils.isBlank(query) || StringUtils.isBlank(title) || StringUtils.isBlank(type) || lesson == null) {
                 return false;
             }
-            log.v(TAG, "editLesson | open fragment | query=", query, " | weekday=", weekday, " | lesson=", lesson);
+            log.v(TAG, "editLesson | open fragment | query=", query, " | weekday=", weekday,
+                    " | customDay=", customDay, " | lesson=", lesson);
             Bundle extras = new Bundle();
             extras.putString("action_type", ScheduleLessonsModifyFragmentPresenter.EDIT);
             extras.putString("query", query);
             extras.putString("type", type);
             extras.putString("title", title);
-            extras.putInt("weekday", weekday);
+            extras.putSerializable("weekday", weekday);
+            extras.putString("custom_day", customDay);
             extras.putSerializable("lesson", lesson);
             onOpen.accept(extras);
             return true;
@@ -412,16 +420,20 @@ public class ScheduleLessonsHelperImpl implements ScheduleLessonsHelper {
     }
 
     @Override
-    public TreeSet<SLesson> filterAndSortLessonsForWeekday(SLessons schedule, int parity, int weekday, boolean hideReducedLessons) {
+    public TreeSet<SLesson> filterAndSortLessonsForWeekday(SLessons schedule, int parity, Integer weekday, String customDay, boolean hideReducedLessons) {
+        TreeSet<SLesson> set = new TreeSet<>();
         if (CollectionUtils.isEmpty(schedule.getSchedule())) {
-            return new TreeSet<>();
+            return set;
         }
         for (SDay day : schedule.getSchedule()) {
-            if (day == null || day.getWeekday() != weekday || CollectionUtils.isEmpty(day.getLessons())) {
+            if (day == null || CollectionUtils.isEmpty(day.getLessons())) {
                 continue;
             }
-            return filterAndSortLessons(day.getLessons(), parity, hideReducedLessons);
+            if (!day.isMatched(weekday, customDay)) {
+                continue;
+            }
+            set.addAll(day.getLessons());
         }
-        return new TreeSet<>();
+        return filterAndSortLessons(set, parity, hideReducedLessons);
     }
 }

@@ -1,4 +1,4 @@
-package com.bukhmastov.cdoitmo.adapter.rva.university;
+package com.bukhmastov.cdoitmo.adapter.rva;
 
 import android.content.Context;
 import androidx.annotation.DrawableRes;
@@ -130,7 +130,7 @@ public class UniversityUnitsRVA extends UniversityRVA {
                 structureContainer.addView(getConnectContainer(R.drawable.ic_access_time, wh, isFirstContainer, null, null));
             }
         } catch (Exception e) {
-            log.exception(e);
+            log.get().exception(e);
         }
     }
     private void bindStructureHead(View container, Item<UUnit> item) {
@@ -167,7 +167,7 @@ public class UniversityUnitsRVA extends UniversityRVA {
                 structureContainer.addView(layout);
             }
         } catch (Exception e) {
-            log.exception(e);
+            log.get().exception(e);
         }
     }
     private void bindDivisions(View container, Item<UUnits> item) {
@@ -190,14 +190,14 @@ public class UniversityUnitsRVA extends UniversityRVA {
                 }
             }
         } catch (Exception e) {
-            log.exception(e);
+            log.get().exception(e);
         }
     }
     private void bindNoData(View container) {
         try {
             ((TextView) container.findViewById(R.id.ntd_text)).setText(R.string.no_data);
         } catch (Exception e) {
-            log.exception(e);
+            log.get().exception(e);
         }
     }
 

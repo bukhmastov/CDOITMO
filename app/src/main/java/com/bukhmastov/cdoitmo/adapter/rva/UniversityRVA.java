@@ -1,4 +1,4 @@
-package com.bukhmastov.cdoitmo.adapter.rva.university;
+package com.bukhmastov.cdoitmo.adapter.rva;
 
 import android.content.Context;
 import androidx.annotation.IdRes;
@@ -79,7 +79,7 @@ public abstract class UniversityRVA extends RVA<RVAUniversity> {
         try {
             ((TextView) container.findViewById(R.id.update_time)).setText(item.data.getValue());
         } catch (Exception e) {
-            log.exception(e);
+            log.get().exception(e);
         }
     }
 }

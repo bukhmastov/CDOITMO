@@ -1,7 +1,9 @@
-package com.bukhmastov.cdoitmo.dialog;
+package com.bukhmastov.cdoitmo.view.dialog;
 
 import android.content.Context;
 import androidx.annotation.LayoutRes;
+import dagger.Lazy;
+
 import android.view.InflateException;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -17,7 +19,7 @@ public abstract class Dialog {
     protected final Context context;
 
     @Inject
-    Log log;
+    Lazy<Log> log;
 
     public Dialog(Context context) {
         AppComponentProvider.getComponent().inject(this);
@@ -26,12 +28,12 @@ public abstract class Dialog {
 
     protected View inflate(@LayoutRes int layout) throws InflateException {
         if (context == null) {
-            log.e(TAG, "Failed to inflate layout, context is null");
+            log.get().e(TAG, "Failed to inflate layout, context is null");
             return null;
         }
         LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         if (inflater == null) {
-            log.e(TAG, "Failed to inflate layout, inflater is null");
+            log.get().e(TAG, "Failed to inflate layout, inflater is null");
             return null;
         }
         return inflater.inflate(layout, null);

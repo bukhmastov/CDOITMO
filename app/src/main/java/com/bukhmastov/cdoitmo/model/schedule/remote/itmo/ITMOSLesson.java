@@ -9,10 +9,11 @@ public class ITMOSLesson extends JsonEntity {
 
     /**
      * 0 - Понедельник
-     * 7 - Воскресенье
+     * 6 - Воскресенье
+     * null - Расписание на определенный день (Неизвестный день, в апи итмо не поддерживается)
      */
     @JsonProperty("data_day")
-    private int weekday;
+    private Integer weekday;
 
     /**
      * Тип занятия: "Лаб", "Прак", "Лек"
@@ -83,11 +84,11 @@ public class ITMOSLesson extends JsonEntity {
         super();
     }
 
-    public int getWeekday() {
+    public Integer getWeekday() {
         return weekday;
     }
 
-    public void setWeekday(int weekday) {
+    public void setWeekday(Integer weekday) {
         this.weekday = weekday;
     }
 
@@ -232,7 +233,7 @@ public class ITMOSLesson extends JsonEntity {
         if (this == o) return true;
         if (!(o instanceof ITMOSLesson)) return false;
         ITMOSLesson that = (ITMOSLesson) o;
-        return weekday == that.weekday &&
+        return Objects.equals(weekday, that.weekday) &&
                 parity == that.parity &&
                 order == that.order &&
                 teacherId == that.teacherId &&

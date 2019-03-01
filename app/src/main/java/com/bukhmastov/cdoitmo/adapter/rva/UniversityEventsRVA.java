@@ -1,4 +1,4 @@
-package com.bukhmastov.cdoitmo.adapter.rva.university;
+package com.bukhmastov.cdoitmo.adapter.rva;
 
 import android.content.Context;
 import android.graphics.Color;
@@ -90,7 +90,7 @@ public class UniversityEventsRVA extends UniversityRVA {
                 staticUtil.removeView(countViewContainerView);
             }
         } catch (Exception e) {
-            log.exception(e);
+            log.get().exception(e);
         }
     }
     private void bindState(View container, Item item) {
@@ -108,14 +108,14 @@ public class UniversityEventsRVA extends UniversityRVA {
                 }
             }
         } catch (Exception e) {
-            log.exception(e);
+            log.get().exception(e);
         }
     }
     private void bindNoData(View container) {
         try {
             ((TextView) container.findViewById(R.id.ntd_text)).setText(R.string.no_events);
         } catch (Exception e) {
-            log.exception(e);
+            log.get().exception(e);
         }
     }
 }

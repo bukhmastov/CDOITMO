@@ -233,7 +233,7 @@ public abstract class ScheduleImpl<T extends ScheduleJsonEntity> extends Schedul
      */
     @Override
     public String getDefaultScope() {
-        String preference = storageProvider.getStoragePref().get(context, "pref_schedule_" + getType() + "_default", "").trim();
+        String preference = storagePref.get(context, "pref_schedule_" + getType() + "_default", "").trim();
         String scope;
         if (StringUtils.isBlank(preference)) {
             scope = "auto";
@@ -247,7 +247,7 @@ public abstract class ScheduleImpl<T extends ScheduleJsonEntity> extends Schedul
         }
         switch (scope) {
             case "auto":
-                String group = storageProvider.getStorage().get(context, Storage.PERMANENT, Storage.USER, "user#group");
+                String group = storage.get(context, Storage.PERMANENT, Storage.USER, "user#group");
                 if (StringUtils.isNotBlank(group)) {
                     return group;
                 }

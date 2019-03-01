@@ -618,9 +618,10 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
                 if (day > 0) {
                     seek.add(Calendar.HOUR, 24);
                 }
-                int week = time.getWeek(context, seek) % 2;
+                int parity = time.getWeek(context, seek) % 2;
                 int weekday = time.getWeekDay(seek);
-                TreeSet<SLesson> lessons = scheduleLessonsHelper.filterAndSortLessonsForWeekday(schedule, week, weekday, true);
+                String customDay = time.getScheduleCustomDayRaw(seek);
+                TreeSet<SLesson> lessons = scheduleLessonsHelper.filterAndSortLessonsForWeekday(schedule, parity, weekday, customDay, true);
                 // if this day contains lessons
                 if (CollectionUtils.isNotEmpty(lessons)) {
                     if (day == 0) {
@@ -642,7 +643,7 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
                                 } else {
                                     // if current timestamp less than lesson end timestamp
                                     // then today's lessons still not ended, so current shiftAutomatic should be set to 0
-                                    shiftAutomatic = saveShiftAutomatic(context, appWidgetId, settings, shiftAutomatic, day);
+                                    shiftAutomatic = saveShiftAutomatic(appWidgetId, settings, shiftAutomatic, day);
                                     break days_loop;
                                 }
                             }
@@ -650,7 +651,7 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
                     } else {
                         // if this day - not today (any other following day)
                         // then we found day that contains lessons and current shiftAutomatic should be set to 'day' variable
-                        shiftAutomatic = saveShiftAutomatic(context, appWidgetId, settings, shiftAutomatic, day);
+                        shiftAutomatic = saveShiftAutomatic(appWidgetId, settings, shiftAutomatic, day);
                     }
                     break;
                 }
@@ -661,7 +662,7 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
         return new int[] {shift, shiftAutomatic};
     }
 
-    private int saveShiftAutomatic(Context context, int appWidgetId, WSLSettings settings, int oldShift, int newShift) {
+    private int saveShiftAutomatic(int appWidgetId, WSLSettings settings, int oldShift, int newShift) {
         int delta = newShift - oldShift;
         oldShift = newShift;
         if (delta != 0) {

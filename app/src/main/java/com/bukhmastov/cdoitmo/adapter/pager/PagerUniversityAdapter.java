@@ -1,9 +1,6 @@
-package com.bukhmastov.cdoitmo.adapter;
+package com.bukhmastov.cdoitmo.adapter.pager;
 
 import android.content.Context;
-import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentManager;
-import androidx.fragment.app.FragmentStatePagerAdapter;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
@@ -15,9 +12,15 @@ import com.bukhmastov.cdoitmo.fragment.UniversityPersonsFragment;
 import com.bukhmastov.cdoitmo.fragment.UniversityUnitsFragment;
 import com.bukhmastov.cdoitmo.util.Log;
 
-import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
 
 import javax.inject.Inject;
+
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentStatePagerAdapter;
+import dagger.Lazy;
 
 public class PagerUniversityAdapter extends FragmentStatePagerAdapter {
 
@@ -31,10 +34,10 @@ public class PagerUniversityAdapter extends FragmentStatePagerAdapter {
             this.fragment = fragment;
         }
     }
-    private final ArrayList<Element> tabs = new ArrayList<>();
+    private final List<Element> tabs = new LinkedList<>();
 
     @Inject
-    Log log;
+    Lazy<Log> log;
 
     public PagerUniversityAdapter(FragmentManager fm, Context context) {
         super(fm);
@@ -49,18 +52,17 @@ public class PagerUniversityAdapter extends FragmentStatePagerAdapter {
 
     @Override
     public Fragment getItem(int position) {
-        Fragment fragment = null;
-        for (Element element : tabs) {
-            if (element.id == position) {
-                try {
-                    fragment = (Fragment) element.fragment.newInstance();
-                } catch (Exception e) {
-                    log.exception(e);
+        try {
+            for (Element element : tabs) {
+                if (element.id == position) {
+                    return (Fragment) element.fragment.newInstance();
                 }
-                break;
             }
+            return null;
+        } catch (Exception e) {
+            log.get().exception(e);
+            return null;
         }
-        return fragment;
     }
 
     @Override

@@ -67,13 +67,15 @@ public class ScheduleLessonsShareFragmentPresenterImpl extends ConnectedFragment
     
     private static class Change {
         private final @TYPE String type;
-        private final int weekday;
+        private final Integer weekday;
+        private final String customDay;
         private final SLesson lesson;
         private boolean enabled;
-        private Change(@TYPE String type, boolean enabled, int weekday, SLesson lesson) {
+        private Change(@TYPE String type, boolean enabled, Integer weekday, String customDay, SLesson lesson) {
             this.type = type;
             this.enabled = enabled;
             this.weekday = weekday;
+            this.customDay = customDay;
             this.lesson = lesson;
         }
     }
@@ -120,7 +122,7 @@ public class ScheduleLessonsShareFragmentPresenterImpl extends ConnectedFragment
         }
         thread.run(SLS, () -> {
             firebaseAnalyticsProvider.logCurrentScreen(activity, fragment);
-            log.v(TAG, "Fragment created | action=" + action);
+            log.v(TAG, "Fragment created | action=", action);
             if (action == null || !(action.equals("share") || action.equals("handle"))) {
                 keepGoing = false;
                 notificationMessage.toast(activity, activity.getString(R.string.corrupted_data));
@@ -239,7 +241,7 @@ public class ScheduleLessonsShareFragmentPresenterImpl extends ConnectedFragment
                 if (day.getLesson() == null) {
                     continue;
                 }
-                changes.add(new Change(ADDED, true, day.getDay(), day.getLesson()));
+                changes.add(new Change(ADDED, true, day.getDay(), day.getCustomDay(), day.getLesson()));
             }
         }
         ArrayList<FSLReducedDay> reduced = fsLessonsContent.getReduced();
@@ -264,9 +266,9 @@ public class ScheduleLessonsShareFragmentPresenterImpl extends ConnectedFragment
                         if (day.getLesson() == null || StringUtils.isBlank(day.getLesson().getHash())) {
                             continue;
                         }
-                        SLesson lesson = getLessonByHash(schedule, day.getDay(), day.getLesson().getHash());
+                        SLesson lesson = getLessonByHash(schedule, day.getDay(), day.getCustomDay(), day.getLesson().getHash());
                         if (lesson != null) {
-                            changes.add(new Change(REDUCED, true, day.getDay(), lesson));
+                            changes.add(new Change(REDUCED, true, day.getDay(), day.getCustomDay(), lesson));
                         }
                     }
                     display();
@@ -365,7 +367,7 @@ public class ScheduleLessonsShareFragmentPresenterImpl extends ConnectedFragment
                         continue;
                     }
                     for (SLesson lesson : day.getLessons()) {
-                        changes.add(new Change(ADDED, true, day.getWeekday(), lesson));
+                        changes.add(new Change(ADDED, true, day.getWeekday(), day.getTitle(), lesson));
                     }
                 }
             }
@@ -395,9 +397,9 @@ public class ScheduleLessonsShareFragmentPresenterImpl extends ConnectedFragment
                             continue;
                         }
                         for (String hash : day.getLessons()) {
-                            SLesson lesson = getLessonByHash(schedule, day.getWeekday(), hash);
+                            SLesson lesson = getLessonByHash(schedule, day.getWeekday(), day.getCustomDay(), hash);
                             if (lesson != null) {
-                                changes.add(new Change(REDUCED, true, day.getWeekday(), lesson));
+                                changes.add(new Change(REDUCED, true, day.getWeekday(), day.getCustomDay(), lesson));
                             }
                         }
                     }
@@ -584,21 +586,18 @@ public class ScheduleLessonsShareFragmentPresenterImpl extends ConnectedFragment
                 }
                 added.setTimestamp(time.getTimeInMillis());
                 for (SDay day : added.getSchedule()) {
-                    if (day.getWeekday() == change.weekday) {
-                        if (CollectionUtils.isEmpty(day.getLessons())) {
-                            day.setLessons(new ArrayList<>());
-                        }
-                        day.getLessons().add(change.lesson);
+                    if (day.isMatched(change.weekday, change.customDay)) {
+                        day.addLesson(change.lesson);
                         found = true;
                         break;
                     }
                 }
                 if (!found) {
-                    SDay day = new SDay();
-                    day.setWeekday(change.weekday);
-                    day.setLessons(new ArrayList<>());
-                    day.getLessons().add(change.lesson);
-                    added.getSchedule().add(day);
+                    if (change.weekday != null) {
+                        added.getSchedule().add(new SDay(change.weekday, change.lesson));
+                    } else {
+                        added.getSchedule().add(new SDay(change.customDay, change.lesson));
+                    }
                 }
                 storage.put(activity, Storage.PERMANENT, Storage.USER, "schedule_lessons#added#" + token, added.toJsonString());
             }
@@ -613,7 +612,7 @@ public class ScheduleLessonsShareFragmentPresenterImpl extends ConnectedFragment
                     reduced.setSchedule(new ArrayList<>());
                 }
                 for (SDayReduced day : reduced.getSchedule()) {
-                    if (day.getWeekday() == change.weekday) {
+                    if (day.isMatched(change.weekday, change.customDay)) {
                         if (CollectionUtils.isEmpty(day.getLessons())) {
                             day.setLessons(new ArrayList<>());
                         }
@@ -632,11 +631,11 @@ public class ScheduleLessonsShareFragmentPresenterImpl extends ConnectedFragment
                     }
                 }
                 if (!found) {
-                    SDayReduced day = new SDayReduced();
-                    day.setWeekday(change.weekday);
-                    day.setLessons(new ArrayList<>());
-                    day.getLessons().add(hash);
-                    reduced.getSchedule().add(day);
+                    if (change.weekday != null) {
+                        reduced.getSchedule().add(new SDayReduced(change.weekday, hash));
+                    } else {
+                        reduced.getSchedule().add(new SDayReduced(change.customDay, hash));
+                    }
                 }
                 storage.put(activity, Storage.PERMANENT, Storage.USER, "schedule_lessons#reduced#" + token, reduced.toJsonString());
             }
@@ -668,12 +667,14 @@ public class ScheduleLessonsShareFragmentPresenterImpl extends ConnectedFragment
             if (ADDED.equals(change.type)) {
                 FSLAddedDay day = new FSLAddedDay();
                 day.setDay(change.weekday);
+                day.setCustomDay(null);
                 day.setLesson(change.lesson);
                 content.getAdded().add(day);
             }
             if (REDUCED.equals(change.type)) {
                 FSLReducedDay day = new FSLReducedDay();
                 day.setDay(change.weekday);
+                day.setCustomDay(null);
                 day.setLesson(new FSLReduced(scheduleLessonsHelper.getLessonHash(change.lesson)));
                 content.getReduced().add(day);
             }
@@ -806,13 +807,15 @@ public class ScheduleLessonsShareFragmentPresenterImpl extends ConnectedFragment
         return file;
     }
 
-    private @Nullable SLesson getLessonByHash(SLessons schedule, int weekday, String hash) {
-        thread.assertNotUI();
+    private @Nullable SLesson getLessonByHash(SLessons schedule, Integer weekday, String customDay, String hash) {
         if (schedule == null || CollectionUtils.isEmpty(schedule.getSchedule())) {
             return null;
         }
         for (SDay day : schedule.getSchedule()) {
-            if (day == null || day.getWeekday() != weekday || CollectionUtils.isEmpty(day.getLessons())) {
+            if (day == null || CollectionUtils.isEmpty(day.getLessons())) {
+                continue;
+            }
+            if (!day.isMatched(weekday, customDay)) {
                 continue;
             }
             for (SLesson lesson : day.getLessons()) {

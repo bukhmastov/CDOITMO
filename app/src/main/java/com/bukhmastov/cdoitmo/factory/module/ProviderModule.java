@@ -1,7 +1,6 @@
 package com.bukhmastov.cdoitmo.factory.module;
 
 import com.bukhmastov.cdoitmo.provider.InjectProvider;
-import com.bukhmastov.cdoitmo.provider.StorageProvider;
 
 import javax.inject.Singleton;
 
@@ -15,11 +14,5 @@ public class ProviderModule {
     @Singleton
     public InjectProvider provideInjectProvider() {
         return new InjectProvider();
-    }
-
-    @Provides
-    @Singleton
-    public StorageProvider provideStorageProvider() {
-        return new StorageProvider();
     }
 }

@@ -1,4 +1,4 @@
-package com.bukhmastov.cdoitmo.adapter.rva;
+package com.bukhmastov.cdoitmo.view;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;

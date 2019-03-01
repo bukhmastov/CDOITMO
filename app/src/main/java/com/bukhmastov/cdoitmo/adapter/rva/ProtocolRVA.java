@@ -76,7 +76,7 @@ public class ProtocolRVA extends RVA<RVAProtocolChange> {
         try {
             ((TextView) container.findViewById(R.id.name)).setText(item.data.getValue());
         } catch (Exception e) {
-            log.exception(e);
+            log.get().exception(e);
         }
     }
     private void bindChange(View container, Item<RVAProtocolChange> item) {
@@ -96,7 +96,7 @@ public class ProtocolRVA extends RVA<RVAProtocolChange> {
                 delta.setVisibility(View.GONE);
             }
         } catch (Exception e) {
-            log.exception(e);
+            log.get().exception(e);
         }
     }
     private void bindChangeSimple(View container, Item<RVAProtocolChange> item) {
@@ -117,14 +117,14 @@ public class ProtocolRVA extends RVA<RVAProtocolChange> {
                 delta.setVisibility(View.GONE);
             }
         } catch (Exception e) {
-            log.exception(e);
+            log.get().exception(e);
         }
     }
     private void bindNoChanges(View container) {
         try {
             ((TextView) container.findViewById(R.id.ntd_text)).setText(R.string.no_changes_for_period);
         } catch (Exception e) {
-            log.exception(e);
+            log.get().exception(e);
         }
     }
 
@@ -217,7 +217,7 @@ public class ProtocolRVA extends RVA<RVAProtocolChange> {
                 }
             }
         } catch (Exception e) {
-            log.exception(e);
+            log.get().exception(e);
         }
         return dataset;
     }

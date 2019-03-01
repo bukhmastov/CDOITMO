@@ -297,6 +297,7 @@
     <string name="speech_recognition_is_not_supported">Speech recognition not supported</string>
     <string name="lesson_title_required">You must specify the title of the lesson</string>
     <string name="lesson_time_start_required">You must specify the start time for lesson</string>
+    <string name="lesson_date_required">You must specify the date for lesson</string>
     <string name="log">Log</string>
     <string name="share">Share</string>
     <string name="exams_gone">No exams</string>
@@ -596,5 +597,15 @@
     <string name="schedule_failed_invalid_query">Invalid query provided</string>
     <string name="schedule_failed_need_isu">ISU authorization required</string>
     <string name="schedule_failed_not_found">Schedule not found</string>
+
+    <string name="info_primary">General information</string>
+    <string name="info_secondary">Additional information</string>
+    <string name="day_of_lesson">Day of the lesson</string>
+    <string name="date_of_lesson">Date of the lesson</string>
+    <string name="date_of_lesson_undefined">You must select a date</string>
+    <string name="lesson_day_type">Schedule type</string>
+    <string name="lesson_day_type_regular">Regular schedule</string>
+    <string name="lesson_day_type_date">Schedule for defined day</string>
+    <string name="unknown_day_about">Application cannot display the lesson day as the ITMO API does not provide date for defined-date-lessons.</string>
 
 </resources>

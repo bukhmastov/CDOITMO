@@ -64,7 +64,7 @@ public class GroupRVA extends RVA<GPerson> {
             ((TextView) container.findViewById(R.id.header)).setText(item.data.getFirst());
             ((TextView) container.findViewById(R.id.info)).setText(item.data.getSecond());
         } catch (Exception e) {
-            log.exception(e);
+            log.get().exception(e);
         }
     }
 
@@ -80,7 +80,7 @@ public class GroupRVA extends RVA<GPerson> {
                     .into((ImageView) container.findViewById(R.id.avatar));
             tryRegisterClickListener(container, R.id.person, item.data);
         } catch (Exception e) {
-            log.exception(e);
+            log.get().exception(e);
         }
     }
 
@@ -88,7 +88,7 @@ public class GroupRVA extends RVA<GPerson> {
         try {
             ((TextView) container.findViewById(R.id.ntd_text)).setText(R.string.no_groups);
         } catch (Exception e) {
-            log.exception(e);
+            log.get().exception(e);
         }
     }
 
@@ -96,7 +96,7 @@ public class GroupRVA extends RVA<GPerson> {
         try {
             ((TextView) container.findViewById(R.id.ntd_text)).setText(R.string.no_group_persons);
         } catch (Exception e) {
-            log.exception(e);
+            log.get().exception(e);
         }
     }
 
@@ -135,7 +135,7 @@ public class GroupRVA extends RVA<GPerson> {
                 }
             }
         } catch (Exception e) {
-            log.exception(e);
+            log.get().exception(e);
         }
         return dataset;
     }

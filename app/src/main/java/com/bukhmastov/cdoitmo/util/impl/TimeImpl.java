@@ -212,4 +212,26 @@ public class TimeImpl implements Time {
         }
         return message;
     }
+
+    @Override
+    public String getScheduleCustomDayRaw(Calendar calendar) {
+        calendar.set(Calendar.HOUR_OF_DAY, 0);
+        calendar.set(Calendar.MINUTE, 0);
+        calendar.set(Calendar.SECOND, 0);
+        calendar.set(Calendar.MILLISECOND, 0);
+        return String.valueOf(calendar.getTimeInMillis());
+    }
+
+    @Override
+    public String getScheduleCustomDayTitle(Context context, String customDay) {
+        if (StringUtils.isBlank(customDay) || !customDay.matches("[0-9]+")) {
+            return customDay;
+        }
+        Calendar calendar = getCalendar();
+        calendar.setTimeInMillis(Long.parseLong(customDay));
+        String day = StringUtils.ldgZero(calendar.get(Calendar.DAY_OF_MONTH));
+        String month = getGenitiveMonth(context, calendar.get(Calendar.MONTH));
+        String year = String.valueOf(calendar.get(Calendar.YEAR));
+        return day + " " + month + " " + year;
+    }
 }

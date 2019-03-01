@@ -15,17 +15,17 @@ public interface ScheduleLessonsHelper {
 
     boolean clearChanges(String query, Callable callback);
 
-    boolean reduceLesson(String query, int weekday, SLesson lesson, Callable callback);
+    boolean reduceLesson(String query, Integer weekday, String customDay, SLesson lesson, Callable callback);
 
-    boolean restoreLesson(String query, int weekday, SLesson lesson, Callable callback);
+    boolean restoreLesson(String query, Integer weekday, String customDay, SLesson lesson, Callable callback);
 
-    boolean createLesson(String query, String title, String type, int weekday, SLesson lesson, Consumer<Bundle> onOpen);
+    boolean createLesson(String query, String title, String type, Integer weekday, String customDay, SLesson lesson, Consumer<Bundle> onOpen);
 
-    boolean createLesson(String query, int weekday, SLesson lesson, Callable callback);
+    boolean createLesson(String query, Integer weekday, String customDay, SLesson lesson, Callable callback);
 
-    boolean deleteLesson(String query, int weekday, SLesson lesson, Callable callback);
+    boolean deleteLesson(String query, Integer weekday, String customDay, SLesson lesson, Callable callback);
 
-    boolean editLesson(String query, String title, String type, int weekday, SLesson lesson, Consumer<Bundle> onOpen);
+    boolean editLesson(String query, String title, String type, Integer weekday, String customDay, SLesson lesson, Consumer<Bundle> onOpen);
 
     String getLessonHash(SLesson lesson) throws Exception;
 
@@ -35,5 +35,5 @@ public interface ScheduleLessonsHelper {
 
     TreeSet<SDay> filterAndSortDays(Collection<SDay> days);
 
-    TreeSet<SLesson> filterAndSortLessonsForWeekday(SLessons schedule, int parity, int weekday, boolean hideReducedLessons);
+    TreeSet<SLesson> filterAndSortLessonsForWeekday(SLessons schedule, int parity, Integer weekday, String customDay, boolean hideReducedLessons);
 }

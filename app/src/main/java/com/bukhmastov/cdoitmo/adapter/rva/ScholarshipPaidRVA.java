@@ -65,7 +65,7 @@ public class ScholarshipPaidRVA extends RVA<SSPaid> {
         try {
             tryRegisterClickListener(container, R.id.scholarship_assigned_container, null);
         } catch (Exception e) {
-            log.exception(e);
+            log.get().exception(e);
         }
     }
 
@@ -89,7 +89,7 @@ public class ScholarshipPaidRVA extends RVA<SSPaid> {
             ((TextView) container.findViewById(R.id.amount)).setText(info);
             tryRegisterClickListener(container, R.id.scholarship_paid_item, item.data);
         } catch (Exception e) {
-            log.exception(e);
+            log.get().exception(e);
         }
     }
 
@@ -97,7 +97,7 @@ public class ScholarshipPaidRVA extends RVA<SSPaid> {
         try {
             ((TextView) container.findViewById(R.id.ntd_text)).setText(R.string.no_paid_scholarship);
         } catch (Exception e) {
-            log.exception(e);
+            log.get().exception(e);
         }
     }
 
@@ -114,7 +114,7 @@ public class ScholarshipPaidRVA extends RVA<SSPaid> {
                 dataset.add(new Item<>(TYPE_PAID_ITEM, ssPaid));
             }
         } catch (Exception e) {
-            log.exception(e);
+            log.get().exception(e);
         }
         return dataset;
     }

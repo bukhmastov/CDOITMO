@@ -13,7 +13,7 @@ import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activity.MainActivity;
 import com.bukhmastov.cdoitmo.activity.TimeRemainingWidgetActivity;
 import com.bukhmastov.cdoitmo.activity.presenter.TimeRemainingWidgetActivityPresenter;
-import com.bukhmastov.cdoitmo.dialog.BottomSheetDialog;
+import com.bukhmastov.cdoitmo.view.dialog.BottomSheetDialog;
 import com.bukhmastov.cdoitmo.event.bus.EventBus;
 import com.bukhmastov.cdoitmo.event.events.OpenActivityEvent;
 import com.bukhmastov.cdoitmo.event.events.ShareTextEvent;

@@ -106,7 +106,7 @@ public class RatingRVA extends RVA<RVARating> {
                         dataset.add(new Item<>(TYPE_COMMON, ratingPickerAll));
                     }
                 } catch (Exception e) {
-                    log.exception(e);
+                    log.get().exception(e);
                 }
             } else {
                 dataset.add(new Item<>(
@@ -151,7 +151,7 @@ public class RatingRVA extends RVA<RVARating> {
                         }
                     }
                 } catch (Exception e) {
-                    log.exception(e);
+                    log.get().exception(e);
                 }
             } else {
                 dataset.add(new Item<>(
@@ -160,7 +160,7 @@ public class RatingRVA extends RVA<RVARating> {
                 ));
             }
         } catch (Exception e) {
-            log.exception(e);
+            log.get().exception(e);
         }
         return dataset;
     }
@@ -169,7 +169,7 @@ public class RatingRVA extends RVA<RVARating> {
         try {
             ((TextView) container.findViewById(R.id.title)).setText(item.data.getValue());
         } catch (Exception e) {
-            log.exception(e);
+            log.get().exception(e);
         }
     }
     private void bindCommon(View container, Item<RatingPickerAll> item) {
@@ -250,7 +250,7 @@ public class RatingRVA extends RVA<RVARating> {
                 });
             }
         } catch (Exception e) {
-            log.exception(e);
+            log.get().exception(e);
         }
     }
     private void bindOwn(View container, Item<RVARating> item) {
@@ -259,14 +259,14 @@ public class RatingRVA extends RVA<RVARating> {
             ((TextView) container.findViewById(R.id.position)).setText(item.data.getPosition());
             tryRegisterClickListener(container, R.id.own_apply, item.data);
         } catch (Exception e) {
-            log.exception(e);
+            log.get().exception(e);
         }
     }
     private void bindEmpty(View container) {
         try {
             ((TextView) container.findViewById(R.id.ntd_text)).setText(R.string.no_data);
         } catch (Exception e) {
-            log.exception(e);
+            log.get().exception(e);
         }
     }
     private void bindFailed(View container, Item<RVASingleValue> item) {
@@ -275,7 +275,7 @@ public class RatingRVA extends RVA<RVARating> {
                 ((TextView) container.findViewById(R.id.state_failed_compact_message)).setText(item.data.getValue());
             }
         } catch (Exception e) {
-            log.exception(e);
+            log.get().exception(e);
         }
     }
 }

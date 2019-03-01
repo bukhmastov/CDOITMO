@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
 
@@ -10,7 +10,9 @@
         android:layout_marginTop="@dimen/item_vertical_padding"
         android:layout_marginBottom="@dimen/item_vertical_padding"
         android:layout_marginStart="@dimen/item_horizontal_padding"
-        android:layout_marginEnd="@dimen/item_horizontal_padding"
+        android:layout_marginEnd="@dimen/item_horizontal_padding_half"
+        android:layout_alignParentStart="true"
+        android:layout_toStartOf="@+id/day_info"
         android:gravity="center_vertical"
         android:text="@string/lorem_ipsum"
         android:textAllCaps="true"
@@ -18,4 +20,19 @@
         android:textSize="@dimen/font_size_14"
         android:textStyle="normal|bold" />
 
-</FrameLayout>
+    <ImageButton
+        android:id="@+id/day_info"
+        style="@android:style/Widget.Material.ImageButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentEnd="true"
+        android:layout_marginStart="0dp"
+        android:layout_marginEnd="@dimen/item_padding_half"
+        android:paddingTop="@dimen/item_padding_half"
+        android:paddingBottom="@dimen/item_padding_half"
+        android:paddingStart="@dimen/item_padding_half"
+        android:paddingEnd="@dimen/item_padding_half"
+        android:background="?android:attr/selectableItemBackgroundBorderless"
+        android:src="@drawable/ic_help"/>
+
+</RelativeLayout>

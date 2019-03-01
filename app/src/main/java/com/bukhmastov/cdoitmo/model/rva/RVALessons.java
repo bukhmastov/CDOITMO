@@ -15,7 +15,10 @@ public class RVALessons extends JsonEntity {
     private SLesson lesson;
 
     @JsonProperty("weekday")
-    private int weekday;
+    private Integer weekday;
+
+    @JsonProperty("customDay")
+    private String customDay;
 
     @JsonProperty("teacher")
     private STeacher teacher;
@@ -31,10 +34,11 @@ public class RVALessons extends JsonEntity {
     }
 
     // lesson click
-    public RVALessons(SLesson lesson, int weekday) {
+    public RVALessons(SLesson lesson, Integer weekday, String customDay) {
         super();
         this.lesson = lesson;
         this.weekday = weekday;
+        this.customDay = customDay;
     }
 
     // teacher click
@@ -59,8 +63,12 @@ public class RVALessons extends JsonEntity {
         return lesson;
     }
 
-    public int getWeekday() {
+    public Integer getWeekday() {
         return weekday;
+    }
+
+    public String getCustomDay() {
+        return customDay;
     }
 
     public STeacher getTeacher() {
@@ -80,7 +88,8 @@ public class RVALessons extends JsonEntity {
         if (this == o) return true;
         if (!(o instanceof RVALessons)) return false;
         RVALessons that = (RVALessons) o;
-        return weekday == that.weekday &&
+        return Objects.equals(weekday, that.weekday) &&
+                Objects.equals(customDay, that.customDay) &&
                 parity == that.parity &&
                 Objects.equals(lesson, that.lesson) &&
                 Objects.equals(teacher, that.teacher) &&
@@ -89,7 +98,7 @@ public class RVALessons extends JsonEntity {
 
     @Override
     public int hashCode() {
-        return Objects.hash(lesson, weekday, teacher, parity, days);
+        return Objects.hash(lesson, weekday, customDay, teacher, parity, days);
     }
 
     @Override
@@ -97,6 +106,7 @@ public class RVALessons extends JsonEntity {
         return "RVALessons{" +
                 "lesson=" + lesson +
                 ", weekday=" + weekday +
+                ", customDay='" + customDay + '\'' +
                 ", teacher=" + teacher +
                 ", parity=" + parity +
                 ", days=" + days +

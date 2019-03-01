@@ -5,7 +5,7 @@ import android.os.Bundle;
 import android.view.View;
 
 import com.bukhmastov.cdoitmo.R;
-import com.bukhmastov.cdoitmo.adapter.PagerUniversityAdapter;
+import com.bukhmastov.cdoitmo.adapter.pager.PagerUniversityAdapter;
 import com.bukhmastov.cdoitmo.event.bus.EventBus;
 import com.bukhmastov.cdoitmo.event.bus.annotation.Event;
 import com.bukhmastov.cdoitmo.event.events.ClearCacheEvent;

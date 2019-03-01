@@ -11,8 +11,6 @@ public interface TeacherSearch {
 
     void search(String query, TeacherSearchCallback callback);
 
-    //void setQuery(String query);
-
     interface TeacherSearchCallback {
         void onState(@State int state);
         void onSuccess(STeachers teachers);

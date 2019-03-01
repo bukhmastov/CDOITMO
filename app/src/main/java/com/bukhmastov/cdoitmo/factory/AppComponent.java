@@ -30,23 +30,23 @@ import com.bukhmastov.cdoitmo.activity.search.ScheduleAttestationsSearchActivity
 import com.bukhmastov.cdoitmo.activity.search.ScheduleExamsSearchActivity;
 import com.bukhmastov.cdoitmo.activity.search.ScheduleLessonsSearchActivity;
 import com.bukhmastov.cdoitmo.activity.search.SearchActivity;
-import com.bukhmastov.cdoitmo.adapter.PagerExamsAdapter;
-import com.bukhmastov.cdoitmo.adapter.PagerLessonsAdapter;
-import com.bukhmastov.cdoitmo.adapter.PagerUniversityAdapter;
-import com.bukhmastov.cdoitmo.adapter.TeacherPickerAdapter;
+import com.bukhmastov.cdoitmo.adapter.pager.PagerExamsAdapter;
+import com.bukhmastov.cdoitmo.adapter.pager.PagerLessonsAdapter;
+import com.bukhmastov.cdoitmo.adapter.pager.PagerUniversityAdapter;
+import com.bukhmastov.cdoitmo.adapter.array.TeacherPickerAdapter;
 import com.bukhmastov.cdoitmo.adapter.rva.RVABase;
 import com.bukhmastov.cdoitmo.adapter.rva.RatingRVA;
 import com.bukhmastov.cdoitmo.adapter.rva.ScheduleAttestationsRVA;
 import com.bukhmastov.cdoitmo.adapter.rva.ScheduleExamsRVA;
 import com.bukhmastov.cdoitmo.adapter.rva.ScheduleLessonsRVA;
 import com.bukhmastov.cdoitmo.adapter.rva.ScholarshipPaidRVA;
-import com.bukhmastov.cdoitmo.adapter.rva.university.UniversityRVA;
+import com.bukhmastov.cdoitmo.adapter.rva.UniversityRVA;
 import com.bukhmastov.cdoitmo.builder.Room101ReviewBuilder;
-import com.bukhmastov.cdoitmo.dialog.BottomSheetDialog;
-import com.bukhmastov.cdoitmo.dialog.CacheClearDialog;
-import com.bukhmastov.cdoitmo.dialog.ColorPickerDialog;
-import com.bukhmastov.cdoitmo.dialog.Dialog;
-import com.bukhmastov.cdoitmo.dialog.ThemeDialog;
+import com.bukhmastov.cdoitmo.view.dialog.BottomSheetDialog;
+import com.bukhmastov.cdoitmo.view.dialog.CacheClearDialog;
+import com.bukhmastov.cdoitmo.view.dialog.ColorPickerDialog;
+import com.bukhmastov.cdoitmo.view.dialog.Dialog;
+import com.bukhmastov.cdoitmo.view.dialog.ThemeDialog;
 import com.bukhmastov.cdoitmo.event.bus.impl.EventBusImpl;
 import com.bukhmastov.cdoitmo.factory.module.ActivityPresenterModule;
 import com.bukhmastov.cdoitmo.factory.module.AppModule;
@@ -164,7 +164,6 @@ import com.bukhmastov.cdoitmo.object.schedule.impl.ScheduleExamsImpl;
 import com.bukhmastov.cdoitmo.object.schedule.impl.ScheduleLessonsHelperImpl;
 import com.bukhmastov.cdoitmo.object.schedule.impl.ScheduleLessonsImpl;
 import com.bukhmastov.cdoitmo.provider.InjectProvider;
-import com.bukhmastov.cdoitmo.provider.StorageProvider;
 import com.bukhmastov.cdoitmo.receiver.ShortcutReceiver;
 import com.bukhmastov.cdoitmo.util.impl.AccountImpl;
 import com.bukhmastov.cdoitmo.util.impl.AccountsImpl;
@@ -390,7 +389,6 @@ public interface AppComponent {
 
     // Providers
     void inject(InjectProvider injectProvider);
-    void inject(StorageProvider storageProvider);
 
     // Converters and Parsers
     void inject(ConverterBase converter);

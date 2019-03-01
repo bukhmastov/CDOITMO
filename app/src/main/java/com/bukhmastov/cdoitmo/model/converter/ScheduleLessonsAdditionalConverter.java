@@ -14,6 +14,8 @@ import com.bukhmastov.cdoitmo.util.singleton.CollectionUtils;
 import com.bukhmastov.cdoitmo.util.singleton.StringUtils;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
 
 public class ScheduleLessonsAdditionalConverter extends Converter<SLessons, SLessons> {
@@ -35,7 +37,7 @@ public class ScheduleLessonsAdditionalConverter extends Converter<SLessons, SLes
             if (lessonsReduced != null && CollectionUtils.isNotEmpty(lessonsReduced.getSchedule())) {
                 for (SDay day : entity.getSchedule()) {
                     for (SLesson lesson : day.getLessons()) {
-                        applyReducedIfNeeded(lesson, day.getWeekday(), lessonsReduced);
+                        applyReducedIfNeeded(lesson, day.getWeekday(), day.getTitle(), lessonsReduced);
                     }
                 }
             }
@@ -46,7 +48,7 @@ public class ScheduleLessonsAdditionalConverter extends Converter<SLessons, SLes
                 ArrayList<SDay> days = entity.getSchedule();
                 for (SDay day : lessonsAdded.getSchedule()) {
                     for (SLesson lesson : day.getLessons()) {
-                        putLessonToDay(days, day.getWeekday(), lesson);
+                        putLessonToDay(days, day.getWeekday(), day.getTitle(), lesson);
                     }
                 }
             }
@@ -59,27 +61,27 @@ public class ScheduleLessonsAdditionalConverter extends Converter<SLessons, SLes
         return FirebasePerformanceProvider.Trace.Convert.Schedule.ADDITIONAL;
     }
 
-    private void putLessonToDay(ArrayList<SDay> days, int weekday, SLesson lesson) {
+    private void putLessonToDay(List<SDay> days, Integer weekday, String customDay, SLesson lesson) {
         for (SDay day : days) {
-            if (day.getWeekday() == weekday) {
-                day.getLessons().add(lesson);
+            if (day.isMatched(weekday, customDay)) {
+                day.addLesson(lesson);
                 return;
             }
         }
-        SDay day = new SDay();
-        day.setWeekday(weekday);
-        day.setLessons(new ArrayList<>());
-        day.getLessons().add(lesson);
-        days.add(day);
+        if (weekday != null) {
+            days.add(new SDay(weekday, lesson));
+        } else {
+            days.add(new SDay(customDay, lesson));
+        }
     }
 
-    private void applyReducedIfNeeded(SLesson lesson, int weekday, SLessonsReduced lessonsReduced) throws Throwable {
+    private void applyReducedIfNeeded(SLesson lesson, Integer weekday, String customDay, SLessonsReduced lessonsReduced) throws Throwable {
         if (Objects.equals(lesson.getCdoitmoType(), "synthetic")) {
             return;
         }
         String lessonHash = scheduleLessonsHelper.get().getLessonHash(lesson);
         for (SDayReduced dayReduced : lessonsReduced.getSchedule()) {
-            if (dayReduced.getWeekday() != weekday) {
+            if (!dayReduced.isMatched(weekday, customDay)) {
                 continue;
             }
             for (String hash : dayReduced.getLessons()) {

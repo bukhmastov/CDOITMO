@@ -102,7 +102,7 @@ public class ScheduleAttestationsRVA extends RVA<RVAAttestations> {
             tryRegisterClickListener(container, R.id.schedule_lessons_menu, null);
             tryRegisterClickListener(container, R.id.schedule_lessons_share, new RVAAttestations(subjects));
         } catch (Exception e) {
-            log.exception(e);
+            log.get().exception(e);
         }
     }
     private void bindSubject(View container, Item<RVADualValue> item) {
@@ -110,7 +110,7 @@ public class ScheduleAttestationsRVA extends RVA<RVAAttestations> {
             ((TextView) container.findViewById(R.id.title)).setText(item.data.getFirst());
             ((TextView) container.findViewById(R.id.desc)).setText(item.data.getSecond());
         } catch (Exception e) {
-            log.exception(e);
+            log.get().exception(e);
         }
     }
     private void bindAttestation(View container, Item<SAttestation> item) {
@@ -118,21 +118,21 @@ public class ScheduleAttestationsRVA extends RVA<RVAAttestations> {
             ((TextView) container.findViewById(R.id.name)).setText(item.data.getName());
             ((TextView) container.findViewById(R.id.desc)).setText(item.data.getWeek());
         } catch (Exception e) {
-            log.exception(e);
+            log.get().exception(e);
         }
     }
     private void bindUpdateTime(View container, Item<RVASingleValue> item) {
         try {
             ((TextView) container.findViewById(R.id.update_time)).setText(StringUtils.isNotBlank(item.data.getValue()) ? item.data.getValue() : Static.GLITCH);
         } catch (Exception e) {
-            log.exception(e);
+            log.get().exception(e);
         }
     }
     private void bindNoAttestations(View container) {
         try {
             ((TextView) container.findViewById(R.id.ntd_text)).setText(R.string.no_attestations);
         } catch (Exception e) {
-            log.exception(e);
+            log.get().exception(e);
         }
     }
 
@@ -173,7 +173,7 @@ public class ScheduleAttestationsRVA extends RVA<RVAAttestations> {
                 dataset.add(new Item<>(TYPE_UPDATE_TIME, new RVASingleValue(context.getString(R.string.update_date) + " " + time.getUpdateTime(context, schedule.getTimestamp()))));
             }
         } catch (Exception e) {
-            log.exception(e);
+            log.get().exception(e);
         }
         return dataset;
     }

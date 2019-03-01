@@ -13,7 +13,7 @@ import android.widget.RadioGroup;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activity.ConnectedActivity;
-import com.bukhmastov.cdoitmo.adapter.TeacherPickerAdapter;
+import com.bukhmastov.cdoitmo.adapter.array.TeacherPickerAdapter;
 import com.bukhmastov.cdoitmo.function.Consumer;
 import com.bukhmastov.cdoitmo.model.entity.SettingsQuery;
 import com.bukhmastov.cdoitmo.model.schedule.ScheduleJsonEntity;

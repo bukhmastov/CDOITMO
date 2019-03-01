@@ -13,6 +13,7 @@ import com.bukhmastov.cdoitmo.util.singleton.StringUtils;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -54,11 +55,12 @@ public class TimeRemainingWidgetImpl implements TimeRemainingWidget {
         private final Delegate delegate;
         private final SLessons schedule;
         private final long delay = 1000;
-        private ArrayList<SLesson> lessons;
+        private List<SLesson> lessons;
         private boolean running;
         private boolean firstInit;
         private int week = -1;
         private int weekday = -1;
+        private String customDay = null;
 
         Executor(SLessons schedule, Delegate delegate){
             log.i(TAG, "started");
@@ -79,9 +81,10 @@ public class TimeRemainingWidgetImpl implements TimeRemainingWidget {
                         firstInit = false;
                         week = time.getWeek(context) % 2;
                         weekday = time.getWeekDay();
+                        customDay = time.getScheduleCustomDayRaw(time.getCalendar());
                         lessons.clear();
                         for (SDay day : schedule.getSchedule()) {
-                            if (day.getWeekday() != weekday) {
+                            if (!day.isMatched(weekday, customDay)) {
                                 continue;
                             }
                             lessons.addAll(day.getLessons());

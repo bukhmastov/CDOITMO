@@ -171,6 +171,15 @@
         <item>ifmo</item>
     </string-array>
 
+    <string-array name="lesson_date_type_titles">
+        <item>@string/lesson_day_type_regular</item>
+        <item>@string/lesson_day_type_date</item>
+    </string-array>
+    <string-array name="lesson_date_type_values" translatable="false">
+        <item>regular</item>
+        <item>date</item>
+    </string-array>
+
     <string-array name="week_types_titles">
         <item>@string/week_both</item>
         <item>@string/week_even</item>

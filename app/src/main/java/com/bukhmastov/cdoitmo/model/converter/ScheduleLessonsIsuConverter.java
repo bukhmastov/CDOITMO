@@ -16,7 +16,10 @@ import com.bukhmastov.cdoitmo.util.singleton.CollectionUtils;
 import com.bukhmastov.cdoitmo.util.singleton.StringUtils;
 
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.List;
 import java.util.Objects;
+import java.util.regex.Pattern;
 
 import androidx.annotation.NonNull;
 
@@ -24,6 +27,7 @@ public class ScheduleLessonsIsuConverter extends Converter<ISUScheduleApiRespons
 
     private String type = null;
     private String title = null;
+    private static final Pattern SCHEDULE_CUSTOM_DAY_PATTERN = Pattern.compile("\\d{2}\\.\\d{2}\\.\\d{4}");
 
     public ScheduleLessonsIsuConverter(@NonNull ISUScheduleApiResponse entity) {
         super(entity);
@@ -48,13 +52,16 @@ public class ScheduleLessonsIsuConverter extends Converter<ISUScheduleApiRespons
                         title = group;
                     }
                     for (ISUSchedule isuSchedule : CollectionUtils.emptyIfNull(isuGroup.getSchedule())) {
-                        int weekday = isuSchedule.getWeekday() - 1;
-                        if (weekday < 0) {
-                            weekday += 8;
+                        Integer weekday = isuSchedule.getWeekday();
+                        if (weekday != null) {
+                            weekday -= 1;
+                            if (weekday < 0 || weekday > 6) {
+                                weekday = null;
+                            }
                         }
                         for (ISULesson isuLesson : CollectionUtils.emptyIfNull(isuSchedule.getLessons())) {
                             SLesson lesson = convertLesson(isuLesson, group);
-                            putLessonToDay(days, weekday, lesson);
+                            putLessonToDay(days, weekday, lesson, isuLesson);
                         }
                     }
                 }
@@ -122,20 +129,31 @@ public class ScheduleLessonsIsuConverter extends Converter<ISUScheduleApiRespons
         return lesson;
     }
 
-    private void putLessonToDay(ArrayList<SDay> days, int weekday, SLesson lesson) {
+    private void putLessonToDay(List<SDay> days, Integer weekday, SLesson lesson, ISULesson isuLesson) {
+        // ISU api provides no info about custom date, although not surprising
+        // date_start always null, but maybe someday it wouldn't...
+        String customDay = StringUtils.emptyIfNull(isuLesson.getDateStart());
+        if (StringUtils.isNotBlank(customDay) && SCHEDULE_CUSTOM_DAY_PATTERN.matcher(customDay).matches()) {
+            String[] parts = customDay.split("\\.");
+            if (parts.length == 3) {
+                Calendar calendar = time.get().getCalendar();
+                calendar.set(Calendar.DAY_OF_MONTH, Integer.parseInt(parts[0]));
+                calendar.set(Calendar.MONTH, Integer.parseInt(parts[1]));
+                calendar.set(Calendar.YEAR, Integer.parseInt(parts[2]));
+                customDay = time.get().getScheduleCustomDayRaw(calendar);
+            }
+        }
         for (SDay day : days) {
-            if (day.getWeekday() == weekday) {
-                day.getLessons().add(lesson);
+            if (day.isMatched(weekday, customDay)) {
+                day.addLesson(lesson);
                 return;
             }
         }
-        SDay day = new SDay();
-        day.setWeekday(weekday);
-        day.setType(weekday < 7 ? "unknown" : "date");
-        day.setTitle(weekday < 7 ? "" : ""); // FIXME obtain day title from isu api
-        day.setLessons(new ArrayList<>());
-        day.getLessons().add(lesson);
-        days.add(day);
+        if (weekday != null) {
+            days.add(new SDay(weekday, lesson));
+        } else {
+            days.add(new SDay(customDay, lesson));
+        }
     }
 
     private String trim(String value) {
@@ -144,7 +162,7 @@ public class ScheduleLessonsIsuConverter extends Converter<ISUScheduleApiRespons
         }
         value = StringUtils.removeHtmlTags(value);
         value = StringUtils.escapeString(value);
-        if (".".equals(value) || ",".equals(value)) {
+        if (".".equals(value) || ",".equals(value) || "-".equals(value)) {
             value = "";
         }
         return value;

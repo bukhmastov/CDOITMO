@@ -1,5 +1,6 @@
 package com.bukhmastov.cdoitmo.fragment.presenter.impl;
 
+import android.app.DatePickerDialog;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -13,7 +14,7 @@ import android.widget.Spinner;
 import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
-import com.bukhmastov.cdoitmo.adapter.TeacherPickerAdapter;
+import com.bukhmastov.cdoitmo.adapter.array.TeacherPickerAdapter;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.fragment.presenter.ScheduleLessonsModifyFragmentPresenter;
 import com.bukhmastov.cdoitmo.fragment.presenter.ScheduleLessonsTabHostFragmentPresenter;
@@ -50,7 +51,10 @@ public class ScheduleLessonsModifyFragmentPresenterImpl extends ConnectedFragmen
 
     private static final String TAG = "SLModifyFragment";
     private @TYPE String type;
+    private Integer weekdayOriginal;
+    private String customDayOriginal;
     private Integer weekday;
+    private String customDay;
     private boolean blockTimeStart = false;
     private boolean blockTimeEnd = false;
     private boolean blockNextTeacherSearch = false;
@@ -119,7 +123,10 @@ public class ScheduleLessonsModifyFragmentPresenterImpl extends ConnectedFragmen
         String query = getStringExtra(fragment.extras(), "query", true);
         String lessonType = getStringExtra(fragment.extras(), "type", true);
         String title = getStringExtra(fragment.extras(), "title", true);
-        weekday = getIntExtra(fragment.extras(), "weekday", true);
+        weekday = getIntegerExtra(fragment.extras(), "weekday", true);
+        weekdayOriginal = weekday;
+        customDay = getStringExtra(fragment.extras(), "custom_day", true);
+        customDayOriginal = customDay;
 
         switch (StringUtils.defaultIfNull(lesson.getType(), "")) {
             case "practice": lesson.setType(activity.getString(R.string.practice)); break;
@@ -132,8 +139,7 @@ public class ScheduleLessonsModifyFragmentPresenterImpl extends ConnectedFragmen
             initHeader(time.getWeek(activity), title, lessonType);
             initTextField(R.id.lesson_title, lesson::getSubject, lesson::setSubject);
             initTime(lesson);
-            initWeek(lesson);
-            initDayOfWeek();
+            initDay(lesson);
             initAutoCompleteTextField(R.id.lesson_type, lesson::getType, lesson::setType, ArrayAdapter.createFromResource(activity, R.array.lessons_types, R.layout.spinner_simple_padding));
             initTextField(R.id.lesson_group, lesson::getGroup, lesson::setGroup);
             initTeacher(lesson);
@@ -343,34 +349,100 @@ public class ScheduleLessonsModifyFragmentPresenterImpl extends ConnectedFragmen
         });
     }
 
-    private void initWeek(SLesson lesson) {
-        Spinner lessonWeek = fragment.container().findViewById(R.id.lesson_week);
-        ArrayAdapter<?> lessonWeekAdapter = ArrayAdapter.createFromResource(activity, R.array.week_types_titles, R.layout.spinner_simple);
-        lessonWeekAdapter.setDropDownViewResource(R.layout.spinner_center);
-        lessonWeek.setAdapter(lessonWeekAdapter);
-        lessonWeek.setSelection((lesson.getParity() + 1) % 3);
-        lessonWeek.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+    private void initDay(SLesson lesson) {
+        Spinner lessonDateType = fragment.container().findViewById(R.id.lesson_date_type);
+        ArrayAdapter<?> lessonDateTypeAdapter = ArrayAdapter.createFromResource(activity, R.array.lesson_date_type_titles, R.layout.spinner_simple);
+        String[] typeValues = activity.getResources().getStringArray(R.array.lesson_date_type_values);
+        lessonDateTypeAdapter.setDropDownViewResource(R.layout.spinner_center);
+        lessonDateType.setAdapter(lessonDateTypeAdapter);
+        lessonDateType.setSelection(weekday != null ? 0 : 1);
+        lessonDateType.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long selectedId) {
+                toggleDay(lesson, typeValues[position]);
+            }
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {}
+        });
+        toggleDay(lesson, typeValues[weekday != null ? 0 : 1]);
+    }
+
+    private void toggleDay(SLesson lesson, String type) {
+        if ("regular".equals(type)) {
+            initDayRegular(lesson);
+        } else {
+            initDayDate();
+        }
+    }
+
+    private void initDayRegular(SLesson lesson) {
+
+        if (weekday == null) {
+            weekday = 0;
+        }
+        customDay = null;
+
+        fragment.container().findViewById(R.id.lesson_date_type_regular).setVisibility(View.VISIBLE);
+        fragment.container().findViewById(R.id.lesson_date_type_day).setVisibility(View.GONE);
+
+        Spinner paritySpinner = fragment.container().findViewById(R.id.lesson_week);
+        ArrayAdapter<?> parityAdapter = ArrayAdapter.createFromResource(activity, R.array.week_types_titles, R.layout.spinner_simple);
+        parityAdapter.setDropDownViewResource(R.layout.spinner_center);
+        paritySpinner.setAdapter(parityAdapter);
+        paritySpinner.setSelection((lesson.getParity() + 1) % 3);
+        paritySpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             public void onItemSelected(AdapterView<?> parent, View item, int position, long selectedId) {
                 String[] week_types_values = activity.getResources().getStringArray(R.array.week_types_values);
                 lesson.setParity(Integer.parseInt(week_types_values[position]));
             }
             public void onNothingSelected(AdapterView<?> parent) {}
         });
-    }
 
-    private void initDayOfWeek() {
-        String[] weekTypesValues = activity.getResources().getStringArray(R.array.days_of_week_values);
-        Spinner lessonDayOfWeek = fragment.container().findViewById(R.id.lesson_day_of_week);
-        ArrayAdapter<?> lesson_day_of_week_adapter = ArrayAdapter.createFromResource(activity, R.array.days_of_week_titles, R.layout.spinner_simple);
-        lesson_day_of_week_adapter.setDropDownViewResource(R.layout.spinner_center);
-        lessonDayOfWeek.setAdapter(lesson_day_of_week_adapter);
-        lessonDayOfWeek.setSelection(weekday < weekTypesValues.length ? weekday : 0);
-        lessonDayOfWeek.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+        String[] weekdayValues = activity.getResources().getStringArray(R.array.days_of_week_values);
+        Spinner weekdaySpinner = fragment.container().findViewById(R.id.lesson_day_of_week);
+        ArrayAdapter<?> weekdayAdapter = ArrayAdapter.createFromResource(activity, R.array.days_of_week_titles, R.layout.spinner_simple);
+        weekdayAdapter.setDropDownViewResource(R.layout.spinner_center);
+        weekdaySpinner.setAdapter(weekdayAdapter);
+        weekdaySpinner.setSelection(weekday < weekdayValues.length ? weekday : 0);
+        weekdaySpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             public void onItemSelected(AdapterView<?> parent, View item, int position, long selectedId) {
-                weekday = Integer.parseInt(weekTypesValues[position]);
+                weekday = Integer.parseInt(weekdayValues[position]);
             }
             public void onNothingSelected(AdapterView<?> parent) {}
         });
+    }
+
+    private void initDayDate() {
+
+        if (customDay == null) {
+            customDay = "";
+        }
+        weekday = null;
+
+        fragment.container().findViewById(R.id.lesson_date_type_day).setVisibility(View.VISIBLE);
+        fragment.container().findViewById(R.id.lesson_date_type_regular).setVisibility(View.GONE);
+
+        TextView lessonDateDay = fragment.container().findViewById(R.id.lesson_date_day);
+        lessonDateDay.setOnClickListener(v -> {
+            Calendar c = time.getCalendar();
+            int d = c.get(Calendar.DAY_OF_MONTH);
+            int m = c.get(Calendar.MONTH);
+            int y = c.get(Calendar.YEAR);
+            new DatePickerDialog(activity, (view, year, month, dayOfMonth) -> {
+                Calendar calendar = time.getCalendar();
+                calendar.set(Calendar.YEAR, year);
+                calendar.set(Calendar.MONTH, month);
+                calendar.set(Calendar.DAY_OF_MONTH, dayOfMonth);
+                customDay = time.getScheduleCustomDayRaw(calendar);
+                String customDayTitle = time.getScheduleCustomDayTitle(activity, customDay);
+                lessonDateDay.setText(customDayTitle);
+            }, y, m, d).show();
+        });
+        if (StringUtils.isNotBlank(customDay)) {
+            lessonDateDay.setText(time.getScheduleCustomDayTitle(activity, customDay));
+        } else {
+            lessonDateDay.setText(R.string.date_of_lesson_undefined);
+        }
     }
 
     private void initTeacher(SLesson lesson) {
@@ -468,6 +540,14 @@ public class ScheduleLessonsModifyFragmentPresenterImpl extends ConnectedFragmen
                     notificationMessage.snackBar(activity, activity.getString(R.string.lesson_time_start_required));
                     return;
                 }
+                if (weekday == null && StringUtils.isBlank(customDay)) {
+                    log.v(TAG, "weekday and customDay are null");
+                    notificationMessage.snackBar(activity, activity.getString(R.string.lesson_date_required));
+                    return;
+                }
+                if (weekday == null) {
+                    lesson.setParity(2);
+                }
                 if (StringUtils.isNotBlank(lesson.getType())) {
                     if (lesson.getType().toLowerCase().equals(activity.getString(R.string.lecture).toLowerCase())) lesson.setType("lecture");
                     if (lesson.getType().toLowerCase().equals(activity.getString(R.string.practice).toLowerCase())) lesson.setType("practice");
@@ -476,7 +556,7 @@ public class ScheduleLessonsModifyFragmentPresenterImpl extends ConnectedFragmen
                 }
                 switch (type) {
                     case CREATE: {
-                        if (scheduleLessonsHelper.createLesson(query, weekday, lesson, null)) {
+                        if (scheduleLessonsHelper.createLesson(query, weekday, customDay, lesson, null)) {
                             thread.runOnUI(SLM, () -> {
                                 tabHostPresenter.invalidateOnDemand();
                                 fragment.close();
@@ -488,8 +568,8 @@ public class ScheduleLessonsModifyFragmentPresenterImpl extends ConnectedFragmen
                         break;
                     }
                     case EDIT: {
-                        if (scheduleLessonsHelper.deleteLesson(query, weekday, lessonOriginal, null) &&
-                                scheduleLessonsHelper.createLesson(query, weekday, lesson, null)) {
+                        if (scheduleLessonsHelper.deleteLesson(query, weekdayOriginal, customDayOriginal, lessonOriginal, null) &&
+                                scheduleLessonsHelper.createLesson(query, weekday, customDay, lesson, null)) {
                             thread.runOnUI(SLM, () -> {
                                 tabHostPresenter.invalidateOnDemand();
                                 fragment.close();
@@ -511,16 +591,7 @@ public class ScheduleLessonsModifyFragmentPresenterImpl extends ConnectedFragmen
     
     private String getStringExtra(Bundle extras, String key, boolean strict) throws Exception {
         if (extras.containsKey(key)) {
-            String value = extras.getString(key);
-            if (value != null) {
-                return value;
-            } else {
-                if (strict) {
-                    throw new Exception("Missed extra for key: " + key);
-                } else {
-                    return "";
-                }
-            }
+            return extras.getString(key);
         } else {
             if (strict) {
                 throw new Exception("Missed extra for key: " + key);
@@ -530,14 +601,25 @@ public class ScheduleLessonsModifyFragmentPresenterImpl extends ConnectedFragmen
         }
     }
     
-    private int getIntExtra(Bundle extras, String key, boolean strict) throws Exception {
+    private Integer getIntegerExtra(Bundle extras, String key, boolean strict) throws Exception {
         if (extras.containsKey(key)) {
-            return extras.getInt(key);
+            Serializable object = extras.getSerializable(key);
+            if (object == null) {
+                return null;
+            }
+            if (object instanceof Integer) {
+                return (Integer) object;
+            }
+            if (strict) {
+                throw new Exception("Missed extra for key: " + key);
+            } else {
+                return null;
+            }
         } else {
             if (strict) {
                 throw new Exception("Missed extra for key: " + key);
             } else {
-                return 0;
+                return null;
             }
         }
     }

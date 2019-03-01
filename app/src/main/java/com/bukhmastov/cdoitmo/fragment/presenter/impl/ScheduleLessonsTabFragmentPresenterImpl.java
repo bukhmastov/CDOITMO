@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.util.SparseArray;
 import android.view.InflateException;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -52,6 +53,7 @@ import com.bukhmastov.cdoitmo.util.singleton.StringUtils;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
+import java.util.Objects;
 import java.util.TreeSet;
 
 import javax.inject.Inject;
@@ -258,6 +260,7 @@ public class ScheduleLessonsTabFragmentPresenterImpl implements Schedule.Handler
             adapter.setClickListener(R.id.schedule_lessons_create, ScheduleLessonsTabFragmentPresenterImpl.this::lessonsMenuCreate);
             adapter.setClickListener(R.id.lesson_touch_icon, ScheduleLessonsTabFragmentPresenterImpl.this::lessonMenu);
             adapter.setClickListener(R.id.teacher_picker_item, ScheduleLessonsTabFragmentPresenterImpl.this::teacherSelected);
+            adapter.setClickListener(R.id.day_info, ScheduleLessonsTabFragmentPresenterImpl.this::dayInfoClicked);
             thread.runOnUI(SL, () -> {
                 draw(activity, R.layout.layout_schedule_both_recycle_list);
                 // prepare
@@ -299,14 +302,37 @@ public class ScheduleLessonsTabFragmentPresenterImpl implements Schedule.Handler
                     layoutManager.scrollToPositionWithOffset(scroll.position, scroll.offset);
                 } else if (storagePref.get(activity, "pref_schedule_lessons_scroll_to_day", true)) {
                     int position = -1;
-                    switch (time.getCalendar().get(Calendar.DAY_OF_WEEK)) {
-                        case Calendar.MONDAY: position = adapter.getDayPosition(0); if (position >= 0) break;
-                        case Calendar.TUESDAY: position = adapter.getDayPosition(1); if (position >= 0) break;
-                        case Calendar.WEDNESDAY: position = adapter.getDayPosition(2); if (position >= 0) break;
-                        case Calendar.THURSDAY: position = adapter.getDayPosition(3); if (position >= 0) break;
-                        case Calendar.FRIDAY: position = adapter.getDayPosition(4); if (position >= 0) break;
-                        case Calendar.SATURDAY: position = adapter.getDayPosition(5); if (position >= 0) break;
-                        case Calendar.SUNDAY: position = adapter.getDayPosition(6); if (position >= 0) break;
+                    Calendar today = time.getCalendar();
+                    int weekdayToday = today.get(Calendar.DAY_OF_WEEK);
+                    switch (weekdayToday) {
+                        case Calendar.MONDAY: {
+                            position = getRvaNearestScrollPosition(adapter, 0, today, Calendar.MONDAY);
+                            if (position >= 0) break;
+                        }
+                        case Calendar.TUESDAY: {
+                            position = getRvaNearestScrollPosition(adapter, 1, today, Calendar.TUESDAY);
+                            if (position >= 0) break;
+                        }
+                        case Calendar.WEDNESDAY: {
+                            position = getRvaNearestScrollPosition(adapter, 2, today, Calendar.WEDNESDAY);
+                            if (position >= 0) break;
+                        }
+                        case Calendar.THURSDAY: {
+                            position = getRvaNearestScrollPosition(adapter, 3, today, Calendar.THURSDAY);
+                            if (position >= 0) break;
+                        }
+                        case Calendar.FRIDAY: {
+                            position = getRvaNearestScrollPosition(adapter, 4, today, Calendar.FRIDAY);
+                            if (position >= 0) break;
+                        }
+                        case Calendar.SATURDAY: {
+                            position = getRvaNearestScrollPosition(adapter, 5, today, Calendar.SATURDAY);
+                            if (position >= 0) break;
+                        }
+                        case Calendar.SUNDAY: {
+                            position = getRvaNearestScrollPosition(adapter, 6, today, Calendar.SUNDAY);
+                            if (position >= 0) break;
+                        }
                     }
                     if (position >= 0) {
                         layoutManager.scrollToPosition(position);
@@ -409,6 +435,14 @@ public class ScheduleLessonsTabFragmentPresenterImpl implements Schedule.Handler
         }
     }
 
+    private int getRvaNearestScrollPosition(ScheduleLessonsRVA adapter, int weekday, Calendar today, int weekdayCompare) {
+        int position = adapter.getWeekdayPosition(weekday);
+        if (position < 0 && today.get(Calendar.DAY_OF_WEEK) == weekdayCompare) {
+            position = adapter.getCustomDayPosition(time.getScheduleCustomDayRaw(today));
+        }
+        return position;
+    }
+
     private void draw(View view) {
         thread.runOnUI(SL, () -> {
             ViewGroup vg = container.findViewById(R.id.container);
@@ -484,6 +518,7 @@ public class ScheduleLessonsTabFragmentPresenterImpl implements Schedule.Handler
                 notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
                 return;
             }
+            SparseArray<String> customDaysMap = new SparseArray<>();
             PopupMenu popup = new PopupMenu(activity, view);
             popup.inflate(R.menu.schedule_lessons_common_share);
             if (CollectionUtils.isEmpty(entity.getDays())) {
@@ -491,21 +526,32 @@ public class ScheduleLessonsTabFragmentPresenterImpl implements Schedule.Handler
             } else {
                 Menu subMenu = popup.getMenu().findItem(R.id.share_daily_schedule).getSubMenu();
                 for (SDay day : entity.getDays()) {
-                    subMenu.add(Menu.NONE, getDayResID(day.getWeekday()), day.getWeekday(), getDayTitle(day));
+                    int id = getDayResID(day.getWeekday());
+                    Integer weekday = day.getWeekday();
+                    String title = getDayTitle(day);
+                    if (weekday == null) {
+                        customDaysMap.append(id, day.getTitle());
+                    }
+                    subMenu.add(Menu.NONE, id, weekday != null ? weekday : Menu.NONE, title);
                 }
             }
             popup.setOnMenuItemClickListener(menuItem -> {
                 thread.run(SL, () -> {
                     switch (menuItem.getItemId()) {
                         case R.id.share_all_schedule: shareSchedule(entity.getDays()); break;
-                        case R.id.monday: shareSchedule(entity.getDays(), 0); break;
-                        case R.id.tuesday: shareSchedule(entity.getDays(), 1); break;
-                        case R.id.wednesday: shareSchedule(entity.getDays(), 2); break;
-                        case R.id.thursday: shareSchedule(entity.getDays(), 3); break;
-                        case R.id.friday: shareSchedule(entity.getDays(), 4); break;
-                        case R.id.saturday: shareSchedule(entity.getDays(), 5); break;
-                        case R.id.sunday: shareSchedule(entity.getDays(), 6); break;
+                        case R.id.share_daily_schedule: break;
                         case R.id.share_changes: shareChanges(); break;
+                        case R.id.monday: shareSchedule(entity.getDays(), 0, null); break;
+                        case R.id.tuesday: shareSchedule(entity.getDays(), 1, null); break;
+                        case R.id.wednesday: shareSchedule(entity.getDays(), 2, null); break;
+                        case R.id.thursday: shareSchedule(entity.getDays(), 3, null); break;
+                        case R.id.friday: shareSchedule(entity.getDays(), 4, null); break;
+                        case R.id.saturday: shareSchedule(entity.getDays(), 5, null); break;
+                        case R.id.sunday: shareSchedule(entity.getDays(), 6, null); break;
+                        default:
+                            String customDay = customDaysMap.get(menuItem.getItemId());
+                            shareSchedule(entity.getDays(), null, customDay);
+                            break;
                     }
                 }, throwable -> {
                     log.exception(throwable);
@@ -603,7 +649,7 @@ public class ScheduleLessonsTabFragmentPresenterImpl implements Schedule.Handler
         }
         SLesson lesson = new SLesson();
         lesson.setParity(parity);
-        if (!scheduleLessonsHelper.createLesson(schedule.getQuery(), schedule.getTitle(), schedule.getType(), time.getWeekDay(), lesson, extras -> {
+        if (!scheduleLessonsHelper.createLesson(schedule.getQuery(), schedule.getTitle(), schedule.getType(), time.getWeekDay(), null, lesson, extras -> {
             thread.runOnUI(SL, () -> {
                 activity.openActivityOrFragment(ScheduleLessonsModifyFragment.class, extras);
             });
@@ -618,13 +664,13 @@ public class ScheduleLessonsTabFragmentPresenterImpl implements Schedule.Handler
             notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
             return;
         }
-        scheduleLessonsHelper.createLesson(schedule.getQuery(), dayOfWeek, makeLesson("Утренний осмотр, строевая подготовка", "Военка", 2, "9:05", "9:20"), null);
-        scheduleLessonsHelper.createLesson(schedule.getQuery(), dayOfWeek, makeLesson("1 пара", "Военка", 2, "9:30", "10:50"), null);
-        scheduleLessonsHelper.createLesson(schedule.getQuery(), dayOfWeek, makeLesson("2 пара", "Военка", 2, "11:00", "12:20"), null);
-        scheduleLessonsHelper.createLesson(schedule.getQuery(), dayOfWeek, makeLesson("3 пара", "Военка", 2, "12:30", "13:50"), null);
-        scheduleLessonsHelper.createLesson(schedule.getQuery(), dayOfWeek, makeLesson("4 пара", "Военка", 2, "14:50", "16:10"), null);
-        scheduleLessonsHelper.createLesson(schedule.getQuery(), dayOfWeek, makeLesson("Строевая подготовка", "Военка", 2, "16:20", "16:35"), null);
-        scheduleLessonsHelper.createLesson(schedule.getQuery(), dayOfWeek, makeLesson("Кураторский час", "Военка", 2, "16:45", "17:30"), null);
+        scheduleLessonsHelper.createLesson(schedule.getQuery(), dayOfWeek, null, makeLesson("Утренний осмотр, строевая подготовка", "Военка", 2, "9:05", "9:20"), null);
+        scheduleLessonsHelper.createLesson(schedule.getQuery(), dayOfWeek, null, makeLesson("1 пара", "Военка", 2, "9:30", "10:50"), null);
+        scheduleLessonsHelper.createLesson(schedule.getQuery(), dayOfWeek, null, makeLesson("2 пара", "Военка", 2, "11:00", "12:20"), null);
+        scheduleLessonsHelper.createLesson(schedule.getQuery(), dayOfWeek, null, makeLesson("3 пара", "Военка", 2, "12:30", "13:50"), null);
+        scheduleLessonsHelper.createLesson(schedule.getQuery(), dayOfWeek, null, makeLesson("4 пара", "Военка", 2, "14:50", "16:10"), null);
+        scheduleLessonsHelper.createLesson(schedule.getQuery(), dayOfWeek, null, makeLesson("Строевая подготовка", "Военка", 2, "16:20", "16:35"), null);
+        scheduleLessonsHelper.createLesson(schedule.getQuery(), dayOfWeek, null, makeLesson("Кураторский час", "Военка", 2, "16:45", "17:30"), null);
         tabHostPresenter.invalidateOnDemand();
     }
 
@@ -650,15 +696,19 @@ public class ScheduleLessonsTabFragmentPresenterImpl implements Schedule.Handler
         eventBus.fire(new ShareTextEvent(sb.toString().trim(), "txt_slessons_all"));
     }
 
-    private void shareSchedule(ArrayList<SDay> days, int weekday) {
+    private void shareSchedule(ArrayList<SDay> days, Integer weekday, String customDay) {
         thread.assertNotUI();
-        if (schedule == null || CollectionUtils.isEmpty(days) || weekday < 0 || weekday > 6) {
+        if (schedule == null || CollectionUtils.isEmpty(days)) {
+            notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
+            return;
+        }
+        if (weekday == null && customDay == null) {
             notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
             return;
         }
         SDay day = null;
         for (SDay d : days) {
-            if (d.getWeekday() == weekday) {
+            if (d.isMatched(weekday, customDay)) {
                 day = d;
                 break;
             }
@@ -741,11 +791,13 @@ public class ScheduleLessonsTabFragmentPresenterImpl implements Schedule.Handler
             String desc = getLessonDesc(lesson, scheduleType);
             String meta = getLessonMeta(lesson, scheduleType);
             String lessonType = lesson.getType();
-            switch (lessonType) {
-                case "practice": lessonType = activity.getString(R.string.practice); break;
-                case "lecture": lessonType = activity.getString(R.string.lecture); break;
-                case "lab": lessonType = activity.getString(R.string.lab); break;
-                case "iws": lessonType = activity.getString(R.string.iws); break;
+            if (StringUtils.isNotBlank(lessonType)) {
+                switch (lessonType) {
+                    case "practice": lessonType = activity.getString(R.string.practice); break;
+                    case "lecture": lessonType = activity.getString(R.string.lecture); break;
+                    case "lab": lessonType = activity.getString(R.string.lab); break;
+                    case "iws": lessonType = activity.getString(R.string.iws); break;
+                }
             }
             sb.append(StringUtils.isNotBlank(lesson.getTimeStart()) ? lesson.getTimeStart() : "∞");
             sb.append("-");
@@ -812,7 +864,8 @@ public class ScheduleLessonsTabFragmentPresenterImpl implements Schedule.Handler
                 return;
             }
             SLesson lesson = entity.getLesson();
-            int weekday = entity.getWeekday();
+            Integer weekday = entity.getWeekday();
+            String customDay = entity.getCustomDay();
             PopupMenu popup = new PopupMenu(activity, view);
             popup.inflate(R.menu.schedule_lessons_item);
             bindMenuItem(popup, R.id.open_group, "group".equals(schedule.getType()) || StringUtils.isBlank(lesson.getGroup()) ? null : activity.getString(R.string.group) + " " + lesson.getGroup());
@@ -825,7 +878,7 @@ public class ScheduleLessonsTabFragmentPresenterImpl implements Schedule.Handler
             bindMenuItem(popup, R.id.edit_lesson, "synthetic".equals(lesson.getCdoitmoType()) ? activity.getString(R.string.edit_lesson) : null);
             popup.setOnMenuItemClickListener(item -> {
                 thread.runOnUI(SL, () -> {
-                    lessonMenuSelected(item, schedule, lesson, weekday);
+                    lessonMenuSelected(item, schedule, lesson, weekday, customDay);
                     popup.dismiss();
                 });
                 return true;
@@ -837,7 +890,7 @@ public class ScheduleLessonsTabFragmentPresenterImpl implements Schedule.Handler
         });
     }
 
-    private void lessonMenuSelected(MenuItem item, SLessons schedule, SLesson lesson, int weekday) {
+    private void lessonMenuSelected(MenuItem item, SLessons schedule, SLesson lesson, Integer weekday, String customDay) {
         thread.run(SL, () -> {
             log.v(TAG, "Lesson menu | popup item | clicked | " + item.getTitle().toString());
             switch (item.getItemId()) {
@@ -862,25 +915,25 @@ public class ScheduleLessonsTabFragmentPresenterImpl implements Schedule.Handler
                     break;
                 }
                 case R.id.reduce_lesson: {
-                    if (!scheduleLessonsHelper.reduceLesson(schedule.getQuery(), weekday, lesson, () -> tabHostPresenter.invalidateOnDemand())) {
+                    if (!scheduleLessonsHelper.reduceLesson(schedule.getQuery(), weekday, customDay, lesson, () -> tabHostPresenter.invalidateOnDemand())) {
                         notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
                     }
                     break;
                 }
                 case R.id.restore_lesson: {
-                    if (!scheduleLessonsHelper.restoreLesson(schedule.getQuery(), weekday, lesson, () -> tabHostPresenter.invalidateOnDemand())) {
+                    if (!scheduleLessonsHelper.restoreLesson(schedule.getQuery(), weekday, customDay, lesson, () -> tabHostPresenter.invalidateOnDemand())) {
                         notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
                     }
                     break;
                 }
                 case R.id.delete_lesson: {
-                    if (!scheduleLessonsHelper.deleteLesson(schedule.getQuery(), weekday, lesson, () -> tabHostPresenter.invalidateOnDemand())) {
+                    if (!scheduleLessonsHelper.deleteLesson(schedule.getQuery(), weekday, customDay, lesson, () -> tabHostPresenter.invalidateOnDemand())) {
                         notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
                     }
                     break;
                 }
                 case R.id.copy_lesson: {
-                    if (!scheduleLessonsHelper.createLesson(schedule.getQuery(), schedule.getTitle(), schedule.getType(), weekday, lesson, extras -> {
+                    if (!scheduleLessonsHelper.createLesson(schedule.getQuery(), schedule.getTitle(), schedule.getType(), weekday, customDay, lesson, extras -> {
                         thread.runOnUI(SL, () -> {
                             activity.openActivityOrFragment(ScheduleLessonsModifyFragment.class, extras);
                         });
@@ -890,7 +943,7 @@ public class ScheduleLessonsTabFragmentPresenterImpl implements Schedule.Handler
                     break;
                 }
                 case R.id.edit_lesson: {
-                    if (!scheduleLessonsHelper.editLesson(schedule.getQuery(), schedule.getTitle(), schedule.getType(), weekday, lesson, extras -> {
+                    if (!scheduleLessonsHelper.editLesson(schedule.getQuery(), schedule.getTitle(), schedule.getType(), weekday, customDay, lesson, extras -> {
                         thread.runOnUI(SL, () -> {
                             activity.openActivityOrFragment(ScheduleLessonsModifyFragment.class, extras);
                         });
@@ -934,6 +987,15 @@ public class ScheduleLessonsTabFragmentPresenterImpl implements Schedule.Handler
 
     // -<-- Teacher selection --<- || -->- Utils ->--
 
+    private void dayInfoClicked(View view, RVALessons entity) {
+        new AlertDialog.Builder(activity)
+                .setTitle(R.string.unknown_day)
+                .setMessage(R.string.unknown_day_about)
+                .setIcon(R.drawable.ic_help)
+                .setNegativeButton(R.string.close, null)
+                .create().show();
+    }
+
     private SLesson makeLesson(String subject, String type, int parity, String timeStart, String timeEnd) {
         SLesson lesson = new SLesson();
         lesson.setSubject(subject);
@@ -945,7 +1007,10 @@ public class ScheduleLessonsTabFragmentPresenterImpl implements Schedule.Handler
         return lesson;
     }
 
-    private @IdRes int getDayResID(int weekday) {
+    private @IdRes int getDayResID(Integer weekday) {
+        if (weekday == null) {
+            return View.generateViewId();
+        }
         switch (weekday) {
             case 0: return R.id.monday;
             case 1: return R.id.tuesday;
@@ -955,10 +1020,16 @@ public class ScheduleLessonsTabFragmentPresenterImpl implements Schedule.Handler
             case 5: return R.id.saturday;
             case 6: return R.id.sunday;
         }
-        return R.id.undefined;
+        return View.generateViewId();
     }
 
     private String getDayTitle(SDay day) {
+        if (day.getWeekday() == null) {
+            if (StringUtils.isBlank(day.getTitle())) {
+                return activity.getString(R.string.unknown_day);
+            }
+            return time.getScheduleCustomDayTitle(activity, day.getTitle());
+        }
         switch (day.getWeekday()) {
             case 0: return activity.getString(R.string.monday);
             case 1: return activity.getString(R.string.tuesday);
@@ -967,12 +1038,7 @@ public class ScheduleLessonsTabFragmentPresenterImpl implements Schedule.Handler
             case 4: return activity.getString(R.string.friday);
             case 5: return activity.getString(R.string.saturday);
             case 6: return activity.getString(R.string.sunday);
-            default:
-                // расписание из ису, когда есть расписания на определенный день
-                if ("date".equals(day.getType()) && StringUtils.isNotBlank(day.getTitle())) {
-                    return day.getTitle();
-                }
-                return activity.getString(R.string.unknown_day);
+            default: return activity.getString(R.string.unknown_day);
         }
     }
 
