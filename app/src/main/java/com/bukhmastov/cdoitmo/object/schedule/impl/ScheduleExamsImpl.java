@@ -18,6 +18,9 @@ import com.bukhmastov.cdoitmo.object.schedule.ScheduleExams;
 import com.bukhmastov.cdoitmo.util.singleton.CollectionUtils;
 import com.bukhmastov.cdoitmo.util.singleton.StringUtils;
 
+import java.util.Arrays;
+import java.util.List;
+
 public class ScheduleExamsImpl extends ScheduleImpl<SExams> implements ScheduleExams {
 
     private static final String TAG = "ScheduleExams";
@@ -37,10 +40,10 @@ public class ScheduleExamsImpl extends ScheduleImpl<SExams> implements ScheduleE
 
     @Override
     protected void searchPersonal(int refreshRate, boolean forceToCache, boolean withUserChanges) throws Exception {
-        @Source String source = SOURCE.ISU/*getSource()*/;
+        List<String> sources = makeSources(SOURCE.ISU);
         log.v(TAG, "searchPersonal | refreshRate=", refreshRate, " | forceToCache=", forceToCache,
-                " | withUserChanges=", withUserChanges, " | source=", source);
-        searchByQuery("personal", source, refreshRate, withUserChanges, new SearchByQuery<SExams>() {
+                " | withUserChanges=", withUserChanges, " | sources=", sources);
+        searchByQuery("personal", sources, refreshRate, withUserChanges, new SearchByQuery<SExams>() {
             @Override
             public void onWebRequest(String query, String source, RestResponseHandler<SExams> handler) {
                 switch (source) {
@@ -70,10 +73,10 @@ public class ScheduleExamsImpl extends ScheduleImpl<SExams> implements ScheduleE
 
     @Override
     protected void searchGroup(String group, int refreshRate, boolean forceToCache, boolean withUserChanges) throws Exception {
-        @Source String source = getSource();
+        List<String> sources = makeSources(SOURCE.ISU, SOURCE.IFMO);
         log.v(TAG, "searchGroup | group=", group, " | refreshRate=", refreshRate,
-                " | forceToCache=", forceToCache, " | withUserChanges=", withUserChanges, " | source=", source);
-        searchByQuery(group, source, refreshRate, withUserChanges, new SearchByQuery<SExams>() {
+                " | forceToCache=", forceToCache, " | withUserChanges=", withUserChanges, " | sources=", sources);
+        searchByQuery(group, sources, refreshRate, withUserChanges, new SearchByQuery<SExams>() {
             @Override
             public void onWebRequest(String query, String source, RestResponseHandler<SExams> handler) {
                 switch (source) {
@@ -123,10 +126,10 @@ public class ScheduleExamsImpl extends ScheduleImpl<SExams> implements ScheduleE
 
     @Override
     protected void searchTeacher(String teacherId, int refreshRate, boolean forceToCache, boolean withUserChanges) throws Exception {
-        @Source String source = getSource();
+        List<String> sources = makeSources(SOURCE.ISU, SOURCE.IFMO);
         log.v(TAG, "searchTeacher | teacherId=", teacherId, " | refreshRate=", refreshRate,
-                " | forceToCache=", forceToCache, " | withUserChanges=", withUserChanges, " | source=", source);
-        searchByQuery(teacherId, source, refreshRate, withUserChanges, new SearchByQuery<SExams>() {
+                " | forceToCache=", forceToCache, " | withUserChanges=", withUserChanges, " | sources=", sources);
+        searchByQuery(teacherId, sources, refreshRate, withUserChanges, new SearchByQuery<SExams>() {
             @Override
             public void onWebRequest(String query, String source, RestResponseHandler<SExams> handler) {
                 switch (source) {
@@ -170,9 +173,9 @@ public class ScheduleExamsImpl extends ScheduleImpl<SExams> implements ScheduleE
 
     @Override
     protected void searchTeachers(String lastname, boolean withUserChanges) throws Exception {
-        @Source String source = SOURCE.IFMO/*getSource()*/;
-        log.v(TAG, "searchTeachers | lastname=", lastname);
-        searchByQuery(lastname, source, 0, withUserChanges, new SearchByQuery<SExams>() {
+        List<String> sources = makeSources(SOURCE.IFMO);
+        log.v(TAG, "searchTeachers | lastname=", lastname, " | withUserChanges=", withUserChanges, " | sources=", sources);
+        searchByQuery(lastname, sources, 0, withUserChanges, new SearchByQuery<SExams>() {
             @Override
             public void onWebRequest(String query, String source, RestResponseHandler<SExams> handler) {
                 switch (source) {
@@ -217,6 +220,11 @@ public class ScheduleExamsImpl extends ScheduleImpl<SExams> implements ScheduleE
     @Override
     protected String getDefaultSource() {
         return SOURCE.ISU;
+    }
+
+    @Override
+    protected List<String> getSupportedSources() {
+        return Arrays.asList(SOURCE.ISU, SOURCE.IFMO);
     }
 
     @Override

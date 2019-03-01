@@ -100,6 +100,7 @@ public class ProtocolFragmentPresenterImpl extends ConnectedFragmentWithDataPres
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
+        thread.initialize(PR);
         thread.run(PR, () -> {
             log.v(TAG, "Fragment created");
             if (App.UNAUTHORIZED_MODE) {

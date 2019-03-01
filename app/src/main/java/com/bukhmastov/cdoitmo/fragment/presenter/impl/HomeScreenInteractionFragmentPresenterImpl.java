@@ -182,6 +182,7 @@ public class HomeScreenInteractionFragmentPresenterImpl extends ConnectedFragmen
 
     @Override
     public void onViewCreated() {
+        super.onViewCreated();
         initPicker(true);
     }
 

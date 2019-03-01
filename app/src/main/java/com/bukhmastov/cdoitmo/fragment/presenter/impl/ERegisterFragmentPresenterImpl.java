@@ -102,6 +102,7 @@ public class ERegisterFragmentPresenterImpl extends ConnectedFragmentWithDataPre
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
+        thread.initialize(ER);
         thread.run(ER, () -> {
             log.v(TAG, "Fragment created");
             if (App.UNAUTHORIZED_MODE) {

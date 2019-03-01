@@ -74,10 +74,14 @@ public class ThreadImpl implements Thread {
     @Override
     public void run(@ThreadToken String token, @NonNull ThrowingRunnable runnable,
                     @Nullable ThrowingConsumer<Throwable, Throwable> errorHandler) {
-        initialize(token);
         synchronized (handlerThreadMap) {
             HandlerThreadWrapper wrapper = handlerThreadMap.get(token);
             String threadName = makeBackgroundThreadName(token);
+            if (wrapper == null || wrapper.isDead()) {
+                log.get().i(TAG, threadName, " | Prevented task execution at background thread, ",
+                        "thread not started or not alive");
+                return;
+            }
             try {
                 Handler handler = new Handler(wrapper.getThread().getLooper());
                 Runnable task = () -> {
@@ -121,7 +125,8 @@ public class ThreadImpl implements Thread {
         synchronized (handlerThreadMap) {
             HandlerThreadWrapper wrapper = handlerThreadMap.get(token);
             if (wrapper == null || wrapper.isDead()) {
-                log.get().i(TAG, "UI for ", token, " | Prevented task execution at UI thread, ",
+                String threadName = makeBackgroundThreadName(token);
+                log.get().i(TAG, "UI for ", threadName, " | Prevented task execution at UI thread, ",
                         "because corresponding background thread not started or not alive");
                 return;
             }

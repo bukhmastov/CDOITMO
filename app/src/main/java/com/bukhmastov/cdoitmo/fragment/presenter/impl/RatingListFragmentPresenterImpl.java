@@ -97,6 +97,7 @@ public class RatingListFragmentPresenterImpl extends ConnectedFragmentWithDataPr
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
+        thread.initialize(RAL);
         thread.run(RAL, () -> {
             log.v(TAG, "Fragment created");
             firebaseAnalyticsProvider.logCurrentScreen(activity, fragment);
@@ -158,6 +159,7 @@ public class RatingListFragmentPresenterImpl extends ConnectedFragmentWithDataPr
 
     @Override
     public void onViewCreated() {
+        super.onViewCreated();
         thread.runOnUI(RAL, () -> {
             activity.updateToolbar(activity, activity.getString(R.string.top_rating), R.drawable.ic_rating);
             Bundle extras = fragment.getArguments();

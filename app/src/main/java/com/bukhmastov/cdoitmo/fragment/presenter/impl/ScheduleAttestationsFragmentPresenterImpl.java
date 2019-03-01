@@ -96,6 +96,7 @@ public class ScheduleAttestationsFragmentPresenterImpl extends ConnectedFragment
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
+        thread.initialize(SA);
         thread.run(SA, () -> {
             log.v(TAG, "Fragment created");
             firebaseAnalyticsProvider.logCurrentScreen(activity, fragment);

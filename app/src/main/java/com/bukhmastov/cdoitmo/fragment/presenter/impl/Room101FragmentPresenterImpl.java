@@ -91,6 +91,7 @@ public class Room101FragmentPresenterImpl extends ConnectedFragmentWithDataPrese
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
+        thread.initialize(R101);
         thread.run(R101, () -> {
             log.v(TAG, "Fragment created");
             if (App.UNAUTHORIZED_MODE) {

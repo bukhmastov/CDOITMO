@@ -98,6 +98,7 @@ public class ScheduleExamsTabFragmentPresenterImpl implements Schedule.Handler<S
 
     @Override
     public void onCreate(Bundle savedInstanceState, ConnectedActivity activity, Fragment fragment) {
+        thread.initialize(SE);
         thread.run(SE, () -> {
             this.activity = activity;
             Bundle bundle = fragment.getArguments();

@@ -14,6 +14,8 @@ import com.bukhmastov.cdoitmo.object.schedule.ScheduleAttestations;
 import com.bukhmastov.cdoitmo.util.singleton.StringUtils;
 
 import java.util.Calendar;
+import java.util.Collections;
+import java.util.List;
 
 import javax.inject.Inject;
 
@@ -45,15 +47,14 @@ public class ScheduleAttestationsImpl extends ScheduleImpl<SAttestations> implem
 
     @Override
     protected void searchGroup(String group, int refreshRate, boolean forceToCache, boolean withUserChanges) throws Exception {
-        @Source String source = SOURCE.IFMO;
+        List<String> sources = makeSources(SOURCE.DE_IFMO);
         log.v(TAG, "searchGroup | group=", group, " | refreshRate=", refreshRate,
-                " | forceToCache=", forceToCache, " | withUserChanges=", withUserChanges, " | source=", source);
-        searchByQuery(group, source, refreshRate, withUserChanges, new SearchByQuery<SAttestations>() {
+                " | forceToCache=", forceToCache, " | withUserChanges=", withUserChanges, " | sources=", sources);
+        searchByQuery(group, sources, refreshRate, withUserChanges, new SearchByQuery<SAttestations>() {
             @Override
             public void onWebRequest(String query, String source, RestResponseHandler<SAttestations> handler) {
                 switch (source) {
-                    case SOURCE.ISU: // not available, using ifmo source
-                    case SOURCE.IFMO: {
+                    case SOURCE.DE_IFMO: {
                         int term = getTerm();
                         String url = String.format("index.php?node=schedule&index=sched&semiId=%s&group=%s",
                                 String.valueOf(term), StringUtils.prettifyGroupNumber(group));
@@ -108,7 +109,12 @@ public class ScheduleAttestationsImpl extends ScheduleImpl<SAttestations> implem
 
     @Override
     protected String getDefaultSource() {
-        return SOURCE.IFMO;
+        return SOURCE.DE_IFMO;
+    }
+
+    @Override
+    protected List<String> getSupportedSources() {
+        return Collections.singletonList(SOURCE.DE_IFMO);
     }
 
     @Override

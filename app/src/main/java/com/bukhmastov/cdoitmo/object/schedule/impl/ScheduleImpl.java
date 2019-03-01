@@ -17,8 +17,10 @@ import java.lang.annotation.RetentionPolicy;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -128,11 +130,12 @@ public abstract class ScheduleImpl<T extends ScheduleJsonEntity> extends Schedul
      * Remote source of schedules to be downloaded from
      */
     @Retention(RetentionPolicy.SOURCE)
-    @StringDef({SOURCE.ISU, SOURCE.IFMO})
+    @StringDef({SOURCE.ISU, SOURCE.IFMO, SOURCE.DE_IFMO})
     protected @interface Source {}
     protected static class SOURCE {
         protected static final String ISU = "isu";
         protected static final String IFMO = "ifmo";
+        protected static final String DE_IFMO = "de.ifmo";
     }
 
     /**
@@ -176,6 +179,13 @@ public abstract class ScheduleImpl<T extends ScheduleJsonEntity> extends Schedul
     protected abstract @Source String getDefaultSource();
 
     /**
+     * Defines set of supported sources
+     * @return set of supported @Source
+     * @see Source
+     */
+    protected abstract @Source List<String> getSupportedSources();
+
+    /**
      * Get new T instance
      */
     protected abstract T getNewInstance();
@@ -186,20 +196,21 @@ public abstract class ScheduleImpl<T extends ScheduleJsonEntity> extends Schedul
     protected abstract @FirebasePerformanceProvider.TRACE String getTraceName();
 
     /**
-     * Defines the source of the schedule
+     * Defines the source set of the schedule
+     * @return set of @Source
      * @see Source
      */
-    protected @Source String getSource() {
+    protected @Source List<String> makeSources(@Source String...sources) {
         String token = "pref_schedule_" + getType() + "_source";
-        String source = storagePref.get(context, token, getDefaultSource());
-        switch (source) {
-            case "ifmo": case "isu": break;
-            default: {
-                source = getDefaultSource();
-                storagePref.put(context, token, source);
-            }
+        String primarySource = storagePref.get(context, token, getDefaultSource());
+        if (!getSupportedSources().contains(primarySource)) {
+            primarySource = getDefaultSource();
+            storagePref.put(context, token, primarySource);
         }
-        return source;
+        LinkedList<String> sourceList = new LinkedList<>(Arrays.asList(sources));
+        sourceList.remove(primarySource);
+        sourceList.addFirst(primarySource);
+        return sourceList;
     }
 
     /**
@@ -360,6 +371,7 @@ public abstract class ScheduleImpl<T extends ScheduleJsonEntity> extends Schedul
                 }
             }
             if (remove) {
+                log.v(TAG, "invokePending | query=", query, " | remove");
                 pendingStack.remove(token);
                 if (trace.containsKey(token)) {
                     firebasePerformanceProvider.stopTrace(trace.get(token));
@@ -447,8 +459,8 @@ public abstract class ScheduleImpl<T extends ScheduleJsonEntity> extends Schedul
 
     // --<- Cache mechanism -<--
 
-    protected void searchByQuery(String query, @Source String source, int refreshRate, boolean withUserChanges, SearchByQuery<T> search) throws Exception {
-        log.v(TAG, "searchByQuery | query=", query, " | source=", source, " | refreshRate=", refreshRate, " | withUserChanges=", withUserChanges);
+    protected void searchByQuery(String query, @Source List<String> sources, int refreshRate, boolean withUserChanges, SearchByQuery<T> search) throws Exception {
+        log.v(TAG, "searchByQuery | query=", query, " | sources=", sources, " | refreshRate=", refreshRate, " | withUserChanges=", withUserChanges);
         T cached = getFromCache(query);
         if (App.OFFLINE_MODE) {
             if (cached != null) {
@@ -462,7 +474,17 @@ public abstract class ScheduleImpl<T extends ScheduleJsonEntity> extends Schedul
             search.onFound(query, cached, true);
             return;
         }
-        log.v(TAG, "searchByQuery | query=", query, " | force refresh");
+        if (sources.size() < 1) {
+            log.wtf(TAG, "searchByQuery | query=", query, " | zero sources provided");
+            invokePendingAndClose(query, withUserChanges, handler -> handler.onFailure(FAILED_LOAD));
+            return;
+        }
+        searchByQuery(query, cached, sources, 0, withUserChanges, search);
+    }
+
+    private void searchByQuery(String query, T cached, @Source List<String> sources, int sourceIndex, boolean withUserChanges, SearchByQuery<T> search) {
+        String source = sources.get(sourceIndex);
+        log.v(TAG, "searchByQuery | query=", query, " | sources=", sources, " | source=", source, " | withUserChanges=", withUserChanges);
         search.onWebRequest(query, source, new RestResponseHandler<T>() {
             @Override
             public void onSuccess(int code, Client.Headers headers, T schedule) throws Exception {
@@ -474,21 +496,13 @@ public abstract class ScheduleImpl<T extends ScheduleJsonEntity> extends Schedul
                 if (cached != null) {
                     search.onFound(query, cached, true);
                 } else {
-                    invokePendingAndClose(query, withUserChanges, handler -> handler.onFailure(code, headers, FAILED_LOAD));
+                    onSourceFailed(code, headers, FAILED_LOAD);
                 }
             }
             @Override
             public void onFailure(int code, Client.Headers headers, int state) {
                 log.v(TAG, "searchByQuery | query=", query, " || onFailure | code=", code, " | state=", state);
-                if (cached != null && state != Client.FAILED_INTERRUPTED) {
-                    search.onFound(query, cached, true);
-                    return;
-                }
-                if (code == 404) {
-                    invokePendingAndClose(query, withUserChanges, handler -> handler.onFailure(code, headers, FAILED_NOT_FOUND));
-                    return;
-                }
-                invokePendingAndClose(query, withUserChanges, handler -> handler.onFailure(code, headers, state));
+                onSourceFailed(code, headers, state);
             }
             @Override
             public void onProgress(int state) {
@@ -502,6 +516,22 @@ public abstract class ScheduleImpl<T extends ScheduleJsonEntity> extends Schedul
             @Override
             public T newInstance() {
                 return getNewInstance();
+            }
+            private void onSourceFailed(int code, Client.Headers headers, int state) {
+                int nextSourceIndex = sourceIndex + 1;
+                if (nextSourceIndex < sources.size() && state != Client.FAILED_INTERRUPTED) {
+                    searchByQuery(query, cached, sources, nextSourceIndex, withUserChanges, search);
+                    return;
+                }
+                if (cached != null && state != Client.FAILED_INTERRUPTED) {
+                    search.onFound(query, cached, true);
+                    return;
+                }
+                if (code == 404) {
+                    invokePendingAndClose(query, withUserChanges, handler -> handler.onFailure(code, headers, FAILED_NOT_FOUND));
+                    return;
+                }
+                invokePendingAndClose(query, withUserChanges, handler -> handler.onFailure(code, headers, state));
             }
         });
     }

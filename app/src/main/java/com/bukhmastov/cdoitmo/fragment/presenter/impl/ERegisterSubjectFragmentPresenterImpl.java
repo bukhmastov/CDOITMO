@@ -78,6 +78,7 @@ public class ERegisterSubjectFragmentPresenterImpl extends ConnectedFragmentWith
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
+        thread.initialize(ERS);
         thread.run(ERS, () -> {
             log.v(TAG, "Fragment created");
             firebaseAnalyticsProvider.logCurrentScreen(activity, fragment);

@@ -95,19 +95,20 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
 
     private Client.Request requestHandler = null;
 
-    private void inject() {
+    private void init() {
         if (thread == null) {
             AppComponentProvider.getComponent().inject(this);
         }
+        thread.initialize(WSL);
     }
 
     public ScheduleLessonsWidget() {
-        inject();
+        init();
     }
 
     @Override
     public void onUpdate(Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds) {
-        inject();
+        init();
         for (int appWidgetId : appWidgetIds) {
             updateAppWidget(context, appWidgetManager, appWidgetId, false);
         }
@@ -115,7 +116,7 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
 
     @Override
     public void onDeleted(Context context, int[] appWidgetIds) {
-        inject();
+        init();
         for (int appWidgetId : appWidgetIds) {
             deleteAppWidget(context, appWidgetId);
         }
@@ -123,16 +124,17 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
 
     @Override
     public void onAppWidgetOptionsChanged(Context context, AppWidgetManager appWidgetManager, int appWidgetId, Bundle options) {
-        inject();
+        init();
         super.onAppWidgetOptionsChanged(context, appWidgetManager, appWidgetId, options);
         display(context, appWidgetManager, appWidgetId, false);
     }
 
     public void updateAppWidget(Context context, AppWidgetManager appWidgetManager, int appWidgetId, boolean force) {
+        init();
         updateAppWidget(context, appWidgetManager, appWidgetId, force, false);
     }
 
-    public void updateAppWidget(Context context, AppWidgetManager appWidgetManager, int appWidgetId, boolean force, boolean controls) {
+    private void updateAppWidget(Context context, AppWidgetManager appWidgetManager, int appWidgetId, boolean force, boolean controls) {
         thread.run(WSL, () -> {
             log.i(TAG, "update | appWidgetId=", appWidgetId);
             WSLSettings settings = scheduleLessonsWidgetStorage.getSettings(appWidgetId);
@@ -156,7 +158,7 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
         });
     }
 
-    public void deleteAppWidget(Context context, int appWidgetId) {
+    private void deleteAppWidget(Context context, int appWidgetId) {
         thread.run(WSL, () -> {
             log.i(TAG, "delete | appWidgetId=", appWidgetId);
             scheduleLessonsWidgetStorage.delete(appWidgetId);
@@ -679,7 +681,7 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
 
     @Override
     public void onReceive(Context context, Intent intent) {
-        inject();
+        init();
         super.onReceive(context, intent);
         thread.run(WSL, () -> {
             String action = intent.getAction() != null ? intent.getAction() : "";

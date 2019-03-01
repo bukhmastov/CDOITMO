@@ -8,6 +8,7 @@ import com.bukhmastov.cdoitmo.fragment.presenter.ConnectedFragmentPresenter;
 import com.bukhmastov.cdoitmo.network.model.Client;
 import com.bukhmastov.cdoitmo.util.Thread;
 
+import androidx.annotation.CallSuper;
 import androidx.annotation.Nullable;
 
 public abstract class ConnectedFragmentPresenterImpl extends ConnectedFragmentBasePresenterImpl
@@ -41,6 +42,14 @@ public abstract class ConnectedFragmentPresenterImpl extends ConnectedFragmentBa
             thread.initialize(getThreadToken());
         }
         firebaseAnalyticsProvider.logCurrentScreen(activity, fragment);
+    }
+
+    @Override
+    @CallSuper
+    public void onViewCreated() {
+        if (getThreadToken() != null) {
+            thread.initialize(getThreadToken());
+        }
     }
 
     @Override

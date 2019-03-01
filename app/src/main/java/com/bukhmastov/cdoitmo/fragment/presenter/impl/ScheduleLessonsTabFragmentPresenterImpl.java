@@ -120,6 +120,7 @@ public class ScheduleLessonsTabFragmentPresenterImpl implements Schedule.Handler
 
     @Override
     public void onCreate(Bundle savedInstanceState, ConnectedActivity activity, Fragment fragment) {
+        thread.initialize(SL);
         thread.run(SL, () -> {
             this.activity = activity;
             Bundle bundle = fragment.getArguments();
@@ -200,15 +201,16 @@ public class ScheduleLessonsTabFragmentPresenterImpl implements Schedule.Handler
                 return;
             }
             draw(activity, R.layout.state_loading_text);
-            thread.run(SL, () -> {
-                if (activity == null || tabHostPresenter.getQuery() == null) {
-                    log.w(TAG, "load | some values are null | activity=", activity, " | getQuery()=", tabHostPresenter.getQuery());
-                    failed(activity);
-                    return;
-                }
-                if (!tabHostPresenter.isSameQueryRequested()) {
-                    tabHostPresenter.scroll().clear();
-                }
+            if (activity == null || tabHostPresenter.getQuery() == null) {
+                log.w(TAG, "load | some values are null | activity=", activity, " | getQuery()=", tabHostPresenter.getQuery());
+                failed(activity);
+                return;
+            }
+            if (!tabHostPresenter.isSameQueryRequested()) {
+                tabHostPresenter.scroll().clear();
+            }
+            // Standalone thread because this fragment going to be loaded up to three times
+            thread.standalone(() -> {
                 if (refresh) {
                     scheduleLessons.search(tabHostPresenter.getQuery(), 0, this);
                 } else {

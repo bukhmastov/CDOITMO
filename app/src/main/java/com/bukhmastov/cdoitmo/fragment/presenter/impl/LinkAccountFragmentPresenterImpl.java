@@ -64,6 +64,7 @@ public class LinkAccountFragmentPresenterImpl extends ConnectedFragmentPresenter
 
     @Override
     public void onViewCreated() {
+        super.onViewCreated();
         thread.runOnUI(() -> {
             Bundle extras = fragment.getArguments();
             if (extras == null) {

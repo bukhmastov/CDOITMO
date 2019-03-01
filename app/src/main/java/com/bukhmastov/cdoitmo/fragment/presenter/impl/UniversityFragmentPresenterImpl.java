@@ -104,6 +104,7 @@ public class UniversityFragmentPresenterImpl extends ConnectedFragmentPresenterI
 
     @Override
     public void onViewCreated() {
+        super.onViewCreated();
         thread.runOnUI(UH, () -> {
             if (fragment.isNotAddedToActivity()) {
                 log.w(TAG, "onViewCreated | fragment not added to activity");

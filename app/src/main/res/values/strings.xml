@@ -614,7 +614,7 @@
     <string name="lesson_day_type">Тип раписания</string>
     <string name="lesson_day_type_regular">Обычное расписание</string>
     <string name="lesson_day_type_date">Расписание на определенный день</string>
-    <string name="unknown_day_about">Приложение не может отобразить день занятия, так как API ИТМО не возвращает дату для занятий на определенную дату. Вот так вот.</string>
+    <string name="unknown_day_about">Приложение не может отобразить день занятия, так как API ИТМО не возвращает дату для занятий с определенной датой. Вот так вот.</string>
 
 
 </resources>

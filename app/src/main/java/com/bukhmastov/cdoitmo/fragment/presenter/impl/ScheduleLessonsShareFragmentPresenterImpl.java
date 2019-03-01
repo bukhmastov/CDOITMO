@@ -120,6 +120,7 @@ public class ScheduleLessonsShareFragmentPresenterImpl extends ConnectedFragment
         } catch (Exception e) {
             action = null;
         }
+        thread.initialize(SLS);
         thread.run(SLS, () -> {
             firebaseAnalyticsProvider.logCurrentScreen(activity, fragment);
             log.v(TAG, "Fragment created | action=", action);
