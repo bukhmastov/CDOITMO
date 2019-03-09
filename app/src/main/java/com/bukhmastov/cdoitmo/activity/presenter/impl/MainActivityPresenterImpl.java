@@ -23,6 +23,7 @@ import com.bukhmastov.cdoitmo.firebase.FirebaseConfigProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseCrashlyticsProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebasePerformanceProvider;
 import com.bukhmastov.cdoitmo.fragment.ERegisterFragment;
+import com.bukhmastov.cdoitmo.fragment.HelpFragment;
 import com.bukhmastov.cdoitmo.fragment.HomeScreenInteractionFragment;
 import com.bukhmastov.cdoitmo.fragment.IsuGroupInfoFragment;
 import com.bukhmastov.cdoitmo.fragment.IsuScholarshipPaidFragment;
@@ -306,11 +307,13 @@ public class MainActivityPresenterImpl implements MainActivityPresenter, Navigat
                 }
                 case R.id.nav_homescreen:
                 case R.id.nav_settings:
+                case R.id.nav_help:
                     final Class connectedFragmentClass;
                     switch (section) {
                         default:
                         case R.id.nav_homescreen: connectedFragmentClass = HomeScreenInteractionFragment.class; break;
                         case R.id.nav_settings: connectedFragmentClass = SettingsFragment.class; break;
+                        case R.id.nav_help: connectedFragmentClass = HelpFragment.class; break;
                     }
                     thread.runOnUI(AM, () -> {
                         if (activity.openActivityOrFragment(ConnectedActivity.TYPE.ROOT, connectedFragmentClass, null)) {

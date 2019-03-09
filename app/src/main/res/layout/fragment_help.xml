@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="@dimen/item_padding_quarter">
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="@dimen/item_padding_quarter"
+            android:padding="@dimen/item_padding_quarter"
+            android:background="@drawable/shape_border_round">
+
+            <FrameLayout
+                android:id="@+id/block_servers"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="@dimen/item_padding_half"
+                android:background="?android:attr/selectableItemBackground">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="?android:attr/textColorPrimary"
+                    android:textSize="@dimen/font_size_14"
+                    android:text="@string/help_error_servers" />
+
+            </FrameLayout>
+
+        </FrameLayout>
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="@dimen/item_padding_quarter"
+            android:padding="@dimen/item_padding_quarter"
+            android:background="@drawable/shape_border_round">
+
+            <FrameLayout
+                android:id="@+id/block_not_working"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="@dimen/item_padding_half"
+                android:background="?android:attr/selectableItemBackground">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="?android:attr/textColorPrimary"
+                    android:textSize="@dimen/font_size_14"
+                    android:text="@string/help_error_not_working" />
+
+            </FrameLayout>
+
+        </FrameLayout>
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="@dimen/item_padding_quarter"
+            android:padding="@dimen/item_padding_quarter"
+            android:background="@drawable/shape_border_round">
+
+            <FrameLayout
+                android:id="@+id/block_group_week"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="@dimen/item_padding_half"
+                android:background="?android:attr/selectableItemBackground">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="?android:attr/textColorPrimary"
+                    android:textSize="@dimen/font_size_14"
+                    android:text="@string/help_error_group_week" />
+
+            </FrameLayout>
+
+        </FrameLayout>
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="@dimen/item_padding_quarter"
+            android:padding="@dimen/item_padding_quarter"
+            android:background="@drawable/shape_border_round">
+
+            <FrameLayout
+                android:id="@+id/block_isu_reauth"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="@dimen/item_padding_half"
+                android:background="?android:attr/selectableItemBackground">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="?android:attr/textColorPrimary"
+                    android:textSize="@dimen/font_size_14"
+                    android:text="@string/help_error_isu_reauth" />
+
+            </FrameLayout>
+
+        </FrameLayout>
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="@dimen/item_padding_quarter"
+            android:padding="@dimen/item_padding_quarter"
+            android:background="@drawable/shape_border_round">
+
+            <FrameLayout
+                android:id="@+id/block_read_only"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="@dimen/item_padding_half"
+                android:background="?android:attr/selectableItemBackground">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="?android:attr/textColorPrimary"
+                    android:textSize="@dimen/font_size_14"
+                    android:text="@string/help_read_only" />
+
+            </FrameLayout>
+
+        </FrameLayout>
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="@dimen/item_padding_quarter"
+            android:padding="@dimen/item_padding_quarter"
+            android:background="@drawable/shape_border_round">
+
+            <FrameLayout
+                android:id="@+id/block_log"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="@dimen/item_padding_half"
+                android:background="?android:attr/selectableItemBackground">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="?android:attr/textColorPrimary"
+                    android:textSize="@dimen/font_size_14"
+                    android:text="@string/help_open_log" />
+
+            </FrameLayout>
+
+        </FrameLayout>
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="@dimen/item_padding_quarter"
+            android:padding="@dimen/item_padding_quarter"
+            android:background="@drawable/shape_border_round">
+
+            <FrameLayout
+                android:id="@+id/block_about"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="@dimen/item_padding_half"
+                android:background="?android:attr/selectableItemBackground">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="?android:attr/textColorPrimary"
+                    android:textSize="@dimen/font_size_14"
+                    android:text="@string/about" />
+
+            </FrameLayout>
+
+        </FrameLayout>
+
+    </LinearLayout>
+
+</ScrollView>

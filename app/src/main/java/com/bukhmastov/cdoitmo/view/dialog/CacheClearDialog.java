@@ -146,9 +146,7 @@ public class CacheClearDialog extends Dialog {
                     .setNegativeButton(R.string.close, null)
                     .create().show());
             // calculate size
-            thread.standalone(() -> {
-                calculateCacheSize(cacheList);
-            });
+            calculateCacheSize(cacheList);
         }, throwable -> {
             log.exception(throwable);
         });
@@ -166,42 +164,44 @@ public class CacheClearDialog extends Dialog {
                 cacheItemSizeContainer.setVisibility(View.VISIBLE);
                 cacheItemSize.setText("...");
             }
-        });
-        for (Entry item : items) {
-            if ("_mem_".equals(item.path)) {
-                item.bytes = -1L;
-                return;
-            }
-            if ("_all_".equals(item.path)) {
-                item.bytes = storage.getDirSize(activity, Storage.CACHE, Storage.USER, "") +
-                        storage.getDirSize(activity, Storage.CACHE, Storage.GLOBAL, "");
-                return;
-            }
-            switch (item.type) {
-                case Storage.USER: item.bytes = storage.getDirSize(activity, Storage.CACHE, Storage.USER, item.path); break;
-                case Storage.GLOBAL: item.bytes = storage.getDirSize(activity, Storage.CACHE, Storage.GLOBAL, item.path); break;
-                default: item.bytes = -1L; break;
-            }
-        }
-        thread.runOnUI(() -> {
-            for (Entry item : items) {
-                ViewGroup layoutItem = cacheList.findViewWithTag(TAG_PREFIX + item.path);
-                if (layoutItem == null) {
-                    return;
+            thread.standalone(() -> {
+                for (Entry item : items) {
+                    if ("_mem_".equals(item.path)) {
+                        item.bytes = -1L;
+                        continue;
+                    }
+                    if ("_all_".equals(item.path)) {
+                        item.bytes = storage.getDirSize(activity, Storage.CACHE, Storage.USER, "") +
+                                storage.getDirSize(activity, Storage.CACHE, Storage.GLOBAL, "");
+                        continue;
+                    }
+                    switch (item.type) {
+                        case Storage.USER: item.bytes = storage.getDirSize(activity, Storage.CACHE, Storage.USER, item.path); break;
+                        case Storage.GLOBAL: item.bytes = storage.getDirSize(activity, Storage.CACHE, Storage.GLOBAL, item.path); break;
+                        default: item.bytes = -1L; break;
+                    }
                 }
-                ViewGroup cacheItemSizeContainer = layoutItem.findViewById(R.id.cache_item_size_container);
-                TextView cacheItemSize = layoutItem.findViewById(R.id.cache_item_size);
-                if (item.bytes < 0L) {
-                    cacheItemSizeContainer.setVisibility(View.INVISIBLE);
-                } else if (item.bytes == 0L) {
-                    cacheItemSize.setText(R.string.empty);
-                    cacheItemSizeContainer.setVisibility(View.VISIBLE);
-                } else {
-                    cacheItemSize.setText(StringUtils.bytes2readable(activity, storagePref, item.bytes));
-                    cacheItemSizeContainer.setVisibility(View.VISIBLE);
-                }
-                cacheItemSizeContainer.invalidate();
-            }
+                thread.runOnUI(() -> {
+                    for (Entry item : items) {
+                        ViewGroup layoutItem = cacheList.findViewWithTag(TAG_PREFIX + item.path);
+                        if (layoutItem == null) {
+                            continue;
+                        }
+                        ViewGroup cacheItemSizeContainer = layoutItem.findViewById(R.id.cache_item_size_container);
+                        TextView cacheItemSize = layoutItem.findViewById(R.id.cache_item_size);
+                        if (item.bytes < 0L) {
+                            cacheItemSizeContainer.setVisibility(View.INVISIBLE);
+                        } else if (item.bytes == 0L) {
+                            cacheItemSize.setText(R.string.empty);
+                            cacheItemSizeContainer.setVisibility(View.VISIBLE);
+                        } else {
+                            cacheItemSize.setText(StringUtils.bytes2readable(activity, storagePref, item.bytes));
+                            cacheItemSizeContainer.setVisibility(View.VISIBLE);
+                        }
+                        cacheItemSizeContainer.invalidate();
+                    }
+                });
+            });
         });
     }
 }

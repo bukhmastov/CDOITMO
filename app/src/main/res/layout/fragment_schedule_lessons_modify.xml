@@ -256,7 +256,25 @@
 
             </LinearLayout>
 
-            <LinearLayout
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/lesson_date_type_day"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/lesson_date_day"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="@string/date_of_lesson"
+                    android:inputType="text|textCapSentences"
+                    android:maxLines="1"
+                    android:selectAllOnFocus="true"
+                    android:textColor="?android:attr/textColorPrimary"
+                    android:textSize="@dimen/font_size_14" />
+
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!--<LinearLayout
                 android:id="@+id/lesson_date_type_day"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -286,7 +304,7 @@
                     android:layout_height="@dimen/separator"
                     android:background="?attr/colorSeparatorDark" />
 
-            </LinearLayout>
+            </LinearLayout>-->
 
             <FrameLayout
                 android:layout_width="match_parent"

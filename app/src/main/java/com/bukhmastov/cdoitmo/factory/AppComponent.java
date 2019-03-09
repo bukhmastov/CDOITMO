@@ -42,6 +42,8 @@ import com.bukhmastov.cdoitmo.adapter.rva.ScheduleLessonsRVA;
 import com.bukhmastov.cdoitmo.adapter.rva.ScholarshipPaidRVA;
 import com.bukhmastov.cdoitmo.adapter.rva.UniversityRVA;
 import com.bukhmastov.cdoitmo.builder.Room101ReviewBuilder;
+import com.bukhmastov.cdoitmo.fragment.HelpFragment;
+import com.bukhmastov.cdoitmo.fragment.presenter.impl.HelpFragmentPresenterImpl;
 import com.bukhmastov.cdoitmo.view.dialog.BottomSheetDialog;
 import com.bukhmastov.cdoitmo.view.dialog.CacheClearDialog;
 import com.bukhmastov.cdoitmo.view.dialog.ColorPickerDialog;
@@ -271,6 +273,7 @@ public interface AppComponent {
     void inject(IsuScholarshipPaidFragment isuScholarshipPaidFragment);
     void inject(IsuScholarshipPaidDetailsFragment isuScholarshipPaidDetailsFragment);
     void inject(IsuScholarshipAssignedFragment isuScholarshipAssignedFragment);
+    void inject(HelpFragment helpFragment);
     // Fragment presenters
     void inject(ConnectedFragmentBasePresenterImpl connectedFragmentBasePresenter);
     void inject(AboutFragmentPresenterImpl aboutFragmentPresenter);
@@ -304,6 +307,7 @@ public interface AppComponent {
     void inject(IsuScholarshipPaidFragmentPresenterImpl isuScholarshipPaidFragmentPresenter);
     void inject(IsuScholarshipPaidDetailsFragmentPresenterImpl isuScholarshipPaidDetailsFragmentPresenter);
     void inject(IsuScholarshipAssignedFragmentPresenterImpl isuScholarshipAssignedFragmentPresenter);
+    void inject(HelpFragmentPresenterImpl helpFragmentPresenter);
 
     // Adapters
     void inject(TeacherPickerAdapter teacherPickerAdapter);

@@ -23,7 +23,6 @@ import dagger.Lazy;
 public class TimeImpl implements Time {
 
     private static final String TAG = "Time";
-    private static final Locale DEFAULT_LOCALE = Locale.GERMANY;
 
     @Inject
     Lazy<Log> log;
@@ -233,5 +232,13 @@ public class TimeImpl implements Time {
         String month = getGenitiveMonth(context, calendar.get(Calendar.MONTH));
         String year = String.valueOf(calendar.get(Calendar.YEAR));
         return day + " " + month + " " + year;
+    }
+
+    @Override
+    public long getScheduleCustomDayTimestamp(String customDay) {
+        if (StringUtils.isBlank(customDay) || !customDay.matches("[0-9]+")) {
+            return 0L;
+        }
+        return Long.parseLong(customDay);
     }
 }

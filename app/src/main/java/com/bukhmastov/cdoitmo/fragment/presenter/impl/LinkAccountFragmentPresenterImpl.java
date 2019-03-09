@@ -2,7 +2,9 @@ package com.bukhmastov.cdoitmo.fragment.presenter.impl;
 
 import android.os.Bundle;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.TextView;
 
@@ -96,6 +98,9 @@ public class LinkAccountFragmentPresenterImpl extends ConnectedFragmentPresenter
             Button loginBtn = activity.findViewById(R.id.login);
             EditText inputLogin = activity.findViewById(R.id.input_login);
             EditText inputPassword = activity.findViewById(R.id.input_password);
+            ViewGroup authCredentials = activity.findViewById(R.id.auth_credentials);
+            ViewGroup authCredentialsDeIfmo = activity.findViewById(R.id.auth_credentials_deifmo);
+            CheckBox authCredentialsDeIfmoCheckBox = activity.findViewById(R.id.auth_credentials_deifmo_checkbox);
             linkAccountForm = activity.findViewById(R.id.link_account_form);
             linkAccountProgress = activity.findViewById(R.id.link_account_progress);
             linkAccountForm.setVisibility(View.VISIBLE);
@@ -112,13 +117,32 @@ public class LinkAccountFragmentPresenterImpl extends ConnectedFragmentPresenter
                     log.v(TAG, "login clicked");
                     String login = "";
                     String password = "";
-                    if (inputLogin != null) {
-                        login = inputLogin.getText().toString();
-                    }
-                    if (inputPassword != null) {
-                        password = inputPassword.getText().toString();
+                    if (authCredentialsDeIfmoCheckBox != null && authCredentialsDeIfmoCheckBox.isChecked()) {
+                        login = storage.get(activity, Storage.PERMANENT, Storage.USER, "user#deifmo#login", "");
+                        password = storage.get(activity, Storage.PERMANENT, Storage.USER, "user#deifmo#password", "");
+                    } else {
+                        if (inputLogin != null) {
+                            login = inputLogin.getText().toString();
+                        }
+                        if (inputPassword != null) {
+                            password = inputPassword.getText().toString();
+                        }
                     }
                     auth(type, login, password);
+                });
+            }
+            if (authCredentialsDeIfmo != null) {
+                authCredentialsDeIfmo.setOnClickListener(v -> {
+                    if (authCredentialsDeIfmoCheckBox != null) {
+                        authCredentialsDeIfmoCheckBox.setChecked(!authCredentialsDeIfmoCheckBox.isChecked());
+                    }
+                });
+            }
+            if (authCredentialsDeIfmoCheckBox != null) {
+                authCredentialsDeIfmoCheckBox.setOnCheckedChangeListener((compoundButton, checked) -> {
+                    if (authCredentials != null) {
+                        authCredentials.setVisibility(checked ? View.GONE : View.VISIBLE);
+                    }
                 });
             }
         }, throwable -> {

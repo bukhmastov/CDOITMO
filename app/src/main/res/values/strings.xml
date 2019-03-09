@@ -599,6 +599,7 @@
     <string name="network_failed_auth_required">Необходима авторизация</string>
     <string name="network_failed_credentials_required">Необходимо указать логин/пароль</string>
     <string name="network_failed_credentials_failed">Неверный логин/пароль</string>
+    <string name="network_failed_restore_isu_credentials_failed">Не удалось авторизоваться в ИСУ. Необходимо выйти и заново войти, используя логин и пароль.</string>
 
     <string name="schedule_failed_load">Не удалось загрузить расписание</string>
     <string name="schedule_failed_empty_query">Задан пустой запрос</string>
@@ -609,12 +610,27 @@
     <string name="info_primary">Основная информация</string>
     <string name="info_secondary">Дополнительная информация</string>
     <string name="day_of_lesson">День занятия</string>
-    <string name="date_of_lesson">Дата занятия</string>
+    <string name="date_of_lesson">Дата занятия (dd.MM.yyyy)</string>
     <string name="date_of_lesson_undefined">Необходимо выбрать дату</string>
     <string name="lesson_day_type">Тип раписания</string>
     <string name="lesson_day_type_regular">Обычное расписание</string>
     <string name="lesson_day_type_date">Расписание на определенный день</string>
     <string name="unknown_day_about">Приложение не может отобразить день занятия, так как API ИТМО не возвращает дату для занятий с определенной датой. Вот так вот.</string>
 
+    <string name="crush_this_app">Крашнуть приложение</string>
+    <string name="crush_this_app_desc">Вы собираетесь крашнуть приложение собственными руками. После нажатия на кнопку \"Продолжить\" приложение упадет с ошибкой.</string>
+    <string name="use_deifmo_credentials">Использовать логин и пароль текущего аккаунта ЦДО</string>
+    <string name="help_errors">Ошибки в приложении</string>
+    <string name="help_error_servers">Происходят ошибки при загрузке данных с серверов</string>
+    <string name="help_error_servers_desc">Ошибки могут происходить из-за того, что сервера временно не доступны, на серверах происходят ошибки или конфигурация серверов изменилась. Обратите внимание, что разработчик не имеет отношения к серверам. У приложения нет собственной серверной части, все данные загружаются напрямую с серверов ЦДО, ИСУ и ИТМО.</string>
+    <string name="help_error_not_working">Не работает что-то или что-то сломалось</string>
+    <string name="help_error_not_working_desc">В приложении может что-то сломаться и это нормально. Разработка ведется одним человеком, а тестирование ведет полтора человека. Все это только на личном энтузиазме и без какого-либо финансирования. Следовательно, в продакшн могут пробраться неотловленные ошибки. Если Вы обнаружили некорректное поведение и считаете, что это ошибка, просто напишите разработчику или покопайтесь в гитхабе. Контакты оставлены на странице \"О приложении\".</string>
+    <string name="help_error_group_week">Отображается неверная неделя/группа</string>
+    <string name="help_error_group_week_desc">Номер недели или группа могут неверно определяться в первый день семестра, это зависит от оперативности изменения данных на серверах. Если неделя или группа отображаются неверно в другие дни, сообщите разработчику или переопределите неделю или группу в настройках в разделе \"Основные настройки\".</string>
+    <string name="help_error_isu_reauth">Неудачная авторизация в ИСУ, хотя в ИСУ уже авторизован</string>
+    <string name="help_error_isu_reauth_desc">Авторизация в ИСУ иногда ломается и необходимо полностью выйти из ИСУ аккаунта (в настройках в разделе \"Связанные аккаунты\") и войти заново, используя логин и пароль.</string>
+    <string name="help_read_only">Может ли приложение изменить мои данные на серверах?</string>
+    <string name="help_read_only_desc">Приложение работает в режиме только чтение. Оно загружает, обрабатывает и отображает данные с серверов, не изменяя никаких данных на самих серверах. Единственное исключение - раздел \"101 аудитория\" - при подаче заявки на последнем этапе вносятся данные на сервера ЦДО.</string>
+    <string name="help_open_log">Открыть лог-журнал</string>
 
 </resources>

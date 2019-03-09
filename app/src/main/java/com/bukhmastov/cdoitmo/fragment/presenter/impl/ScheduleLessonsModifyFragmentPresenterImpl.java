@@ -1,6 +1,5 @@
 package com.bukhmastov.cdoitmo.fragment.presenter.impl;
 
-import android.app.DatePickerDialog;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -34,6 +33,9 @@ import com.bukhmastov.cdoitmo.util.singleton.StringUtils;
 import com.google.android.material.textfield.TextInputEditText;
 
 import java.io.Serializable;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -58,6 +60,7 @@ public class ScheduleLessonsModifyFragmentPresenterImpl extends ConnectedFragmen
     private boolean blockTimeStart = false;
     private boolean blockTimeEnd = false;
     private boolean blockNextTeacherSearch = false;
+    private DateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy", Time.DEFAULT_LOCALE);
 
     @Inject
     Log log;
@@ -423,26 +426,29 @@ public class ScheduleLessonsModifyFragmentPresenterImpl extends ConnectedFragmen
         fragment.container().findViewById(R.id.lesson_date_type_day).setVisibility(View.VISIBLE);
         fragment.container().findViewById(R.id.lesson_date_type_regular).setVisibility(View.GONE);
 
-        TextView lessonDateDay = fragment.container().findViewById(R.id.lesson_date_day);
-        lessonDateDay.setOnClickListener(v -> {
-            Calendar c = time.getCalendar();
-            int d = c.get(Calendar.DAY_OF_MONTH);
-            int m = c.get(Calendar.MONTH);
-            int y = c.get(Calendar.YEAR);
-            new DatePickerDialog(activity, (view, year, month, dayOfMonth) -> {
-                Calendar calendar = time.getCalendar();
-                calendar.set(Calendar.YEAR, year);
-                calendar.set(Calendar.MONTH, month);
-                calendar.set(Calendar.DAY_OF_MONTH, dayOfMonth);
-                customDay = time.getScheduleCustomDayRaw(calendar);
-                String customDayTitle = time.getScheduleCustomDayTitle(activity, customDay);
-                lessonDateDay.setText(customDayTitle);
-            }, y, m, d).show();
+        TextInputEditText lessonDateDay = fragment.container().findViewById(R.id.lesson_date_day);
+        lessonDateDay.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {}
+            @Override
+            public void afterTextChanged(Editable s) {
+                String value = s.toString().trim();
+                try {
+                    Calendar calendar = time.getCalendar();
+                    calendar.setTime(dateFormat.parse(value));
+                    customDay = time.getScheduleCustomDayRaw(calendar);
+                } catch (ParseException ignore) {
+                    // wrong format provided
+                    customDay = "";
+                }
+            }
         });
         if (StringUtils.isNotBlank(customDay)) {
-            lessonDateDay.setText(time.getScheduleCustomDayTitle(activity, customDay));
-        } else {
-            lessonDateDay.setText(R.string.date_of_lesson_undefined);
+            Date date = new Date(time.getScheduleCustomDayTimestamp(customDay));
+            String text = dateFormat.format(date);
+            lessonDateDay.setText(text);
         }
     }
 

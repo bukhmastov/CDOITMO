@@ -3,8 +3,11 @@ package com.bukhmastov.cdoitmo.util;
 import android.content.Context;
 
 import java.util.Calendar;
+import java.util.Locale;
 
 public interface Time {
+
+    Locale DEFAULT_LOCALE = Locale.GERMANY;
 
     Calendar getCalendar();
 
@@ -31,4 +34,6 @@ public interface Time {
     String getScheduleCustomDayRaw(Calendar calendar);
 
     String getScheduleCustomDayTitle(Context context, String customDay);
+
+    long getScheduleCustomDayTimestamp(String customDay);
 }

@@ -591,6 +591,7 @@
     <string name="network_failed_auth_required">Authorization required</string>
     <string name="network_failed_credentials_required">Login/password required</string>
     <string name="network_failed_credentials_failed">Invalid login/password</string>
+    <string name="network_failed_restore_isu_credentials_failed">Unable to log in to the ISU. You must log out and re-login using your username and password.</string>
 
     <string name="schedule_failed_load">Failed to load schedule</string>
     <string name="schedule_failed_empty_query">Empty query provided</string>
@@ -601,11 +602,27 @@
     <string name="info_primary">General information</string>
     <string name="info_secondary">Additional information</string>
     <string name="day_of_lesson">Day of the lesson</string>
-    <string name="date_of_lesson">Date of the lesson</string>
+    <string name="date_of_lesson">Date of the lesson (dd.MM.yyyy)</string>
     <string name="date_of_lesson_undefined">You must select a date</string>
     <string name="lesson_day_type">Schedule type</string>
     <string name="lesson_day_type_regular">Regular schedule</string>
     <string name="lesson_day_type_date">Schedule for defined day</string>
     <string name="unknown_day_about">Application cannot display the lesson day as the ITMO API does not provide date for defined-date-lessons.</string>
+
+    <string name="crush_this_app">Crush this application</string>
+    <string name="crush_this_app_desc">You are about to crush the application by yourself. After clicking on the \"Continue\" button, the application will be crashed.</string>
+    <string name="use_deifmo_credentials">Use the login and password of the current CDO account</string>
+    <string name="help_errors">App displays errors</string>
+    <string name="help_error_servers">Errors occur when downloading data from servers</string>
+    <string name="help_error_servers_desc">Errors may occur due to the fact that the servers are temporarily unavailable, errors occur on the servers, or the configuration of the servers has changed. Please note that the developer is not related to servers. The application does not have its own server-side, all data is downloaded directly from the servers of DLC, ISU and ITMO.</string>
+    <string name="help_error_not_working">Something does not work or something has broken</string>
+    <string name="help_error_not_working_desc">Something may break in the application and this is normal. Development is conducted by one person, and testing is conducted by one and a half person. All this is only on personal enthusiasm and without any funding. Consequently, missed bugs can sneak into production. If you find an inappropriate behavior and think that this is a bug, just write to the developer or dig into github. Contacts are left on the \"About\" page.</string>
+    <string name="help_error_group_week">Invalid week or group displayed</string>
+    <string name="help_error_group_week_desc">The week or group may be incorrectly determined on the first day of the semester, it depends on the speed of changing data on the servers. If the week or group is displayed incorrectly on other days, inform the developer or override week or group in the settings in the \"General settings\" section.</string>
+    <string name="help_error_isu_reauth">Unsuccessful ISU authorization, although i am already authorized in the ISU</string>
+    <string name="help_error_isu_reauth_desc">Authorization in the ISU sometimes breaks down and you need to logout of the ISU account (in the settings in the \"Linked accounts\" section) and login again using your login and password.</string>
+    <string name="help_read_only">Can this app change my data on servers?</string>
+    <string name="help_read_only_desc">The application works in read only mode. It loads, processes and displays data from servers, without changing any data on the servers. The only exception is the section \"101 audience\" - when submitting at the last stage, data are entered on the CDO server.</string>
+    <string name="help_open_log">Open log</string>
 
 </resources>

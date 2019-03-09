@@ -75,25 +75,57 @@
                             android:paddingStart="@dimen/item_padding"
                             android:paddingEnd="@dimen/item_padding">
 
-                            <EditText
-                                android:id="@+id/input_login"
+                            <LinearLayout
+                                android:id="@+id/auth_credentials"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:ems="10"
-                                android:hint="@string/login"
-                                android:inputType="text"
-                                android:selectAllOnFocus="true"
-                                android:textSize="@dimen/font_size_16" />
+                                android:orientation="vertical"
+                                android:paddingTop="0dp"
+                                android:paddingBottom="@dimen/item_padding_quarter">
 
-                            <EditText
-                                android:id="@+id/input_password"
+                                <EditText
+                                    android:id="@+id/input_login"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:ems="10"
+                                    android:hint="@string/login"
+                                    android:inputType="text"
+                                    android:selectAllOnFocus="true"
+                                    android:textSize="@dimen/font_size_16" />
+
+                                <EditText
+                                    android:id="@+id/input_password"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:ems="10"
+                                    android:hint="@string/password"
+                                    android:inputType="textPassword"
+                                    android:selectAllOnFocus="true"
+                                    android:textSize="@dimen/font_size_16" />
+
+                            </LinearLayout>
+
+                            <LinearLayout
+                                android:id="@+id/auth_credentials_deifmo"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:ems="10"
-                                android:hint="@string/password"
-                                android:inputType="textPassword"
-                                android:selectAllOnFocus="true"
-                                android:textSize="@dimen/font_size_16" />
+                                android:orientation="horizontal">
+
+                                <CheckBox
+                                    android:id="@+id/auth_credentials_deifmo_checkbox"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_gravity="center_vertical" />
+
+                                <TextView
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:layout_gravity="center_vertical"
+                                    android:text="@string/use_deifmo_credentials"
+                                    android:textColor="?android:attr/textColorPrimary"
+                                    android:textSize="@dimen/font_size_14"/>
+
+                            </LinearLayout>
 
                         </LinearLayout>
 

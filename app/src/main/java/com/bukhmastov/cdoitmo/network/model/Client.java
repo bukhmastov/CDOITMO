@@ -82,6 +82,7 @@ public abstract class Client {
     public static final int FAILED_AUTH_REQUIRED = 10;
     public static final int FAILED_AUTH_CREDENTIALS_REQUIRED = 11;
     public static final int FAILED_AUTH_CREDENTIALS_FAILED = 12;
+    public static final int FAILED_AUTH_ISU_RESTORE_CREDENTIALS_FAILED = 13;
 
     /**
      * Protocol of request
@@ -343,10 +344,6 @@ public abstract class Client {
             if (StringUtils.isNotBlank(message)) {
                 return message;
             }
-            Integer state = getFailedState(context, code);
-            if (state != null) {
-                failed = state;
-            }
         }
         switch (failed) {
             case FAILED: return context.getString(R.string.network_failed);
@@ -362,6 +359,7 @@ public abstract class Client {
             case FAILED_AUTH_REQUIRED: return context.getString(R.string.network_failed_auth_required);
             case FAILED_AUTH_CREDENTIALS_REQUIRED: return context.getString(R.string.network_failed_credentials_required);
             case FAILED_AUTH_CREDENTIALS_FAILED: return context.getString(R.string.network_failed_credentials_failed);
+            case FAILED_AUTH_ISU_RESTORE_CREDENTIALS_FAILED: return context.getString(R.string.network_failed_restore_isu_credentials_failed);
         }
         return context.getString(R.string.network_failed);
     }
@@ -370,14 +368,17 @@ public abstract class Client {
         return failed == FAILED_AUTH ||
                 failed == FAILED_AUTH_REQUIRED ||
                 failed == FAILED_AUTH_CREDENTIALS_REQUIRED ||
-                failed == FAILED_AUTH_CREDENTIALS_FAILED;
+                failed == FAILED_AUTH_CREDENTIALS_FAILED ||
+                failed == FAILED_AUTH_ISU_RESTORE_CREDENTIALS_FAILED;
+    }
+
+    public boolean isFailedAuthCredentials(int failed) {
+        return failed == FAILED_AUTH_CREDENTIALS_REQUIRED ||
+                failed == FAILED_AUTH_CREDENTIALS_FAILED ||
+                failed == FAILED_AUTH_ISU_RESTORE_CREDENTIALS_FAILED;
     }
 
     protected String getFailedMessage(@NonNull Context context, int code) {
-        return null;
-    }
-
-    protected Integer getFailedState(@NonNull Context context, int code) {
         return null;
     }
 

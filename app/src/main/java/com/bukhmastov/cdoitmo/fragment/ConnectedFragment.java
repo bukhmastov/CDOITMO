@@ -318,6 +318,7 @@ public abstract class ConnectedFragment<P extends ConnectedFragmentPresenter> ex
         if (connectedFragment == IsuScholarshipPaidFragment.class) return new Data(connectedFragment, context.getString(R.string.scholarship), R.drawable.ic_money_circle);
         if (connectedFragment == IsuScholarshipAssignedFragment.class) return new Data(connectedFragment, context.getString(R.string.scholarship_assigned), R.drawable.ic_money_circle);
         if (connectedFragment == IsuScholarshipPaidDetailsFragment.class) return new Data(connectedFragment, context.getString(R.string.scholarship_paid), R.drawable.ic_money_circle);
+        if (connectedFragment == HelpFragment.class) return new Data(connectedFragment, context.getString(R.string.help_errors), R.drawable.ic_help);
         throw new IllegalStateException("Connected fragment class without declaration at ConnectedFragment#getData, class = " + connectedFragment.getName());
     }
 

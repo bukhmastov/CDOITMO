@@ -12,6 +12,7 @@ import android.widget.TextView;
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.event.bus.EventBus;
 import com.bukhmastov.cdoitmo.event.events.OpenIntentEvent;
+import com.bukhmastov.cdoitmo.exception.SimulatedRuntimeException;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseCrashlyticsProvider;
 import com.bukhmastov.cdoitmo.fragment.presenter.LogFragmentPresenter;
@@ -64,6 +65,7 @@ public class LogFragmentPresenterImpl extends ConnectedFragmentPresenterImpl
                 return;
             }
             MenuItem info = menu.findItem(R.id.action_preference_hard_reset);
+            MenuItem crush = menu.findItem(R.id.action_crush);
             if (info != null) {
                 info.setVisible(true);
                 info.setOnMenuItemClickListener(item -> {
@@ -80,7 +82,22 @@ public class LogFragmentPresenterImpl extends ConnectedFragmentPresenterImpl
                     return true;
                 });
             }
-
+            if (crush != null) {
+                crush.setVisible(true);
+                crush.setOnMenuItemClickListener(item -> {
+                    if (activity == null || activity.isFinishing() || activity.isDestroyed()) {
+                        return false;
+                    }
+                    new AlertDialog.Builder(activity)
+                            .setIcon(R.drawable.ic_bolt)
+                            .setTitle(R.string.crush_this_app)
+                            .setMessage(R.string.crush_this_app_desc)
+                            .setNegativeButton(R.string.do_cancel, null)
+                            .setPositiveButton(R.string.proceed, (dialog, which) -> pleaseCrushThisAppForMe())
+                            .create().show();
+                    return true;
+                });
+            }
         } catch (Throwable throwable) {
             log.exception(throwable);
         }
@@ -228,6 +245,10 @@ public class LogFragmentPresenterImpl extends ConnectedFragmentPresenterImpl
                     view -> staticUtil.get().reLaunch(activity)
             );
         });
+    }
+
+    private void pleaseCrushThisAppForMe() {
+        throw new SimulatedRuntimeException();
     }
 
     @Nullable

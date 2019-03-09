@@ -25,6 +25,7 @@ import com.bukhmastov.cdoitmo.event.bus.annotation.Event;
 import com.bukhmastov.cdoitmo.event.events.ClearCacheEvent;
 import com.bukhmastov.cdoitmo.event.events.MainActivityEvent;
 import com.bukhmastov.cdoitmo.event.events.OpenActivityEvent;
+import com.bukhmastov.cdoitmo.event.events.UserInfoChangedEvent;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseConfigProvider;
@@ -611,9 +612,13 @@ public class LoginActivityPresenterImpl implements LoginActivityPresenter {
         }
         if (isNewUser) {
             thread.runOnUI(AL, () -> handler.onProgress(activity.getString(R.string.data_initializing)));
-            loginSetupInformation(login, () -> thread.runOnUI(AL, onDone));
+            loginSetupInformation(login, () -> {
+                thread.runOnUI(AL, onDone);
+            });
         } else {
-            loginSetupInformation(login, () -> {});
+            loginSetupInformation(login, () -> {
+                eventBus.fire(new UserInfoChangedEvent());
+            });
             thread.runOnUI(AL, onDone);
         }
     }

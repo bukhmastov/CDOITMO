@@ -1,67 +1,7 @@
 package com.bukhmastov.cdoitmo.factory.module;
 
-import com.bukhmastov.cdoitmo.fragment.presenter.AboutFragmentPresenter;
-import com.bukhmastov.cdoitmo.fragment.presenter.ERegisterFragmentPresenter;
-import com.bukhmastov.cdoitmo.fragment.presenter.ERegisterSubjectFragmentPresenter;
-import com.bukhmastov.cdoitmo.fragment.presenter.HomeScreenInteractionFragmentPresenter;
-import com.bukhmastov.cdoitmo.fragment.presenter.IsuGroupInfoFragmentPresenter;
-import com.bukhmastov.cdoitmo.fragment.presenter.IsuScholarshipAssignedFragmentPresenter;
-import com.bukhmastov.cdoitmo.fragment.presenter.IsuScholarshipPaidDetailsFragmentPresenter;
-import com.bukhmastov.cdoitmo.fragment.presenter.IsuScholarshipPaidFragmentPresenter;
-import com.bukhmastov.cdoitmo.fragment.presenter.LinkAccountFragmentPresenter;
-import com.bukhmastov.cdoitmo.fragment.presenter.LinkedAccountsFragmentPresenter;
-import com.bukhmastov.cdoitmo.fragment.presenter.LogFragmentPresenter;
-import com.bukhmastov.cdoitmo.fragment.presenter.ProtocolFragmentPresenter;
-import com.bukhmastov.cdoitmo.fragment.presenter.RatingFragmentPresenter;
-import com.bukhmastov.cdoitmo.fragment.presenter.RatingListFragmentPresenter;
-import com.bukhmastov.cdoitmo.fragment.presenter.Room101FragmentPresenter;
-import com.bukhmastov.cdoitmo.fragment.presenter.ScheduleAttestationsFragmentPresenter;
-import com.bukhmastov.cdoitmo.fragment.presenter.ScheduleExamsFragmentPresenter;
-import com.bukhmastov.cdoitmo.fragment.presenter.ScheduleExamsTabFragmentPresenter;
-import com.bukhmastov.cdoitmo.fragment.presenter.ScheduleExamsTabHostFragmentPresenter;
-import com.bukhmastov.cdoitmo.fragment.presenter.ScheduleLessonsFragmentPresenter;
-import com.bukhmastov.cdoitmo.fragment.presenter.ScheduleLessonsModifyFragmentPresenter;
-import com.bukhmastov.cdoitmo.fragment.presenter.ScheduleLessonsShareFragmentPresenter;
-import com.bukhmastov.cdoitmo.fragment.presenter.ScheduleLessonsTabFragmentPresenter;
-import com.bukhmastov.cdoitmo.fragment.presenter.ScheduleLessonsTabHostFragmentPresenter;
-import com.bukhmastov.cdoitmo.fragment.presenter.UniversityBuildingsFragmentPresenter;
-import com.bukhmastov.cdoitmo.fragment.presenter.UniversityEventsFragmentPresenter;
-import com.bukhmastov.cdoitmo.fragment.presenter.UniversityFacultiesFragmentPresenter;
-import com.bukhmastov.cdoitmo.fragment.presenter.UniversityFragmentPresenter;
-import com.bukhmastov.cdoitmo.fragment.presenter.UniversityNewsFragmentPresenter;
-import com.bukhmastov.cdoitmo.fragment.presenter.UniversityPersonsFragmentPresenter;
-import com.bukhmastov.cdoitmo.fragment.presenter.UniversityUnitsFragmentPresenter;
-import com.bukhmastov.cdoitmo.fragment.presenter.impl.AboutFragmentPresenterImpl;
-import com.bukhmastov.cdoitmo.fragment.presenter.impl.ERegisterFragmentPresenterImpl;
-import com.bukhmastov.cdoitmo.fragment.presenter.impl.HomeScreenInteractionFragmentPresenterImpl;
-import com.bukhmastov.cdoitmo.fragment.presenter.impl.IsuGroupInfoFragmentPresenterImpl;
-import com.bukhmastov.cdoitmo.fragment.presenter.impl.IsuScholarshipAssignedFragmentPresenterImpl;
-import com.bukhmastov.cdoitmo.fragment.presenter.impl.IsuScholarshipPaidDetailsFragmentPresenterImpl;
-import com.bukhmastov.cdoitmo.fragment.presenter.impl.IsuScholarshipPaidFragmentPresenterImpl;
-import com.bukhmastov.cdoitmo.fragment.presenter.impl.LinkAccountFragmentPresenterImpl;
-import com.bukhmastov.cdoitmo.fragment.presenter.impl.LinkedAccountsFragmentPresenterImpl;
-import com.bukhmastov.cdoitmo.fragment.presenter.impl.LogFragmentPresenterImpl;
-import com.bukhmastov.cdoitmo.fragment.presenter.impl.ProtocolFragmentPresenterImpl;
-import com.bukhmastov.cdoitmo.fragment.presenter.impl.RatingFragmentPresenterImpl;
-import com.bukhmastov.cdoitmo.fragment.presenter.impl.RatingListFragmentPresenterImpl;
-import com.bukhmastov.cdoitmo.fragment.presenter.impl.Room101FragmentPresenterImpl;
-import com.bukhmastov.cdoitmo.fragment.presenter.impl.ScheduleAttestationsFragmentPresenterImpl;
-import com.bukhmastov.cdoitmo.fragment.presenter.impl.ScheduleExamsFragmentPresenterImpl;
-import com.bukhmastov.cdoitmo.fragment.presenter.impl.ScheduleExamsTabFragmentPresenterImpl;
-import com.bukhmastov.cdoitmo.fragment.presenter.impl.ScheduleExamsTabHostFragmentPresenterImpl;
-import com.bukhmastov.cdoitmo.fragment.presenter.impl.ScheduleLessonsFragmentPresenterImpl;
-import com.bukhmastov.cdoitmo.fragment.presenter.impl.ScheduleLessonsModifyFragmentPresenterImpl;
-import com.bukhmastov.cdoitmo.fragment.presenter.impl.ScheduleLessonsShareFragmentPresenterImpl;
-import com.bukhmastov.cdoitmo.fragment.presenter.impl.ScheduleLessonsTabFragmentPresenterImpl;
-import com.bukhmastov.cdoitmo.fragment.presenter.impl.ScheduleLessonsTabHostFragmentPresenterImpl;
-import com.bukhmastov.cdoitmo.fragment.presenter.impl.ERegisterSubjectFragmentPresenterImpl;
-import com.bukhmastov.cdoitmo.fragment.presenter.impl.UniversityBuildingsFragmentPresenterImpl;
-import com.bukhmastov.cdoitmo.fragment.presenter.impl.UniversityEventsFragmentPresenterImpl;
-import com.bukhmastov.cdoitmo.fragment.presenter.impl.UniversityFacultiesFragmentPresenterImpl;
-import com.bukhmastov.cdoitmo.fragment.presenter.impl.UniversityFragmentPresenterImpl;
-import com.bukhmastov.cdoitmo.fragment.presenter.impl.UniversityNewsFragmentPresenterImpl;
-import com.bukhmastov.cdoitmo.fragment.presenter.impl.UniversityPersonsFragmentPresenterImpl;
-import com.bukhmastov.cdoitmo.fragment.presenter.impl.UniversityUnitsFragmentPresenterImpl;
+import com.bukhmastov.cdoitmo.fragment.presenter.*;
+import com.bukhmastov.cdoitmo.fragment.presenter.impl.*;
 
 import javax.inject.Singleton;
 
@@ -252,5 +192,11 @@ public class FragmentPresenterModule {
     @Singleton
     public IsuScholarshipPaidDetailsFragmentPresenter provideIsuScholarshipPaidDetailsFragmentPresenter() {
         return new IsuScholarshipPaidDetailsFragmentPresenterImpl();
+    }
+
+    @Provides
+    @Singleton
+    public HelpFragmentPresenter provideHelpFragmentPresenter() {
+        return new HelpFragmentPresenterImpl();
     }
 }

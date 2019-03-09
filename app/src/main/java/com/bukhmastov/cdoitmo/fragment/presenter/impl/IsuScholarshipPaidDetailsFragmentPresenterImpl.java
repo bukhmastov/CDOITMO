@@ -250,6 +250,12 @@ public class IsuScholarshipPaidDetailsFragmentPresenterImpl extends ConnectedFra
                                 if (openIsuAuth != null) {
                                     openIsuAuth.setOnClickListener(v -> activity.openActivity(ConnectedActivity.TYPE.STACKABLE, LinkedAccountsFragment.class, null));
                                 }
+                                if (isuPrivateRestClient.isFailedAuthCredentials(state)) {
+                                    TextView isuAuthMessage = fragment.container().findViewById(R.id.isu_auth_message);
+                                    if (isuAuthMessage != null) {
+                                        isuAuthMessage.setText(isuPrivateRestClient.getFailedMessage(activity, code, state));
+                                    }
+                                }
                             }, throwable -> {
                                 loadFailed();
                             });

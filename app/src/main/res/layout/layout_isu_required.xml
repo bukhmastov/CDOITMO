@@ -19,6 +19,7 @@
             android:tint="?attr/colorIcXml"/>
 
         <TextView
+            android:id="@+id/isu_auth_message"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/item_padding_eight"

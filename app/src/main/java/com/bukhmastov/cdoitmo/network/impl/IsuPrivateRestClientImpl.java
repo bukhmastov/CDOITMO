@@ -107,15 +107,15 @@ public class IsuPrivateRestClientImpl extends IsuPrivateRestClient {
                         super.onSuccess(code, headers, "authorized");
                         return;
                     }
-                    if (code == 401) {
-                        super.onFailure(code, headers, FAILED_AUTH_CREDENTIALS_FAILED);
-                        return;
-                    }
                     super.onFailure(code, headers, FAILED_AUTH);
                 }
                 @Override
                 public void onFailure(int code, Headers headers, int state) {
                     log.v(TAG, "authorize by refresh token | failed | code=", code, " | state=", state);
+                    if (code == 400 || code == 401) {
+                        super.onFailure(code, headers, FAILED_AUTH_ISU_RESTORE_CREDENTIALS_FAILED);
+                        return;
+                    }
                     super.onFailure(code, headers, state);
                 }
             });
@@ -185,15 +185,15 @@ public class IsuPrivateRestClientImpl extends IsuPrivateRestClient {
                         super.onSuccess(code, headers, "authorized");
                         return;
                     }
-                    if (code == 401) {
-                        super.onFailure(code, headers, FAILED_AUTH_CREDENTIALS_FAILED);
-                        return;
-                    }
                     super.onFailure(code, headers, FAILED_AUTH);
                 }
                 @Override
                 public void onFailure(int code, Headers headers, int state) {
                     log.v(TAG, "authorize by password | failed | code=", code, " | state=", state);
+                    if (code == 400 || code == 401) {
+                        super.onFailure(code, headers, FAILED_AUTH_CREDENTIALS_FAILED);
+                        return;
+                    }
                     super.onFailure(code, headers, state);
                 }
             });

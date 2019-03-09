@@ -56,14 +56,6 @@ public abstract class Isu extends Client {
         }
     }
 
-    @Override
-    protected Integer getFailedState(@NonNull Context context, int code) {
-        if (code == 401) {
-            return FAILED_AUTH_REQUIRED;
-        }
-        return super.getFailedState(context, code);
-    }
-
     @NonNull
     private okhttp3.Headers getHeaders(@NonNull final Context context) throws IOException {
         HashMap<String, String> headers = new HashMap<>();

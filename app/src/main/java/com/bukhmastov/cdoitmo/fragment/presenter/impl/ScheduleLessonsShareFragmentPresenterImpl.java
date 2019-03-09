@@ -668,14 +668,14 @@ public class ScheduleLessonsShareFragmentPresenterImpl extends ConnectedFragment
             if (ADDED.equals(change.type)) {
                 FSLAddedDay day = new FSLAddedDay();
                 day.setDay(change.weekday);
-                day.setCustomDay(null);
+                day.setCustomDay(change.customDay);
                 day.setLesson(change.lesson);
                 content.getAdded().add(day);
             }
             if (REDUCED.equals(change.type)) {
                 FSLReducedDay day = new FSLReducedDay();
                 day.setDay(change.weekday);
-                day.setCustomDay(null);
+                day.setCustomDay(change.customDay);
                 day.setLesson(new FSLReduced(scheduleLessonsHelper.getLessonHash(change.lesson)));
                 content.getReduced().add(day);
             }
