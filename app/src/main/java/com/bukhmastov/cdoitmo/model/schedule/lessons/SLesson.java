@@ -189,36 +189,40 @@ public class SLesson extends JsonEntity implements Comparable<SLesson> {
                     Calendar::compareTo
             );
             if (c == 0) {
-                c = Objects.compare(getSubject(), lesson.getSubject(), String::compareTo);
+                c = stringCompare(getSubject(), lesson.getSubject());
             }
             if (c == 0) {
-                c = Objects.compare(getNote(), lesson.getNote(), String::compareTo);
+                c = stringCompare(getNote(), lesson.getNote());
             }
             if (c == 0) {
-                c = Objects.compare(getType(), lesson.getType(), String::compareTo);
+                c = stringCompare(getType(), lesson.getType());
             }
             if (c == 0) {
                 c = Objects.compare(getParity(), lesson.getParity(), Integer::compareTo);
             }
             if (c == 0) {
-                c = Objects.compare(getGroup(), lesson.getGroup(), String::compareTo);
+                c = stringCompare(getGroup(), lesson.getGroup());
             }
             if (c == 0) {
-                c = Objects.compare(getTeacherName(), lesson.getTeacherName(), String::compareTo);
+                c = stringCompare(getTeacherName(), lesson.getTeacherName());
             }
             if (c == 0) {
-                c = Objects.compare(getRoom(), lesson.getRoom(), String::compareTo);
+                c = stringCompare(getRoom(), lesson.getRoom());
             }
             if (c == 0) {
-                c = Objects.compare(getBuilding(), lesson.getBuilding(), String::compareTo);
+                c = stringCompare(getBuilding(), lesson.getBuilding());
             }
             if (c == 0) {
-                c = Objects.compare(getCdoitmoType(), lesson.getCdoitmoType(), String::compareTo);
+                c = stringCompare(getCdoitmoType(), lesson.getCdoitmoType());
             }
             return c;
         } catch (Exception e) {
             return 0;
         }
+    }
+
+    private int stringCompare(String a, String b) {
+        return Objects.compare(StringUtils.emptyIfNull(a), StringUtils.emptyIfNull(b), String::compareTo);
     }
 
     @Override

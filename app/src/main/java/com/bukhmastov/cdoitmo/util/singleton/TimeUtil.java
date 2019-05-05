@@ -19,6 +19,7 @@ public class TimeUtil {
             calendar.set(Calendar.HOUR_OF_DAY, Integer.parseInt(times[0]));
             calendar.set(Calendar.MINUTE, Integer.parseInt(times[1]));
             calendar.set(Calendar.SECOND, 0);
+            calendar.set(Calendar.MILLISECOND, 0);
             return calendar;
         } catch (Exception e) {
             return null;

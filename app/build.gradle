@@ -41,13 +41,14 @@ android {
 
 ext {
     androidXVersion = "1.0.0"
+    androidXAppcompatVersion = "1.0.2"
     constraintlayoutVersion = "1.1.3"
-    firebaseCoreVersion = "16.0.6"
-    firebaseMessagingVersion = "17.3.4"
-    firebaseConfigVersion = "16.1.3"
-    firebasePerfVersion = "16.2.3"
-    firebaseCrashlyticsVersion = "2.9.8"
-    googlePlayServicesVersion = "16.0.0"
+    firebaseCoreVersion = "16.0.8"
+    firebaseMessagingVersion = "17.6.0"
+    firebaseConfigVersion = "16.5.0"
+    firebasePerfVersion = "16.2.5"
+    firebaseCrashlyticsVersion = "2.10.0"
+    googlePlayServicesVersion = "16.1.0"
     okhttpVersion = "3.10.0"
     htmlcleanerVersion = "2.18"
     picassoVersion = "2.5.2"
@@ -60,7 +61,7 @@ dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
     // android x
     implementation "com.google.android.material:material:${androidXVersion}"
-    implementation "androidx.appcompat:appcompat:${androidXVersion}"
+    implementation "androidx.appcompat:appcompat:${androidXAppcompatVersion}"
     implementation "androidx.legacy:legacy-support-v4:${androidXVersion}"
     implementation "androidx.cardview:cardview:${androidXVersion}"
     implementation "androidx.recyclerview:recyclerview:${androidXVersion}"
