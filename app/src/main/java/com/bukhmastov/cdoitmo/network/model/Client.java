@@ -10,6 +10,7 @@ import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.model.JsonEntity;
 import com.bukhmastov.cdoitmo.network.handlers.ResponseHandler;
 import com.bukhmastov.cdoitmo.network.handlers.RestResponseHandler;
+import com.bukhmastov.cdoitmo.network.handlers.joiner.RestStringResponseHandlerJoiner;
 import com.bukhmastov.cdoitmo.network.provider.NetworkClientProvider;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Storage;
@@ -129,8 +130,9 @@ public abstract class Client {
                     builder.addQueryParameter(entry.getKey(), entry.getValue());
                 }
                 execute(builder.build(), headers, null, handler);
+            } else {
+                execute(httpUrl, headers, null, handler);
             }
-            execute(httpUrl, headers, null, handler);
         } catch (Exception exception) {
             handler.onFailure(STATUS_CODE_EMPTY, null, getFailedStatus(exception));
         }
@@ -183,7 +185,7 @@ public abstract class Client {
      */
     protected <T extends JsonEntity> void doGetJson(@NonNull String url, @Nullable okhttp3.Headers headers,
                             @Nullable Map<String, String> query, @NonNull RestResponseHandler<T> restHandler) {
-        ResponseHandler handler = new ResponseHandler() {
+        doGet(url, headers, query, new RestStringResponseHandlerJoiner(restHandler) {
             @Override
             public void onSuccess(int code, Headers headers, String response) throws Exception {
                 try {
@@ -227,20 +229,7 @@ public abstract class Client {
                     restHandler.onFailure(code, headers, getFailedStatus(exception));
                 }
             }
-            @Override
-            public void onFailure(int code, Headers headers, int state) {
-                restHandler.onFailure(code, headers, state);
-            }
-            @Override
-            public void onProgress(int state) {
-                restHandler.onProgress(state);
-            }
-            @Override
-            public void onNewRequest(Request request) {
-                restHandler.onNewRequest(request);
-            }
-        };
-        doGet(url, headers, query, handler);
+        });
     }
 
     /**
