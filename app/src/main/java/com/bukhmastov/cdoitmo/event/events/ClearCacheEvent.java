@@ -28,7 +28,7 @@ public class ClearCacheEvent {
         if (ALL.equals(getIdentity())) {
             return true;
         }
-        if (NOT_VALUABLE.equals(getIdentity()) && !VALUABLE_IDENTITIES.contains(getIdentity())) {
+        if (NOT_VALUABLE.equals(getIdentity()) && !VALUABLE_IDENTITIES.contains(identity)) {
             return true;
         }
         return getIdentity().equals(identity);
