@@ -116,32 +116,18 @@ public class ThemeDialog extends Dialog {
         log.v(TAG, "show");
         thread.runOnUI(() -> {
             ViewGroup themeLayout = (ViewGroup) inflate(R.layout.dialog_theme_picker);
-            thread.standalone(() -> {
-                ViewGroup themeContainerStatic = themeLayout.findViewById(R.id.theme_container_static);
-                ViewGroup themeContainerAuto = themeLayout.findViewById(R.id.theme_container_auto);
-                ViewGroup switcherContainer = themeLayout.findViewById(R.id.switcher_container);
-                Switch switcher = themeLayout.findViewById(R.id.switcher);
-                TextView t1Time = themeLayout.findViewById(R.id.t1_time);
-                TextView t2Time = themeLayout.findViewById(R.id.t2_time);
-                TextView t1Spinner = themeLayout.findViewById(R.id.t1_spinner);
-                TextView t2Spinner = themeLayout.findViewById(R.id.t2_spinner);
-                // setup switcher
-                switcher.setOnCheckedChangeListener((compoundButton, checked) -> {
-                    autoEnabled = checked;
-                    log.v(TAG, "switcher clicked | autoEnabled = " + (autoEnabled ? "true" : "false"));
-                    if (autoEnabled) {
-                        themeContainerStatic.setVisibility(View.GONE);
-                        themeContainerAuto.setVisibility(View.VISIBLE);
-                    } else {
-                        themeContainerStatic.setVisibility(View.VISIBLE);
-                        themeContainerAuto.setVisibility(View.GONE);
-                    }
-                });
-                switcherContainer.setOnClickListener(view -> {
-                    log.v(TAG, "switcherContainer clicked");
-                    switcher.setChecked(!autoEnabled);
-                });
-                switcher.setChecked(autoEnabled);
+            ViewGroup themeContainerStatic = themeLayout.findViewById(R.id.theme_container_static);
+            ViewGroup themeContainerAuto = themeLayout.findViewById(R.id.theme_container_auto);
+            ViewGroup switcherContainer = themeLayout.findViewById(R.id.switcher_container);
+            Switch switcher = themeLayout.findViewById(R.id.switcher);
+            TextView t1Time = themeLayout.findViewById(R.id.t1_time);
+            TextView t2Time = themeLayout.findViewById(R.id.t2_time);
+            TextView t1Spinner = themeLayout.findViewById(R.id.t1_spinner);
+            TextView t2Spinner = themeLayout.findViewById(R.id.t2_spinner);
+            // setup switcher
+            switcher.setOnCheckedChangeListener((compoundButton, checked) -> {
+                autoEnabled = checked;
+                log.v(TAG, "switcher clicked | autoEnabled = " + (autoEnabled ? "true" : "false"));
                 if (autoEnabled) {
                     themeContainerStatic.setVisibility(View.GONE);
                     themeContainerAuto.setVisibility(View.VISIBLE);
@@ -149,71 +135,82 @@ public class ThemeDialog extends Dialog {
                     themeContainerStatic.setVisibility(View.VISIBLE);
                     themeContainerAuto.setVisibility(View.GONE);
                 }
-                // setup static theme selector
-                thread.runOnUI(() -> {
-                    for (int i = 0; i < prefThemeTitles.size(); i++) {
-                        final RadioButton radioButton = (RadioButton) inflate(R.layout.dialog_theme_picker_static_item);
-                        radioButton.setText(prefThemeTitles.get(i));
-                        radioButton.setOnCheckedChangeListener((buttonView, isChecked) -> {
-                            if (isChecked) {
-                                staticValue = prefThemeValues.get(prefThemeTitles.indexOf(buttonView.getText().toString().trim()));
-                            }
-                        });
-                        themeContainerStatic.addView(radioButton, RadioGroup.LayoutParams.MATCH_PARENT, RadioGroup.LayoutParams.WRAP_CONTENT);
-                        if (prefThemeValues.indexOf(staticValue) == i) {
-                            ((RadioGroup) themeContainerStatic).check(radioButton.getId());
-                        }
+            });
+            switcherContainer.setOnClickListener(view -> {
+                log.v(TAG, "switcherContainer clicked");
+                switcher.setChecked(!autoEnabled);
+            });
+            switcher.setChecked(autoEnabled);
+            if (autoEnabled) {
+                themeContainerStatic.setVisibility(View.GONE);
+                themeContainerAuto.setVisibility(View.VISIBLE);
+            } else {
+                themeContainerStatic.setVisibility(View.VISIBLE);
+                themeContainerAuto.setVisibility(View.GONE);
+            }
+            // setup static theme selector
+            for (int i = 0; i < prefThemeTitles.size(); i++) {
+                final RadioButton radioButton = (RadioButton) inflate(R.layout.dialog_theme_picker_static_item);
+                radioButton.setText(prefThemeTitles.get(i));
+                radioButton.setOnCheckedChangeListener((buttonView, isChecked) -> {
+                    if (isChecked) {
+                        staticValue = prefThemeValues.get(prefThemeTitles.indexOf(buttonView.getText().toString().trim()));
                     }
                 });
-                // setup automatic theme selector
-                t1Time.setText(t1Hour + ":" + StringUtils.ldgZero(t1Minutes));
-                t1Time.setOnClickListener(view -> {
-                    log.v(TAG, "t1Time clicked");
-                    showTimePicker(t1Hour, t1Minutes, (hours, minutes) -> {
-                        log.v(TAG, "t1Time showTimePicker done | " + hours + " | " + minutes);
-                        t1Hour = hours;
-                        t1Minutes = minutes;
-                        t1Time.setText(t1Hour + ":" + StringUtils.ldgZero(t1Minutes));
-                    });
+                themeContainerStatic.addView(radioButton, RadioGroup.LayoutParams.MATCH_PARENT, RadioGroup.LayoutParams.WRAP_CONTENT);
+                if (prefThemeValues.indexOf(staticValue) == i) {
+                    ((RadioGroup) themeContainerStatic).check(radioButton.getId());
+                }
+            }
+            // setup automatic theme selector
+            t1Time.setText(t1Hour + ":" + StringUtils.ldgZero(t1Minutes));
+            t1Time.setOnClickListener(view -> {
+                log.v(TAG, "t1Time clicked");
+                showTimePicker(t1Hour, t1Minutes, (hours, minutes) -> {
+                    log.v(TAG, "t1Time showTimePicker done | " + hours + " | " + minutes);
+                    t1Hour = hours;
+                    t1Minutes = minutes;
+                    t1Time.setText(t1Hour + ":" + StringUtils.ldgZero(t1Minutes));
                 });
-                t2Time.setText(t2Hour + ":" + StringUtils.ldgZero(t2Minutes));
-                t2Time.setOnClickListener(view -> showTimePicker(t2Hour, t2Minutes, (hours, minutes) -> {
-                    log.v(TAG, "t2Time showTimePicker done | " + hours + " | " + minutes);
-                    t2Hour = hours;
-                    t2Minutes = minutes;
-                    t2Time.setText(t2Hour + ":" + StringUtils.ldgZero(t2Minutes));
-                }));
-                t1Spinner.setText(prefThemeTitles.get(prefThemeValues.indexOf(t1Value)));
-                t1Spinner.setOnClickListener(view -> showThemePicker(t1Value, theme -> {
-                    log.v(TAG, "t1Spinner showThemePicker done | " + theme);
-                    t1Value = theme;
-                    t1Spinner.setText(prefThemeTitles.get(prefThemeValues.indexOf(t1Value)));
-                }));
-                t2Spinner.setText(prefThemeTitles.get(prefThemeValues.indexOf(t2Value)));
-                t2Spinner.setOnClickListener(view -> showThemePicker(t2Value, theme -> {
-                    log.v(TAG, "t2Spinner showThemePicker done | " + theme);
-                    t2Value = theme;
-                    t2Spinner.setText(prefThemeTitles.get(prefThemeValues.indexOf(t2Value)));
-                }));
-                // show picker
-                thread.runOnUI(() -> new AlertDialog.Builder(context)
-                        .setTitle(R.string.theme)
-                        .setView(themeLayout)
-                        .setPositiveButton(R.string.accept, (dialog, which) -> {
-                            log.v(TAG, "show picker accepted");
-                            String theme;
-                            if (autoEnabled) {
-                                theme = t1Hour + ":" + StringUtils.ldgZero(t1Minutes) + "#" + t1Value + "#" +
-                                        t2Hour + ":" + StringUtils.ldgZero(t2Minutes) + "#" + t2Value;
-                            } else {
-                                theme = staticValue;
-                            }
-                            cb.onDone(theme, getThemeDesc(context, theme));
-                        })
-                        .create().show());
-            }, throwable -> {
-                log.exception(throwable);
             });
+            t2Time.setText(t2Hour + ":" + StringUtils.ldgZero(t2Minutes));
+            t2Time.setOnClickListener(view -> showTimePicker(t2Hour, t2Minutes, (hours, minutes) -> {
+                log.v(TAG, "t2Time showTimePicker done | " + hours + " | " + minutes);
+                t2Hour = hours;
+                t2Minutes = minutes;
+                t2Time.setText(t2Hour + ":" + StringUtils.ldgZero(t2Minutes));
+            }));
+            t1Spinner.setText(prefThemeTitles.get(prefThemeValues.indexOf(t1Value)));
+            t1Spinner.setOnClickListener(view -> showThemePicker(t1Value, theme -> {
+                log.v(TAG, "t1Spinner showThemePicker done | " + theme);
+                t1Value = theme;
+                t1Spinner.setText(prefThemeTitles.get(prefThemeValues.indexOf(t1Value)));
+            }));
+            t2Spinner.setText(prefThemeTitles.get(prefThemeValues.indexOf(t2Value)));
+            t2Spinner.setOnClickListener(view -> showThemePicker(t2Value, theme -> {
+                log.v(TAG, "t2Spinner showThemePicker done | " + theme);
+                t2Value = theme;
+                t2Spinner.setText(prefThemeTitles.get(prefThemeValues.indexOf(t2Value)));
+            }));
+            // show picker
+            new AlertDialog.Builder(context)
+                    .setTitle(R.string.theme)
+                    .setView(themeLayout)
+                    .setPositiveButton(R.string.accept, (dialog, which) -> {
+                        log.v(TAG, "show picker accepted");
+                        String theme;
+                        if (autoEnabled) {
+                            theme = t1Hour + ":" + StringUtils.ldgZero(t1Minutes) + "#" + t1Value + "#" +
+                                    t2Hour + ":" + StringUtils.ldgZero(t2Minutes) + "#" + t2Value;
+                        } else {
+                            theme = staticValue;
+                        }
+                        cb.onDone(theme, getThemeDesc(context, theme));
+                    })
+                    .create()
+                    .show();
+        }, throwable -> {
+            log.exception(throwable);
         });
     }
 
