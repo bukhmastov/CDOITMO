@@ -157,7 +157,7 @@
     <string name="schedule_not_found">Schedule not found</string>
     <string name="failed_to_create_widget">Failed to create widget</string>
     <string name="failed_to_load_schedule">Failed to load the schedule</string>
-    <string name="need_to_config_widget">Widget configuration is required</string>
+    <string name="need_to_config_widget">Widget configuration is required\nTap here to open configuration</string>
     <string name="failed_to_show_schedule">Failed to display the schedule</string>
     <string name="monday">Monday</string>
     <string name="tuesday">Tuesday</string>
@@ -416,6 +416,7 @@
     <string name="days_remaining_widget_desc">This application will tell you how much time is left before the next exam</string>
     <string name="need_to_choose_type">You must select a type</string>
     <string name="pin_app_widget_not_supported">Creating widgets in the application is not supported. Creating widgets is available in your launcher.</string>
+    <string name="create_widget">Create widget</string>
     <string name="open_settings">Open settings</string>
     <string name="min_15">15-minute rule</string>
     <string name="handle_file">File processing</string>

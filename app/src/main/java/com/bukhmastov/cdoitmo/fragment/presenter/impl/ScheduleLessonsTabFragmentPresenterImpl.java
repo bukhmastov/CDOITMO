@@ -1,6 +1,10 @@
 package com.bukhmastov.cdoitmo.fragment.presenter.impl;
 
+import android.annotation.TargetApi;
 import android.app.AlertDialog;
+import android.app.PendingIntent;
+import android.appwidget.AppWidgetManager;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
@@ -15,6 +19,13 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.PopupMenu;
 import android.widget.TextView;
+
+import androidx.annotation.IdRes;
+import androidx.annotation.LayoutRes;
+import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activity.ConnectedActivity;
@@ -49,21 +60,14 @@ import com.bukhmastov.cdoitmo.util.Time;
 import com.bukhmastov.cdoitmo.util.singleton.CollectionUtils;
 import com.bukhmastov.cdoitmo.util.singleton.Color;
 import com.bukhmastov.cdoitmo.util.singleton.StringUtils;
+import com.bukhmastov.cdoitmo.widget.ScheduleLessonsWidget;
 
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
-import java.util.Objects;
 import java.util.TreeSet;
 
 import javax.inject.Inject;
-
-import androidx.annotation.IdRes;
-import androidx.annotation.LayoutRes;
-import androidx.fragment.app.Fragment;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
-import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import static com.bukhmastov.cdoitmo.util.Thread.SL;
 
@@ -589,6 +593,7 @@ public class ScheduleLessonsTabFragmentPresenterImpl implements Schedule.Handler
                                     thread.runOnUI(SL, () -> menuItem.setChecked(!isCached));
                                 }
                                 break;
+                            case R.id.create_widget: createWidget(); break;
                             case R.id.remove_changes: clearChanges(); break;
                             case R.id.open_settings:
                                 thread.runOnUI(SL, () -> {
@@ -603,6 +608,9 @@ public class ScheduleLessonsTabFragmentPresenterImpl implements Schedule.Handler
                     popup.dismiss();
                     return true;
                 });
+                if (!isPinWidgetSupported()) {
+                    popup.getMenu().findItem(R.id.create_widget).setVisible(false);
+                }
                 popup.show();
             }, throwable -> {
                 log.exception(throwable);
@@ -857,6 +865,27 @@ public class ScheduleLessonsTabFragmentPresenterImpl implements Schedule.Handler
                 .create().show();
     }
 
+    @TargetApi(Build.VERSION_CODES.O)
+    private void createWidget() {
+        if (!isPinWidgetSupported()) {
+            notificationMessage.snackBar(activity, activity.getString(R.string.pin_app_widget_not_supported));
+            return;
+        }
+        if (schedule == null) {
+            notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
+            return;
+        }
+        AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(activity);
+        ComponentName componentName = new ComponentName(activity, ScheduleLessonsWidget.class);
+        Intent intent = new Intent(activity, ScheduleLessonsWidget.class);
+        intent.setAction(ScheduleLessonsWidget.ACTION_WIDGET_OPEN_CONFIGURATION);
+        intent.putExtra(ScheduleLessonsWidget.EXTRA_WIDGET_WSL_SETTINGS_QUERY, schedule.getQuery());
+        PendingIntent onSuccess = PendingIntent.getBroadcast(activity, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        if (!appWidgetManager.requestPinAppWidget(componentName, null, onSuccess)) {
+            notificationMessage.snackBar(activity, activity.getString(R.string.pin_app_widget_not_supported));
+        }
+    }
+
     // -<-- Lessons global menu --<- || -->- Lesson menu ->--
 
     private void lessonMenu(View view, RVALessons entity) {
@@ -1082,6 +1111,14 @@ public class ScheduleLessonsTabFragmentPresenterImpl implements Schedule.Handler
             }
         }
         return null;
+    }
+
+    private boolean isPinWidgetSupported() {
+        if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.O) {
+            return false;
+        }
+        AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(activity);
+        return appWidgetManager.isRequestPinAppWidgetSupported();
     }
 
     // -<-- Utils --<-

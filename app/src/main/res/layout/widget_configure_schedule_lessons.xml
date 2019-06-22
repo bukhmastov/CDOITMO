@@ -109,26 +109,52 @@
                         </FrameLayout>
 
                         <FrameLayout
-                            android:id="@+id/widget_controls_open_container"
+                            android:id="@+id/widget_before_container"
                             android:layout_width="@dimen/widget_schedule_lessons_button_dimen"
                             android:layout_height="@dimen/widget_schedule_lessons_button_dimen"
                             android:visibility="visible">
 
                             <ImageView
-                                android:id="@+id/widget_controls_open_button"
+                                android:id="@+id/widget_before_button"
                                 android:layout_height="@dimen/widget_schedule_lessons_header_icon"
                                 android:layout_width="@dimen/widget_schedule_lessons_header_icon"
                                 android:layout_margin="@dimen/widget_schedule_lessons_header_icon_padding"
                                 android:layout_gravity="center"
-                                android:src="@drawable/ic_widget_expand"/>
+                                android:src="@drawable/ic_widget_before"/>
 
                         </FrameLayout>
 
                         <FrameLayout
-                            android:id="@+id/widget_controls_close_container"
+                            android:id="@+id/widget_reset_container"
                             android:layout_width="@dimen/widget_schedule_lessons_button_dimen"
                             android:layout_height="@dimen/widget_schedule_lessons_button_dimen"
-                            android:visibility="gone" />
+                            android:visibility="visible">
+
+                            <ImageView
+                                android:id="@+id/widget_reset_button"
+                                android:layout_height="@dimen/widget_schedule_lessons_header_icon"
+                                android:layout_width="@dimen/widget_schedule_lessons_header_icon"
+                                android:layout_margin="@dimen/widget_schedule_lessons_header_icon_padding"
+                                android:layout_gravity="center"
+                                android:src="@drawable/ic_widget_reset"/>
+
+                        </FrameLayout>
+
+                        <FrameLayout
+                            android:id="@+id/widget_next_container"
+                            android:layout_width="@dimen/widget_schedule_lessons_button_dimen"
+                            android:layout_height="@dimen/widget_schedule_lessons_button_dimen"
+                            android:visibility="visible">
+
+                            <ImageView
+                                android:id="@+id/widget_next_button"
+                                android:layout_height="@dimen/widget_schedule_lessons_header_icon"
+                                android:layout_width="@dimen/widget_schedule_lessons_header_icon"
+                                android:layout_margin="@dimen/widget_schedule_lessons_header_icon_padding"
+                                android:layout_gravity="center"
+                                android:src="@drawable/ic_widget_next"/>
+
+                        </FrameLayout>
 
                     </LinearLayout>
 

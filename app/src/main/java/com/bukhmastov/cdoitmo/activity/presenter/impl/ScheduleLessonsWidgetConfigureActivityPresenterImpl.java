@@ -51,6 +51,7 @@ import com.bukhmastov.cdoitmo.widget.ScheduleLessonsWidget;
 import com.bukhmastov.cdoitmo.widget.ScheduleLessonsWidgetStorage;
 
 import java.util.ArrayList;
+import java.util.Locale;
 
 import javax.inject.Inject;
 
@@ -121,8 +122,6 @@ public class ScheduleLessonsWidgetConfigureActivityPresenterImpl implements Sche
                 close(Activity.RESULT_CANCELED, null);
                 return;
             }
-            Settings.Schedule.query = Default.Schedule.query;
-            Settings.Schedule.title = Default.Schedule.title;
             init();
         });
     }
@@ -134,12 +133,31 @@ public class ScheduleLessonsWidgetConfigureActivityPresenterImpl implements Sche
     }
 
     private void init() {
+        initDefaults();
         initPartPreview();
         initPartSchedule();
         initPartTheme();
         initPartUpdate();
         initPartDynamicShift();
         initFinishButton();
+    }
+
+    private void initDefaults() {
+        WSLSettings settings = getSettings(mAppWidgetId);
+        if (settings == null) {
+            settings = new WSLSettings();
+        }
+        WSLTheme theme = settings.getTheme();
+        if (theme == null) {
+            theme = new WSLTheme();
+        }
+        Settings.Schedule.query = StringUtils.nvlt(settings.getQuery(), Default.Schedule.query);
+        Settings.Schedule.title = StringUtils.nvlt(settings.getQuery(), Default.Schedule.title);
+        Settings.Theme.background = StringUtils.nvlt(theme.getBackground(), isDarkTheme ? Default.Theme.Dark.background : Default.Theme.Light.background);
+        Settings.Theme.text       = StringUtils.nvlt(theme.getText(),       isDarkTheme ? Default.Theme.Dark.text       : Default.Theme.Light.text);
+        Settings.Theme.opacity = theme.getOpacity() != 0 ? theme.getOpacity() : Default.Theme.Light.opacity;
+        Settings.updateTime = settings.getUpdateTime() != 0 ? settings.getUpdateTime() : Default.updateTime;
+        Settings.useShiftAutomatic = Default.useShiftAutomatic;
     }
     
     private void initPartPreview() {
@@ -170,8 +188,6 @@ public class ScheduleLessonsWidgetConfigureActivityPresenterImpl implements Sche
                     // just ignore
                 }
             }
-            Settings.Theme.background = isDarkTheme ? Default.Theme.Dark.background : Default.Theme.Light.background;
-            Settings.Theme.text       = isDarkTheme ? Default.Theme.Dark.text       : Default.Theme.Light.text;
             updateDemo();
         });
     }
@@ -464,6 +480,7 @@ public class ScheduleLessonsWidgetConfigureActivityPresenterImpl implements Sche
             final TextView text_color_picker_hint = layout.findViewById(R.id.text_color_picker_hint);
 
             final ViewGroup background_opacity_picker = layout.findViewById(R.id.background_opacity_picker);
+            final TextView background_opacity_picker_title = layout.findViewById(R.id.background_opacity_picker_title);
             final SeekBar background_opacity_picker_seek_bar = layout.findViewById(R.id.background_opacity_picker_seek_bar);
 
             // setup ui
@@ -527,7 +544,7 @@ public class ScheduleLessonsWidgetConfigureActivityPresenterImpl implements Sche
             }));
             default_theme_light_background.setText(activity.getString(R.string.background_color) + ": " + Default.Theme.Light.background);
             default_theme_light_text.setText(activity.getString(R.string.text_color) + ": " + Default.Theme.Light.text);
-            default_theme_light_opacity.setText(activity.getString(R.string.background_opacity) + ": " + Default.Theme.Light.opacity);
+            default_theme_light_opacity.setText(activity.getString(R.string.background_opacity) + ": " + opacity2percent(Default.Theme.Light.opacity) + "%");
 
             default_theme_dark.setOnClickListener(view -> thread.run(WSLC, () -> {
                 log.v(TAG, "activatePartTheme | dark theme selected");
@@ -549,7 +566,7 @@ public class ScheduleLessonsWidgetConfigureActivityPresenterImpl implements Sche
             }));
             default_theme_dark_background.setText(activity.getString(R.string.background_color) + ": " + Default.Theme.Dark.background);
             default_theme_dark_text.setText(activity.getString(R.string.text_color) + ": " + Default.Theme.Dark.text);
-            default_theme_dark_opacity.setText(activity.getString(R.string.background_opacity) + ": " + Default.Theme.Dark.opacity);
+            default_theme_dark_opacity.setText(activity.getString(R.string.background_opacity) + ": " + opacity2percent(Default.Theme.Dark.opacity) + "%");
 
             background_color_picker.setOnClickListener(view -> thread.run(WSLC, () -> {
                 log.v(TAG, "activatePartTheme | background color picker clicked");
@@ -590,6 +607,7 @@ public class ScheduleLessonsWidgetConfigureActivityPresenterImpl implements Sche
             applyColor(Settings.Theme.text, text_color_picker, text_color_picker_image, text_color_picker_value, text_color_picker_header, text_color_picker_hint);
 
             background_opacity_picker.getBackground().setAlpha((int) ((double) (255 - Settings.Theme.opacity) * 0.5));
+            background_opacity_picker_title.setText(activity.getString(R.string.background_opacity) + " – " + opacity2percent(Settings.Theme.opacity) + "%");
             background_opacity_picker_seek_bar.setProgress(Settings.Theme.opacity);
             background_opacity_picker_seek_bar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
                 @Override
@@ -602,6 +620,7 @@ public class ScheduleLessonsWidgetConfigureActivityPresenterImpl implements Sche
                             progress = 255;
                         }
                         background_opacity_picker.getBackground().setAlpha((int) ((double) (255 - progress) * 0.5));
+                        background_opacity_picker_title.setText(activity.getString(R.string.background_opacity) + " – " + opacity2percent(progress) + "%");
                     } catch (Exception e) {
                         log.exception(e);
                         notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
@@ -718,7 +737,9 @@ public class ScheduleLessonsWidgetConfigureActivityPresenterImpl implements Sche
                 TextView widget_title = widget_content.findViewById(R.id.widget_title);
                 TextView widget_day_title = widget_content.findViewById(R.id.widget_day_title);
                 ImageView widget_refresh_button = widget_content.findViewById(R.id.widget_refresh_button);
-                ImageView widget_controls_open_button = widget_content.findViewById(R.id.widget_controls_open_button);
+                ImageView widget_before_button = widget_content.findViewById(R.id.widget_before_button);
+                ImageView widget_reset_button = widget_content.findViewById(R.id.widget_reset_button);
+                ImageView widget_next_button = widget_content.findViewById(R.id.widget_next_button);
                 TextView slw_item_time_start = widget_content.findViewById(R.id.slw_item_time_start);
                 ImageView slw_item_time_icon = widget_content.findViewById(R.id.slw_item_time_icon);
                 TextView slw_item_time_end = widget_content.findViewById(R.id.slw_item_time_end);
@@ -730,7 +751,9 @@ public class ScheduleLessonsWidgetConfigureActivityPresenterImpl implements Sche
                 widget_title.setTextColor(text);
                 widget_day_title.setTextColor(text);
                 widget_refresh_button.setImageTintList(ColorStateList.valueOf(text));
-                widget_controls_open_button.setImageTintList(ColorStateList.valueOf(text));
+                widget_before_button.setImageTintList(ColorStateList.valueOf(text));
+                widget_reset_button.setImageTintList(ColorStateList.valueOf(text));
+                widget_next_button.setImageTintList(ColorStateList.valueOf(text));
                 slw_item_time_start.setTextColor(text);
                 slw_item_time_icon.setImageTintList(ColorStateList.valueOf(text));
                 slw_item_time_end.setTextColor(text);
@@ -766,7 +789,7 @@ public class ScheduleLessonsWidgetConfigureActivityPresenterImpl implements Sche
             } else {
                 summary  = "Фон" + ": " + Settings.Theme.background + ", ";
                 summary += "Текст" + ": " + Settings.Theme.text + ", ";
-                summary += "Прозрачность" + ": " + Settings.Theme.opacity;
+                summary += "Прозрачность" + ": " + opacity2percent(Settings.Theme.opacity) + "%";
             }
             partThemeSummary.setText(summary);
         }, throwable -> {
@@ -815,6 +838,24 @@ public class ScheduleLessonsWidgetConfigureActivityPresenterImpl implements Sche
         log.v(TAG, "parseColor | color=" + color + " | opacity=" + opacity);
         int parsed = Color.parseColor(color);
         return Color.argb(opacity, Color.red(parsed), Color.green(parsed), Color.blue(parsed));
+    }
+
+    private String opacity2percent(int opacity) {
+        double iOpacity = 255.0 - (double) opacity;
+        double ratio = 100.0 / 255.0;
+        double percent = iOpacity * ratio;
+        return String.format(Locale.getDefault(), percent % 1.0 != 0 ? "%.2f" : "%.0f", percent);
+    }
+
+    private WSLSettings getSettings(int appWidgetId) {
+        try {
+            if (appWidgetId == AppWidgetManager.INVALID_APPWIDGET_ID) {
+                return null;
+            }
+            return scheduleLessonsWidgetStorage.getSettings(appWidgetId);
+        } catch (Exception ignore) {
+            return null;
+        }
     }
 
     private void close(int result, Intent intent) {

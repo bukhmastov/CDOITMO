@@ -8,6 +8,10 @@
         android:title="@string/add_to_cache" />
 
     <item
+        android:id="@+id/create_widget"
+        android:title="@string/create_widget" />
+
+    <item
         android:id="@+id/remove_changes"
         android:title="@string/remove_changes" />
 

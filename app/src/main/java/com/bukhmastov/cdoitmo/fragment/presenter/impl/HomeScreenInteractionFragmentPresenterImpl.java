@@ -3,8 +3,8 @@ package com.bukhmastov.cdoitmo.fragment.presenter.impl;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.app.AlertDialog;
+import android.app.PendingIntent;
 import android.appwidget.AppWidgetManager;
-import android.appwidget.AppWidgetProviderInfo;
 import android.content.ComponentName;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -44,6 +44,7 @@ import com.bukhmastov.cdoitmo.util.Storage;
 import com.bukhmastov.cdoitmo.util.Thread;
 import com.bukhmastov.cdoitmo.util.singleton.CollectionUtils;
 import com.bukhmastov.cdoitmo.util.singleton.StringUtils;
+import com.bukhmastov.cdoitmo.widget.ScheduleLessonsWidget;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -225,23 +226,25 @@ public class HomeScreenInteractionFragmentPresenterImpl extends ConnectedFragmen
     private void initWidgets() {
         thread.run(AHS, () -> {
             log.v(TAG, "initWidgets");
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-                AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(activity);
-                if (!appWidgetManager.isRequestPinAppWidgetSupported()) {
-                    showWidgetsHolder();
-                    return;
-                }
-                AppWidgetProviderInfo appWidgetProviderInfo = new AppWidgetProviderInfo();
-                ComponentName componentName = appWidgetProviderInfo.provider;
-                if (!appWidgetManager.requestPinAppWidget(componentName, null, null)) {
-                    showWidgetsHolder();
-                }
-            } else {
+            if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.O) {
+                showWidgetsHolder();
+                return;
+            }
+            AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(activity);
+            if (!appWidgetManager.isRequestPinAppWidgetSupported()) {
+                showWidgetsHolder();
+                return;
+            }
+            ComponentName componentName = new ComponentName(activity, ScheduleLessonsWidget.class);
+            Intent intent = new Intent(activity, ScheduleLessonsWidget.class);
+            intent.setAction(ScheduleLessonsWidget.ACTION_WIDGET_OPEN_CONFIGURATION);
+            PendingIntent onSuccess = PendingIntent.getBroadcast(activity, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+            if (!appWidgetManager.requestPinAppWidget(componentName, null, onSuccess)) {
                 showWidgetsHolder();
             }
         }, throwable -> {
             log.exception(throwable);
-            notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
+            showWidgetsHolder();
         });
     }
     

@@ -161,7 +161,7 @@
     <string name="schedule_not_found">Расписание не найдено</string>
     <string name="failed_to_create_widget">Не удалось создать виджет</string>
     <string name="failed_to_load_schedule">Не удалось загрузить расписание</string>
-    <string name="need_to_config_widget">Необходима настройка виджета</string>
+    <string name="need_to_config_widget">Необходима настройка виджета\nНажмите, чтобы открыть настройку</string>
     <string name="failed_to_show_schedule">Не удалось отобразить распиание</string>
     <string name="monday">Понедельник</string>
     <string name="tuesday">Вторник</string>
@@ -424,6 +424,7 @@
     <string name="days_remaining_widget_desc">Данное приложение подскажет сколько времени осталось до ближайшего экзамена</string>
     <string name="need_to_choose_type">Необходимо выбрать тип</string>
     <string name="pin_app_widget_not_supported">Создание виджетов в приложении не поддерживается. Создание виджетов доступно в Вашем лаунчере.</string>
+    <string name="create_widget">Создать виджет</string>
     <string name="open_settings">Открыть настройки</string>
     <string name="min_15">Правило 15 минут</string>
     <string name="handle_file">Обработка файла</string>

@@ -21,6 +21,7 @@ import com.bukhmastov.cdoitmo.App;
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activity.MainActivity;
 import com.bukhmastov.cdoitmo.activity.PikaActivity;
+import com.bukhmastov.cdoitmo.activity.ScheduleLessonsWidgetConfigureActivity;
 import com.bukhmastov.cdoitmo.activity.presenter.ScheduleLessonsWidgetConfigureActivityPresenter;
 import com.bukhmastov.cdoitmo.event.bus.EventBus;
 import com.bukhmastov.cdoitmo.event.events.OpenActivityEvent;
@@ -39,6 +40,7 @@ import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Thread;
 import com.bukhmastov.cdoitmo.util.Time;
 import com.bukhmastov.cdoitmo.util.singleton.CollectionUtils;
+import com.bukhmastov.cdoitmo.util.singleton.StringUtils;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -68,6 +70,9 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
     public static final String ACTION_WIDGET_CONTROLS_NEXT = "com.bukhmastov.cdoitmo.ACTION_WIDGET_CONTROLS_NEXT";
     public static final String ACTION_WIDGET_CONTROLS_BEFORE = "com.bukhmastov.cdoitmo.ACTION_WIDGET_CONTROLS_BEFORE";
     public static final String ACTION_WIDGET_CONTROLS_RESET = "com.bukhmastov.cdoitmo.ACTION_WIDGET_CONTROLS_RESET";
+    public static final String ACTION_WIDGET_OPEN_CONFIGURATION = "com.bukhmastov.cdoitmo.ACTION_WIDGET_OPEN_CONFIGURATION";
+
+    public static final String EXTRA_WIDGET_WSL_SETTINGS_QUERY = "CDOITMO_EXTRA_WIDGET_WSL_SETTINGS_QUERY";
 
     @Inject
     Log log;
@@ -491,9 +496,11 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
             layout.removeAllViews(R.id.widget_container);
             layout.addView(R.id.widget_container, new RemoteViews(context.getPackageName(), R.layout.widget_schedule_lessons_message));
             layout.setInt(R.id.slw_message_text, "setTextColor", colors.text);
+            layout.setTextViewText(R.id.slw_message_text, context.getString(R.string.need_to_config_widget));
             layout.setImageViewBitmap(R.id.slw_message_icon, getBitmap(context, R.drawable.ic_widget_info_outline, colors.text));
             // установки
             bindOpen(context, appWidgetId, layout);
+            bindOpenConfiguration(context, appWidgetId, layout, R.id.widget_container);
             appWidgetManager.updateAppWidget(appWidgetId, layout);
         });
     }
@@ -584,6 +591,15 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
         intent.setData(Uri.parse(intent.toUri(Intent.URI_INTENT_SCHEME)));
         PendingIntent pIntent = PendingIntent.getBroadcast(context, 0, intent, 0);
         remoteViews.setOnClickPendingIntent(R.id.widget_title_container, pIntent);
+    }
+
+    private void bindOpenConfiguration(Context context, int appWidgetId, RemoteViews remoteViews, int viewId) {
+        Intent intent = new Intent(context, ScheduleLessonsWidget.class);
+        intent.setAction(ACTION_WIDGET_OPEN_CONFIGURATION);
+        intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId);
+        intent.setData(Uri.parse(intent.toUri(Intent.URI_INTENT_SCHEME)));
+        PendingIntent pIntent = PendingIntent.getBroadcast(context, 0, intent, 0);
+        remoteViews.setOnClickPendingIntent(viewId, pIntent);
     }
 
     private int[] getShiftBasedOnTime(Context context, int appWidgetId, WSLSettings settings, Calendar calendar) {
@@ -743,6 +759,27 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
                         eventBus.fire(new OpenActivityEvent(MainActivity.class, extras, App.intentFlagRestart));
                     });
                     break;
+                }
+                case ACTION_WIDGET_OPEN_CONFIGURATION: {
+                    thread.run(WSL, () -> {
+                        if (appWidgetId != AppWidgetManager.INVALID_APPWIDGET_ID) {
+                            String query = intent.getStringExtra(EXTRA_WIDGET_WSL_SETTINGS_QUERY);
+                            if (StringUtils.isNotBlank(query)) {
+                                WSLSettings settings = null;
+                                try {
+                                    settings = scheduleLessonsWidgetStorage.getSettings(appWidgetId);
+                                } catch (Exception ignore) {}
+                                if (settings == null) {
+                                    settings = new WSLSettings();
+                                }
+                                settings.setQuery(query);
+                                scheduleLessonsWidgetStorage.save(appWidgetId, settings);
+                            }
+                        }
+                        Bundle extras = new Bundle();
+                        extras.putInt(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId);
+                        eventBus.fire(new OpenActivityEvent(ScheduleLessonsWidgetConfigureActivity.class, extras));
+                    });
                 }
             }
         });
