@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="AppTheme.Search" parent="AppTheme">
+        <item name="colorBackgroundSearchToolbar">@color/colorBackgroundSearchToolbar</item>
+        <item name="colorBackgroundSearch">@color/colorBackgroundSearch</item>
+        <item name="colorPrimaryDark">@color/colorSearchPrimaryDark</item>
+        <item name="android:colorPrimaryDark">@color/colorSearchPrimaryDark</item>
+        <item name="android:statusBarColor">@color/colorSearchPrimaryDark</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:navigationBarColor">@color/colorBackgroundSearch</item>
+        <item name="android:windowLightNavigationBar">true</item>
+    </style>
+
+</resources>
