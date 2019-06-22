@@ -7,11 +7,13 @@ import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.fragment.presenter.ScheduleLessonsTabHostFragmentPresenter;
 import com.bukhmastov.cdoitmo.util.Log;
+import com.bukhmastov.cdoitmo.util.Storage;
 import com.bukhmastov.cdoitmo.util.Thread;
 
-import javax.inject.Inject;
+import java.util.Arrays;
+import java.util.List;
 
-import static com.bukhmastov.cdoitmo.util.Thread.AS;
+import javax.inject.Inject;
 
 public class ScheduleLessonsSearchActivity extends SearchActivity {
 
@@ -48,11 +50,32 @@ public class ScheduleLessonsSearchActivity extends SearchActivity {
     }
 
     @Override
-    protected void onDone(final String query) {
-        thread.run(AS, () -> {
-            log.v(TAG, "onDone | query=", query);
-            tabHostPresenter.setQuery(query);
-            tabHostPresenter.invalidate();
-        });
+    protected void onDone(String query, @ResultType String type) {
+        log.v(TAG, "onDone | query=", query, " | type=", type);
+        tabHostPresenter.setQuery(query);
+        tabHostPresenter.invalidate();
+        thread.standalone(() -> logStatistic(query, type));
+    }
+
+    private void logStatistic(String query, @ResultType String type) {
+        Bundle bundle = new Bundle();
+        bundle.putString(FirebaseAnalyticsProvider.Param.SCHEDULE_LESSONS_TYPE, "schedule_search");
+        bundle.putString(FirebaseAnalyticsProvider.Param.SCHEDULE_LESSONS_QUERY, query);
+        bundle.putString(FirebaseAnalyticsProvider.Param.SCHEDULE_LESSONS_QUERY_IS_SELF, getSelfGroups().contains(query) ? "1" : "0");
+        bundle.putString(FirebaseAnalyticsProvider.Param.SCHEDULE_LESSONS_EXTRA, type);
+        firebaseAnalyticsProvider.logEvent(
+                context,
+                FirebaseAnalyticsProvider.Event.SCHEDULE_LESSONS,
+                bundle
+        );
+    }
+
+    private List<String> getSelfGroups() {
+        thread.assertNotUI();
+        List<String> groups = Arrays.asList(storage.get(context, Storage.PERMANENT, Storage.USER, "user#groups").split(","));
+        for (int i = 0; i < groups.size(); i++) {
+            groups.set(i, groups.get(i).trim());
+        }
+        return groups;
     }
 }

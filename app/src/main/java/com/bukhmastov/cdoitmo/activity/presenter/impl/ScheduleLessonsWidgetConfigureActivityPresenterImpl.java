@@ -133,16 +133,27 @@ public class ScheduleLessonsWidgetConfigureActivityPresenterImpl implements Sche
     }
 
     private void init() {
-        initDefaults();
-        initPartPreview();
-        initPartSchedule();
-        initPartTheme();
-        initPartUpdate();
-        initPartDynamicShift();
-        initFinishButton();
+        thread.run(WSLC, () -> {
+            initDefaults();
+            initPartPreview();
+            thread.runOnUI(WSLC, () -> {
+                initPartSchedule();
+                initPartTheme();
+                initPartUpdate();
+                initPartDynamicShift();
+                initFinishButton();
+            }, throwable -> {
+                log.exception(throwable);
+                notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
+            });
+        }, throwable -> {
+            log.exception(throwable);
+            notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
+        });
     }
 
     private void initDefaults() {
+        log.v(TAG, "initDefaults");
         WSLSettings settings = getSettings(mAppWidgetId);
         if (settings == null) {
             settings = new WSLSettings();
@@ -162,112 +173,85 @@ public class ScheduleLessonsWidgetConfigureActivityPresenterImpl implements Sche
     
     private void initPartPreview() {
         log.v(TAG, "initPartPreview");
-        thread.run(WSLC, () -> {
-            // Starting from Android 27 (8.1) there is no longer free access to current wallpaper
-            // Getting wallpaper requires "dangerous" permission android.permission.READ_EXTERNAL_STORAGE
-            // To avoid using this permission, we just not gonna use wallpaper for widget preview
-            // UPD: Now we are using this permission. Here we gonna check for permission and _not_ gonna ask for it to be granted
-            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O_MR1 ||
-                    ContextCompat.checkSelfPermission(activity, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
-                try {
-                    final WallpaperManager wallpaperManager = WallpaperManager.getInstance(activity);
-                    if (wallpaperManager == null) {
-                        throw new NullPointerException("WallpaperManager is null");
-                    }
-                    final Drawable wallpaperDrawable = wallpaperManager.getDrawable();
-                    if (wallpaperDrawable == null) {
-                        throw new NullPointerException("WallpaperDrawable is null");
-                    }
-                    thread.runOnUI(WSLC, () -> {
-                        ImageView partPreviewBackground = activity.findViewById(R.id.part_preview_background);
-                        if (partPreviewBackground != null) {
-                            partPreviewBackground.setImageDrawable(wallpaperDrawable);
-                        }
-                    });
-                } catch (Exception ignore) {
-                    // just ignore
+        // Starting from Android 27 (8.1) there is no longer free access to current wallpaper
+        // Getting wallpaper requires "dangerous" permission android.permission.READ_EXTERNAL_STORAGE
+        // To avoid using this permission, we just not gonna use wallpaper for widget preview
+        // UPD: Now we are using this permission. Here we gonna check for permission and _not_ gonna ask for it to be granted
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O_MR1 ||
+                ContextCompat.checkSelfPermission(activity, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
+            try {
+                final WallpaperManager wallpaperManager = WallpaperManager.getInstance(activity);
+                if (wallpaperManager == null) {
+                    throw new NullPointerException("WallpaperManager is null");
                 }
+                final Drawable wallpaperDrawable = wallpaperManager.getDrawable();
+                if (wallpaperDrawable == null) {
+                    throw new NullPointerException("WallpaperDrawable is null");
+                }
+                thread.runOnUI(WSLC, () -> {
+                    ImageView partPreviewBackground = activity.findViewById(R.id.part_preview_background);
+                    if (partPreviewBackground != null) {
+                        partPreviewBackground.setImageDrawable(wallpaperDrawable);
+                    }
+                });
+            } catch (Exception ignore) {
+                // just ignore
             }
-            updateDemo();
-        });
+        }
+        updateDemo();
     }
     
     private void initPartSchedule() {
         log.v(TAG, "initPartSchedule");
-        thread.run(WSLC, () -> {
-            ViewGroup partSchedule = activity.findViewById(R.id.part_schedule);
-            partSchedule.setOnClickListener(view -> {
-                if (StringUtils.isNotBlank(Settings.Schedule.query)) {
-                    activatePartSchedule(Settings.Schedule.title);
-                    return;
-                }
-                String group = storage.get(activity, Storage.PERMANENT, Storage.USER, "user#group");
-                if (StringUtils.isBlank(group)) {
-                    activatePartSchedule("personal");
-                } else {
-                    activatePartSchedule(group);
-                }
-            });
-            updateScheduleSummary();
-        }, throwable -> {
-            log.exception(throwable);
-            notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
+        ViewGroup partSchedule = activity.findViewById(R.id.part_schedule);
+        partSchedule.setOnClickListener(view -> {
+            if (StringUtils.isNotBlank(Settings.Schedule.query)) {
+                activatePartSchedule(Settings.Schedule.title);
+                return;
+            }
+            String group = storage.get(activity, Storage.PERMANENT, Storage.USER, "user#group");
+            if (StringUtils.isBlank(group)) {
+                activatePartSchedule("personal");
+            } else {
+                activatePartSchedule(group);
+            }
         });
+        updateScheduleSummary();
     }
     
     private void initPartTheme() {
         log.v(TAG, "initPartTheme");
-        thread.run(WSLC, () -> {
-            ViewGroup partTheme = activity.findViewById(R.id.part_theme);
-            partTheme.setOnClickListener(view -> activatePartTheme());
-            updateThemeSummary();
-        }, throwable -> {
-            log.exception(throwable);
-            notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
-        });
+        ViewGroup partTheme = activity.findViewById(R.id.part_theme);
+        partTheme.setOnClickListener(view -> activatePartTheme());
+        updateThemeSummary();
     }
     
     private void initPartUpdate() {
         log.v(TAG, "initPartUpdate");
-        thread.run(WSLC, () -> {
-            ViewGroup partUpdate = activity.findViewById(R.id.part_update);
-            partUpdate.setOnClickListener(view -> activatePartUpdate());
-            updateUpdateSummary();
-        }, throwable -> {
-            log.exception(throwable);
-            notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
-        });
+        ViewGroup partUpdate = activity.findViewById(R.id.part_update);
+        partUpdate.setOnClickListener(view -> activatePartUpdate());
+        updateUpdateSummary();
     }
     
     private void initPartDynamicShift() {
         log.v(TAG, "initPartDynamicShift");
-        thread.runOnUI(WSLC, () -> {
-            ViewGroup partDynamicShift = activity.findViewById(R.id.part_automatic_shift);
-            Switch partDynamicShiftSwitch = activity.findViewById(R.id.part_automatic_shift_switch);
-            partDynamicShiftSwitch.setChecked(Default.useShiftAutomatic);
-            partDynamicShiftSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
-                activatePartDynamicShift(isChecked);
-            });
-            partDynamicShift.setOnClickListener(view -> thread.runOnUI(WSLC, () -> {
-                partDynamicShiftSwitch.setChecked(!partDynamicShiftSwitch.isChecked());
-            }));
-        }, throwable -> {
-            log.exception(throwable);
-            notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
+        ViewGroup partDynamicShift = activity.findViewById(R.id.part_automatic_shift);
+        Switch partDynamicShiftSwitch = activity.findViewById(R.id.part_automatic_shift_switch);
+        partDynamicShiftSwitch.setChecked(Default.useShiftAutomatic);
+        partDynamicShiftSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            activatePartDynamicShift(isChecked);
         });
+        partDynamicShift.setOnClickListener(view -> thread.runOnUI(WSLC, () -> {
+            partDynamicShiftSwitch.setChecked(!partDynamicShiftSwitch.isChecked());
+        }));
     }
     
     private void initFinishButton() {
         log.v(TAG, "initFinishButton");
-        thread.runOnUI(WSLC, () -> {
-            Button addButton = activity.findViewById(R.id.add_button);
-            addButton.setText(R.string.add_widget);
-            addButton.setVisibility(View.VISIBLE);
-            addButton.setOnClickListener(view -> activateFinish());
-        }, throwable -> {
-            log.exception(throwable);
-            notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
-        });
+        Button addButton = activity.findViewById(R.id.add_button);
+        addButton.setText(R.string.add_widget);
+        addButton.setVisibility(View.VISIBLE);
+        addButton.setOnClickListener(view -> activateFinish());
     }
 
     private void activatePartSchedule() {
@@ -275,8 +259,8 @@ public class ScheduleLessonsWidgetConfigureActivityPresenterImpl implements Sche
     }
     
     private void activatePartSchedule(String title) {
-        log.v(TAG, "activatePartSchedule | scope=", title);
         thread.runOnUI(WSLC, () -> {
+            log.v(TAG, "activatePartSchedule | scope=", title);
             if (activity.isFinishing() || activity.isDestroyed()) {
                 return;
             }
@@ -445,8 +429,9 @@ public class ScheduleLessonsWidgetConfigureActivityPresenterImpl implements Sche
     }
     
     private void activatePartTheme() {
-        log.v(TAG, "activatePartTheme");
         thread.runOnUI(WSLC, () -> {
+            log.v(TAG, "activatePartTheme");
+
             if (activity.isFinishing() || activity.isDestroyed()) {
                 return;
             }
@@ -640,8 +625,8 @@ public class ScheduleLessonsWidgetConfigureActivityPresenterImpl implements Sche
     }
     
     private void activatePartUpdate() {
-        log.v(TAG, "activatePartUpdate");
         thread.runOnUI(WSLC, () -> {
+            log.v(TAG, "activatePartUpdate");
             if (activity.isFinishing() || activity.isDestroyed()) {
                 return;
             }
@@ -680,8 +665,8 @@ public class ScheduleLessonsWidgetConfigureActivityPresenterImpl implements Sche
     }
     
     private void activatePartDynamicShift(boolean checked) {
-        log.v(TAG, "activatePartDynamicShift | checked=", checked);
         thread.run(WSLC, () -> {
+            log.v(TAG, "activatePartDynamicShift | checked=", checked);
             Settings.useShiftAutomatic = checked;
         }, throwable -> {
             log.exception(throwable);
@@ -690,8 +675,8 @@ public class ScheduleLessonsWidgetConfigureActivityPresenterImpl implements Sche
     }
     
     private void activateFinish() {
-        log.v(TAG, "activateFinish");
         thread.run(WSLC, () -> {
+            log.v(TAG, "activateFinish");
             if (Settings.Schedule.query == null || Settings.Schedule.query.trim().isEmpty()) {
                 notificationMessage.snackBar(activity, activity.getString(R.string.need_to_choose_schedule));
                 return;
@@ -727,8 +712,8 @@ public class ScheduleLessonsWidgetConfigureActivityPresenterImpl implements Sche
     }
 
     private void updateDemo() {
-        log.v(TAG, "updateDemo");
         thread.runOnUI(WSLC, () -> {
+            log.v(TAG, "updateDemo");
             int background = parseColor(Settings.Theme.background, Settings.Theme.opacity);
             int text = parseColor(Settings.Theme.text);
             ViewGroup widget_content = activity.findViewById(R.id.widget_content);

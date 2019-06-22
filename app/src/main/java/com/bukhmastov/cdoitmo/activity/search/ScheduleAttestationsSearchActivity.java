@@ -48,11 +48,9 @@ public class ScheduleAttestationsSearchActivity extends SearchActivity {
     }
 
     @Override
-    protected void onDone(final String query) {
-        thread.run(AS, () -> {
-            log.v(TAG, "onDone | query=", query);
-            scheduleAttestationsFragmentPresenter.setQuery(query);
-            scheduleAttestationsFragmentPresenter.invalidate();
-        });
+    protected void onDone(String query, @ResultType String type) {
+        log.v(TAG, "onDone | query=", query, " | type=", type);
+        scheduleAttestationsFragmentPresenter.setQuery(query);
+        scheduleAttestationsFragmentPresenter.invalidate();
     }
 }

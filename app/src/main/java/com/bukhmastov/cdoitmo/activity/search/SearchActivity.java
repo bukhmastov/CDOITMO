@@ -77,9 +77,16 @@ public abstract class SearchActivity extends AppCompatActivity {
     private static final String CLEAR = "clear";
     private static final String NONE = "none";
 
+    @Retention(RetentionPolicy.SOURCE)
+    @StringDef({NEW, RECENT, CACHED})
+    protected  @interface ResultType {}
+    protected static final String NEW = "new";
+    protected static final String RECENT = "recent";
+    protected static final String CACHED = "cached";
+
     abstract protected String getType();
     abstract protected String getHint();
-    abstract protected void onDone(String query);
+    abstract protected void onDone(String query, @ResultType String type);
 
     private void inject() {
         if (thread == null) {
@@ -187,7 +194,7 @@ public abstract class SearchActivity extends AppCompatActivity {
         thread.run(AS, () -> {
             SearchSuggestionsRVA adapter = new SearchSuggestionsRVA(context, suggestions);
             adapter.setClickListener(R.id.click, (v, suggestion) -> {
-                done(suggestion.query, suggestion.title);
+                done(suggestion.query, suggestion.title, suggestion.removable ? RECENT : CACHED);
             });
             adapter.setClickListener(R.id.remove, (v, suggestion) -> thread.run(AS, () -> {
                 if (!suggestion.removable) {
@@ -251,7 +258,7 @@ public abstract class SearchActivity extends AppCompatActivity {
         }
     }
 
-    private void done(String query, String title) {
+    private void done(String query, String title, @ResultType String type) {
         thread.run(AS, () -> {
             log.v(TAG, "done | type=", getType(), " | query=", query, " | title=", title);
             try {
@@ -293,7 +300,7 @@ public abstract class SearchActivity extends AppCompatActivity {
                 log.exception(e);
                 storage.delete(context, Storage.PERMANENT, Storage.USER, "schedule_" + getType() + "#recent");
             }
-            onDone(query);
+            onDone(query, type);
             thread.runOnUI(AS, this::finish);
         });
     }
@@ -415,7 +422,7 @@ public abstract class SearchActivity extends AppCompatActivity {
             if (event.getAction() == KeyEvent.ACTION_DOWN && keyCode == KeyEvent.KEYCODE_ENTER) {
                 String query = StringUtils.prettifyGroupNumber(searchEditText.getText().toString().trim());
                 if (!query.isEmpty()) {
-                    done(query, query);
+                    done(query, query, NEW);
                     return true;
                 }
             }

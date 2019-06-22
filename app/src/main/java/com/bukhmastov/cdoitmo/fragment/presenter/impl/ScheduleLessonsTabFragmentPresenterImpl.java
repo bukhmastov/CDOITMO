@@ -37,6 +37,7 @@ import com.bukhmastov.cdoitmo.event.events.OpenActivityEvent;
 import com.bukhmastov.cdoitmo.event.events.OpenIntentEvent;
 import com.bukhmastov.cdoitmo.event.events.ShareTextEvent;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
+import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.fragment.LinkedAccountsFragment;
 import com.bukhmastov.cdoitmo.fragment.ScheduleLessonsModifyFragment;
 import com.bukhmastov.cdoitmo.fragment.ScheduleLessonsShareFragment;
@@ -63,11 +64,15 @@ import com.bukhmastov.cdoitmo.util.singleton.StringUtils;
 import com.bukhmastov.cdoitmo.widget.ScheduleLessonsWidget;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collection;
+import java.util.List;
 import java.util.TreeSet;
 
 import javax.inject.Inject;
+
+import dagger.Lazy;
 
 import static com.bukhmastov.cdoitmo.util.Thread.SL;
 
@@ -87,6 +92,7 @@ public class ScheduleLessonsTabFragmentPresenterImpl implements Schedule.Handler
      * 2 - Обе недели
      */
     private int type = ScheduleLessonsTabHostFragmentPresenter.DEFAULT_INVALID_TYPE;
+    private List<String> selfGroups = new ArrayList<>();
 
     @Inject
     Log log;
@@ -108,6 +114,8 @@ public class ScheduleLessonsTabFragmentPresenterImpl implements Schedule.Handler
     Time time;
     @Inject
     NotificationMessage notificationMessage;
+    @Inject
+    Lazy<FirebaseAnalyticsProvider> firebaseAnalyticsProvider;
 
     public ScheduleLessonsTabFragmentPresenterImpl() {
         AppComponentProvider.getComponent().inject(this);
@@ -135,6 +143,8 @@ public class ScheduleLessonsTabFragmentPresenterImpl implements Schedule.Handler
                 type = ScheduleLessonsTabHostFragmentPresenter.DEFAULT_TYPE;
             }
             log.v(TAG, "Fragment created | type=", type);
+            selfGroups.clear();
+            selfGroups.addAll(getSelfGroups());
             tabHostPresenter.tabs().put(type, refresh -> thread.run(SL, () -> {
                 log.v(TAG, "onInvalidate | type=", type, " | refresh=", refresh);
                 if (fragment.isResumed()) {
@@ -495,14 +505,14 @@ public class ScheduleLessonsTabFragmentPresenterImpl implements Schedule.Handler
             popup.setOnMenuItemClickListener(menuItem -> {
                 thread.run(SL, () -> {
                     switch (menuItem.getItemId()) {
-                        case R.id.add_lesson: addLesson(entity.getParity()); break;
-                        case R.id.add_military_day_monday: addMilitaryDay(0); break;
-                        case R.id.add_military_day_tuesday: addMilitaryDay(1); break;
-                        case R.id.add_military_day_wednesday: addMilitaryDay(2); break;
-                        case R.id.add_military_day_thursday: addMilitaryDay(3); break;
-                        case R.id.add_military_day_friday: addMilitaryDay(4); break;
-                        case R.id.add_military_day_saturday: addMilitaryDay(5); break;
-                        case R.id.add_military_day_sunday: addMilitaryDay(6); break;
+                        case R.id.add_lesson: addLesson(entity.getParity()); logStatistic("schedule_create_lesson"); break;
+                        case R.id.add_military_day_monday: addMilitaryDay(0); logStatistic("schedule_create_military"); break;
+                        case R.id.add_military_day_tuesday: addMilitaryDay(1); logStatistic("schedule_create_military"); break;
+                        case R.id.add_military_day_wednesday: addMilitaryDay(2); logStatistic("schedule_create_military"); break;
+                        case R.id.add_military_day_thursday: addMilitaryDay(3); logStatistic("schedule_create_military"); break;
+                        case R.id.add_military_day_friday: addMilitaryDay(4); logStatistic("schedule_create_military"); break;
+                        case R.id.add_military_day_saturday: addMilitaryDay(5); logStatistic("schedule_create_military"); break;
+                        case R.id.add_military_day_sunday: addMilitaryDay(6); logStatistic("schedule_create_military"); break;
                     }
                 }, throwable -> {
                     log.exception(throwable);
@@ -512,6 +522,7 @@ public class ScheduleLessonsTabFragmentPresenterImpl implements Schedule.Handler
                 return true;
             });
             popup.show();
+            logStatistic("schedule_create");
         }, throwable -> {
             log.exception(throwable);
             notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
@@ -544,9 +555,9 @@ public class ScheduleLessonsTabFragmentPresenterImpl implements Schedule.Handler
             popup.setOnMenuItemClickListener(menuItem -> {
                 thread.run(SL, () -> {
                     switch (menuItem.getItemId()) {
-                        case R.id.share_all_schedule: shareSchedule(entity.getDays()); break;
-                        case R.id.share_daily_schedule: break;
-                        case R.id.share_changes: shareChanges(); break;
+                        case R.id.share_all_schedule: shareSchedule(entity.getDays()); logStatistic("schedule_share_all"); break;
+                        case R.id.share_daily_schedule: logStatistic("schedule_share_day"); break;
+                        case R.id.share_changes: shareChanges(); logStatistic("schedule_share_changes"); break;
                         case R.id.monday: shareSchedule(entity.getDays(), 0, null); break;
                         case R.id.tuesday: shareSchedule(entity.getDays(), 1, null); break;
                         case R.id.wednesday: shareSchedule(entity.getDays(), 2, null); break;
@@ -567,6 +578,7 @@ public class ScheduleLessonsTabFragmentPresenterImpl implements Schedule.Handler
                 return true;
             });
             popup.show();
+            logStatistic("schedule_share");
         }, throwable -> {
             log.exception(throwable);
             notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
@@ -591,13 +603,15 @@ public class ScheduleLessonsTabFragmentPresenterImpl implements Schedule.Handler
                             case R.id.toggle_cache:
                                 if (toggleCache()) {
                                     thread.runOnUI(SL, () -> menuItem.setChecked(!isCached));
+                                    logStatistic("schedule_more_cache_" + (isCached ? "removed" : "added"));
                                 }
                                 break;
-                            case R.id.create_widget: createWidget(); break;
-                            case R.id.remove_changes: clearChanges(); break;
+                            case R.id.create_widget: createWidget(); logStatistic("schedule_more_create_widget"); break;
+                            case R.id.remove_changes: clearChanges(); logStatistic("schedule_more_clear_changes"); break;
                             case R.id.open_settings:
                                 thread.runOnUI(SL, () -> {
                                     activity.openActivityOrFragment(ConnectedActivity.TYPE.STACKABLE, SettingsScheduleLessonsFragment.class, null);
+                                    logStatistic("schedule_more_open_settings");
                                 });
                                 break;
                         }
@@ -612,6 +626,7 @@ public class ScheduleLessonsTabFragmentPresenterImpl implements Schedule.Handler
                     popup.getMenu().findItem(R.id.create_widget).setVisible(false);
                 }
                 popup.show();
+                logStatistic("schedule_more");
             }, throwable -> {
                 log.exception(throwable);
                 notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
@@ -915,6 +930,7 @@ public class ScheduleLessonsTabFragmentPresenterImpl implements Schedule.Handler
                 return true;
             });
             popup.show();
+            logStatistic("lesson");
         }, throwable -> {
             log.exception(throwable);
             notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
@@ -928,39 +944,50 @@ public class ScheduleLessonsTabFragmentPresenterImpl implements Schedule.Handler
                 case R.id.open_group: {
                     tabHostPresenter.setQuery(lesson.getGroup());
                     tabHostPresenter.invalidate(false);
+                    logStatistic("lesson_open_group");
                     break;
                 }
                 case R.id.open_teacher: {
                     tabHostPresenter.setQuery(lesson.getTeacherId());
                     tabHostPresenter.invalidate(false);
+                    logStatistic("lesson_open_teacher");
                     break;
                 }
                 case R.id.open_room: {
                     tabHostPresenter.setQuery(lesson.getRoom());
                     tabHostPresenter.invalidate(false);
+                    logStatistic("lesson_open_room");
                     break;
                 }
                 case R.id.open_location: {
                     Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("geo:0,0?q=Санкт-Петербург, " + lesson.getBuilding()));
                     eventBus.fire(new OpenIntentEvent(intent).withIdentity(ScheduleLessonsTabFragmentPresenterImpl.class.getName()));
+                    logStatistic("lesson_open_location");
+                    break;
+                }
+                case R.id.open_edit_actions: {
+                    logStatistic("lesson_action");
                     break;
                 }
                 case R.id.reduce_lesson: {
                     if (!scheduleLessonsHelper.reduceLesson(schedule.getQuery(), weekday, customDay, lesson, () -> tabHostPresenter.invalidateOnDemand())) {
                         notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
                     }
+                    logStatistic("lesson_action_reduce_lesson");
                     break;
                 }
                 case R.id.restore_lesson: {
                     if (!scheduleLessonsHelper.restoreLesson(schedule.getQuery(), weekday, customDay, lesson, () -> tabHostPresenter.invalidateOnDemand())) {
                         notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
                     }
+                    logStatistic("lesson_action_restore_lesson");
                     break;
                 }
                 case R.id.delete_lesson: {
                     if (!scheduleLessonsHelper.deleteLesson(schedule.getQuery(), weekday, customDay, lesson, () -> tabHostPresenter.invalidateOnDemand())) {
                         notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
                     }
+                    logStatistic("lesson_action_delete_lesson");
                     break;
                 }
                 case R.id.copy_lesson: {
@@ -971,6 +998,7 @@ public class ScheduleLessonsTabFragmentPresenterImpl implements Schedule.Handler
                     })) {
                         notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
                     }
+                    logStatistic("lesson_action_copy_lesson");
                     break;
                 }
                 case R.id.edit_lesson: {
@@ -981,6 +1009,7 @@ public class ScheduleLessonsTabFragmentPresenterImpl implements Schedule.Handler
                     })) {
                         notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
                     }
+                    logStatistic("lesson_action_edit_lesson");
                     break;
                 }
             }
@@ -1025,6 +1054,7 @@ public class ScheduleLessonsTabFragmentPresenterImpl implements Schedule.Handler
                 .setIcon(R.drawable.ic_help)
                 .setNegativeButton(R.string.close, null)
                 .create().show();
+        logStatistic("schedule_unknown_day_clicked");
     }
 
     private SLesson makeLesson(String subject, String type, int parity, String timeStart, String timeEnd) {
@@ -1121,5 +1151,30 @@ public class ScheduleLessonsTabFragmentPresenterImpl implements Schedule.Handler
         return appWidgetManager.isRequestPinAppWidgetSupported();
     }
 
+    private List<String> getSelfGroups() {
+        thread.assertNotUI();
+        List<String> groups = Arrays.asList(storage.get(activity, Storage.PERMANENT, Storage.USER, "user#groups").split(","));
+        for (int i = 0; i < groups.size(); i++) {
+            groups.set(i, groups.get(i).trim());
+        }
+        return groups;
+    }
+
+    private void logStatistic(String info) {
+        String tab = "both";
+        if (type == 0) tab = "odd";
+        if (type == 1) tab = "even";
+        Bundle bundle = new Bundle();
+        bundle.putString(FirebaseAnalyticsProvider.Param.SCHEDULE_LESSONS_TYPE, info);
+        bundle.putString(FirebaseAnalyticsProvider.Param.SCHEDULE_LESSONS_TAB, tab);
+        bundle.putString(FirebaseAnalyticsProvider.Param.SCHEDULE_LESSONS_QUERY, schedule.getQuery());
+        bundle.putString(FirebaseAnalyticsProvider.Param.SCHEDULE_LESSONS_QUERY_IS_SELF, selfGroups.contains(schedule.getQuery()) ? "1" : "0");
+        firebaseAnalyticsProvider.get().logEvent(
+                activity,
+                FirebaseAnalyticsProvider.Event.SCHEDULE_LESSONS,
+                bundle
+        );
+    }
+    
     // -<-- Utils --<-
 }

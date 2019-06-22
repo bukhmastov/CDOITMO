@@ -739,6 +739,7 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
                             if (shift > 180 || shift < -180) {
                                 shift = 0;
                                 eventBus.fire(new OpenActivityEvent(PikaActivity.class));
+                                firebaseAnalyticsProvider.logBasicEvent(context, "Widget sl shift 180");
                             }
                             settings.setShift(shift);
                             scheduleLessonsWidgetStorage.save(appWidgetId, settings);

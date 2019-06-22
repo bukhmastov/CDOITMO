@@ -29,6 +29,7 @@ public interface FirebaseAnalyticsProvider {
         public static final String LOGIN_ISU = "cdo_isu_login";                                 // авторизован в ису
         public static final String LOGOUT_ISU = "cdo_isu_logout";                               // разлогинен из ису
         public static final String LOGIN_ISU_FAILED = "cdo_isu_login_failed";                   // не авторизован в ису
+        public static final String SCHEDULE_LESSONS = "cdo_schedule_lessons";                   // использование расписания занятий
     }
     class Param {
         // 25 unique Params with each Event type | 40 characters long | values 100 characters long
@@ -42,6 +43,11 @@ public interface FirebaseAnalyticsProvider {
         public static final String WIDGET_USAGE_INFO = "cdo_widget_usage_info";
         public static final String EVENT_EXTRA = "cdo_event_extra";
         public static final String TYPE = "cdo_type";
+        public static final String SCHEDULE_LESSONS_TYPE = "cdo_schedule_lessons_type";
+        public static final String SCHEDULE_LESSONS_TAB = "cdo_schedule_lessons_tab";
+        public static final String SCHEDULE_LESSONS_QUERY = "cdo_schedule_lessons_query";
+        public static final String SCHEDULE_LESSONS_QUERY_IS_SELF = "cdo_schedule_lessons_query_is_self";
+        public static final String SCHEDULE_LESSONS_EXTRA = "cdo_schedule_lessons_extra";
     }
     class Property {
         // 25 unique UserProperties | 24 characters long | values 36 characters long

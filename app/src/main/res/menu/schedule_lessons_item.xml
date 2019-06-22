@@ -17,7 +17,9 @@
         android:id="@+id/open_location"
         android:title="@string/open_location" />
 
-    <item android:title="@string/extra_actions" >
+    <item
+        android:id="@+id/open_edit_actions"
+        android:title="@string/extra_actions" >
         <menu>
             <item
                 android:id="@+id/edit_lesson"

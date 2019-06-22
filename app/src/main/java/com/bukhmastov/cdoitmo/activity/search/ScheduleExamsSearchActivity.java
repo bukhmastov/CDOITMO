@@ -48,11 +48,9 @@ public class ScheduleExamsSearchActivity extends SearchActivity {
     }
 
     @Override
-    protected void onDone(final String query) {
-        thread.run(AS, () -> {
-            log.v(TAG, "onDone | query=", query);
-            tabHostPresenter.setQuery(query);
-            tabHostPresenter.invalidate();
-        });
+    protected void onDone(String query, @ResultType String type) {
+        log.v(TAG, "onDone | query=", query, " | type=", type);
+        tabHostPresenter.setQuery(query);
+        tabHostPresenter.invalidate();
     }
 }
