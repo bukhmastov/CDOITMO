@@ -201,7 +201,7 @@ public class Room101FragmentPresenterImpl extends ConnectedFragmentWithDataPrese
                     .setMessage(activity.getString(R.string.request_deny_1) + "\n" + activity.getString(R.string.request_deny_2))
                     .setCancelable(true)
                     .setPositiveButton(R.string.delete, (dialog, which) -> {
-                        thread.run(R101, () -> denyRequest(reid, status));
+                        thread.standalone(() -> denyRequest(reid, status));
                         dialog.cancel();
                     })
                     .setNegativeButton(R.string.cancel, (dialog, which) -> dialog.cancel())
@@ -249,7 +249,9 @@ public class Room101FragmentPresenterImpl extends ConnectedFragmentWithDataPrese
                     }
                     View reload = fragment.container().findViewById(R.id.try_again_reload);
                     if (reload != null) {
-                        reload.setOnClickListener(v -> denyRequest(reid, status));
+                        reload.setOnClickListener(v -> {
+                            thread.standalone(() -> denyRequest(reid, status));
+                        });
                     }
                     staticUtil.lockOrientation(activity, false);
                 }, throwable -> {

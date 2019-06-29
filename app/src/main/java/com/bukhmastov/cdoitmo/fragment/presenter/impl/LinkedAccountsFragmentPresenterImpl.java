@@ -122,22 +122,18 @@ public class LinkedAccountsFragmentPresenterImpl extends ConnectedFragmentPresen
         thread.standalone(() -> isuPrivateRestClient.authorize(activity, new ResponseHandler() {
             @Override
             public void onSuccess(int code, Client.Headers headers, String response) {
-                thread.runOnUI(() -> {
-                    log.v(TAG, "isuLogin | success | code=", code, " | response=", response);
-                    if ("authorized".equals(response)) {
-                        notificationMessage.snackBar(activity, activity.getString(R.string.authorized));
-                        initIsu();
-                    } else {
-                        notificationMessage.snackBar(activity, activity.getString(R.string.auth_failed));
-                    }
-                });
+                log.v(TAG, "isuLogin | success | code=", code, " | response=", response);
+                if ("authorized".equals(response)) {
+                    notificationMessage.snackBar(activity, activity.getString(R.string.authorized));
+                    initIsu();
+                } else {
+                    notificationMessage.snackBar(activity, activity.getString(R.string.auth_failed));
+                }
             }
             @Override
             public void onFailure(int code, Client.Headers headers, int state) {
-                thread.runOnUI(() -> {
-                    log.v(TAG, "isuLogin | failure | state=", state, " | code=", code);
-                    notificationMessage.snackBar(activity, isuPrivateRestClient.getFailedMessage(activity, code, state));
-                });
+                log.v(TAG, "isuLogin | failure | state=", state, " | code=", code);
+                notificationMessage.snackBar(activity, isuPrivateRestClient.getFailedMessage(activity, code, state));
             }
             @Override
             public void onProgress(int state) {

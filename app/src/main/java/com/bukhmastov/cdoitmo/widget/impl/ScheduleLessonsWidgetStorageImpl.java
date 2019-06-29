@@ -34,7 +34,12 @@ public class ScheduleLessonsWidgetStorageImpl implements ScheduleLessonsWidgetSt
         if (StringUtils.isBlank(settings)) {
             return null;
         }
-        return new WSLSettings().fromJsonString(settings);
+        try {
+            return new WSLSettings().fromJsonString(settings);
+        } catch (Exception e) {
+            delete(appWidgetId, "settings");
+            return null;
+        }
     }
 
     @Override
@@ -43,7 +48,12 @@ public class ScheduleLessonsWidgetStorageImpl implements ScheduleLessonsWidgetSt
         if (StringUtils.isBlank(cache)) {
             return null;
         }
-        return new SLessons().fromJsonString(cache);
+        try {
+            return new SLessons().fromJsonString(cache);
+        } catch (Exception e) {
+            delete(appWidgetId, "cache_converted");
+            return null;
+        }
     }
 
     @Override
