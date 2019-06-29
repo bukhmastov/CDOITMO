@@ -3,18 +3,17 @@ package com.bukhmastov.cdoitmo.fragment.presenter.impl;
 import android.app.AlertDialog;
 import android.view.View;
 
+import androidx.annotation.StringRes;
+
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activity.ConnectedActivity;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.fragment.AboutFragment;
 import com.bukhmastov.cdoitmo.fragment.LogFragment;
 import com.bukhmastov.cdoitmo.fragment.presenter.HelpFragmentPresenter;
-import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Thread;
 
 import javax.inject.Inject;
-
-import androidx.annotation.StringRes;
 
 public class HelpFragmentPresenterImpl extends ConnectedFragmentPresenterImpl implements HelpFragmentPresenter {
 
@@ -29,8 +28,8 @@ public class HelpFragmentPresenterImpl extends ConnectedFragmentPresenterImpl im
     }
 
     @Override
-    public void onViewCreated() {
-        super.onViewCreated();
+    public void onStart() {
+        super.onStart();
         thread.runOnUI(() -> {
 
             View helpServers = fragment.container().findViewById(R.id.block_servers);

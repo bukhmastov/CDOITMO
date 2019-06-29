@@ -51,7 +51,6 @@ import java.util.regex.Pattern;
 
 import javax.inject.Inject;
 
-import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
@@ -101,13 +100,12 @@ public class ERegisterFragmentPresenterImpl extends ConnectedFragmentWithDataPre
     }
 
     @Override
-    public void onCreate(@Nullable Bundle savedInstanceState) {
-        thread.initialize(ER);
+    public void onStart() {
+        super.onStart();
         thread.run(ER, () -> {
-            log.v(TAG, "Fragment created");
             if (App.UNAUTHORIZED_MODE) {
                 forbidden = true;
-                log.w(TAG, "Fragment created | UNAUTHORIZED_MODE not allowed, closing fragment...");
+                log.w(TAG, "UNAUTHORIZED_MODE not allowed, closing fragment...");
                 thread.runOnUI(ER, () -> fragment.close());
                 return;
             }
@@ -609,7 +607,6 @@ public class ERegisterFragmentPresenterImpl extends ConnectedFragmentWithDataPre
         final int month = now.get(Calendar.MONTH);
         switch (Integer.parseInt(storagePref.get(activity, "pref_e_journal_term", "0"))) {
             default: case 0: {
-                //noinspection ConstantConditions
                 return getTerm(erYear, (term1, term2) -> {
                     if (month > Calendar.AUGUST || month == Calendar.JANUARY) {
                         return Math.min(term1, term2);
@@ -619,11 +616,9 @@ public class ERegisterFragmentPresenterImpl extends ConnectedFragmentWithDataPre
                 });
             }
             case 1: {
-                //noinspection ConstantConditions
                 return getTerm(erYear, Math::min);
             }
             case 2: {
-                //noinspection ConstantConditions
                 return getTerm(erYear, Math::max);
             }
             case 3: {

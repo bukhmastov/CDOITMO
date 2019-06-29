@@ -3,6 +3,13 @@ package com.bukhmastov.cdoitmo.activity;
 import android.content.Context;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+import android.os.Parcel;
+import android.os.Parcelable;
+import android.view.InflateException;
+import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.View;
+import android.view.ViewGroup;
 
 import androidx.annotation.CallSuper;
 import androidx.annotation.IdRes;
@@ -12,11 +19,6 @@ import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
-import android.view.InflateException;
-import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.View;
-import android.view.ViewGroup;
 
 import com.bukhmastov.cdoitmo.App;
 import com.bukhmastov.cdoitmo.R;
@@ -24,12 +26,13 @@ import com.bukhmastov.cdoitmo.event.bus.EventBus;
 import com.bukhmastov.cdoitmo.event.events.OpenActivityEvent;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.fragment.ConnectedFragment;
-import com.bukhmastov.cdoitmo.util.singleton.Color;
-import com.bukhmastov.cdoitmo.util.singleton.CtxWrapper;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.StoragePref;
 import com.bukhmastov.cdoitmo.util.Thread;
+import com.bukhmastov.cdoitmo.util.singleton.Color;
+import com.bukhmastov.cdoitmo.util.singleton.CtxWrapper;
 
+import java.io.Serializable;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.ArrayList;
@@ -38,9 +41,11 @@ import javax.inject.Inject;
 
 public abstract class ConnectedActivity extends AppCompatActivity {
 
-    private static final String STATE_STORED_FRAGMENT_NAME = "storedFragmentName";
-    private static final String STATE_STORED_FRAGMENT_DATA = "storedFragmentData";
-    private static final String STATE_STORED_FRAGMENT_EXTRA = "storedFragmentExtra";
+    public static final String STATE_CONNECTED_ACTIVITY_STACK = "connectedActivityStack";
+    public static final String STATE_LAYOUT_WITH_MENU = "isLayoutWithMenu";
+    public static final String STATE_STORED_FRAGMENT_NAME = "storedFragmentName";
+    public static final String STATE_STORED_FRAGMENT_DATA = "storedFragmentData";
+    public static final String STATE_STORED_FRAGMENT_EXTRA = "storedFragmentExtra";
     public static final String ACTIVITY_WITH_MENU = "connected_activity_with_align";
 
     private final ArrayList<StackElement> stack = new ArrayList<>();
@@ -67,42 +72,35 @@ public abstract class ConnectedActivity extends AppCompatActivity {
         public static final String STACKABLE = "stackable";
     }
 
-    public static class StackElement {
-        public final Class connectedFragmentClass;
-        public final Bundle extras;
-        public final @Type String type;
-        public StackElement(@Type String type, Class connectedFragmentClass, Bundle extras) {
-            this.connectedFragmentClass = connectedFragmentClass;
-            this.extras = extras;
-            this.type = type;
-        }
-    }
-
     public abstract @IdRes int getRootViewId();
     protected abstract String getLogTag();
 
     @Override
     @CallSuper
-    protected void onCreate(final Bundle savedInstanceState) {
+    protected void onCreate(Bundle savedInstanceState) {
         AppComponentProvider.getComponent().inject(this);
         log.v(getLogTag(), getMethodSignature("onCreate"));
+        if (savedInstanceState != null) {
+            ArrayList<StackElement> s = savedInstanceState.getParcelableArrayList(STATE_CONNECTED_ACTIVITY_STACK);
+            if (s != null) {
+                stack.addAll(s);
+            }
+            layoutWithMenu = savedInstanceState.getBoolean(STATE_LAYOUT_WITH_MENU, layoutWithMenu);
+            storedFragmentName = savedInstanceState.getString(STATE_STORED_FRAGMENT_NAME);
+            storedFragmentData = savedInstanceState.getString(STATE_STORED_FRAGMENT_DATA);
+            storedFragmentExtra = savedInstanceState.getString(STATE_STORED_FRAGMENT_EXTRA);
+        }
         super.onCreate(savedInstanceState);
     }
 
     @Override
-    protected void onSaveInstanceState(final Bundle outState) {
+    protected void onSaveInstanceState(Bundle outState) {
+        outState.putParcelableArrayList(STATE_CONNECTED_ACTIVITY_STACK, stack);
+        outState.putBoolean(STATE_LAYOUT_WITH_MENU, layoutWithMenu);
         outState.putString(STATE_STORED_FRAGMENT_NAME, storedFragmentName);
         outState.putString(STATE_STORED_FRAGMENT_DATA, storedFragmentData);
         outState.putString(STATE_STORED_FRAGMENT_EXTRA, storedFragmentExtra);
         super.onSaveInstanceState(outState);
-    }
-
-    @Override
-    protected void onRestoreInstanceState(final Bundle savedInstanceState) {
-        super.onRestoreInstanceState(savedInstanceState);
-        storedFragmentName = savedInstanceState.getString(STATE_STORED_FRAGMENT_NAME);
-        storedFragmentData = savedInstanceState.getString(STATE_STORED_FRAGMENT_DATA);
-        storedFragmentExtra = savedInstanceState.getString(STATE_STORED_FRAGMENT_EXTRA);
     }
 
     @Override
@@ -213,6 +211,21 @@ public abstract class ConnectedActivity extends AppCompatActivity {
         }
     }
 
+    public int getStackSize() {
+        return stack.size();
+    }
+
+    public StackElement popFragment() {
+        log.v(getLogTag(), getMethodSignature("popFragment"));
+        if (stack.isEmpty()) {
+            log.v(getLogTag(), getMethodSignature("popFragment"), " | stack is empty");
+            return null;
+        }
+        StackElement stackElement = stack.remove(stack.size() - 1);
+        log.v(getLogTag(), getMethodSignature("popFragment"), " | type=", stackElement.type, " | class=", stackElement.connectedFragmentClass, " | stack.size() = ", stack.size());
+        return stackElement;
+    }
+
     public void pushFragment(StackElement stackElement) {
         log.v(getLogTag(), getMethodSignature("pushFragment"), " | type=", stackElement.type, " | class=", stackElement.connectedFragmentClass);
         if (stackElement.type.equals(TYPE.ROOT)) {
@@ -220,22 +233,6 @@ public abstract class ConnectedActivity extends AppCompatActivity {
         }
         stack.add(stackElement);
         log.v(getLogTag(), getMethodSignature("pushFragment"), " | stack.size()=", stack.size());
-    }
-
-    public void removeFragment(Class connectedFragmentClass) {
-        log.v(getLogTag(), getMethodSignature("removeFragment"), " | class=", connectedFragmentClass);
-        for (int i = stack.size() - 1; i >= 0; i--) {
-            StackElement stackElement = stack.get(i);
-            if (stackElement.connectedFragmentClass == connectedFragmentClass) {
-                if (!stackElement.type.equals(TYPE.ROOT)) {
-                    stack.remove(stackElement);
-                } else {
-                    log.e(getLogTag(), getMethodSignature("removeFragment"), " | Prevented root fragment removal from the stack");
-                }
-                break;
-            }
-        }
-        log.v(getLogTag(), getMethodSignature("removeFragment"), " | stack.size() = ", stack.size());
     }
 
     public void updateToolbar(Context context, String title, Integer image) {
@@ -308,5 +305,48 @@ public abstract class ConnectedActivity extends AppCompatActivity {
     protected void attachBaseContext(Context context) {
         AppComponentProvider.getComponent().inject(this);
         super.attachBaseContext(CtxWrapper.wrap(context, storagePref));
+    }
+
+    public static class StackElement implements Serializable, Parcelable {
+
+        public final Class connectedFragmentClass;
+        public final Bundle extras;
+        public final @Type String type;
+
+        public StackElement(@Type String type, Class connectedFragmentClass, Bundle extras) {
+            this.connectedFragmentClass = connectedFragmentClass;
+            this.extras = extras;
+            this.type = type;
+        }
+
+        public StackElement(Parcel in){
+            Object[] data = in.readArray(StackElement.class.getClassLoader());
+            this.connectedFragmentClass = (Class) data[0];
+            this.extras = (Bundle) data[1];
+            this.type = (String) data[2];
+        }
+
+        @Override
+        public int describeContents() {
+            return 0;
+        }
+
+        @Override
+        public void writeToParcel(Parcel dest, int flags) {
+            dest.writeArray(new Object[] {
+                    connectedFragmentClass,
+                    extras,
+                    type
+            });
+        }
+
+        public static final Parcelable.Creator CREATOR = new Parcelable.Creator() {
+            public StackElement createFromParcel(Parcel in) {
+                return new StackElement(in);
+            }
+            public StackElement[] newArray(int size) {
+                return new StackElement[size];
+            }
+        };
     }
 }

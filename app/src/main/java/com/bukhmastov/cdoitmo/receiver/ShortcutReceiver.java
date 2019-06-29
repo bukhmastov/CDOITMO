@@ -227,7 +227,6 @@ public class ShortcutReceiver extends BroadcastReceiver {
         }
     }
 
-    @SuppressWarnings("deprecation")
     private void installShortcut(Context context, String type, String data, String mode, String label, @DrawableRes int icon) {
         log.v(TAG, "installShortcut | type=", type, " | data=", data);
         Intent intent = new Intent(context, ShortcutReceiverActivity.class);

@@ -32,7 +32,6 @@ import java.util.Objects;
 
 import javax.inject.Inject;
 
-import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -77,11 +76,9 @@ public class ERegisterSubjectFragmentPresenterImpl extends ConnectedFragmentWith
     }
 
     @Override
-    public void onCreate(@Nullable Bundle savedInstanceState) {
-        thread.initialize(ERS);
+    public void onStart() {
+        super.onStart();
         thread.run(ERS, () -> {
-            log.v(TAG, "Fragment created");
-            firebaseAnalyticsProvider.logCurrentScreen(activity, fragment);
             fragment.setHasOptionsMenu(true);
             Bundle extras = fragment.getArguments();
             if (extras == null) {

@@ -2,7 +2,6 @@ package com.bukhmastov.cdoitmo.model.schedule.lessons;
 
 import com.bukhmastov.cdoitmo.model.JsonEntity;
 import com.bukhmastov.cdoitmo.model.JsonProperty;
-import com.bukhmastov.cdoitmo.util.singleton.StringUtils;
 
 import java.util.ArrayList;
 import java.util.Objects;

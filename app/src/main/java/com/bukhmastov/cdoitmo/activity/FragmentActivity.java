@@ -25,10 +25,9 @@ public class FragmentActivity extends ConnectedActivity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         AppComponentProvider.getComponent().inject(this);
+        super.onCreate(savedInstanceState);
         presenter.setActivity(this);
         theme.applyActivityTheme(this);
-        super.onCreate(savedInstanceState);
-        staticUtil.lockOrientation(this, true);
         presenter.onCreate(savedInstanceState);
     }
 

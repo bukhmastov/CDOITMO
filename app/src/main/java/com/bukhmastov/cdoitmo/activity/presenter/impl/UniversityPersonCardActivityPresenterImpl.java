@@ -170,7 +170,6 @@ public class UniversityPersonCardActivityPresenterImpl implements UniversityPers
                             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
                                 response.setPost(android.text.Html.fromHtml(response.getPost(), android.text.Html.FROM_HTML_MODE_LEGACY).toString());
                             } else {
-                                //noinspection deprecation
                                 response.setPost(android.text.Html.fromHtml(response.getPost()).toString());
                             }
                             person = response;
@@ -400,7 +399,6 @@ public class UniversityPersonCardActivityPresenterImpl implements UniversityPers
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
             textView.setText(android.text.Html.fromHtml(text, android.text.Html.FROM_HTML_MODE_LEGACY).toString().trim());
         } else {
-            //noinspection deprecation
             textView.setText(android.text.Html.fromHtml(text).toString().trim());
         }
         return activity_university_person_card_about;

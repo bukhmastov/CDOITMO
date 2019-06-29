@@ -31,12 +31,10 @@ public abstract class ConnectedFragmentWithDataPresenterImpl<T extends JsonEntit
     @Override
     public void onResume() {
         thread.run(getThreadToken(), () -> {
-            log.v(getLogTag(), "Fragment resumed");
             if (forbidden) {
-                log.v(getLogTag(), "Fragment resumed - interrupted");
                 return;
             }
-            firebaseAnalyticsProvider.setCurrentScreen(activity, fragment);
+            super.onResume();
             if (!loaded) {
                 loaded = true;
                 if (getRestoredData() == null) {

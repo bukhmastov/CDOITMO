@@ -1,10 +1,11 @@
 package com.bukhmastov.cdoitmo.fragment.settings;
 
-import android.os.Bundle;
-import androidx.fragment.app.Fragment;
+import android.content.Context;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+
+import androidx.fragment.app.Fragment;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
@@ -33,34 +34,30 @@ public abstract class SettingsTemplateHeadersFragment extends ConnectedFragment 
     }
 
     @Override
-    public void onCreate(Bundle savedInstanceState) {
+    public void onAttach(Context context) {
         AppComponentProvider.getComponent().inject(this);
-        super.onCreate(savedInstanceState);
-        log.v(getTAG(), "Fragment created");
+        super.onAttach(context);
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
         firebaseAnalyticsProvider.logCurrentScreen(activity(), getSelf());
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
-        log.v(getTAG(), "Fragment destroyed");
         loaded = false;
     }
 
     @Override
     public void onResume() {
         super.onResume();
-        log.v(getTAG(), "resumed");
         firebaseAnalyticsProvider.setCurrentScreen(activity(), getSelf());
         if (!loaded) {
             load();
         }
-    }
-
-    @Override
-    public void onPause() {
-        super.onPause();
-        log.v(getTAG(), "paused");
     }
 
     @Override
@@ -96,6 +93,7 @@ public abstract class SettingsTemplateHeadersFragment extends ConnectedFragment 
             failed();
         }
     }
+
     private void failed() {
         try {
             View view = inflate(R.layout.state_failed_button);

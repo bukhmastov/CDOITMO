@@ -2,9 +2,11 @@ package com.bukhmastov.cdoitmo.fragment.presenter.impl;
 
 import android.app.Activity;
 import android.content.Intent;
-import android.os.Bundle;
 import android.view.MenuItem;
 import android.view.View;
+
+import androidx.fragment.app.FragmentManager;
+import androidx.viewpager.widget.ViewPager;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activity.search.ScheduleExamsSearchActivity;
@@ -22,10 +24,6 @@ import com.bukhmastov.cdoitmo.util.Thread;
 import com.google.android.material.tabs.TabLayout;
 
 import javax.inject.Inject;
-
-import androidx.annotation.Nullable;
-import androidx.fragment.app.FragmentManager;
-import androidx.viewpager.widget.ViewPager;
 
 import static com.bukhmastov.cdoitmo.util.Thread.SE;
 
@@ -56,11 +54,10 @@ public class ScheduleExamsFragmentPresenterImpl extends ConnectedFragmentPresent
     }
 
     @Override
-    public void onCreate(@Nullable Bundle savedInstanceState) {
+    public void onStart() {
+        super.onStart();
         thread.initialize(SE);
         thread.run(SE, () -> {
-            log.v(TAG, "Fragment created");
-            firebaseAnalyticsProvider.logCurrentScreen(activity, fragment);
             // define query
             String scope = tabHostPresenter.restoreData();
             if (scope == null) {
@@ -80,48 +77,41 @@ public class ScheduleExamsFragmentPresenterImpl extends ConnectedFragmentPresent
 
     @Override
     public void onDestroy() {
-        thread.runOnUI(SE, () -> {
-            log.v(TAG, "Fragment destroyed");
-            loaded = false;
-            TabLayout fixedTabs = activity.findViewById(R.id.fixed_tabs);
-            if (fixedTabs != null) {
-                fixedTabs.setVisibility(View.GONE);
+        TabLayout fixedTabs = activity.findViewById(R.id.fixed_tabs);
+        if (fixedTabs != null) {
+            fixedTabs.setVisibility(View.GONE);
+        }
+        if (fragment != null && fragment.toolbar() != null) {
+            MenuItem actionSearch = fragment.toolbar().findItem(R.id.action_search);
+            if (actionSearch != null && actionSearch.isVisible()) {
+                log.v(TAG, "Hiding actionSearch");
+                actionSearch.setVisible(false);
+                actionSearch.setOnMenuItemClickListener(null);
             }
-            if (fragment != null && fragment.toolbar() != null) {
-                MenuItem actionSearch = fragment.toolbar().findItem(R.id.action_search);
-                if (actionSearch != null && actionSearch.isVisible()) {
-                    log.v(TAG, "Hiding actionSearch");
-                    actionSearch.setVisible(false);
-                    actionSearch.setOnMenuItemClickListener(null);
-                }
-            }
-            thread.standalone(() -> {
-                thread.interrupt(SE);
-            });
-        });
+        }
+        super.onDestroy();
     }
 
     @Override
     public void onResume() {
-        thread.run(SE, () -> {
-            log.v(TAG, "Fragment resumed");
-            firebaseAnalyticsProvider.setCurrentScreen(activity, fragment);
-            thread.runOnUI(SE, () -> {
-                if (fragment != null && fragment.toolbar() != null) {
-                    MenuItem action_search = fragment.toolbar().findItem(R.id.action_search);
-                    if (action_search != null && !action_search.isVisible()) {
-                        log.v(TAG, "Revealing action_search");
-                        action_search.setVisible(true);
-                        action_search.setOnMenuItemClickListener(item -> {
-                            thread.run(SE, () -> {
-                                log.v(TAG, "action_search clicked");
-                                eventBus.fire(new OpenActivityEvent(ScheduleExamsSearchActivity.class));
-                            });
-                            return false;
+        super.onResume();
+        thread.runOnUI(SE, () -> {
+            if (fragment != null && fragment.toolbar() != null) {
+                MenuItem action_search = fragment.toolbar().findItem(R.id.action_search);
+                if (action_search != null && !action_search.isVisible()) {
+                    log.v(TAG, "Revealing action_search");
+                    action_search.setVisible(true);
+                    action_search.setOnMenuItemClickListener(item -> {
+                        thread.run(SE, () -> {
+                            log.v(TAG, "action_search clicked");
+                            eventBus.fire(new OpenActivityEvent(ScheduleExamsSearchActivity.class));
                         });
-                    }
+                        return false;
+                    });
                 }
-            });
+            }
+        });
+        thread.run(SE, () -> {
             if (!loaded) {
                 loaded = true;
                 load();

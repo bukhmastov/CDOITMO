@@ -104,8 +104,8 @@ public class LogFragmentPresenterImpl extends ConnectedFragmentPresenterImpl
     }
 
     @Override
-    public void onViewCreated() {
-        super.onViewCreated();
+    public void onStart() {
+        super.onStart();
         thread.runOnUI(() -> {
             ((TextView) fragment.container().findViewById(R.id.warn)).setText(String.valueOf(LogMetrics.warn));
             ((TextView) fragment.container().findViewById(R.id.error)).setText(String.valueOf(LogMetrics.error));

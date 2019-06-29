@@ -104,19 +104,14 @@ public class RatingFragmentPresenterImpl implements RatingFragmentPresenter, Swi
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         thread.initialize(RA);
-        thread.run(RA, () -> {
-            log.v(TAG, "Fragment created");
-            firebaseAnalyticsProvider.logCurrentScreen(activity, fragment);
-            data.put(COMMON, new Info(EMPTY));
-            data.put(OWN, new Info(EMPTY));
-        });
+        firebaseAnalyticsProvider.logCurrentScreen(activity, fragment);
+        data.put(COMMON, new Info(EMPTY));
+        data.put(OWN, new Info(EMPTY));
     }
 
     @Override
-    public void onDestroy() {
-        log.v(TAG, "Fragment destroyed");
-        thread.interrupt(RA);
-        loaded = false;
+    public void onStart() {
+        thread.initialize(RA);
     }
 
     @Override
@@ -145,9 +140,8 @@ public class RatingFragmentPresenterImpl implements RatingFragmentPresenter, Swi
 
     @Override
     public void onResume() {
+        firebaseAnalyticsProvider.setCurrentScreen(activity, fragment);
         thread.run(RA, () -> {
-            log.v(TAG, "Fragment resumed");
-            firebaseAnalyticsProvider.setCurrentScreen(activity, fragment);
             if (loaded) {
                 return;
             }
@@ -175,12 +169,20 @@ public class RatingFragmentPresenterImpl implements RatingFragmentPresenter, Swi
 
     @Override
     public void onPause() {
-        log.v(TAG, "Fragment paused");
         thread.standalone(() -> {
             if (requestHandle != null && requestHandle.cancel()) {
                 loaded = false;
             }
         });
+    }
+
+    @Override
+    public void onStop() {}
+
+    @Override
+    public void onDestroy() {
+        thread.interrupt(RA);
+        loaded = false;
     }
 
     @Override
@@ -227,10 +229,8 @@ public class RatingFragmentPresenterImpl implements RatingFragmentPresenter, Swi
             data.get(type).data = COMMON.equals(type) ? (RatingPickerAll) cached : (RatingPickerOwn) cached;
             long timestamp;
             if (COMMON.equals(type)) {
-                //noinspection ConstantConditions
                 timestamp = ((RatingPickerAll) cached).getTimestamp();
             } else {
-                //noinspection ConstantConditions
                 timestamp = ((RatingPickerOwn) cached).getTimestamp();
             }
             if (timestamp + refresh_rate * 3600000L < time.getTimeInMillis()) {

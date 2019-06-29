@@ -11,8 +11,6 @@ import com.bukhmastov.cdoitmo.util.Thread;
 
 import javax.inject.Inject;
 
-import static com.bukhmastov.cdoitmo.util.Thread.AS;
-
 public class ScheduleExamsSearchActivity extends SearchActivity {
 
     private static final String TAG = "SESearchActivity";

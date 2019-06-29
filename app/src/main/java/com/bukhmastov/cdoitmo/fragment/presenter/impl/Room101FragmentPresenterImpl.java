@@ -3,7 +3,6 @@ package com.bukhmastov.cdoitmo.fragment.presenter.impl;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.Intent;
-import android.os.Bundle;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
@@ -41,7 +40,6 @@ import java.util.HashMap;
 
 import javax.inject.Inject;
 
-import androidx.annotation.Nullable;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import static com.bukhmastov.cdoitmo.util.Thread.R101;
@@ -90,13 +88,12 @@ public class Room101FragmentPresenterImpl extends ConnectedFragmentWithDataPrese
     }
 
     @Override
-    public void onCreate(@Nullable Bundle savedInstanceState) {
-        thread.initialize(R101);
+    public void onStart() {
+        super.onStart();
         thread.run(R101, () -> {
-            log.v(TAG, "Fragment created");
             if (App.UNAUTHORIZED_MODE) {
                 forbidden = true;
-                log.w(TAG, "Fragment created | UNAUTHORIZED_MODE not allowed, closing fragment...");
+                log.w(TAG, "UNAUTHORIZED_MODE not allowed, closing fragment...");
                 thread.runOnUI(R101, () -> fragment.close());
                 return;
             }
@@ -114,7 +111,6 @@ public class Room101FragmentPresenterImpl extends ConnectedFragmentWithDataPrese
     @Override
     public void onResume() {
         thread.run(R101, () -> {
-            log.v(TAG, "Fragment resumed");
             if (forbidden) {
                 return;
             }

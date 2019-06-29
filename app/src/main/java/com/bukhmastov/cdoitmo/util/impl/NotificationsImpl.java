@@ -58,7 +58,6 @@ public class NotificationsImpl implements Notifications {
     }
 
     @Override
-    @SuppressWarnings("deprecation")
     public Notification.Builder get(@NonNull String channel, @NonNull Context context, @NonNull String title, @NonNull String body, long timestamp, int group, boolean isSummary, @Nullable PendingIntent pIntent) {
         Notification.Builder builder;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {

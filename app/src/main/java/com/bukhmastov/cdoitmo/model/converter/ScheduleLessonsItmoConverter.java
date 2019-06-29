@@ -13,7 +13,6 @@ import com.bukhmastov.cdoitmo.util.singleton.StringUtils;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 public class ScheduleLessonsItmoConverter extends Converter<ITMOSLessons, SLessons> {
 

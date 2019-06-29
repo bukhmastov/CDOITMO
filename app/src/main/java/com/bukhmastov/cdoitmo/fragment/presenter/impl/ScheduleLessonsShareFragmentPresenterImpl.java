@@ -113,17 +113,16 @@ public class ScheduleLessonsShareFragmentPresenterImpl extends ConnectedFragment
     }
 
     @Override
-    public void onCreate(@Nullable Bundle savedInstanceState) {
-        try {
-            loaded = false;
-            action = fragment.extras().getString("action");
-        } catch (Exception e) {
-            action = null;
-        }
-        thread.initialize(SLS);
+    public void onStart() {
+        super.onStart();
         thread.run(SLS, () -> {
-            firebaseAnalyticsProvider.logCurrentScreen(activity, fragment);
-            log.v(TAG, "Fragment created | action=", action);
+            try {
+                loaded = false;
+                action = fragment.extras().getString("action");
+            } catch (Exception e) {
+                action = null;
+            }
+            log.v(TAG, "Fragment started | action=", action);
             if (action == null || !(action.equals("share") || action.equals("handle"))) {
                 keepGoing = false;
                 notificationMessage.toast(activity, activity.getString(R.string.corrupted_data));
@@ -133,21 +132,12 @@ public class ScheduleLessonsShareFragmentPresenterImpl extends ConnectedFragment
     }
 
     @Override
-    public void onDestroy() {
-        log.v(TAG, "Fragment destroyed");
-        loaded = false;
-        changes.clear();
-        super.onDestroy();
-    }
-
-    @Override
     public void onResume() {
         thread.run(SLS, () -> {
             if (!keepGoing) {
                 return;
             }
-            log.v(TAG, "Fragment resumed");
-            firebaseAnalyticsProvider.setCurrentScreen(activity, fragment);
+            super.onResume();
             if (loaded) {
                 return;
             }
@@ -172,6 +162,12 @@ public class ScheduleLessonsShareFragmentPresenterImpl extends ConnectedFragment
             log.exception(throwable);
             finish();
         });
+    }
+
+    @Override
+    public void onDestroy() {
+        changes.clear();
+        super.onDestroy();
     }
 
     @Override

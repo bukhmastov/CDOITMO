@@ -65,30 +65,30 @@ public class LinkAccountFragmentPresenterImpl extends ConnectedFragmentPresenter
     }
 
     @Override
-    public void onViewCreated() {
-        super.onViewCreated();
+    public void onStart() {
+        super.onStart();
         thread.runOnUI(() -> {
             Bundle extras = fragment.getArguments();
             if (extras == null) {
-                log.w(TAG, "onViewCreated | extras are null");
+                log.w(TAG, "onStart | extras are null");
                 fragment.close();
                 return;
             }
             if (!extras.containsKey("type")) {
-                log.w(TAG, "onViewCreated | extras does not contain 'type'");
+                log.w(TAG, "onStart | extras does not contain 'type'");
                 fragment.close();
                 return;
             }
             type = extras.getString("type");
             if (StringUtils.isBlank(type)) {
-                log.w(TAG, "onViewCreated | type is blank");
+                log.w(TAG, "onStart | type is blank");
                 fragment.close();
                 return;
             }
             switch (type) {
                 case ISU: break;
                 default: {
-                    log.w(TAG, "onViewCreated | wrong 'type' provided: ", type);
+                    log.w(TAG, "onStart | wrong 'type' provided: ", type);
                     fragment.close();
                     return;
                 }

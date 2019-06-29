@@ -1,6 +1,5 @@
 package com.bukhmastov.cdoitmo.fragment.presenter.impl;
 
-import android.os.Bundle;
 import android.util.SparseArray;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -10,6 +9,10 @@ import android.widget.ArrayAdapter;
 import android.widget.PopupMenu;
 import android.widget.Spinner;
 import android.widget.TextView;
+
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.bukhmastov.cdoitmo.App;
 import com.bukhmastov.cdoitmo.R;
@@ -47,11 +50,6 @@ import java.util.List;
 import java.util.Map;
 
 import javax.inject.Inject;
-
-import androidx.annotation.Nullable;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
-import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import static com.bukhmastov.cdoitmo.util.Thread.PR;
 
@@ -99,13 +97,12 @@ public class ProtocolFragmentPresenterImpl extends ConnectedFragmentWithDataPres
     }
 
     @Override
-    public void onCreate(@Nullable Bundle savedInstanceState) {
-        thread.initialize(PR);
+    public void onStart() {
+        super.onStart();
         thread.run(PR, () -> {
-            log.v(TAG, "Fragment created");
             if (App.UNAUTHORIZED_MODE) {
                 forbidden = true;
-                log.w(TAG, "Fragment created | UNAUTHORIZED_MODE not allowed, closing fragment...");
+                log.w(TAG, "UNAUTHORIZED_MODE not allowed, closing fragment...");
                 thread.runOnUI(PR, () -> fragment.close());
                 return;
             }

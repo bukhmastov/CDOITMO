@@ -114,9 +114,8 @@ public class IsuScholarshipPaidDetailsFragmentPresenterImpl extends ConnectedFra
 
     @Override
     public void onResume() {
+        firebaseAnalyticsProvider.setCurrentScreen(activity, fragment);
         thread.run(ISPD, () -> {
-            log.v(TAG, "Fragment resumed");
-            firebaseAnalyticsProvider.setCurrentScreen(activity, fragment);
             if (!loaded) {
                 loaded = true;
                 if (setYearMonthFromArguments()) {

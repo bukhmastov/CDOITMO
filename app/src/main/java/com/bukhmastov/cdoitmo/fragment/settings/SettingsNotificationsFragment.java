@@ -6,8 +6,10 @@ import android.content.Intent;
 import android.media.Ringtone;
 import android.media.RingtoneManager;
 import android.net.Uri;
-import android.os.Bundle;
 import android.text.TextUtils;
+
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activity.ConnectedActivity;
@@ -26,8 +28,6 @@ import java.util.List;
 
 import javax.inject.Inject;
 
-import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentManager;
 import dagger.Lazy;
 
 public class SettingsNotificationsFragment extends SettingsTemplatePreferencesFragment {
@@ -126,9 +126,9 @@ public class SettingsNotificationsFragment extends SettingsTemplatePreferencesFr
     Lazy<StoragePref> storagePref;
 
     @Override
-    public void onCreate(Bundle savedInstanceState) {
+    public void onAttach(Context context) {
         AppComponentProvider.getComponent().inject(this);
-        super.onCreate(savedInstanceState);
+        super.onAttach(context);
     }
 
     @Override

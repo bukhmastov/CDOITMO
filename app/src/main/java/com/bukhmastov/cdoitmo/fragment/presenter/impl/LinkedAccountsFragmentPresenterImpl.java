@@ -53,8 +53,7 @@ public class LinkedAccountsFragmentPresenterImpl extends ConnectedFragmentPresen
 
     @Override
     public void onResume() {
-        log.v(TAG, "Fragment resumed");
-        firebaseAnalyticsProvider.setCurrentScreen(activity, fragment);
+        super.onResume();
         thread.standalone(() -> {
             initDeIfmo();
             initIsu();

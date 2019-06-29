@@ -62,49 +62,19 @@ public class UniversityFragmentPresenterImpl extends ConnectedFragmentPresenterI
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
-        thread.initialize(UH);
-        thread.run(UH, () -> {
-            log.v(TAG, "Fragment created");
-            firebaseAnalyticsProvider.logCurrentScreen(activity, fragment);
-            Intent intent = activity.getIntent();
-            if (intent != null) {
-                actionExtra = intent.getStringExtra("action_extra");
-                if (actionExtra != null) {
-                    intent.removeExtra("action_extra");
-                }
+        super.onCreate(savedInstanceState);
+        Intent intent = activity.getIntent();
+        if (intent != null) {
+            actionExtra = intent.getStringExtra("action_extra");
+            if (actionExtra != null) {
+                intent.removeExtra("action_extra");
             }
-        });
+        }
     }
 
     @Override
-    public void onDestroy() {
-        thread.runOnUI(UH, () -> {
-            log.v(TAG, "Fragment destroyed");
-            TabLayout scrollableTabs = activity.findViewById(R.id.scrollable_tabs);
-            if (scrollableTabs != null) {
-                scrollableTabs.setVisibility(View.GONE);
-            }
-            thread.standalone(() -> {
-                thread.interrupt(UH);
-            });
-        });
-    }
-
-    @Override
-    public void onResume() {
-        thread.runOnUI(UH, () -> {
-            log.v(TAG, "Fragment resumed");
-            firebaseAnalyticsProvider.setCurrentScreen(activity, fragment);
-            TabLayout scrollableTabs = activity.findViewById(R.id.scrollable_tabs);
-            if (scrollableTabs != null) {
-                scrollableTabs.setVisibility(View.VISIBLE);
-            }
-        });
-    }
-
-    @Override
-    public void onViewCreated() {
-        super.onViewCreated();
+    public void onStart() {
+        super.onStart();
         thread.runOnUI(UH, () -> {
             if (fragment.isNotAddedToActivity()) {
                 log.w(TAG, "onViewCreated | fragment not added to activity");
@@ -150,6 +120,26 @@ public class UniversityFragmentPresenterImpl extends ConnectedFragmentPresenterI
                 tab.select();
             }
         });
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        thread.runOnUI(UH, () -> {
+            TabLayout scrollableTabs = activity.findViewById(R.id.scrollable_tabs);
+            if (scrollableTabs != null) {
+                scrollableTabs.setVisibility(View.VISIBLE);
+            }
+        });
+    }
+
+    @Override
+    public void onDestroy() {
+        TabLayout scrollableTabs = activity.findViewById(R.id.scrollable_tabs);
+        if (scrollableTabs != null) {
+            scrollableTabs.setVisibility(View.GONE);
+        }
+        super.onDestroy();
     }
 
     @Override

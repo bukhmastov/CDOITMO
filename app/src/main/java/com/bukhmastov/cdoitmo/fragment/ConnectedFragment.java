@@ -25,6 +25,7 @@ import com.bukhmastov.cdoitmo.fragment.settings.SettingsSystemsFragment;
 
 import java.util.Objects;
 
+import androidx.annotation.CallSuper;
 import androidx.annotation.IdRes;
 import androidx.annotation.LayoutRes;
 import androidx.annotation.NonNull;
@@ -43,6 +44,7 @@ public abstract class ConnectedFragment<P extends ConnectedFragmentPresenter> ex
     protected abstract String getLogTag();
 
     @Override
+    @CallSuper
     public void onAttach(Context context) {
         super.onAttach(context);
         log.v(getLogTag(), getMethodSignature("onAttach"));
@@ -54,6 +56,7 @@ public abstract class ConnectedFragment<P extends ConnectedFragmentPresenter> ex
     }
 
     @Override
+    @CallSuper
     public void onCreate(@Nullable Bundle savedInstanceState) {
         extras = getArguments();
         if (getPresenter() != null) {
@@ -67,6 +70,7 @@ public abstract class ConnectedFragment<P extends ConnectedFragmentPresenter> ex
     }
 
     @Override
+    @CallSuper
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         int layoutId = getLayoutId();
         log.v(getLogTag(), getMethodSignature("onCreateView"), " | layoutId=", layoutId);
@@ -76,6 +80,7 @@ public abstract class ConnectedFragment<P extends ConnectedFragmentPresenter> ex
     }
 
     @Override
+    @CallSuper
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         container = view;
         log.v(getLogTag(), getMethodSignature("onViewCreated"), " | view=", view);
@@ -83,15 +88,20 @@ public abstract class ConnectedFragment<P extends ConnectedFragmentPresenter> ex
     }
 
     @Override
+    @CallSuper
     public void onStart() {
         super.onStart();
         log.v(getLogTag(), getMethodSignature("onStart"));
+        if (getPresenter() != null) {
+            getPresenter().onStart();
+        }
         if (getPresenter() != null && toolbar() != null) {
             getPresenter().onToolbarSetup(toolbar());
         }
     }
 
     @Override
+    @CallSuper
     public void onResume() {
         super.onResume();
         log.v(getLogTag(), getMethodSignature("onResume"));
@@ -101,6 +111,7 @@ public abstract class ConnectedFragment<P extends ConnectedFragmentPresenter> ex
     }
 
     @Override
+    @CallSuper
     public void onPause() {
         super.onPause();
         log.v(getLogTag(), getMethodSignature("onPause"));
@@ -110,15 +121,20 @@ public abstract class ConnectedFragment<P extends ConnectedFragmentPresenter> ex
     }
 
     @Override
+    @CallSuper
     public void onStop() {
         super.onStop();
         log.v(getLogTag(), getMethodSignature("onStop"));
         if (getPresenter() != null && toolbar() != null) {
             getPresenter().onToolbarTeardown(toolbar());
         }
+        if (getPresenter() != null) {
+            getPresenter().onStop();
+        }
     }
 
     @Override
+    @CallSuper
     public void onDestroy() {
         super.onDestroy();
         log.v(getLogTag(), getMethodSignature("onDestroy"));
@@ -128,6 +144,7 @@ public abstract class ConnectedFragment<P extends ConnectedFragmentPresenter> ex
     }
 
     @Override
+    @CallSuper
     public void onDetach() {
         activity = null;
         super.onDetach();
@@ -135,6 +152,7 @@ public abstract class ConnectedFragment<P extends ConnectedFragmentPresenter> ex
     }
 
     @Override
+    @CallSuper
     public void onPrepareOptionsMenu(Menu menu) {
         if (getPresenter() != null) {
             getPresenter().onToolbarSetup(menu);

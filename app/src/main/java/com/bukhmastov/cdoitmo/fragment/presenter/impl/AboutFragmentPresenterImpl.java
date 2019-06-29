@@ -58,8 +58,8 @@ public class AboutFragmentPresenterImpl extends ConnectedFragmentPresenterImpl
     }
 
     @Override
-    public void onViewCreated() {
-        super.onViewCreated();
+    public void onStart() {
+        super.onStart();
         thread.runOnUI(() -> {
 
             TextView appVersion = fragment.container().findViewById(R.id.app_version);

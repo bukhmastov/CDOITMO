@@ -3,7 +3,6 @@ package com.bukhmastov.cdoitmo.fragment.presenter.impl;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
-import android.os.Bundle;
 import android.util.SparseArray;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -11,6 +10,10 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.PopupMenu;
 import android.widget.TextView;
+
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activity.ConnectedActivity;
@@ -43,11 +46,6 @@ import com.bukhmastov.cdoitmo.util.singleton.StringUtils;
 import java.util.ArrayList;
 
 import javax.inject.Inject;
-
-import androidx.annotation.Nullable;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
-import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import static com.bukhmastov.cdoitmo.util.Thread.SA;
 
@@ -95,11 +93,10 @@ public class ScheduleAttestationsFragmentPresenterImpl extends ConnectedFragment
     }
 
     @Override
-    public void onCreate(@Nullable Bundle savedInstanceState) {
+    public void onStart() {
+        super.onStart();
         thread.initialize(SA);
         thread.run(SA, () -> {
-            log.v(TAG, "Fragment created");
-            firebaseAnalyticsProvider.logCurrentScreen(activity, fragment);
             // define query
             String scope = fragment.restoreData();
             if (scope == null) {
@@ -120,46 +117,39 @@ public class ScheduleAttestationsFragmentPresenterImpl extends ConnectedFragment
 
     @Override
     public void onDestroy() {
-        thread.runOnUI(SA, () -> {
-            log.v(TAG, "Fragment destroyed");
-            loaded = false;
-            tab = null;
-            scroll = null;
-            if (fragment != null && fragment.toolbar() != null) {
-                MenuItem action_search = fragment.toolbar().findItem(R.id.action_search);
-                if (action_search != null && action_search.isVisible()) {
-                    log.v(TAG, "Hiding action_search");
-                    action_search.setVisible(false);
-                    action_search.setOnMenuItemClickListener(null);
-                }
+        tab = null;
+        scroll = null;
+        if (fragment != null && fragment.toolbar() != null) {
+            MenuItem action_search = fragment.toolbar().findItem(R.id.action_search);
+            if (action_search != null && action_search.isVisible()) {
+                log.v(TAG, "Hiding action_search");
+                action_search.setVisible(false);
+                action_search.setOnMenuItemClickListener(null);
             }
-            thread.standalone(() -> {
-                thread.interrupt(SA);
-            });
-        });
+        }
+        super.onDestroy();
     }
 
     @Override
     public void onResume() {
-        thread.run(SA, () -> {
-            log.v(TAG, "resumed");
-            firebaseAnalyticsProvider.setCurrentScreen(activity, fragment);
-            thread.runOnUI(SA, () -> {
-                if (fragment != null && fragment.toolbar() != null) {
-                    MenuItem action_search = fragment.toolbar().findItem(R.id.action_search);
-                    if (action_search != null && !action_search.isVisible()) {
-                        log.v(TAG, "Revealing action_search");
-                        action_search.setVisible(true);
-                        action_search.setOnMenuItemClickListener(item -> {
-                            thread.run(SA, () -> {
-                                log.v(TAG, "action_search clicked");
-                                eventBus.fire(new OpenActivityEvent(ScheduleAttestationsSearchActivity.class));
-                            });
-                            return false;
+        super.onResume();
+        thread.runOnUI(SA, () -> {
+            if (fragment != null && fragment.toolbar() != null) {
+                MenuItem action_search = fragment.toolbar().findItem(R.id.action_search);
+                if (action_search != null && !action_search.isVisible()) {
+                    log.v(TAG, "Revealing action_search");
+                    action_search.setVisible(true);
+                    action_search.setOnMenuItemClickListener(item -> {
+                        thread.run(SA, () -> {
+                            log.v(TAG, "action_search clicked");
+                            eventBus.fire(new OpenActivityEvent(ScheduleAttestationsSearchActivity.class));
                         });
-                    }
+                        return false;
+                    });
                 }
-            });
+            }
+        });
+        thread.run(SA, () -> {
             if (tab == null) {
                 tab = refresh -> thread.run(SA, () -> {
                     log.v(TAG, "onInvalidate | refresh=", refresh);

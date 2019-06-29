@@ -8,7 +8,6 @@ import android.appwidget.AppWidgetManager;
 import android.content.ComponentName;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.View;
@@ -18,10 +17,12 @@ import android.widget.AutoCompleteTextView;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import androidx.annotation.DrawableRes;
+import androidx.annotation.StringDef;
+
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.adapter.array.TeacherPickerAdapter;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
-import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.fragment.ConnectedFragment;
 import com.bukhmastov.cdoitmo.fragment.presenter.HomeScreenInteractionFragmentPresenter;
 import com.bukhmastov.cdoitmo.function.BiConsumer;
@@ -53,10 +54,6 @@ import java.util.Arrays;
 
 import javax.inject.Inject;
 
-import androidx.annotation.DrawableRes;
-import androidx.annotation.Nullable;
-import androidx.annotation.StringDef;
-
 import static com.bukhmastov.cdoitmo.util.Thread.AHS;
 
 public class HomeScreenInteractionFragmentPresenterImpl extends ConnectedFragmentPresenterImpl
@@ -82,8 +79,6 @@ public class HomeScreenInteractionFragmentPresenterImpl extends ConnectedFragmen
     ScheduleAttestations scheduleAttestations;
     @Inject
     NotificationMessage notificationMessage;
-    @Inject
-    FirebaseAnalyticsProvider firebaseAnalyticsProvider;
 
     @Retention(RetentionPolicy.SOURCE)
     @StringDef({PICK, WIDGETS, APPS, SHORTCUTS})
@@ -132,39 +127,37 @@ public class HomeScreenInteractionFragmentPresenterImpl extends ConnectedFragmen
     }
 
     @Override
-    public void onCreate(@Nullable Bundle savedInstanceState) {
-        thread.initialize(AHS);
-        thread.runOnUI(AHS, () -> {
-            log.v(TAG, "Fragment created");
-            firebaseAnalyticsProvider.logCurrentScreen(activity, fragment);
-            ConnectedFragment.Data data = ConnectedFragment.getData(activity, fragment.getClass());
-            activity.updateToolbar(activity, data.title, data.image);
-            // Инициализируем приложения
-            apps.clear();
-            apps.add(new App("time_remaining_widget", activity.getString(R.string.time_remaining_widget), activity.getString(R.string.time_remaining_widget_desc), activity.getString(R.string.need_to_choose_schedule), R.mipmap.ic_shortcut_time_remaining_widget));
-            apps.add(new App("days_remaining_widget", activity.getString(R.string.days_remaining_widget), activity.getString(R.string.days_remaining_widget_desc), activity.getString(R.string.need_to_choose_schedule), R.mipmap.ic_shortcut_days_remaining_widget));
-            // Инициализируем ярлыки
-            shortcuts.clear();
-            shortcuts.add(new Shortcut("offline", null, activity.getString(R.string.app_name), activity.getString(R.string.launch_app_offline), R.mipmap.ic_shortcut_offline));
-            shortcuts.add(new Shortcut("tab", "e_journal", activity.getString(R.string.e_journal), null, R.mipmap.ic_shortcut_e_journal));
-            shortcuts.add(new Shortcut("tab", "protocol_changes", activity.getString(R.string.protocol_changes), null, R.mipmap.ic_shortcut_protocol_changes));
-            shortcuts.add(new Shortcut("tab", "rating", activity.getString(R.string.rating), null, R.mipmap.ic_shortcut_rating));
-            shortcuts.add(new Shortcut("tab", "room101", activity.getString(R.string.room101), null, R.mipmap.ic_shortcut_room101));
-            shortcuts.add(new Shortcut("room101", "create", activity.getString(R.string.room101create), null, R.mipmap.ic_shortcut_room101_add));
-            shortcuts.add(new Shortcut("schedule_lessons", null, activity.getString(R.string.schedule_lessons), activity.getString(R.string.need_to_choose_schedule), R.mipmap.ic_shortcut_schedule_lessons));
-            shortcuts.add(new Shortcut("schedule_exams", null, activity.getString(R.string.schedule_exams), activity.getString(R.string.need_to_choose_schedule), R.mipmap.ic_shortcut_schedule_exams));
-            shortcuts.add(new Shortcut("schedule_attestations", null, activity.getString(R.string.schedule_attestations), activity.getString(R.string.need_to_choose_schedule), R.mipmap.ic_shortcut_schedule_attestations));
-            shortcuts.add(new Shortcut("university", null, activity.getString(R.string.university), activity.getString(R.string.need_to_choose_type), R.mipmap.ic_shortcut_university));
-            shortcuts.add(new Shortcut("tab", "groups", activity.getString(R.string.study_groups), null, R.mipmap.ic_shortcut_groups));
-            shortcuts.add(new Shortcut("tab", "scholarship", activity.getString(R.string.scholarship), null, R.mipmap.ic_shortcut_scholarship));
-        });
+    public void onStart() {
+        super.onStart();
+        // Toolbar
+        ConnectedFragment.Data data = ConnectedFragment.getData(activity, fragment.getClass());
+        activity.updateToolbar(activity, data.title, data.image);
+        // Инициализируем приложения
+        apps.clear();
+        apps.add(new App("time_remaining_widget", activity.getString(R.string.time_remaining_widget), activity.getString(R.string.time_remaining_widget_desc), activity.getString(R.string.need_to_choose_schedule), R.mipmap.ic_shortcut_time_remaining_widget));
+        apps.add(new App("days_remaining_widget", activity.getString(R.string.days_remaining_widget), activity.getString(R.string.days_remaining_widget_desc), activity.getString(R.string.need_to_choose_schedule), R.mipmap.ic_shortcut_days_remaining_widget));
+        // Инициализируем ярлыки
+        shortcuts.clear();
+        shortcuts.add(new Shortcut("offline", null, activity.getString(R.string.app_name), activity.getString(R.string.launch_app_offline), R.mipmap.ic_shortcut_offline));
+        shortcuts.add(new Shortcut("tab", "e_journal", activity.getString(R.string.e_journal), null, R.mipmap.ic_shortcut_e_journal));
+        shortcuts.add(new Shortcut("tab", "protocol_changes", activity.getString(R.string.protocol_changes), null, R.mipmap.ic_shortcut_protocol_changes));
+        shortcuts.add(new Shortcut("tab", "rating", activity.getString(R.string.rating), null, R.mipmap.ic_shortcut_rating));
+        shortcuts.add(new Shortcut("tab", "room101", activity.getString(R.string.room101), null, R.mipmap.ic_shortcut_room101));
+        shortcuts.add(new Shortcut("room101", "create", activity.getString(R.string.room101create), null, R.mipmap.ic_shortcut_room101_add));
+        shortcuts.add(new Shortcut("schedule_lessons", null, activity.getString(R.string.schedule_lessons), activity.getString(R.string.need_to_choose_schedule), R.mipmap.ic_shortcut_schedule_lessons));
+        shortcuts.add(new Shortcut("schedule_exams", null, activity.getString(R.string.schedule_exams), activity.getString(R.string.need_to_choose_schedule), R.mipmap.ic_shortcut_schedule_exams));
+        shortcuts.add(new Shortcut("schedule_attestations", null, activity.getString(R.string.schedule_attestations), activity.getString(R.string.need_to_choose_schedule), R.mipmap.ic_shortcut_schedule_attestations));
+        shortcuts.add(new Shortcut("university", null, activity.getString(R.string.university), activity.getString(R.string.need_to_choose_type), R.mipmap.ic_shortcut_university));
+        shortcuts.add(new Shortcut("tab", "groups", activity.getString(R.string.study_groups), null, R.mipmap.ic_shortcut_groups));
+        shortcuts.add(new Shortcut("tab", "scholarship", activity.getString(R.string.scholarship), null, R.mipmap.ic_shortcut_scholarship));
+        // Lets begin
+        initPicker(true);
     }
 
     @Override
     public void onResume() {
+        super.onResume();
         thread.runOnUI(AHS, () -> {
-            log.v(TAG, "Fragment resumed");
-            firebaseAnalyticsProvider.setCurrentScreen(activity, fragment);
             IntentFilter filter = new IntentFilter();
             filter.addAction(ShortcutReceiver.ACTION_ADD_SHORTCUT);
             filter.addAction(ShortcutReceiver.ACTION_SHORTCUT_INSTALLED);
@@ -175,16 +168,10 @@ public class HomeScreenInteractionFragmentPresenterImpl extends ConnectedFragmen
 
     @Override
     public void onPause() {
+        super.onPause();
         thread.runOnUI(AHS, () -> {
-            log.v(TAG, "Fragment paused");
             activity.unregisterReceiver(receiver);
         });
-    }
-
-    @Override
-    public void onViewCreated() {
-        super.onViewCreated();
-        initPicker(true);
     }
 
     private void route(@MODE String mode) {

@@ -1,10 +1,12 @@
 package com.bukhmastov.cdoitmo.fragment.settings;
 
 import android.app.AlertDialog;
-import android.os.Bundle;
+import android.content.Context;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+
+import androidx.fragment.app.Fragment;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
@@ -22,7 +24,6 @@ import java.util.List;
 
 import javax.inject.Inject;
 
-import androidx.fragment.app.Fragment;
 import dagger.Lazy;
 
 public class SettingsFragment extends SettingsTemplateHeadersFragment {
@@ -66,9 +67,14 @@ public class SettingsFragment extends SettingsTemplateHeadersFragment {
     Lazy<Static> staticUtil;
 
     @Override
-    public void onCreate(Bundle savedInstanceState) {
+    public void onAttach(Context context) {
         AppComponentProvider.getComponent().inject(this);
-        super.onCreate(savedInstanceState);
+        super.onAttach(context);
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
         setHasOptionsMenu(true);
     }
 

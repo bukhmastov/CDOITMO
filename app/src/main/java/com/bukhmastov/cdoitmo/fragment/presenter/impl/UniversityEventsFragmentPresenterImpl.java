@@ -109,13 +109,13 @@ public class UniversityEventsFragmentPresenterImpl implements UniversityEventsFr
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         thread.initialize(UE);
-        log.v(TAG, "Fragment created");
+        log.v(TAG, "onCreate");
         firebaseAnalyticsProvider.logCurrentScreen(activity, fragment);
     }
 
     @Override
     public void onDestroy() {
-        log.v(TAG, "Fragment destroyed");
+        log.v(TAG, "onDestroy");
         loaded = false;
         thread.interrupt(UE);
     }
@@ -123,7 +123,7 @@ public class UniversityEventsFragmentPresenterImpl implements UniversityEventsFr
     @Override
     public void onResume() {
         thread.run(UE, () -> {
-            log.v(TAG, "Fragment resumed");
+            log.v(TAG, "onResume");
             firebaseAnalyticsProvider.setCurrentScreen(activity, fragment);
             if (!loaded) {
                 loaded = true;
@@ -134,7 +134,7 @@ public class UniversityEventsFragmentPresenterImpl implements UniversityEventsFr
 
     @Override
     public void onPause() {
-        log.v(TAG, "Fragment paused");
+        log.v(TAG, "onPause");
         thread.standalone(() -> {
             if (requestHandle != null && requestHandle.cancel()) {
                 loaded = false;

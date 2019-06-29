@@ -6,6 +6,10 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
 
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
+
 import com.bukhmastov.cdoitmo.App;
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.adapter.rva.RatingListRVA;
@@ -38,11 +42,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.inject.Inject;
-
-import androidx.annotation.Nullable;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
-import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import static com.bukhmastov.cdoitmo.util.Thread.RAL;
 
@@ -96,24 +95,6 @@ public class RatingListFragmentPresenterImpl extends ConnectedFragmentWithDataPr
     }
 
     @Override
-    public void onCreate(@Nullable Bundle savedInstanceState) {
-        thread.initialize(RAL);
-        thread.run(RAL, () -> {
-            log.v(TAG, "Fragment created");
-            firebaseAnalyticsProvider.logCurrentScreen(activity, fragment);
-            fragment.setHasOptionsMenu(true);
-        });
-    }
-
-    @Override
-    public void onDestroy() {
-        log.v(TAG, "Fragment destroyed");
-        loaded = false;
-        fragment.clearData();
-        thread.interrupt(RAL);
-    }
-
-    @Override
     public void onToolbarSetup(Menu menu) {
         if (menu == null) {
             return;
@@ -148,18 +129,9 @@ public class RatingListFragmentPresenterImpl extends ConnectedFragmentWithDataPr
     }
 
     @Override
-    public void onPause() {
-        log.v(TAG, "Fragment paused");
-        thread.standalone(() -> {
-            if (requestHandle != null && requestHandle.cancel()) {
-                loaded = false;
-            }
-        });
-    }
-
-    @Override
-    public void onViewCreated() {
-        super.onViewCreated();
+    public void onStart() {
+        super.onStart();
+        fragment.setHasOptionsMenu(true);
         thread.runOnUI(RAL, () -> {
             activity.updateToolbar(activity, activity.getString(R.string.top_rating), R.drawable.ic_rating);
             Bundle extras = fragment.getArguments();
@@ -190,10 +162,17 @@ public class RatingListFragmentPresenterImpl extends ConnectedFragmentWithDataPr
     }
 
     @Override
+    public void onDestroy() {
+        fragment.clearData();
+        super.onDestroy();
+    }
+
+    @Override
     public void onRefresh() {
         load();
     }
 
+    @Override
     protected void load() {
         thread.run(RAL, () -> {
             log.v(TAG, "load");

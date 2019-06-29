@@ -112,7 +112,11 @@ public class FragmentActivityPresenterImpl implements FragmentActivityPresenter,
                     navigationView.setNavigationItemSelectedListener(this);
                 }
             }
-            openRootFragment(connectedFragmentClass, fragmentExtras);
+            if (activity.getStackSize() > 0) {
+                reopenLastFragment();
+            } else {
+                openRootFragment(connectedFragmentClass, fragmentExtras);
+            }
         }, throwable -> {
             log.exception(throwable);
             loadFailed();
@@ -189,19 +193,42 @@ public class FragmentActivityPresenterImpl implements FragmentActivityPresenter,
     private void openRootFragment(Class connectedFragmentClass, Bundle extras) {
         thread.runOnUI(() -> {
             log.v(TAG, "openRootFragment | ", connectedFragmentClass);
-            if (!activity.openFragment(ConnectedActivity.TYPE.ROOT, connectedFragmentClass, extras)) {
-                log.w(TAG, "openRootFragment | ", connectedFragmentClass, " | failed to open fragment");
-                notificationMessage.get().snackBar(
-                        activity,
-                        activity.getString(R.string.failed_to_open_fragment),
-                        activity.getString(R.string.redo),
-                        view -> openRootFragment(connectedFragmentClass, extras)
-                );
-            }
+            openFragment(new ConnectedActivity.StackElement(ConnectedActivity.TYPE.ROOT, connectedFragmentClass, extras));
         }, throwable -> {
             log.exception(throwable);
             activity.finish();
         });
+    }
+
+    private void reopenLastFragment() {
+        thread.runOnUI(() -> {
+            log.v(TAG, "reopenLastFragment");
+            if (activity.getStackSize() < 1) {
+                log.v(TAG, "reopenLastFragment | stack is empty");
+                return;
+            }
+            ConnectedActivity.StackElement lastFragment = activity.popFragment();
+            if (lastFragment == null) {
+                log.v(TAG, "reopenLastFragment | fragment is null");
+                return;
+            }
+            openFragment(lastFragment);
+        }, throwable -> {
+            log.exception(throwable);
+            activity.finish();
+        });
+    }
+
+    private void openFragment(ConnectedActivity.StackElement stackElement) {
+        if (!activity.openFragment(stackElement)) {
+            log.w(TAG, "openFragment | ", stackElement.connectedFragmentClass, " | failed to open fragment");
+            notificationMessage.get().snackBar(
+                    activity,
+                    activity.getString(R.string.failed_to_open_fragment),
+                    activity.getString(R.string.redo),
+                    view -> openFragment(stackElement)
+            );
+        }
     }
 
     private void loadFailed() {

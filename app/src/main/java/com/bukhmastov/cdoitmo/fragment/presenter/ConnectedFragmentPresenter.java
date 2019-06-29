@@ -14,9 +14,15 @@ public interface ConnectedFragmentPresenter {
 
     void onCreate(@Nullable Bundle savedInstanceState);
 
-    void onDestroy();
+    default void onViewCreated() {}
+
+    void onStart();
 
     default void onToolbarSetup(Menu menu) {}
+
+    void onResume();
+
+    void onPause();
 
     default void onToolbarTeardown(Menu menu) {
         try {
@@ -35,9 +41,7 @@ public interface ConnectedFragmentPresenter {
         }
     }
 
-    void onResume();
+    void onStop();
 
-    void onPause();
-
-    default void onViewCreated() {}
+    void onDestroy();
 }

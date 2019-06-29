@@ -2,9 +2,11 @@ package com.bukhmastov.cdoitmo.fragment.presenter.impl;
 
 import android.app.Activity;
 import android.content.Intent;
-import android.os.Bundle;
 import android.view.MenuItem;
 import android.view.View;
+
+import androidx.fragment.app.FragmentManager;
+import androidx.viewpager.widget.ViewPager;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activity.search.ScheduleLessonsSearchActivity;
@@ -23,10 +25,6 @@ import com.bukhmastov.cdoitmo.util.Time;
 import com.google.android.material.tabs.TabLayout;
 
 import javax.inject.Inject;
-
-import androidx.annotation.Nullable;
-import androidx.fragment.app.FragmentManager;
-import androidx.viewpager.widget.ViewPager;
 
 import static com.bukhmastov.cdoitmo.util.Thread.SL;
 
@@ -59,11 +57,10 @@ public class ScheduleLessonsFragmentPresenterImpl extends ConnectedFragmentPrese
     }
 
     @Override
-    public void onCreate(@Nullable Bundle savedInstanceState) {
+    public void onStart() {
+        super.onStart();
         thread.initialize(SL);
         thread.run(SL, () -> {
-            log.v(TAG, "Fragment created");
-            firebaseAnalyticsProvider.logCurrentScreen(activity, fragment);
             // define query
             String scope = tabHostPresenter.restoreData();
             if (scope == null) {
@@ -83,48 +80,41 @@ public class ScheduleLessonsFragmentPresenterImpl extends ConnectedFragmentPrese
 
     @Override
     public void onDestroy() {
-        thread.runOnUI(SL, () -> {
-            log.v(TAG, "Fragment destroyed");
-            loaded = false;
-            TabLayout fixedTabs = activity.findViewById(R.id.fixed_tabs);
-            if (fixedTabs != null) {
-                fixedTabs.setVisibility(View.GONE);
+        TabLayout fixedTabs = activity.findViewById(R.id.fixed_tabs);
+        if (fixedTabs != null) {
+            fixedTabs.setVisibility(View.GONE);
+        }
+        if (fragment != null && fragment.toolbar() != null) {
+            MenuItem actionSearch = fragment.toolbar().findItem(R.id.action_search);
+            if (actionSearch != null && actionSearch.isVisible()) {
+                log.v(TAG, "Hiding actionSearch");
+                actionSearch.setVisible(false);
+                actionSearch.setOnMenuItemClickListener(null);
             }
-            if (fragment != null && fragment.toolbar() != null) {
-                MenuItem actionSearch = fragment.toolbar().findItem(R.id.action_search);
-                if (actionSearch != null && actionSearch.isVisible()) {
-                    log.v(TAG, "Hiding actionSearch");
-                    actionSearch.setVisible(false);
-                    actionSearch.setOnMenuItemClickListener(null);
-                }
-            }
-            thread.standalone(() -> {
-                thread.interrupt(SL);
-            });
-        });
+        }
+        super.onDestroy();
     }
 
     @Override
     public void onResume() {
-        thread.run(SL, () -> {
-            log.v(TAG, "Fragment resumed");
-            firebaseAnalyticsProvider.setCurrentScreen(activity, fragment);
-            thread.runOnUI(SL, () -> {
-                if (fragment != null && fragment.toolbar() != null) {
-                    MenuItem actionSearch = fragment.toolbar().findItem(R.id.action_search);
-                    if (actionSearch != null && !actionSearch.isVisible()) {
-                        log.v(TAG, "Revealing actionSearch");
-                        actionSearch.setVisible(true);
-                        actionSearch.setOnMenuItemClickListener(item -> {
-                            thread.run(SL, () -> {
-                                log.v(TAG, "actionSearch clicked");
-                                eventBus.fire(new OpenActivityEvent(ScheduleLessonsSearchActivity.class));
-                            });
-                            return false;
+        super.onResume();
+        thread.runOnUI(SL, () -> {
+            if (fragment != null && fragment.toolbar() != null) {
+                MenuItem actionSearch = fragment.toolbar().findItem(R.id.action_search);
+                if (actionSearch != null && !actionSearch.isVisible()) {
+                    log.v(TAG, "Revealing actionSearch");
+                    actionSearch.setVisible(true);
+                    actionSearch.setOnMenuItemClickListener(item -> {
+                        thread.run(SL, () -> {
+                            log.v(TAG, "actionSearch clicked");
+                            eventBus.fire(new OpenActivityEvent(ScheduleLessonsSearchActivity.class));
                         });
-                    }
+                        return false;
+                    });
                 }
-            });
+            }
+        });
+        thread.run(SL, () -> {
             if (!loaded) {
                 loaded = true;
                 load();

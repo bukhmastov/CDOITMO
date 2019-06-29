@@ -128,7 +128,7 @@ public class UniversityBuildingsFragmentPresenterImpl implements UniversityBuild
     public void onCreate(@Nullable Bundle savedInstanceState) {
         thread.initialize(UB);
         thread.run(UB, () -> {
-            log.v(TAG, "Fragment created");
+            log.v(TAG, "onCreate");
             firebaseAnalyticsProvider.logCurrentScreen(activity, fragment);
             markersCampusEnabled = storagePref.get(activity, "pref_university_buildings_campus", true);
             markersDormitoryEnabled = storagePref.get(activity, "pref_university_buildings_dormitory", true);
@@ -137,19 +137,19 @@ public class UniversityBuildingsFragmentPresenterImpl implements UniversityBuild
 
     @Override
     public void onDestroy() {
-        log.v(TAG, "Fragment destroyed");
+        log.v(TAG, "onDestroy");
         thread.interrupt(UB);
     }
 
     @Override
     public void onResume() {
-        log.v(TAG, "Fragment resumed");
+        log.v(TAG, "onResume");
         firebaseAnalyticsProvider.setCurrentScreen(activity, fragment);
     }
 
     @Override
     public void onPause() {
-        log.v(TAG, "Fragment paused");
+        log.v(TAG, "onPause");
         thread.standalone(() -> {
             if (requestHandle != null) {
                 requestHandle.cancel();
@@ -618,7 +618,6 @@ public class UniversityBuildingsFragmentPresenterImpl implements UniversityBuild
     }
 
 
-    @SuppressWarnings("deprecation")
     private String escapeText(String text) {
         try {
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {

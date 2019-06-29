@@ -85,8 +85,8 @@ public class ScheduleLessonsModifyFragmentPresenterImpl extends ConnectedFragmen
     }
 
     @Override
-    public void onViewCreated() {
-        super.onViewCreated();
+    public void onStart() {
+        super.onStart();
         thread.run(SLM, () -> {
             if (fragment.extras() == null) {
                 log.e(TAG, "extras cannot be null");
