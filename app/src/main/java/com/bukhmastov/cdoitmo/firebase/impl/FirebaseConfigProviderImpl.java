@@ -1,11 +1,16 @@
 package com.bukhmastov.cdoitmo.firebase.impl;
 
+import android.content.Context;
+
+import androidx.annotation.NonNull;
+
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseConfigProvider;
 import com.bukhmastov.cdoitmo.function.Consumer;
 import com.bukhmastov.cdoitmo.model.firebase.config.FBConfigMessage;
 import com.bukhmastov.cdoitmo.util.Log;
+import com.bukhmastov.cdoitmo.util.StoragePref;
 import com.bukhmastov.cdoitmo.util.Thread;
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig;
 import com.google.firebase.remoteconfig.FirebaseRemoteConfigSettings;
@@ -16,13 +21,14 @@ public class FirebaseConfigProviderImpl implements FirebaseConfigProvider {
 
     private static final String TAG = "FirebaseConfigProvider";
     private static final boolean DEBUG = false;
-    private static final long cacheExpiration = 7200; // 2 hours
-
+    private static final long CACHE_EXPIRATION_SEC = 12 * 60 * 60;
 
     @Inject
     Log log;
     @Inject
     Thread thread;
+    @Inject
+    StoragePref storagePref;
 
     public FirebaseConfigProviderImpl() {
         AppComponentProvider.getComponent().inject(this);
@@ -40,10 +46,10 @@ public class FirebaseConfigProviderImpl implements FirebaseConfigProvider {
     }
 
     @Override
-    public void getString(String key, Result result) {
+    public void getString(@NonNull Context context, String key, Result result) {
         log.v(TAG, "getString | key=", key);
         thread.assertNotUI();
-        fetch(successful -> {
+        fetch(context, successful -> {
             String value = getFirebaseRemoteConfig().getString(key);
             log.v(TAG, "getString | onComplete | key=", key, " | value=", value);
             result.onResult(value);
@@ -51,10 +57,10 @@ public class FirebaseConfigProviderImpl implements FirebaseConfigProvider {
     }
 
     @Override
-    public void getMessage(String key, ResultMessage result) {
+    public void getMessage(@NonNull Context context, String key, ResultMessage result) {
         log.v(TAG, "getMessage | key=", key);
         thread.assertNotUI();
-        fetch(successful -> {
+        fetch(context, successful -> {
             try {
                 String value = getFirebaseRemoteConfig().getString(key);
                 log.v(TAG, "getMessage | onComplete | key=", key, " | value=", value);
@@ -69,14 +75,23 @@ public class FirebaseConfigProviderImpl implements FirebaseConfigProvider {
         });
     }
 
-    private void fetch(Consumer<Boolean> onComplete) {
-        log.v(TAG, "fetch");
-        getFirebaseRemoteConfig().fetch(DEBUG ? 0 : cacheExpiration)
+    private void fetch(Context context, Consumer<Boolean> onComplete) {
+
+        long expiration = DEBUG ? 0 : CACHE_EXPIRATION_SEC;
+        if (storagePref.get(context, "pref_remote_config_invalidate", false)) {
+            expiration = 0;
+            storagePref.put(context, "pref_remote_config_invalidate", false);
+        }
+
+        log.v(TAG, "fetch | expiration=", expiration);
+
+        getFirebaseRemoteConfig()
+                .fetch(expiration)
                 .addOnCompleteListener(task -> thread.standalone(() -> {
                     boolean successful = task.isSuccessful();
                     log.v(TAG, "fetch | onComplete | successful=", successful);
                     if (successful) {
-                        getFirebaseRemoteConfig().activateFetched();
+                        getFirebaseRemoteConfig().activate();
                     }
                     onComplete.accept(successful);
                 }));

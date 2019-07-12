@@ -52,6 +52,7 @@ import com.bukhmastov.cdoitmo.network.model.Client;
 import com.bukhmastov.cdoitmo.object.schedule.Schedule;
 import com.bukhmastov.cdoitmo.object.schedule.ScheduleLessons;
 import com.bukhmastov.cdoitmo.object.schedule.ScheduleLessonsHelper;
+import com.bukhmastov.cdoitmo.util.Account;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.NotificationMessage;
 import com.bukhmastov.cdoitmo.util.Storage;
@@ -115,6 +116,8 @@ public class ScheduleLessonsTabFragmentPresenterImpl implements Schedule.Handler
     @Inject
     NotificationMessage notificationMessage;
     @Inject
+    Account account;
+    @Inject
     Lazy<FirebaseAnalyticsProvider> firebaseAnalyticsProvider;
 
     public ScheduleLessonsTabFragmentPresenterImpl() {
@@ -144,7 +147,7 @@ public class ScheduleLessonsTabFragmentPresenterImpl implements Schedule.Handler
             }
             log.v(TAG, "Fragment created | type=", type);
             selfGroups.clear();
-            selfGroups.addAll(getSelfGroups());
+            selfGroups.addAll(account.getGroups(activity));
             tabHostPresenter.tabs().put(type, refresh -> thread.run(SL, () -> {
                 log.v(TAG, "onInvalidate | type=", type, " | refresh=", refresh);
                 if (fragment.isResumed()) {
@@ -1151,22 +1154,13 @@ public class ScheduleLessonsTabFragmentPresenterImpl implements Schedule.Handler
         return appWidgetManager.isRequestPinAppWidgetSupported();
     }
 
-    private List<String> getSelfGroups() {
-        thread.assertNotUI();
-        List<String> groups = Arrays.asList(storage.get(activity, Storage.PERMANENT, Storage.USER, "user#groups").split(","));
-        for (int i = 0; i < groups.size(); i++) {
-            groups.set(i, groups.get(i).trim());
-        }
-        return groups;
-    }
-
     private void logStatistic(String info) {
-        String tab = "both";
-        if (type == 0) tab = "odd";
-        if (type == 1) tab = "even";
+        String parity = "both";
+        if (type == 0) parity = "odd";
+        if (type == 1) parity = "even";
         Bundle bundle = new Bundle();
         bundle.putString(FirebaseAnalyticsProvider.Param.SCHEDULE_LESSONS_TYPE, info);
-        bundle.putString(FirebaseAnalyticsProvider.Param.SCHEDULE_LESSONS_TAB, tab);
+        bundle.putString(FirebaseAnalyticsProvider.Param.SCHEDULE_LESSONS_PARITY, parity);
         bundle.putString(FirebaseAnalyticsProvider.Param.SCHEDULE_LESSONS_QUERY, schedule.getQuery());
         bundle.putString(FirebaseAnalyticsProvider.Param.SCHEDULE_LESSONS_QUERY_IS_SELF, selfGroups.contains(schedule.getQuery()) ? "1" : "0");
         firebaseAnalyticsProvider.get().logEvent(

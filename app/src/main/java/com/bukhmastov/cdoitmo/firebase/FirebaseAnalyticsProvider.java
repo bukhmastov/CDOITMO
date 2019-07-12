@@ -18,8 +18,6 @@ public interface FirebaseAnalyticsProvider {
         public static final String SHORTCUT_INSTALL = "cdo_shortcut_install";                   // установка ярлыка
         public static final String SHORTCUT_USE = "cdo_shortcut_use";                           // использование ярлыка
         public static final String WIDGET_INSTALL = "cdo_widget_install";                       // установка виджета расписания
-        public static final String SCHEDULE_LESSON_ADD = "cdo_schedule_lesson_add";             // ручное добавление занятия в расписание
-        public static final String SCHEDULE_LESSON_REDUCE = "cdo_schedule_lesson_reduce";       // скрытие занятия в расписании
         public static final String ROOM101_REQUEST_ADDED = "cdo_room101_request_added";         // оставлен запрос на тестирование в 101 кабинете
         public static final String ROOM101_REQUEST_DENIED = "cdo_room101_request_denied";       // отозван запрос на тестирование в 101 кабинете
         public static final String WIDGET_USAGE = "cdo_widget_usage";                           // использование виджета
@@ -38,13 +36,12 @@ public interface FirebaseAnalyticsProvider {
         public static final String APP_VIEW_SCREEN = "cdo_view_screen";
         public static final String SHORTCUT_TYPE = "cdo_shortcut_type";
         public static final String WIDGET_QUERY = "cdo_widget_query";
-        public static final String LESSON_TITLE = "cdo_lesson_title";
         public static final String ROOM101_REQUEST_DETAILS = "cdo_room101_request_details";
         public static final String WIDGET_USAGE_INFO = "cdo_widget_usage_info";
         public static final String EVENT_EXTRA = "cdo_event_extra";
         public static final String TYPE = "cdo_type";
         public static final String SCHEDULE_LESSONS_TYPE = "cdo_schedule_lessons_type";
-        public static final String SCHEDULE_LESSONS_TAB = "cdo_schedule_lessons_tab";
+        public static final String SCHEDULE_LESSONS_PARITY = "cdo_schedule_lessons_parity";
         public static final String SCHEDULE_LESSONS_QUERY = "cdo_schedule_lessons_query";
         public static final String SCHEDULE_LESSONS_QUERY_IS_SELF = "cdo_schedule_lessons_query_is_self";
         public static final String SCHEDULE_LESSONS_EXTRA = "cdo_schedule_lessons_extra";

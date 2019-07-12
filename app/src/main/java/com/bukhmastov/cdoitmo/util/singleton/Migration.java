@@ -10,6 +10,7 @@ import android.os.Build;
 import androidx.annotation.Keep;
 
 import com.bukhmastov.cdoitmo.activity.presenter.ScheduleLessonsWidgetConfigureActivityPresenter;
+import com.bukhmastov.cdoitmo.firebase.FirebaseMessagingServiceProvider;
 import com.bukhmastov.cdoitmo.model.entity.Suggestions;
 import com.bukhmastov.cdoitmo.model.schedule.lessons.SDay;
 import com.bukhmastov.cdoitmo.model.schedule.lessons.added.SLessonsAdded;
@@ -70,13 +71,17 @@ public class Migration {
                     } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException | ExceptionInInitializerError | SecurityException | NullPointerException e) {
                         // migration failed
                         injectProvider.getLog().e(TAG, "Migration failed for versionCode ", version, " | ", e.getMessage());
+                        injectProvider.getLog().exception(e);
                     } catch (Throwable throwable) {
                         // migration failed
                         injectProvider.getLog().e(TAG, "Migration failed for versionCode ", version, " | uncaught throwable | ", throwable.getMessage());
+                        injectProvider.getLog().exception(throwable);
                     }
                 }
-            } catch (Exception ignore) {
+            } catch (Exception e) {
                 // failed to get migration class
+                injectProvider.getLog().e(TAG, "Migration failed");
+                injectProvider.getLog().exception(e);
             }
             injectProvider.getStoragePref().put(context, "last_version", versionCode);
         } catch (PackageManager.NameNotFoundException e) {
@@ -88,6 +93,11 @@ public class Migration {
     // Methods for migrations
     // migrateXX - migration to version XX
     // -----------------------------------
+
+    @Keep
+    private static void migrate146(Context context, InjectProvider injectProvider) {
+        FirebaseMessagingServiceProvider.subscribeToAllTopics();
+    }
 
     @Keep
     private static void migrate135(Context context, InjectProvider injectProvider) {

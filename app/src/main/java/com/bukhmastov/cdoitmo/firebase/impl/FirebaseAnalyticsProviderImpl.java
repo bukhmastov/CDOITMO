@@ -195,7 +195,8 @@ public class FirebaseAnalyticsProviderImpl implements FirebaseAnalyticsProvider 
     public void setUserProperty(Context context, String property, String value) {
         if (!enabled) return;
         thread.standalone(() -> {
-            getFirebaseAnalytics(context).setUserProperty(property, value);
+            String v = correctStringLength(value, 36);
+            getFirebaseAnalytics(context).setUserProperty(property, v);
         }, throwable -> {
             log.exception(throwable);
         });
@@ -210,7 +211,15 @@ public class FirebaseAnalyticsProviderImpl implements FirebaseAnalyticsProvider 
     public void logEvent(Context context, String name, Bundle params) {
         if (!enabled) return;
         thread.standalone(() -> {
-            getFirebaseAnalytics(context).logEvent(name, params);
+            String n = correctStringLength(name, 40);
+            if (params != null) {
+                for (String key : params.keySet()) {
+                    String value = params.getString(key);
+                    value = correctStringLength(value, 100);
+                    params.putString(key, value);
+                }
+            }
+            getFirebaseAnalytics(context).logEvent(n, params);
         }, throwable -> {
             log.exception(throwable);
         });
@@ -220,9 +229,10 @@ public class FirebaseAnalyticsProviderImpl implements FirebaseAnalyticsProvider 
     public void logBasicEvent(Context context, String content) {
         if (!enabled) return;
         thread.standalone(() -> {
+            String c = correctStringLength(content, 100);
             getFirebaseAnalytics(context).logEvent(
                     Event.EVENT,
-                    getBundle(Param.EVENT_EXTRA, content)
+                    getBundle(Param.EVENT_EXTRA, c)
             );
         }, throwable -> {
             log.exception(throwable);
@@ -256,5 +266,16 @@ public class FirebaseAnalyticsProviderImpl implements FirebaseAnalyticsProvider 
             bundle.putInt(key, (Integer) value);
         }
         return bundle;
+    }
+
+    private String correctStringLength(String text, int len) {
+        if (text == null) {
+            return null;
+        }
+        text = text.trim();
+        if (len < 0 || len > text.length()) {
+            return text;
+        }
+        return text.substring(0, len);
     }
 }

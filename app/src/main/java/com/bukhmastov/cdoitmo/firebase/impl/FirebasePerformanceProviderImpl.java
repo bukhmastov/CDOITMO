@@ -50,10 +50,11 @@ public class FirebasePerformanceProviderImpl implements FirebasePerformanceProvi
     public void setEnabled(Context context) {
         thread.assertNotUI();
         log.i(TAG, "Firebase Performance fetching status");
-        firebaseConfigProvider.get().getString(FirebaseConfigProvider.PERFORMANCE_ENABLED, value -> {
+        firebaseConfigProvider.get().getString(context, FirebaseConfigProvider.PERFORMANCE_ENABLED, value -> {
             setEnabled(context, "1".equals(value));
         });
     }
+
     @Override
     public void setEnabled(Context context, boolean enabled) {
         try {
@@ -90,6 +91,7 @@ public class FirebasePerformanceProviderImpl implements FirebasePerformanceProvi
             return null;
         }
     }
+
     @Override
     public boolean stopTrace(String key) {
         try {
@@ -109,6 +111,7 @@ public class FirebasePerformanceProviderImpl implements FirebasePerformanceProvi
             return false;
         }
     }
+
     @Override
     public void stopAll() {
         for (Map.Entry<String, com.google.firebase.perf.metrics.Trace> entry : traceMap.entrySet()) {
@@ -147,6 +150,7 @@ public class FirebasePerformanceProviderImpl implements FirebasePerformanceProvi
             log.exception(e);
         }
     }
+
     @Override
     public void putAttribute(String key, String attr, String value) {
         try {
@@ -155,15 +159,9 @@ public class FirebasePerformanceProviderImpl implements FirebasePerformanceProvi
             }
             com.google.firebase.perf.metrics.Trace trace = traceMap.get(key);
             if (trace != null) {
-                attr = attr.trim();
-                value = value.trim();
-                if (attr.length() > 40) {
-                    attr = attr.substring(0, 40);
-                }
-                if (value.length() > 100) {
-                    value = value.substring(0, 100);
-                }
-                trace.putAttribute(attr, value);
+                String a = correctStringLength(attr, 32);
+                String v = correctStringLength(value, 100);
+                trace.putAttribute(a, v);
             }
         } catch (Exception e) {
             log.exception(e);
@@ -175,9 +173,21 @@ public class FirebasePerformanceProviderImpl implements FirebasePerformanceProvi
         putAttribute(key, attr, values);
         stopTrace(key);
     }
+
     @Override
     public void putAttributeAndStop(String key, String attr, String value) {
         putAttribute(key, attr, value);
         stopTrace(key);
+    }
+
+    private String correctStringLength(String text, int len) {
+        if (text == null) {
+            return null;
+        }
+        text = text.trim();
+        if (len < 0 || len > text.length()) {
+            return text;
+        }
+        return text.substring(0, len);
     }
 }

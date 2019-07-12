@@ -88,7 +88,7 @@ public class NavigationMenuImpl implements NavigationMenu {
 
     @Override
     public void displayRemoteMessage(Activity activity, FirebaseConfigProvider firebaseConfigProvider, Storage storage) {
-        firebaseConfigProvider.getMessage(FirebaseConfigProvider.MESSAGE_MENU, value -> {
+        firebaseConfigProvider.getMessage(activity, FirebaseConfigProvider.MESSAGE_MENU, value -> {
             if (value == null) {
                 return;
             }

@@ -290,6 +290,7 @@ public class LoginActivityPresenterImpl implements LoginActivityPresenter {
             appendNewUserView(container);
             appendAllUsersView(container);
             appendAnonUserView(container);
+            appendNoticeView(container);
             thread.runOnUI(AL, () -> activity.draw(container));
         }, throwable -> {
             log.exception(throwable);
@@ -534,6 +535,11 @@ public class LoginActivityPresenterImpl implements LoginActivityPresenter {
                     .create().show();
         });
         container.addView(anonymousUserTile);
+    }
+
+    private void appendNoticeView(ViewGroup container) {
+        ViewGroup notice = (ViewGroup) activity.inflate(R.layout.layout_login_notice);
+        container.addView(notice);
     }
 
     private void login(String login, String password, String role, boolean isNewUser) {
@@ -792,7 +798,7 @@ public class LoginActivityPresenterImpl implements LoginActivityPresenter {
     }
 
     private void displayRemoteMessage() {
-        thread.run(AL, () -> firebaseConfigProvider.getMessage(FirebaseConfigProvider.MESSAGE_LOGIN, value -> {
+        thread.run(AL, () -> firebaseConfigProvider.getMessage(activity, FirebaseConfigProvider.MESSAGE_LOGIN, value -> {
             thread.run(AL, () -> {
                 if (value == null) {
                     return;

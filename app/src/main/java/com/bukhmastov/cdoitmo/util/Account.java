@@ -37,6 +37,8 @@ public interface Account {
 
     void setUserInfo(@NonNull Context context, String name, List<String> groups, String avatar);
 
+    List<String> getGroups(@NonNull Context context);
+
     interface LoginHandler {
         void onSuccess();
         void onOffline();

@@ -1,5 +1,9 @@
 package com.bukhmastov.cdoitmo.firebase;
 
+import android.content.Context;
+
+import androidx.annotation.NonNull;
+
 import com.bukhmastov.cdoitmo.model.firebase.config.FBConfigMessage;
 
 public interface FirebaseConfigProvider {
@@ -11,10 +15,12 @@ public interface FirebaseConfigProvider {
     interface Result {
         void onResult(String value);
     }
+
     interface ResultMessage {
         void onResult(FBConfigMessage configMessage);
     }
 
-    void getString(String key, Result result);
-    void getMessage(String key, ResultMessage result);
+    void getString(@NonNull Context context, String key, Result result);
+
+    void getMessage(@NonNull Context context, String key, ResultMessage result);
 }

@@ -610,9 +610,6 @@
     <string name="lesson_day_type_date">Schedule for defined day</string>
     <string name="unknown_day_about">Application cannot display the lesson day as the ITMO API does not provide date for defined-date-lessons.</string>
 
-    <string name="crush_this_app">Crush this application</string>
-    <string name="crush_this_app_desc">You are about to crush the application by yourself. After clicking on the \"Continue\" button, the application will be crashed.</string>
-    <string name="use_deifmo_credentials">Use the login and password of the current CDO account</string>
     <string name="help_errors">App displays errors</string>
     <string name="help_error_servers">Errors occur when downloading data from servers</string>
     <string name="help_error_servers_desc">Errors may occur due to the fact that the servers are temporarily unavailable, errors occur on the servers, or the configuration of the servers has changed. Please note that the developer is not related to servers. The application does not have its own server-side, all data is downloaded directly from the servers of DLC, ISU and ITMO.</string>
@@ -625,5 +622,10 @@
     <string name="help_read_only">Can this app change my data on servers?</string>
     <string name="help_read_only_desc">The application works in read only mode. It loads, processes and displays data from servers, without changing any data on the servers. The only exception is the section \"101 audience\" - when submitting at the last stage, data are entered on the CDO server.</string>
     <string name="help_open_log">Open log</string>
+
+    <string name="crush_this_app">Crush this application</string>
+    <string name="crush_this_app_desc">You are about to crush the application by yourself. After clicking on the \"Continue\" button, the application will be crashed.</string>
+    <string name="use_deifmo_credentials">Use the login and password of the current CDO account</string>
+    <string name="login_notice">Please note that this application is not official\nInformation on official ITMO university resources is considered a higher priority</string>
 
 </resources>

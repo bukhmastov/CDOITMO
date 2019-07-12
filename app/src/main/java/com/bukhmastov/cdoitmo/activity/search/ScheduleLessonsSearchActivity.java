@@ -6,12 +6,9 @@ import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.fragment.presenter.ScheduleLessonsTabHostFragmentPresenter;
+import com.bukhmastov.cdoitmo.util.Account;
 import com.bukhmastov.cdoitmo.util.Log;
-import com.bukhmastov.cdoitmo.util.Storage;
 import com.bukhmastov.cdoitmo.util.Thread;
-
-import java.util.Arrays;
-import java.util.List;
 
 import javax.inject.Inject;
 
@@ -27,6 +24,8 @@ public class ScheduleLessonsSearchActivity extends SearchActivity {
     ScheduleLessonsTabHostFragmentPresenter tabHostPresenter;
     @Inject
     FirebaseAnalyticsProvider firebaseAnalyticsProvider;
+    @Inject
+    Account account;
 
     public ScheduleLessonsSearchActivity() {
         super(3, 100);
@@ -61,21 +60,12 @@ public class ScheduleLessonsSearchActivity extends SearchActivity {
         Bundle bundle = new Bundle();
         bundle.putString(FirebaseAnalyticsProvider.Param.SCHEDULE_LESSONS_TYPE, "schedule_search");
         bundle.putString(FirebaseAnalyticsProvider.Param.SCHEDULE_LESSONS_QUERY, query);
-        bundle.putString(FirebaseAnalyticsProvider.Param.SCHEDULE_LESSONS_QUERY_IS_SELF, getSelfGroups().contains(query) ? "1" : "0");
+        bundle.putString(FirebaseAnalyticsProvider.Param.SCHEDULE_LESSONS_QUERY_IS_SELF, account.getGroups(context).contains(query) ? "1" : "0");
         bundle.putString(FirebaseAnalyticsProvider.Param.SCHEDULE_LESSONS_EXTRA, type);
         firebaseAnalyticsProvider.logEvent(
                 context,
                 FirebaseAnalyticsProvider.Event.SCHEDULE_LESSONS,
                 bundle
         );
-    }
-
-    private List<String> getSelfGroups() {
-        thread.assertNotUI();
-        List<String> groups = Arrays.asList(storage.get(context, Storage.PERMANENT, Storage.USER, "user#groups").split(","));
-        for (int i = 0; i < groups.size(); i++) {
-            groups.set(i, groups.get(i).trim());
-        }
-        return groups;
     }
 }

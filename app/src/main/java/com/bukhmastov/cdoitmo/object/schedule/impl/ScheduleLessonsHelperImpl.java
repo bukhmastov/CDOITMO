@@ -15,6 +15,7 @@ import com.bukhmastov.cdoitmo.model.schedule.lessons.added.SLessonsAdded;
 import com.bukhmastov.cdoitmo.model.schedule.lessons.reduced.SDayReduced;
 import com.bukhmastov.cdoitmo.model.schedule.lessons.reduced.SLessonsReduced;
 import com.bukhmastov.cdoitmo.object.schedule.ScheduleLessonsHelper;
+import com.bukhmastov.cdoitmo.util.Account;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Storage;
 import com.bukhmastov.cdoitmo.util.Thread;
@@ -46,6 +47,8 @@ public class ScheduleLessonsHelperImpl implements ScheduleLessonsHelper {
     Time time;
     @Inject
     FirebaseAnalyticsProvider firebaseAnalyticsProvider;
+    @Inject
+    Account account;
 
     public ScheduleLessonsHelperImpl() {
         AppComponentProvider.getComponent().inject(this);
@@ -133,14 +136,10 @@ public class ScheduleLessonsHelperImpl implements ScheduleLessonsHelper {
             }
             lessonsReduced.setTimestamp(time.getTimeInMillis());
             storage.put(context, Storage.PERMANENT, Storage.USER, "schedule_lessons#reduced#" + token, lessonsReduced.toJsonString());
+            logStatistic(query, lesson.getParity(), lesson.getSubject(), "schedule_lesson_reduce");
             if (callback != null) {
                 callback.call();
             }
-            firebaseAnalyticsProvider.logEvent(
-                    context,
-                    FirebaseAnalyticsProvider.Event.SCHEDULE_LESSON_REDUCE,
-                    firebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.LESSON_TITLE, lesson.getSubject())
-            );
             return true;
         } catch (Exception e) {
             log.exception(e);
@@ -194,6 +193,7 @@ public class ScheduleLessonsHelperImpl implements ScheduleLessonsHelper {
                 lessonsReduced.setTimestamp(time.getTimeInMillis());
                 storage.put(context, Storage.PERMANENT, Storage.USER, "schedule_lessons#reduced#" + token, lessonsReduced.toJsonString());
             }
+            logStatistic(query, lesson.getParity(), lesson.getSubject(), "schedule_lesson_restore");
             if (callback != null) {
                 callback.call();
             }
@@ -264,11 +264,7 @@ public class ScheduleLessonsHelperImpl implements ScheduleLessonsHelper {
             }
             lessonsAdded.setTimestamp(time.getTimeInMillis());
             storage.put(context, Storage.PERMANENT, Storage.USER, "schedule_lessons#added#" + token, lessonsAdded.toJsonString());
-            firebaseAnalyticsProvider.logEvent(
-                    context,
-                    FirebaseAnalyticsProvider.Event.SCHEDULE_LESSON_ADD,
-                    firebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.LESSON_TITLE, lesson.getSubject())
-            );
+            logStatistic(query, lesson.getParity(), lesson.getSubject(), "schedule_lesson_add");
             if (callback != null) {
                 callback.call();
             }
@@ -325,6 +321,7 @@ public class ScheduleLessonsHelperImpl implements ScheduleLessonsHelper {
                 lessonsAdded.setTimestamp(time.getTimeInMillis());
                 storage.put(context, Storage.PERMANENT, Storage.USER, "schedule_lessons#added#" + token, lessonsAdded.toJsonString());
             }
+            logStatistic(query, lesson.getParity(), lesson.getSubject(), "schedule_lesson_delete");
             if (callback != null) {
                 callback.call();
             }
@@ -435,5 +432,22 @@ public class ScheduleLessonsHelperImpl implements ScheduleLessonsHelper {
             set.addAll(day.getLessons());
         }
         return filterAndSortLessons(set, parity, hideReducedLessons);
+    }
+
+    private void logStatistic(String query, int parity, String subject, String type) {
+        String p = "both";
+        if (parity == 0) p = "odd";
+        if (parity == 1) p = "even";
+        Bundle bundle = new Bundle();
+        bundle.putString(FirebaseAnalyticsProvider.Param.SCHEDULE_LESSONS_TYPE, type);
+        bundle.putString(FirebaseAnalyticsProvider.Param.SCHEDULE_LESSONS_PARITY, p);
+        bundle.putString(FirebaseAnalyticsProvider.Param.SCHEDULE_LESSONS_QUERY, query);
+        bundle.putString(FirebaseAnalyticsProvider.Param.SCHEDULE_LESSONS_QUERY_IS_SELF, account.getGroups(context).contains(query) ? "1" : "0");
+        bundle.putString(FirebaseAnalyticsProvider.Param.SCHEDULE_LESSONS_EXTRA, subject);
+        firebaseAnalyticsProvider.logEvent(
+                context,
+                FirebaseAnalyticsProvider.Event.SCHEDULE_LESSONS,
+                bundle
+        );
     }
 }

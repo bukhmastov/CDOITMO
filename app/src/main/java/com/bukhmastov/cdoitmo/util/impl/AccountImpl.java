@@ -393,4 +393,14 @@ public class AccountImpl implements Account {
             firebaseAnalyticsProvider.setUserProperties(context, groupCurrent);
         }
     }
+
+    @Override
+    public List<String> getGroups(@NonNull Context context) {
+        thread.assertNotUI();
+        List<String> groups = Arrays.asList(storage.get(context, Storage.PERMANENT, Storage.USER, "user#groups").split(","));
+        for (int i = 0; i < groups.size(); i++) {
+            groups.set(i, groups.get(i).trim());
+        }
+        return groups;
+    }
 }
