@@ -35,6 +35,11 @@ public class SLessonsReduced extends ScheduleJsonEntity {
     }
 
     @Override
+    public boolean isEmptySchedule() {
+        return schedule == null || schedule.isEmpty();
+    }
+
+    @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof SLessonsReduced)) return false;

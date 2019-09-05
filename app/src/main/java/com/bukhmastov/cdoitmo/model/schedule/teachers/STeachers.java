@@ -79,6 +79,11 @@ public class STeachers extends ScheduleJsonEntity {
     }
 
     @Override
+    public boolean isEmptySchedule() {
+        return teachers == null || teachers.isEmpty();
+    }
+
+    @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof STeachers)) return false;

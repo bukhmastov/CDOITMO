@@ -100,6 +100,12 @@ public class SLessons extends ScheduleJsonEntity {
     }
 
     @Override
+    public boolean isEmptySchedule() {
+        return (schedule != null && schedule.isEmpty()) ||
+               (teachers != null && teachers.isEmptySchedule());
+    }
+
+    @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof SLessons)) return false;

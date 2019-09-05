@@ -5,4 +5,6 @@ import com.bukhmastov.cdoitmo.model.JsonEntity;
 public abstract class ScheduleJsonEntity extends JsonEntity {
 
     public abstract long getTimestamp();
+
+    public abstract boolean isEmptySchedule();
 }

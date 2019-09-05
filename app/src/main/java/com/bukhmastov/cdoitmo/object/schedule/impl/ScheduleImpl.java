@@ -490,19 +490,23 @@ public abstract class ScheduleImpl<T extends ScheduleJsonEntity> extends Schedul
             public void onSuccess(int code, Client.Headers headers, T schedule) throws Exception {
                 log.v(TAG, "searchByQuery | query=", query, " || onSuccess | code=", code, " | schedule=", schedule);
                 if (code == 200 && schedule != null) {
-                    search.onFound(query, schedule, false);
+                    if (schedule.isEmptySchedule()) {
+                        onSourceFailed(schedule, code, headers, FAILED_NOT_FOUND);
+                    } else {
+                        search.onFound(query, schedule, false);
+                    }
                     return;
                 }
                 if (cached != null) {
                     search.onFound(query, cached, true);
                 } else {
-                    onSourceFailed(code, headers, FAILED_LOAD);
+                    onSourceFailed(schedule, code, headers, FAILED_LOAD);
                 }
             }
             @Override
             public void onFailure(int code, Client.Headers headers, int state) {
                 log.v(TAG, "searchByQuery | query=", query, " || onFailure | code=", code, " | state=", state);
-                onSourceFailed(code, headers, state);
+                onSourceFailed(null, code, headers, state);
             }
             @Override
             public void onProgress(int state) {
@@ -517,10 +521,15 @@ public abstract class ScheduleImpl<T extends ScheduleJsonEntity> extends Schedul
             public T newInstance() {
                 return getNewInstance();
             }
-            private void onSourceFailed(int code, Client.Headers headers, int state) {
+
+            private void onSourceFailed(T schedule, int code, Client.Headers headers, int state) {
                 int nextSourceIndex = sourceIndex + 1;
                 if (nextSourceIndex < sources.size() && state != Client.FAILED_INTERRUPTED) {
                     searchByQuery(query, cached, sources, nextSourceIndex, withUserChanges, search);
+                    return;
+                }
+                if (schedule != null && schedule.isEmptySchedule()) {
+                    search.onFound(query, schedule, false);
                     return;
                 }
                 if (cached != null && state != Client.FAILED_INTERRUPTED) {
