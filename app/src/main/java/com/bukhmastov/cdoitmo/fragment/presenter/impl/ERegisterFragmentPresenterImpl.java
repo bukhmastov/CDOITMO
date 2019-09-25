@@ -544,6 +544,11 @@ public class ERegisterFragmentPresenterImpl extends ConnectedFragmentWithDataPre
         String currentGroup = "";
         int currentTerm = -1, maxYear = 0;
         for (ERYear erYear : data.getYears()) {
+            if (StringUtils.isBlank(erYear.getGroup()) || StringUtils.isBlank(erYear.getYears())) {
+                // сервера цдо вернули год обучения без указания года или группы, пропускаем значение
+                log.i(TAG, "applySelectedTermAndGroup() | got invalid year entry", erYear.toString());
+                continue;
+            }
             if (!group.isEmpty() && Objects.equals(group, erYear.getGroup())) {
                 // мы нашли назначенную группу
                 group = erYear.getGroup();
@@ -583,7 +588,7 @@ public class ERegisterFragmentPresenterImpl extends ConnectedFragmentWithDataPre
             } else {
                 term = -1;
                 for (ERYear erYear : data.getYears()) {
-                    if (erYear.getYearFirst() == maxYear) {
+                    if (StringUtils.isNotBlank(erYear.getYears()) && erYear.getYearFirst() == maxYear) {
                         group = erYear.getGroup();
                         break;
                     }
