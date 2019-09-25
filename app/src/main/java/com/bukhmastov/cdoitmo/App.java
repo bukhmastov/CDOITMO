@@ -83,11 +83,12 @@ public class App extends Application {
                 }
             }
             locale = StringUtils.getLocale(this, storagePref);
-            log.i(TAG, "Language | locale=" + locale.toString());
             init();
             setUUID();
             setLocale();
             setFirebase();
+            log.i(TAG, "Installer | " + getPackageManager().getInstallerPackageName("com.bukhmastov.cdoitmo"));
+            log.i(TAG, "Language | locale=" + locale.toString());
         } catch (Throwable throwable) {
             log.exception(throwable);
         }
