@@ -374,85 +374,8 @@ public class ERegisterFragmentPresenterImpl extends ConnectedFragmentWithDataPre
                     swipe.setOnRefreshListener(this);
                 }
                 // setup spinners
-                Spinner spinner;
-                int selection = 0, counter = 0;
-                spinner = fragment.container().findViewById(R.id.erl_group_spinner);
-                if (spinner != null) {
-                    List<String> groupArr = new ArrayList<>();
-                    List<String> groupLabelArr = new ArrayList<>();
-                    for (ERYear erYear : data.getYears()) {
-                        groupArr.add(erYear.getGroup());
-                        groupLabelArr.add(erYear.getGroup() + " (" + erYear.getYearFirst() + "/" + erYear.getYearSecond() + ")");
-                        if (Objects.equals(group, erYear.getGroup())) {
-                            selection = counter;
-                        }
-                        counter++;
-                    }
-                    spinner.setAdapter(new ArrayAdapter<>(activity, R.layout.spinner_center_single_line, groupLabelArr));
-                    spinner.setSelection(selection);
-                    spinnerGroupBlocker = true;
-                    spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-                        public void onItemSelected(final AdapterView<?> parent, final View item, final int position, final long selectedId) {
-                            thread.run(ER, () -> {
-                                if (spinnerGroupBlocker) {
-                                    spinnerGroupBlocker = false;
-                                    return;
-                                }
-                                group = groupArr.get(position);
-                                log.v(TAG, "Group selected | group=" + group);
-                                storage.put(activity, Storage.CACHE, Storage.USER, "eregister#params#selected_group", group);
-                                load(false);
-                            });
-                        }
-                        public void onNothingSelected(AdapterView<?> parent) {}
-                    });
-                }
-                spinner = fragment.container().findViewById(R.id.erl_period_spinner);
-                if (spinner != null) {
-                    List<Integer> termArr = new ArrayList<>();
-                    List<String> termLabelArr = new ArrayList<>();
-                    selection = 2;
-                    for (ERYear erYear : data.getYears()) {
-                        if (Objects.equals(group, erYear.getGroup())) {
-                            Integer first = getTerm(erYear, Math::min);
-                            Integer second = getTerm(erYear, Math::max);
-                            if (first != null) {
-                                termArr.add(first);
-                                termLabelArr.add(first + " " + activity.getString(R.string.semester));
-                                if (term == first) {
-                                    selection = 0;
-                                }
-                            }
-                            if (second != null) {
-                                termArr.add(second);
-                                termLabelArr.add(second + " " + activity.getString(R.string.semester));
-                                if (term == second) {
-                                    selection = 1;
-                                }
-                            }
-                            termArr.add(-1);
-                            termLabelArr.add(activity.getString(R.string.year));
-                            break;
-                        }
-                    }
-                    spinner.setAdapter(new ArrayAdapter<>(activity, R.layout.spinner_center_single_line, termLabelArr));
-                    spinner.setSelection(selection);
-                    spinnerPeriodBlocker = true;
-                    spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-                        public void onItemSelected(final AdapterView<?> parent, final View item, final int position, final long selectedId) {
-                            thread.run(ER, () -> {
-                                if (spinnerPeriodBlocker) {
-                                    spinnerPeriodBlocker = false;
-                                    return;
-                                }
-                                term = termArr.get(position);
-                                log.v(TAG, "Period selected | period=" + termLabelArr.get(position));
-                                load(false);
-                            });
-                        }
-                        public void onNothingSelected(AdapterView<?> parent) {}
-                    });
-                }
+                displayGroupSpinner(data);
+                displayPeriodSpinner(data);
                 // show update time
                 notificationMessage.showUpdateTime(activity, data.getTimestamp(), NotificationMessage.LENGTH_MOMENTUM, true);
             }, throwable -> {
@@ -460,6 +383,109 @@ public class ERegisterFragmentPresenterImpl extends ConnectedFragmentWithDataPre
             });
         }, throwable -> {
             loadFailed();
+        });
+    }
+
+    private void displayGroupSpinner(ERegister data) {
+        Spinner spinner = fragment.container().findViewById(R.id.erl_group_spinner);
+        if (spinner == null) {
+            return;
+        }
+        List<String> groupArr = new ArrayList<>();
+        List<String> groupLabelArr = new ArrayList<>();
+        for (ERYear erYear : data.getYears()) {
+            String cGroup = erYear.getGroup();
+            if (StringUtils.isEmpty(cGroup)) {
+                continue;
+            }
+            String label = makeERYearLabel(erYear);
+            groupArr.add(cGroup);
+            groupLabelArr.add(label);
+        }
+        int selection = 0;
+        for (int i = 0; i < groupArr.size(); i++) {
+            if (Objects.equals(groupArr.get(i), group)) {
+                selection = i;
+                break;
+            }
+        }
+        if (groupLabelArr.size() <= selection) {
+            selection = groupLabelArr.size() - 1;
+        }
+        spinner.setAdapter(new ArrayAdapter<>(activity, R.layout.spinner_center_single_line, groupLabelArr));
+        spinner.setSelection(selection);
+        spinnerGroupBlocker = true;
+        spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            public void onItemSelected(final AdapterView<?> parent, final View item, final int position, final long selectedId) {
+                thread.run(ER, () -> {
+                    if (spinnerGroupBlocker) {
+                        spinnerGroupBlocker = false;
+                        return;
+                    }
+                    group = groupArr.get(position);
+                    log.v(TAG, "Group selected | group=" + group);
+                    storage.put(activity, Storage.CACHE, Storage.USER, "eregister#params#selected_group", group);
+                    load(false);
+                });
+            }
+            public void onNothingSelected(AdapterView<?> parent) {}
+        });
+    }
+
+    private void displayPeriodSpinner(ERegister data) {
+        Spinner spinner = fragment.container().findViewById(R.id.erl_period_spinner);
+        if (spinner == null) {
+            return;
+        }
+        List<Integer> termArr = new ArrayList<>();
+        List<String> termLabelArr = new ArrayList<>();
+        for (ERYear erYear : data.getYears()) {
+            String cGroup = erYear.getGroup();
+            if (StringUtils.isEmpty(cGroup)) {
+                continue;
+            }
+            if (Objects.equals(group, cGroup)) {
+                Integer first = getTerm(erYear, Math::min);
+                Integer second = getTerm(erYear, Math::max);
+                if (first != null) {
+                    termArr.add(first);
+                    termLabelArr.add(first + " " + activity.getString(R.string.semester));
+                }
+                if (second != null && !Objects.equals(first, second)) {
+                    termArr.add(second);
+                    termLabelArr.add(second + " " + activity.getString(R.string.semester));
+                }
+                termArr.add(-1);
+                termLabelArr.add(activity.getString(R.string.year));
+                break;
+            }
+        }
+        int selection = 0;
+        for (int i = 0; i < termArr.size(); i++) {
+            if (termArr.get(i) == term) {
+                selection = i;
+                break;
+            }
+        }
+        if (termLabelArr.size() <= selection) {
+            selection = termLabelArr.size() - 1;
+        }
+        spinner.setAdapter(new ArrayAdapter<>(activity, R.layout.spinner_center_single_line, termLabelArr));
+        spinner.setSelection(selection);
+        spinnerPeriodBlocker = true;
+        spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            public void onItemSelected(final AdapterView<?> parent, final View item, final int position, final long selectedId) {
+                thread.run(ER, () -> {
+                    if (spinnerPeriodBlocker) {
+                        spinnerPeriodBlocker = false;
+                        return;
+                    }
+                    term = termArr.get(position);
+                    log.v(TAG, "Period selected | period=" + termLabelArr.get(position));
+                    load(false);
+                });
+            }
+            public void onNothingSelected(AdapterView<?> parent) {}
         });
     }
 
@@ -668,6 +694,19 @@ public class ERegisterFragmentPresenterImpl extends ConnectedFragmentWithDataPre
             term = termSelector.apply(term1, term2);
         }
         return term;
+    }
+
+    private String makeERYearLabel(ERYear year) {
+        StringBuilder sb = new StringBuilder(year.getGroup());
+        if (year.getYearFirst() == null && year.getYearSecond() == null) {
+            return sb.toString();
+        }
+        sb.append(" (");
+        sb.append(year.getYearFirst() == null ? "?" : year.getYearFirst());
+        sb.append("/");
+        sb.append(year.getYearSecond() == null ? "?" : year.getYearSecond());
+        sb.append(")");
+        return sb.toString();
     }
 
     @Override
