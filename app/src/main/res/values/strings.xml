@@ -103,6 +103,7 @@
     <string name="no_lessons">Занятий нет</string>
     <string name="exam">Экзамен</string>
     <string name="credit">Зачет</string>
+    <string name="diffcredit">Дифференцированный зачет</string>
     <string name="exams">Экзамены</string>
     <string name="credits">Зачеты</string>
     <string name="consult">Консультация</string>

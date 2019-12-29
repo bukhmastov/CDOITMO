@@ -66,7 +66,8 @@ public class DaysRemainingWidgetImpl implements DaysRemainingWidget {
                     ArrayList<DaysRemainingWidget.Data> dataArray = new ArrayList<>();
                     for (SSubject subject : schedule.getSchedule()) {
                         try {
-                            if (!"exam".equals(StringUtils.defaultIfBlank(subject.getType(), "exam"))) {
+                            String subjectType = StringUtils.defaultIfBlank(subject.getType(), "exam");
+                            if (!"exam".equals(subjectType)) {
                                 continue;
                             }
                             SExam exam = subject.getExam();

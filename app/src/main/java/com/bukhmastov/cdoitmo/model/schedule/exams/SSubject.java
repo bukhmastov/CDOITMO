@@ -10,6 +10,7 @@ public class SSubject extends JsonEntity {
     /**
      * exam - экзамен
      * credit - зачет
+     * diffcredit - дифференцированный зачет
      */
     @JsonProperty("type")
     private String type;

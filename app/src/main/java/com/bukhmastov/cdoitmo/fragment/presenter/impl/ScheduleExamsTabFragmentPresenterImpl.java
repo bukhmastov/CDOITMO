@@ -234,8 +234,11 @@ public class ScheduleExamsTabFragmentPresenterImpl implements Schedule.Handler<S
             // fetch only right exams
             ArrayList<SSubject> subjects = new ArrayList<>();
             for (SSubject subject : CollectionUtils.emptyIfNull(schedule.getSchedule())) {
-                if (ScheduleExamsTabFragmentPresenterImpl.this.type == 0 && "exam".equals(StringUtils.defaultIfBlank(subject.getType(), "exam")) ||
-                        ScheduleExamsTabFragmentPresenterImpl.this.type == 1 && "credit".equals(StringUtils.defaultIfBlank(subject.getType(), "exam"))
+                String subjectType = StringUtils.defaultIfBlank(subject.getType(), "exam");
+                boolean isSubjectExam = "exam".equals(subjectType);
+                boolean isSubjectCredit = "credit".equals(subjectType) || "diffcredit".equals(subjectType);
+                if (ScheduleExamsTabFragmentPresenterImpl.this.type == 0 && isSubjectExam ||
+                    ScheduleExamsTabFragmentPresenterImpl.this.type == 1 && isSubjectCredit
                 ) {
                     subjects.add(subject);
                 }
@@ -591,7 +594,7 @@ public class ScheduleExamsTabFragmentPresenterImpl implements Schedule.Handler<S
             sb.append("\n");
         }
         if (subject.getExam() != null && StringUtils.isNotBlank(subject.getExam().getDate())) {
-            shareScheduleAppendEvent(sb, subject.getExam(), activity.getString("credit".equals(subject.getType()) ? R.string.credit : R.string.exam));
+            shareScheduleAppendEvent(sb, subject.getExam(), activity.getString(getTitleResource(subject.getType())));
             sb.append("\n");
         }
     }
@@ -778,6 +781,16 @@ public class ScheduleExamsTabFragmentPresenterImpl implements Schedule.Handler<S
         } catch (Exception e) {
             return false;
         }
+    }
+
+    private int getTitleResource(String type) {
+        if ("diffcredit".equals(type)) {
+            return R.string.diffcredit;
+        }
+        if ("credit".equals(type)) {
+            return R.string.credit;
+        }
+        return R.string.exam;
     }
 
     // -<-- Utils --<-

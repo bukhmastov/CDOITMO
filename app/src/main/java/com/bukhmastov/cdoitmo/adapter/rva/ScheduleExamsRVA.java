@@ -241,7 +241,7 @@ public class ScheduleExamsRVA extends RVA<RVAExams> {
                     if (StringUtils.isNotBlank(place)) {
                         place = context.getString(R.string.place) + ": " + place;
                     }
-                    ((TextView) container.findViewById(R.id.exam_info_exam_title)).setText("credit".equals(subject.getType()) ? R.string.credit : R.string.exam);
+                    ((TextView) container.findViewById(R.id.exam_info_exam_title)).setText(getTitleResource(subject.getType()));
                     ((TextView) container.findViewById(R.id.exam_info_exam_date)).setText(cuteDate(date, dateFormatAppend));
                     TextView placeView = container.findViewById(R.id.exam_info_exam_place);
                     if (!place.isEmpty()) {
@@ -422,5 +422,15 @@ public class ScheduleExamsRVA extends RVA<RVAExams> {
         } catch (Exception e) {
             return false;
         }
+    }
+
+    private int getTitleResource(String type) {
+        if ("diffcredit".equals(type)) {
+            return R.string.diffcredit;
+        }
+        if ("credit".equals(type)) {
+            return R.string.credit;
+        }
+        return R.string.exam;
     }
 }
