@@ -30,14 +30,18 @@
             android:id="@+id/nav_room101"
             android:icon="@drawable/ic_room101"
             android:title="@string/room101"/>
+        <!-- Disable isu section
         <item
             android:id="@+id/nav_group"
             android:icon="@drawable/ic_group"
             android:title="@string/study_groups"/>
+        -->
+        <!-- Disable isu section
         <item
             android:id="@+id/nav_scholarship"
             android:icon="@drawable/ic_money_circle"
             android:title="@string/scholarship"/>
+        -->
         <item
             android:id="@+id/nav_university"
             android:icon="@drawable/ic_university"
