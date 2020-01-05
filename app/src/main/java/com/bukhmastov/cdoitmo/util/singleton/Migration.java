@@ -95,6 +95,14 @@ public class Migration {
     // -----------------------------------
 
     @Keep
+    private static void migrate150(Context context, InjectProvider injectProvider) {
+        String theme = injectProvider.getStoragePref().get(context, "pref_theme", "light");
+        if ("light".equals(theme)) {
+            injectProvider.getStoragePref().put(context, "pref_theme", "default");
+        }
+    }
+
+    @Keep
     private static void migrate146(Context context, InjectProvider injectProvider) {
         FirebaseMessagingServiceProvider.subscribeToAllTopics();
     }

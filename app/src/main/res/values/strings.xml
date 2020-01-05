@@ -70,6 +70,7 @@
     <string name="action_3">событий</string>
     <string name="pref_light_theme">Светлая тема</string>
     <string name="pref_dark_theme">Темная тема</string>
+    <string name="pref_default_theme_ext">Тема по умолчанию</string>
     <string name="pref_light_theme_ext">Светлая тема</string>
     <string name="pref_dark_theme_ext">Темная тема</string>
     <string name="pref_white_theme_ext">Блистательно белая тема</string>

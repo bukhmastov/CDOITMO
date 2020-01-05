@@ -41,8 +41,9 @@ public class ThemeDialog extends Dialog {
     private final List<String> prefThemeTitles;
     private final List<String> prefThemeValues;
 
-    private final static String DEFAULT_THEME = "light";
+    private final static String DEFAULT_THEME_LIGHT = "light";
     private final static String DEFAULT_THEME_DARK = "dark";
+    private final static String DEFAULT_THEME = "default";
 
     // auto theme enabled
     private boolean autoEnabled;
@@ -51,7 +52,7 @@ public class ThemeDialog extends Dialog {
     private String staticValue = DEFAULT_THEME;
 
     // auto theme first value
-    private String t1Value = DEFAULT_THEME;
+    private String t1Value = DEFAULT_THEME_LIGHT;
     private int t1Hour = 6;
     private int t1Minutes = 30;
 
