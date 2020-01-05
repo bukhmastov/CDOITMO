@@ -62,6 +62,7 @@ public class ERegisterFragmentPresenterImpl extends ConnectedFragmentWithDataPre
 
     private static final String TAG = "ERegisterFragment";
     private static final Pattern PATTERN_ATTESTATION = Pattern.compile("^.*зач[её]т$|^экзамен$|^тестирование$|^общий\\sрейтинг$", Pattern.CASE_INSENSITIVE);
+    private String year;
     private String group;
     private int term;
     private boolean spinnerGroupBlocker = true, spinnerPeriodBlocker = true;
@@ -110,6 +111,7 @@ public class ERegisterFragmentPresenterImpl extends ConnectedFragmentWithDataPre
                 return;
             }
             firebaseAnalyticsProvider.logCurrentScreen(activity, fragment);
+            year = storage.get(activity, Storage.CACHE, Storage.USER, "eregister#params#selected_year", "");
             group = storage.get(activity, Storage.CACHE, Storage.USER, "eregister#params#selected_group", "");
             term = -2;
         });
@@ -344,7 +346,7 @@ public class ERegisterFragmentPresenterImpl extends ConnectedFragmentWithDataPre
                 loadFailed();
                 return;
             }
-            applySelectedTermAndGroup(data);
+            applyYearGroupTerm(data);
             ERegisterSubjectsRVA adapter = new ERegisterSubjectsRVA(activity, makeSubjectsSet(data));
             adapter.setClickListener(R.id.subject, (v, subject) -> {
                 thread.runOnUI(ER, () -> {
@@ -391,26 +393,33 @@ public class ERegisterFragmentPresenterImpl extends ConnectedFragmentWithDataPre
         if (spinner == null) {
             return;
         }
+        List<String> yearsArr = new ArrayList<>();
         List<String> groupArr = new ArrayList<>();
         List<String> groupLabelArr = new ArrayList<>();
+        int size = 0;
         for (ERYear erYear : data.getYears()) {
             String cGroup = erYear.getGroup();
             if (StringUtils.isEmpty(cGroup)) {
                 continue;
             }
+            String cYears = makeYears(erYear);
             String label = makeERYearLabel(erYear);
+            yearsArr.add(cYears);
             groupArr.add(cGroup);
             groupLabelArr.add(label);
+            size++;
         }
         int selection = 0;
-        for (int i = 0; i < groupArr.size(); i++) {
-            if (Objects.equals(groupArr.get(i), group)) {
+        for (int i = 0; i < size; i++) {
+            boolean isYearsMatched = Objects.equals(yearsArr.get(i), year);
+            boolean isGroupMatched = Objects.equals(groupArr.get(i), group);
+            if (isYearsMatched && isGroupMatched) {
                 selection = i;
                 break;
             }
         }
-        if (groupLabelArr.size() <= selection) {
-            selection = groupLabelArr.size() - 1;
+        if (size <= selection) {
+            selection = size - 1;
         }
         spinner.setAdapter(new ArrayAdapter<>(activity, R.layout.spinner_center_single_line, groupLabelArr));
         spinner.setSelection(selection);
@@ -422,8 +431,10 @@ public class ERegisterFragmentPresenterImpl extends ConnectedFragmentWithDataPre
                         spinnerGroupBlocker = false;
                         return;
                     }
+                    year = yearsArr.get(position);
                     group = groupArr.get(position);
-                    log.v(TAG, "Group selected | group=" + group);
+                    log.v(TAG, "Group selected | year=", year, " | group=", group);
+                    storage.put(activity, Storage.CACHE, Storage.USER, "eregister#params#selected_year", year);
                     storage.put(activity, Storage.CACHE, Storage.USER, "eregister#params#selected_group", group);
                     load(false);
                 });
@@ -440,11 +451,12 @@ public class ERegisterFragmentPresenterImpl extends ConnectedFragmentWithDataPre
         List<Integer> termArr = new ArrayList<>();
         List<String> termLabelArr = new ArrayList<>();
         for (ERYear erYear : data.getYears()) {
-            String cGroup = erYear.getGroup();
-            if (StringUtils.isEmpty(cGroup)) {
+            if (StringUtils.isEmpty(erYear.getGroup())) {
                 continue;
             }
-            if (Objects.equals(group, cGroup)) {
+            boolean isYearsMatched = Objects.equals(makeYears(erYear), year);
+            boolean isGroupMatched = Objects.equals(erYear.getGroup(), group);
+            if (isYearsMatched && isGroupMatched) {
                 Integer first = getTerm(erYear, Math::min);
                 Integer second = getTerm(erYear, Math::max);
                 if (first != null) {
@@ -554,7 +566,9 @@ public class ERegisterFragmentPresenterImpl extends ConnectedFragmentWithDataPre
             return subjects;
         }
         for (ERYear erYear : data.getYears()) {
-            if (Objects.equals(group, erYear.getGroup())) {
+            boolean isYearsMatched = Objects.equals(makeYears(erYear), year);
+            boolean isGroupMatched = Objects.equals(erYear.getGroup(), group);
+            if (isYearsMatched && isGroupMatched) {
                 subjects.addAll(getSubjectsForTerm(erYear, term));
                 break;
             }
@@ -562,72 +576,93 @@ public class ERegisterFragmentPresenterImpl extends ConnectedFragmentWithDataPre
         return subjects;
     }
 
-    private void applySelectedTermAndGroup(ERegister data) {
-        log.v(TAG, "applySelectedTermAndGroup");
-        final Calendar now = time.getCalendar();
-        final int year = now.get(Calendar.YEAR);
-        final int month = now.get(Calendar.MONTH);
-        String currentGroup = "";
-        int currentTerm = -1, maxYear = 0;
+    private void applyYearGroupTerm(ERegister data) {
+        log.v(TAG, "applyYearGroupTerm() | year=", year, " | group=", group, " | term=", term);
+        boolean isYearsDefined = StringUtils.isNotEmpty(year);
+        boolean isGroupDefined = StringUtils.isNotEmpty(group);
+        if (!isYearsDefined || !isGroupDefined) {
+            applyMaxYearGroupTerm(data);
+            return;
+        }
+        applySelectedYearGroupTerm(data);
+    }
+
+    private void applySelectedYearGroupTerm(ERegister data) {
+        log.v(TAG, "applySelectedYearGroupTerm() | year=", year, " | group=", group, " | term=", term);
+        boolean found = false;
+        String foundYear = "";
+        String foundGroup = "";
+        int foundTerm = -1;
+        int foundTerm1 = -1;
+        int foundTerm2 = -1;
         for (ERYear erYear : data.getYears()) {
-            if (StringUtils.isBlank(erYear.getGroup()) || StringUtils.isBlank(erYear.getYears())) {
-                // сервера цдо вернули год обучения без указания года или группы, пропускаем значение
-                log.i(TAG, "applySelectedTermAndGroup() | got invalid year entry", erYear.toString());
+            boolean isYearsMatched = Objects.equals(makeYears(erYear), year);
+            boolean isGroupMatched = Objects.equals(erYear.getGroup(), group);
+            if (isYearsMatched && isGroupMatched) {
+                Integer[] terms = getTerms(erYear);
+                foundYear = makeYears(erYear);
+                foundGroup = erYear.getGroup();
+                foundTerm = selectTerm(erYear);
+                foundTerm1 = terms[0] == null ? -1 : terms[0];
+                foundTerm2 = terms[1] == null ? -1 : terms[1];
+                found = true;
+                break;
+            }
+        }
+        if (!found) {
+            applyMaxYearGroupTerm(data);
+            return;
+        }
+        boolean isFoundYearsDifferent = !Objects.equals(year, foundYear);
+        boolean isFoundGroupDifferent = !Objects.equals(group, foundGroup);
+        if (isFoundYearsDifferent || isFoundGroupDifferent) {
+            year = foundYear;
+            group = foundGroup;
+            term = foundTerm;
+        } else {
+            if (term == -2 || (term != -1 && term != foundTerm1 && term != foundTerm2)) {
+                term = foundTerm;
+            }
+        }
+        log.v(TAG, "applySelectedYearGroupTerm() | applied | year=", year, " | group=", group, " | term=", term);
+    }
+
+    private void applyMaxYearGroupTerm(ERegister data) {
+        log.v(TAG, "applyMaxYearGroupTerm() | year=", year, " | group=", group, " | term=", term);
+        int maxYear = 0;
+        String foundYear = "";
+        String foundGroup = "";
+        int foundTerm = -1;
+        for (ERYear erYear : data.getYears()) {
+            Integer year = erYear.getYearFirst();
+            if (year == null) {
                 continue;
             }
-            if (!group.isEmpty() && Objects.equals(group, erYear.getGroup())) {
-                // мы нашли назначенную группу
-                group = erYear.getGroup();
-                // теперь проверяем семестр
-                boolean isTermOk = false;
-                if (term == -2) {
-                    term = selectTerm(erYear);
-                    isTermOk = true;
-                } else {
-                    for (ERSubject erSubject : erYear.getSubjects()) {
-                        if (term != -1 && term == erSubject.getTerm()) {
-                            isTermOk = true;
-                            break;
-                        }
-                    }
-                }
-                if (!isTermOk) {
-                    this.term = -1;
-                }
-            } else {
-                // группа до сих пор не найдена
-                if (StringUtils.isBlank(currentGroup)) {
-                    if (year == (month > Calendar.AUGUST ? erYear.getYearFirst() : erYear.getYearSecond())) {
-                        currentGroup = erYear.getGroup();
-                        currentTerm = selectTermBasedOnPreference(erYear);
-                    }
-                }
-                if (maxYear < erYear.getYearFirst()) {
-                    maxYear = erYear.getYearFirst();
-                }
+            if (maxYear < year) {
+                maxYear = year;
+            }
+            if (maxYear == year) {
+                foundYear = makeYears(erYear);
+                foundGroup = erYear.getGroup();
+                foundTerm = selectTerm(erYear);
             }
         }
-        if (StringUtils.isBlank(group)) {
-            if (StringUtils.isNotBlank(currentGroup)) {
-                term = currentTerm;
-                group = currentGroup;
-            } else {
-                term = -1;
-                for (ERYear erYear : data.getYears()) {
-                    if (StringUtils.isNotBlank(erYear.getYears()) && erYear.getYearFirst() == maxYear) {
-                        group = erYear.getGroup();
-                        break;
-                    }
-                }
-            }
-        }
+        year = foundYear;
+        group = foundGroup;
+        term = foundTerm;
+        log.v(TAG, "applyMaxYearGroupTerm() | applied | year=", year, " | group=", group, " | term=", term);
     }
 
     private Integer selectTerm(ERYear erYear) {
-        final Calendar now = time.getCalendar();
-        final int year = now.get(Calendar.YEAR);
-        final int month = now.get(Calendar.MONTH);
-        if (year == (month > Calendar.AUGUST ? erYear.getYearFirst() : erYear.getYearSecond())) {
+        Calendar now = time.getCalendar();
+        int year = now.get(Calendar.YEAR);
+        int month = now.get(Calendar.MONTH);
+        Integer yearFirst = erYear.getYearFirst();
+        Integer yearSecond = erYear.getYearSecond();
+        if (yearFirst == null && yearSecond == null) {
+            return -1;
+        }
+        if (year == (month > Calendar.AUGUST ? yearFirst : yearSecond)) {
             return selectTermBasedOnPreference(erYear);
         }
         return -1;
@@ -658,6 +693,36 @@ public class ERegisterFragmentPresenterImpl extends ConnectedFragmentWithDataPre
         }
     }
 
+    private Integer[] getTerms(ERYear year) {
+        Integer term1 = null, term2 = null;
+        for (ERSubject subject : year.getSubjects()) {
+            if (term1 == null && !Objects.equals(subject.getTerm(), term1)) {
+                term1 = subject.getTerm();
+            } else if (term2 == null && !Objects.equals(subject.getTerm(), term1) && !Objects.equals(subject.getTerm(), term2)) {
+                term2 = subject.getTerm();
+            }
+            if (term1 != null && term2 != null) {
+                break;
+            }
+        }
+        return new Integer[]{ term1, term2 };
+    }
+
+    private Integer getTerm(ERYear year, BiFunction<Integer, Integer, Integer> termSelector) {
+        Integer[] terms = getTerms(year);
+        Integer term1 = terms[0];
+        Integer term2 = terms[1];
+        if (term1 == null && term2 == null) {
+            return null;
+        } else if (term1 == null) {
+            return term2;
+        } else if (term2 == null) {
+            return term1;
+        } else {
+            return termSelector.apply(term1, term2);
+        }
+    }
+
     private Collection<ERSubject> getSubjectsForTerm(ERYear year, Integer term) {
         if (term == null) {
             return new ArrayList<>();
@@ -671,42 +736,21 @@ public class ERegisterFragmentPresenterImpl extends ConnectedFragmentWithDataPre
         return subjects;
     }
 
-    private Integer getTerm(ERYear year, BiFunction<Integer, Integer, Integer> termSelector) {
-        Integer term1 = null, term2 = null;
-        for (ERSubject subject : year.getSubjects()) {
-            if (term1 == null && !Objects.equals(subject.getTerm(), term1)) {
-                term1 = subject.getTerm();
-            } else if (term2 == null && !Objects.equals(subject.getTerm(), term1) && !Objects.equals(subject.getTerm(), term2)) {
-                term2 = subject.getTerm();
-            }
-            if (term1 != null && term2 != null) {
-                break;
-            }
-        }
-        Integer term;
-        if (term1 == null && term2 == null) {
-            return null;
-        } else if (term1 == null) {
-            term = term2;
-        } else if (term2 == null) {
-            term = term1;
-        } else {
-            term = termSelector.apply(term1, term2);
-        }
-        return term;
-    }
-
     private String makeERYearLabel(ERYear year) {
         StringBuilder sb = new StringBuilder(year.getGroup());
         if (year.getYearFirst() == null && year.getYearSecond() == null) {
             return sb.toString();
         }
         sb.append(" (");
-        sb.append(year.getYearFirst() == null ? "?" : year.getYearFirst());
-        sb.append("/");
-        sb.append(year.getYearSecond() == null ? "?" : year.getYearSecond());
+        sb.append(makeYears(year));
         sb.append(")");
         return sb.toString();
+    }
+
+    private String makeYears(ERYear year) {
+        return (year.getYearFirst() == null ? "?" : year.getYearFirst()) +
+               "/" +
+               (year.getYearSecond() == null ? "?" : year.getYearSecond());
     }
 
     @Override
