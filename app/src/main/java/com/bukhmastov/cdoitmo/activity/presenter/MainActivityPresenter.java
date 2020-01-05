@@ -34,5 +34,7 @@ public interface MainActivityPresenter {
 
     void selectSection(int section);
 
+    boolean shouldListenForDrawerSwipe();
+
     boolean isInitialized();
 }

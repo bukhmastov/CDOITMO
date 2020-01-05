@@ -34,6 +34,7 @@ import com.bukhmastov.cdoitmo.fragment.ScheduleAttestationsFragment;
 import com.bukhmastov.cdoitmo.fragment.ScheduleExamsFragment;
 import com.bukhmastov.cdoitmo.fragment.ScheduleLessonsFragment;
 import com.bukhmastov.cdoitmo.fragment.UniversityFragment;
+import com.bukhmastov.cdoitmo.fragment.presenter.UniversityFragmentPresenter;
 import com.bukhmastov.cdoitmo.fragment.settings.SettingsFragment;
 import com.bukhmastov.cdoitmo.network.model.Client;
 import com.bukhmastov.cdoitmo.object.ProtocolTracker;
@@ -57,6 +58,8 @@ import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
+
+import dagger.Lazy;
 
 import static com.bukhmastov.cdoitmo.util.Thread.AM;
 
@@ -101,6 +104,8 @@ public class MainActivityPresenterImpl implements MainActivityPresenter, Navigat
     FirebasePerformanceProvider firebasePerformanceProvider;
     @Inject
     FirebaseConfigProvider firebaseConfigProvider;
+    @Inject
+    Lazy<UniversityFragmentPresenter> universityFragmentPresenter;
 
     public MainActivityPresenterImpl() {
         AppComponentProvider.getComponent().inject(this);
@@ -205,7 +210,7 @@ public class MainActivityPresenterImpl implements MainActivityPresenter, Navigat
 
     @Override
     public boolean onBackButtonPressed() {
-        DrawerLayout drawerLayout = activity.findViewById(R.id.drawer_layout);
+        DrawerLayout drawerLayout = activity.getDrawerLayout();
         if (drawerLayout == null) {
             return activity.back();
         }
@@ -221,8 +226,8 @@ public class MainActivityPresenterImpl implements MainActivityPresenter, Navigat
     @Override
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
         log.v(TAG, "NavigationItemSelected | item=", item.getTitle());
-        DrawerLayout drawer_layout = activity.findViewById(R.id.drawer_layout);
-        if (drawer_layout != null) drawer_layout.closeDrawer(GravityCompat.START);
+        DrawerLayout drawerLayout = activity.getDrawerLayout();
+        if (drawerLayout != null) drawerLayout.closeDrawer(GravityCompat.START);
         selectSection(item.getItemId());
         return true;
     }
@@ -278,8 +283,12 @@ public class MainActivityPresenterImpl implements MainActivityPresenter, Navigat
                 case R.id.nav_schedule_exams:
                 case R.id.nav_schedule_attestations:
                 case R.id.nav_room101:
+                /* Disable isu section
                 case R.id.nav_group:
+                */
+                /* Disable isu section
                 case R.id.nav_scholarship:
+                */
                 case R.id.nav_university: {
                     final Class connectedFragmentClass;
                     switch (section) {
@@ -291,8 +300,12 @@ public class MainActivityPresenterImpl implements MainActivityPresenter, Navigat
                         case R.id.nav_schedule_exams: connectedFragmentClass = ScheduleExamsFragment.class; break;
                         case R.id.nav_schedule_attestations: connectedFragmentClass = ScheduleAttestationsFragment.class; break;
                         case R.id.nav_room101: connectedFragmentClass = Room101Fragment.class; break;
+                        /* Disable isu section
                         case R.id.nav_group: connectedFragmentClass = IsuGroupInfoFragment.class; break;
+                        */
+                        /* Disable isu section
                         case R.id.nav_scholarship: connectedFragmentClass = IsuScholarshipPaidFragment.class; break;
+                        */
                         case R.id.nav_university: connectedFragmentClass = UniversityFragment.class; break;
                     }
                     thread.runOnUI(AM, () -> {
@@ -353,6 +366,14 @@ public class MainActivityPresenterImpl implements MainActivityPresenter, Navigat
     }
 
     @Override
+    public boolean shouldListenForDrawerSwipe() {
+        if (selectedSection == R.id.nav_university) {
+            return universityFragmentPresenter.get().getSelectedTabIndex() < 1;
+        }
+        return true;
+    }
+
+    @Override
     public boolean isInitialized() {
         return initialized;
     }
@@ -406,7 +427,7 @@ public class MainActivityPresenterImpl implements MainActivityPresenter, Navigat
         thread.runOnUI(AM, () -> {
             // setup toolbar and drawer layout
             Toolbar toolbar = activity.findViewById(R.id.toolbar_main);
-            DrawerLayout drawerLayout = activity.findViewById(R.id.drawer_layout);
+            DrawerLayout drawerLayout = activity.getDrawerLayout();
             if (toolbar != null) {
                 theme.applyToolbarTheme(activity, toolbar);
                 activity.setSupportActionBar(toolbar);
@@ -472,12 +493,16 @@ public class MainActivityPresenterImpl implements MainActivityPresenter, Navigat
                     case "university":
                         selectedSection = R.id.nav_university;
                         break;
+                    /* Disable isu section
                     case "groups":
                         selectedSection = R.id.nav_group;
                         break;
+                    */
+                    /* Disable isu section
                     case "scholarship":
                         selectedSection = R.id.nav_scholarship;
                         break;
+                    */
                     default:
                         log.w(TAG, "unsupported act: '", act, "'. Going to select 'e_journal' instead");
                         selectedSection = R.id.nav_e_register;
@@ -495,7 +520,7 @@ public class MainActivityPresenterImpl implements MainActivityPresenter, Navigat
     }
 
     private void toggleDrawer() {
-        DrawerLayout drawerLayout = activity.findViewById(R.id.drawer_layout);
+        DrawerLayout drawerLayout = activity.getDrawerLayout();
         if (drawerLayout == null) {
             return;
         }

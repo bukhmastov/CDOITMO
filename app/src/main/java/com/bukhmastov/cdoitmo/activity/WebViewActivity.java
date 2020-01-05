@@ -10,9 +10,7 @@ import com.bukhmastov.cdoitmo.util.Theme;
 
 import javax.inject.Inject;
 
-import androidx.appcompat.app.AppCompatActivity;
-
-public class WebViewActivity extends AppCompatActivity {
+public class WebViewActivity extends BaseActivity {
 
     @Inject
     WebViewActivityPresenter presenter;

@@ -10,69 +10,82 @@ import com.bukhmastov.cdoitmo.util.Log;
 
 import javax.inject.Inject;
 
-@SuppressWarnings("EmptyMethod")
 public class OnSwipeTouchListener implements View.OnTouchListener {
 
     private final GestureDetector gestureDetector;
+    @Inject Log log;
 
-    @Inject
-    Log log;
+    public OnSwipeTouchListener(Context context) {
+        this(context, false);
+    }
 
-    public OnSwipeTouchListener (Context context) {
+    public OnSwipeTouchListener(Context context, boolean interceptDownEvent) {
+        this(context, 100, 100, interceptDownEvent);
+    }
+
+    public OnSwipeTouchListener(Context context, int swipeThreshold, int swipeVelocityThreshold, boolean interceptDownEvent) {
         AppComponentProvider.getComponent().inject(this);
-        gestureDetector = new GestureDetector(context, new GestureListener());
+        gestureDetector = new GestureDetector(context, new SwipeListener(swipeThreshold, swipeVelocityThreshold, interceptDownEvent));
     }
 
     @Override
-    public boolean onTouch(View v, MotionEvent event) {
-        if (event != null && v != null && event.getAction() == MotionEvent.ACTION_UP) {
-            v.performClick();
+    public boolean onTouch(View view, MotionEvent event) {
+        if (event != null && view != null && event.getAction() == MotionEvent.ACTION_UP) {
+            view.performClick();
         }
         return gestureDetector.onTouchEvent(event);
     }
 
-    private final class GestureListener extends GestureDetector.SimpleOnGestureListener {
+    private final class SwipeListener extends GestureDetector.SimpleOnGestureListener {
 
-        private static final int SWIPE_THRESHOLD = 100;
-        private static final int SWIPE_VELOCITY_THRESHOLD = 100;
+        private final int swipeThreshold;
+        private final int swipeVelocityThreshold;
+        private final boolean interceptDownEvent;
+
+        public SwipeListener(int swipeThreshold, int swipeVelocityThreshold, boolean interceptDownEvent) {
+            this.swipeThreshold = swipeThreshold;
+            this.swipeVelocityThreshold = swipeVelocityThreshold;
+            this.interceptDownEvent = interceptDownEvent;
+        }
 
         @Override
         public boolean onDown(MotionEvent e) {
-            return true;
+            return interceptDownEvent;
         }
 
         @Override
         public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
-            boolean result = false;
             try {
-                float diffY = e2.getY() - e1.getY();
                 float diffX = e2.getX() - e1.getX();
-                if (Math.abs(diffX) > Math.abs(diffY)) {
-                    if (Math.abs(diffX) > SWIPE_THRESHOLD && Math.abs(velocityX) > SWIPE_VELOCITY_THRESHOLD) {
+                float diffY = e2.getY() - e1.getY();
+                float diffXabs = Math.abs(diffX);
+                float diffYabs = Math.abs(diffY);
+                float velocityXabs = Math.abs(velocityX);
+                float velocityYabs = Math.abs(velocityY);
+                if (diffXabs > diffYabs) {
+                    if (diffXabs > swipeThreshold && velocityXabs > swipeVelocityThreshold) {
                         if (diffX > 0) {
-                            onSwipeRight2Left();
+                            return onSwipeLeft2Right();
                         } else {
-                            onSwipeLeft2Right();
+                            return onSwipeRight2Left();
                         }
-                        result = true;
                     }
-                } else if (Math.abs(diffY) > SWIPE_THRESHOLD && Math.abs(velocityY) > SWIPE_VELOCITY_THRESHOLD) {
+                } else if (diffYabs > swipeThreshold && velocityYabs > swipeVelocityThreshold) {
                     if (diffY > 0) {
-                        onSwipeBottom2Top();
+                        return onSwipeBottom2Top();
                     } else {
-                        onSwipeTop2Bottom();
+                        return onSwipeTop2Bottom();
                     }
-                    result = true;
                 }
             } catch (Exception e) {
                 log.exception(e);
             }
-            return result;
+            return false;
         }
     }
 
-    public void onSwipeRight2Left() {}
-    public void onSwipeLeft2Right() {}
-    public void onSwipeTop2Bottom() {}
-    public void onSwipeBottom2Top() {}
+    public boolean onSwipeLeft2Right() { return false; }
+    public boolean onSwipeRight2Left() { return false; }
+    public boolean onSwipeTop2Bottom() { return false; }
+    public boolean onSwipeBottom2Top() { return false; }
 }

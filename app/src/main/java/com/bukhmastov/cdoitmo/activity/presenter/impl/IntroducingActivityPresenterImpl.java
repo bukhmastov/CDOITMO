@@ -114,14 +114,16 @@ public class IntroducingActivityPresenterImpl implements IntroducingActivityPres
     private void initControls() {
         activity.findViewById(R.id.skip).setOnClickListener(view -> close());
         activity.findViewById(R.id.next).setOnClickListener(view -> next());
-        activity.findViewById(R.id.container).setOnTouchListener(new OnSwipeTouchListener(activity) {
+        activity.findViewById(R.id.container).setOnTouchListener(new OnSwipeTouchListener(activity, true) {
             @Override
-            public void onSwipeLeft2Right() {
+            public boolean onSwipeRight2Left() {
                 next();
+                return true;
             }
             @Override
-            public void onSwipeRight2Left() {
+            public boolean onSwipeLeft2Right() {
                 previous();
+                return true;
             }
         });
     }

@@ -163,4 +163,9 @@ public class UniversityFragmentPresenterImpl extends ConnectedFragmentPresenterI
     protected String getThreadToken() {
         return UH;
     }
+
+    @Override
+    public int getSelectedTabIndex() {
+        return tabSelected;
+    }
 }

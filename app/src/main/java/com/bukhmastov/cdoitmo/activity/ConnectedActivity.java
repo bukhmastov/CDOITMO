@@ -16,7 +16,6 @@ import androidx.annotation.IdRes;
 import androidx.annotation.LayoutRes;
 import androidx.annotation.StringDef;
 import androidx.appcompat.app.ActionBar;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 
@@ -39,7 +38,7 @@ import java.util.ArrayList;
 
 import javax.inject.Inject;
 
-public abstract class ConnectedActivity extends AppCompatActivity {
+public abstract class ConnectedActivity extends BaseActivity {
 
     public static final String STATE_CONNECTED_ACTIVITY_STACK = "connectedActivityStack";
     public static final String STATE_LAYOUT_WITH_MENU = "isLayoutWithMenu";

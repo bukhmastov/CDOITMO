@@ -12,9 +12,7 @@ import com.bukhmastov.cdoitmo.util.singleton.CtxWrapper;
 
 import javax.inject.Inject;
 
-import androidx.appcompat.app.AppCompatActivity;
-
-public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
+public class ScheduleLessonsWidgetConfigureActivity extends BaseActivity {
 
     @Inject
     ScheduleLessonsWidgetConfigureActivityPresenter presenter;

@@ -11,9 +11,7 @@ import com.bukhmastov.cdoitmo.util.singleton.CtxWrapper;
 
 import javax.inject.Inject;
 
-import androidx.appcompat.app.AppCompatActivity;
-
-public class PikaActivity extends AppCompatActivity {
+public class PikaActivity extends BaseActivity {
 
     @Inject
     PikaActivityPresenter presenter;

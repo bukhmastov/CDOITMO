@@ -12,9 +12,7 @@ import com.bukhmastov.cdoitmo.util.singleton.CtxWrapper;
 
 import javax.inject.Inject;
 
-import androidx.appcompat.app.AppCompatActivity;
-
-public class TimeRemainingWidgetActivity extends AppCompatActivity {
+public class TimeRemainingWidgetActivity extends BaseActivity {
 
     @Inject
     TimeRemainingWidgetActivityPresenter presenter;

@@ -162,7 +162,7 @@ public class FragmentActivityPresenterImpl implements FragmentActivityPresenter,
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
         if (activity.layoutWithMenu) {
             log.v(TAG, "NavigationItemSelected ", item.getTitle());
-            DrawerLayout drawer = activity.findViewById(R.id.drawer_layout);
+            DrawerLayout drawer = activity.getDrawerLayout();
             if (drawer != null) {
                 drawer.closeDrawer(GravityCompat.START);
             }
@@ -177,7 +177,7 @@ public class FragmentActivityPresenterImpl implements FragmentActivityPresenter,
         if (!activity.layoutWithMenu) {
             return activity.back();
         }
-        DrawerLayout drawerLayout = activity.findViewById(R.id.drawer_layout);
+        DrawerLayout drawerLayout = activity.getDrawerLayout();
         if (drawerLayout == null) {
             return activity.back();
         }

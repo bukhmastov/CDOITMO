@@ -2,6 +2,8 @@ package com.bukhmastov.cdoitmo.activity;
 
 import android.os.Bundle;
 import androidx.annotation.Nullable;
+import androidx.drawerlayout.widget.DrawerLayout;
+
 import android.view.Menu;
 import android.view.MenuItem;
 
@@ -80,5 +82,10 @@ public class FragmentActivity extends ConnectedActivity {
         if (presenter.onBackPressed()) {
             super.onBackPressed();
         }
+    }
+
+    @Override
+    public DrawerLayout getDrawerLayout() {
+        return findViewById(R.id.drawer_layout);
     }
 }

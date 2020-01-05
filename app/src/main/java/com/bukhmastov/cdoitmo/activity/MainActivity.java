@@ -11,6 +11,8 @@ import com.bukhmastov.cdoitmo.util.Theme;
 
 import javax.inject.Inject;
 
+import androidx.drawerlayout.widget.DrawerLayout;
+
 public class MainActivity extends ConnectedActivity {
 
     @Inject
@@ -77,6 +79,16 @@ public class MainActivity extends ConnectedActivity {
     @Override
     public int getRootViewId() {
         return R.id.activity_main;
+    }
+
+    @Override
+    public DrawerLayout getDrawerLayout() {
+        return findViewById(R.id.drawer_layout);
+    }
+
+    @Override
+    public boolean shouldListenForDrawerSwipe() {
+        return presenter.shouldListenForDrawerSwipe();
     }
 
     @Override
