@@ -2,6 +2,7 @@ package com.bukhmastov.cdoitmo.activity.presenter.impl;
 
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.os.Build;
 import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -113,8 +114,11 @@ public class WebViewActivityPresenterImpl implements WebViewActivityPresenter {
                 webview.setWebViewClient(new WebViewClient() {
                     @Override
                     public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
-                        eventBus.fire(new OpenIntentEvent(new Intent(Intent.ACTION_VIEW, request.getUrl())));
-                        return true;
+                        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+                            eventBus.fire(new OpenIntentEvent(new Intent(Intent.ACTION_VIEW, request.getUrl())));
+                            return true;
+                        }
+                        return super.shouldOverrideUrlLoading(view, request);
                     }
                     @Override
                     public void onPageStarted(WebView view, String url, Bitmap favicon) {
