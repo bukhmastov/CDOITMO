@@ -304,7 +304,7 @@ public class UniversityPersonCardActivityPresenterImpl implements UniversityPers
             } else {
                 staticUtil.removeView(activity.findViewById(R.id.degree));
             }
-            Picasso.with(activity)
+            new Picasso.Builder(activity).build()
                     .load(person.getImage())
                     .error(R.drawable.ic_sentiment_very_satisfied_white)
                     .transform(new CircularTransformation())

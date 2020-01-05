@@ -64,13 +64,13 @@ public class UniversityNewsRVA extends UniversityRVA {
                 if (StringUtils.isNotBlank(img)) {
                     View imageView = container.findViewById(R.id.news_image);
                     if (imageView != null) {
-                        Picasso.with(context)
+                        new Picasso.Builder(context).build()
                                 .load(img)
                                 .into(container.findViewById(R.id.news_image), new Callback() {
                                     @Override
                                     public void onSuccess() {}
                                     @Override
-                                    public void onError() {
+                                    public void onError(Exception exception) {
                                         staticUtil.removeView(imageContainer);
                                     }
                                 });
@@ -171,13 +171,13 @@ public class UniversityNewsRVA extends UniversityRVA {
                 if (StringUtils.isNotBlank(img)) {
                     View imageView = container.findViewById(R.id.news_image);
                     if (imageView != null) {
-                        Picasso.with(context)
+                        new Picasso.Builder(context).build()
                                 .load(img)
                                 .into(container.findViewById(R.id.news_image), new Callback() {
                                     @Override
                                     public void onSuccess() {}
                                     @Override
-                                    public void onError() {
+                                    public void onError(Exception exception) {
                                         staticUtil.removeView(imageContainer);
                                     }
                                 });

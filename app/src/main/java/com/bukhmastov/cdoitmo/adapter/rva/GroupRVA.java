@@ -73,7 +73,7 @@ public class GroupRVA extends RVA<GPerson> {
             ((TextView) container.findViewById(R.id.personNumber)).setText(String.valueOf(item.data.getNumber()));
             ((TextView) container.findViewById(R.id.personName)).setText(item.data.getFio());
             ((TextView) container.findViewById(R.id.personId)).setText(String.valueOf(item.data.getPersonId()));
-            Picasso.with(context)
+            new Picasso.Builder(context).build()
                     .load(item.data.getPhotoUrl())
                     .error(R.drawable.ic_sentiment_very_satisfied)
                     .transform(new CircularTransformation())

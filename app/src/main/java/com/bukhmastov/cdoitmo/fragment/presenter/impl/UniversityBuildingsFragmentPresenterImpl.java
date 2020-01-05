@@ -436,7 +436,7 @@ public class UniversityBuildingsFragmentPresenterImpl implements UniversityBuild
                     Uri uri = Uri.parse("http://www.ifmo.ru/ru/map/" + building.getId() + "/");
                     eventBus.fire(new OpenIntentEvent(new Intent(Intent.ACTION_VIEW, uri)));
                 }));
-                Picasso.with(activity)
+                new Picasso.Builder(activity).build()
                         .load(building.getImage())
                         .error(R.drawable.ic_sentiment_very_satisfied)
                         .transform(new CircularTransformation())

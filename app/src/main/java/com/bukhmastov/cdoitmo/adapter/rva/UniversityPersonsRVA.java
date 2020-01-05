@@ -63,7 +63,7 @@ public class UniversityPersonsRVA extends UniversityRVA {
             }
             View avatarView = container.findViewById(R.id.avatar);
             if (avatarView != null) {
-                Picasso.with(context)
+                new Picasso.Builder(context).build()
                         .load(person.getImage())
                         .error(R.drawable.ic_sentiment_very_satisfied)
                         .transform(new CircularTransformation())

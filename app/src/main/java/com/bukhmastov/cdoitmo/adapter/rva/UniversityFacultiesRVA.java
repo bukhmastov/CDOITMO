@@ -160,7 +160,7 @@ public class UniversityFacultiesRVA extends UniversityRVA {
                     staticUtil.removeView(layout.findViewById(R.id.post));
                 }
                 if (StringUtils.isNotBlank(structureInfo.getPersonAvatar())) {
-                    Picasso.with(context)
+                    new Picasso.Builder(context).build()
                             .load(structureInfo.getPersonAvatar())
                             .error(R.drawable.ic_sentiment_very_satisfied)
                             .transform(new CircularTransformation())

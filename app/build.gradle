@@ -51,7 +51,7 @@ ext {
     googlePlayServicesVersion = "17.0.0"
     okhttpVersion = "3.14.4"
     htmlcleanerVersion = "2.18"
-    picassoVersion = "2.5.2"
+    picassoVersion = "2.71828"
     daggerVersion = "2.25.4"
     rxJavaVersion = "2.2.16"
     rxAndroidVersion = "2.0.2"
