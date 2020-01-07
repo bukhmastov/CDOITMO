@@ -34,6 +34,8 @@ import com.bukhmastov.cdoitmo.fragment.ScheduleAttestationsFragment;
 import com.bukhmastov.cdoitmo.fragment.ScheduleExamsFragment;
 import com.bukhmastov.cdoitmo.fragment.ScheduleLessonsFragment;
 import com.bukhmastov.cdoitmo.fragment.UniversityFragment;
+import com.bukhmastov.cdoitmo.fragment.presenter.ScheduleExamsFragmentPresenter;
+import com.bukhmastov.cdoitmo.fragment.presenter.ScheduleLessonsFragmentPresenter;
 import com.bukhmastov.cdoitmo.fragment.presenter.UniversityFragmentPresenter;
 import com.bukhmastov.cdoitmo.fragment.settings.SettingsFragment;
 import com.bukhmastov.cdoitmo.network.model.Client;
@@ -104,6 +106,10 @@ public class MainActivityPresenterImpl implements MainActivityPresenter, Navigat
     FirebasePerformanceProvider firebasePerformanceProvider;
     @Inject
     FirebaseConfigProvider firebaseConfigProvider;
+    @Inject
+    Lazy<ScheduleLessonsFragmentPresenter> scheduleLessonsFragmentPresenter;
+    @Inject
+    Lazy<ScheduleExamsFragmentPresenter> scheduleExamsFragmentPresenter;
     @Inject
     Lazy<UniversityFragmentPresenter> universityFragmentPresenter;
 
@@ -367,6 +373,12 @@ public class MainActivityPresenterImpl implements MainActivityPresenter, Navigat
 
     @Override
     public boolean shouldListenForDrawerSwipe() {
+        if (selectedSection == R.id.nav_schedule) {
+            return scheduleLessonsFragmentPresenter.get().getSelectedTabIndex() < 1;
+        }
+        if (selectedSection == R.id.nav_schedule_exams) {
+            return scheduleExamsFragmentPresenter.get().getSelectedTabIndex() < 1;
+        }
         if (selectedSection == R.id.nav_university) {
             return universityFragmentPresenter.get().getSelectedTabIndex() < 1;
         }

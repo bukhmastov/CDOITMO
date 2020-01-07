@@ -1,3 +1,6 @@
 package com.bukhmastov.cdoitmo.fragment.presenter;
 
-public interface ScheduleLessonsFragmentPresenter extends ConnectedFragmentPresenter {}
+public interface ScheduleLessonsFragmentPresenter extends ConnectedFragmentPresenter {
+
+    int getSelectedTabIndex();
+}

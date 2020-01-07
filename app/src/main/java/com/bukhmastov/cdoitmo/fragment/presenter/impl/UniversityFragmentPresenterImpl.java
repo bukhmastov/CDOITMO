@@ -155,6 +155,11 @@ public class UniversityFragmentPresenterImpl extends ConnectedFragmentPresenterI
     public void onPageScrollStateChanged(int state) {}
 
     @Override
+    public int getSelectedTabIndex() {
+        return tabSelected;
+    }
+
+    @Override
     protected String getLogTag() {
         return TAG;
     }
@@ -162,10 +167,5 @@ public class UniversityFragmentPresenterImpl extends ConnectedFragmentPresenterI
     @Override
     protected String getThreadToken() {
         return UH;
-    }
-
-    @Override
-    public int getSelectedTabIndex() {
-        return tabSelected;
     }
 }

@@ -133,6 +133,11 @@ public class ScheduleLessonsFragmentPresenterImpl extends ConnectedFragmentPrese
     @Override
     public void onPageScrollStateChanged(int state) {}
 
+    @Override
+    public int getSelectedTabIndex() {
+        return activeTab;
+    }
+
     private void load() {
         thread.runOnUI(SL, () -> {
             if (fragment.isNotAddedToActivity()) {
