@@ -56,6 +56,20 @@ public class ThemeImpl implements Theme {
     }
 
     @Override
+    public void applySearchActivityTheme(Activity activity) {
+        if (activity == null) {
+            return;
+        }
+        switch (getAppTheme(activity)) {
+            case "default": activity.setTheme(getDefaultAppSearchTheme(activity)); break;
+            case "dark": activity.setTheme(R.style.AppTheme_Search_Dark); break;
+            case "white": activity.setTheme(R.style.AppTheme_Search_White); break;
+            case "black": activity.setTheme(R.style.AppTheme_Search_Black); break;
+            case "light": default: activity.setTheme(R.style.AppTheme_Search); break;
+        }
+    }
+
+    @Override
     public void applyToolbarTheme(Context context, View toolbar) {
         if (context == null || toolbar == null) {
             return;
@@ -78,6 +92,14 @@ public class ThemeImpl implements Theme {
             return R.style.AppTheme_Dark;
         } else {
             return R.style.AppTheme;
+        }
+    }
+
+    private int getDefaultAppSearchTheme(Context context) {
+        if (isSystemDarkMode(context)) {
+            return R.style.AppTheme_Search_Dark;
+        } else {
+            return R.style.AppTheme_Search;
         }
     }
 

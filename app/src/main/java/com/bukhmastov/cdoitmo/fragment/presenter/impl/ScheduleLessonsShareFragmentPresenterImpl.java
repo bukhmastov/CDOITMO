@@ -170,11 +170,6 @@ public class ScheduleLessonsShareFragmentPresenterImpl extends ConnectedFragment
         super.onDestroy();
     }
 
-    @Override
-    public String getAction() {
-        return action;
-    }
-
     private void load(Bundle extras) {
         thread.run(SLS, () -> {
             log.v(TAG, "load | action=", action);

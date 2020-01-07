@@ -32,7 +32,8 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment<ScheduleLess
 
     @Override
     protected int getLayoutId() {
-        return "handle".equals(presenter.getAction()) ? R.layout.fragment_schedule_lessons_share_receive : R.layout.fragment_schedule_lessons_share_send;
+        String action = extras().getString("action");
+        return "handle".equals(action) ? R.layout.fragment_schedule_lessons_share_receive : R.layout.fragment_schedule_lessons_share_send;
     }
 
     @Override

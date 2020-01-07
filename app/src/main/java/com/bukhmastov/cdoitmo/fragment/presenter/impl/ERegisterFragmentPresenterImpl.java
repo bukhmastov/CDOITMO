@@ -51,6 +51,7 @@ import java.util.regex.Pattern;
 
 import javax.inject.Inject;
 
+import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
@@ -101,6 +102,16 @@ public class ERegisterFragmentPresenterImpl extends ConnectedFragmentWithDataPre
     }
 
     @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        thread.run(ER, () -> {
+            year = storage.get(activity, Storage.CACHE, Storage.USER, "eregister#params#selected_year", "");
+            group = storage.get(activity, Storage.CACHE, Storage.USER, "eregister#params#selected_group", "");
+            term = -2;
+        });
+    }
+
+    @Override
     public void onStart() {
         super.onStart();
         thread.run(ER, () -> {
@@ -111,9 +122,6 @@ public class ERegisterFragmentPresenterImpl extends ConnectedFragmentWithDataPre
                 return;
             }
             firebaseAnalyticsProvider.logCurrentScreen(activity, fragment);
-            year = storage.get(activity, Storage.CACHE, Storage.USER, "eregister#params#selected_year", "");
-            group = storage.get(activity, Storage.CACHE, Storage.USER, "eregister#params#selected_group", "");
-            term = -2;
         });
     }
 

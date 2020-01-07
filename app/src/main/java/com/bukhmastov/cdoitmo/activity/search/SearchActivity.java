@@ -14,6 +14,7 @@ import android.widget.EditText;
 import android.widget.ImageView;
 
 import com.bukhmastov.cdoitmo.R;
+import com.bukhmastov.cdoitmo.activity.BaseActivity;
 import com.bukhmastov.cdoitmo.adapter.rva.SearchSuggestionsRVA;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.model.entity.Suggestion;
@@ -40,13 +41,12 @@ import javax.inject.Inject;
 
 import androidx.annotation.Nullable;
 import androidx.annotation.StringDef;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import static com.bukhmastov.cdoitmo.util.Thread.AS;
 
-public abstract class SearchActivity extends AppCompatActivity {
+public abstract class SearchActivity extends BaseActivity {
 
     private static final String TAG = "SearchActivity";
     private static final int REQ_CODE_SPEECH_INPUT = 1337;
@@ -103,13 +103,7 @@ public abstract class SearchActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         inject();
         thread.initialize(AS);
-        switch (theme.getAppTheme(this)) {
-            case "light":
-            default: setTheme(R.style.AppTheme_Search); break;
-            case "dark": setTheme(R.style.AppTheme_Search_Dark); break;
-            case "white": setTheme(R.style.AppTheme_Search_White); break;
-            case "black": setTheme(R.style.AppTheme_Search_Black); break;
-        }
+        theme.applySearchActivityTheme(this);
         super.onCreate(savedInstanceState);
         log.i(TAG, "Activity created | type=", getType());
         setContentView(R.layout.activity_search);

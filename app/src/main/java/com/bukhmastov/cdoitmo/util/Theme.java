@@ -12,5 +12,7 @@ public interface Theme {
 
     void applyActivityTheme(Activity activity);
 
+    void applySearchActivityTheme(Activity activity);
+
     void applyToolbarTheme(Context context, View toolbar);
 }

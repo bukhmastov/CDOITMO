@@ -7,8 +7,6 @@ import java.lang.annotation.RetentionPolicy;
 
 public interface ScheduleLessonsShareFragmentPresenter extends ConnectedFragmentPresenter {
 
-    String getAction();
-
     @Retention(RetentionPolicy.SOURCE)
     @StringDef({ADDED, REDUCED})
     @interface TYPE {}
