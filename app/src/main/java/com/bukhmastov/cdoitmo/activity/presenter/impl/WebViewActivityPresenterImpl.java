@@ -114,7 +114,7 @@ public class WebViewActivityPresenterImpl implements WebViewActivityPresenter {
                 webview.setWebViewClient(new WebViewClient() {
                     @Override
                     public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
-                        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+                        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) {
                             eventBus.fire(new OpenIntentEvent(new Intent(Intent.ACTION_VIEW, request.getUrl())));
                             return true;
                         }

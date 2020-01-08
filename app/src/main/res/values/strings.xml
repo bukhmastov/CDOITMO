@@ -638,4 +638,7 @@
     <string name="use_deifmo_credentials">Использовать логин и пароль текущего аккаунта ЦДО</string>
     <string name="login_notice">Обратите внимание, что данное приложение не является официальным\nИнформацию на официальных ресурсах университета ИТМО считать более приоритетной</string>
 
+    <string name="changelog">История изменений</string>
+    <string name="changelog_desc">Приложения ЦДО ИТМО</string>
+
 </resources>

@@ -630,4 +630,7 @@
     <string name="use_deifmo_credentials">Use the login and password of the current CDO account</string>
     <string name="login_notice">Please note that this application is not official\nInformation on official ITMO university resources is considered a higher priority</string>
 
+    <string name="changelog">Changelog</string>
+    <string name="changelog_desc">Of application CDE ITMO</string>
+
 </resources>

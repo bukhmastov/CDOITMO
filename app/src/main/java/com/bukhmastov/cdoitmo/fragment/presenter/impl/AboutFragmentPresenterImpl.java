@@ -1,5 +1,6 @@
 package com.bukhmastov.cdoitmo.fragment.presenter.impl;
 
+import android.app.AlertDialog;
 import android.content.Intent;
 import android.net.Uri;
 import android.text.method.LinkMovementMethod;
@@ -20,6 +21,7 @@ import com.bukhmastov.cdoitmo.fragment.LogFragment;
 import com.bukhmastov.cdoitmo.fragment.presenter.AboutFragmentPresenter;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Thread;
+import com.bukhmastov.cdoitmo.util.singleton.AssetUtils;
 
 import java.util.Random;
 
@@ -105,6 +107,21 @@ public class AboutFragmentPresenterImpl extends ConnectedFragmentPresenterImpl
                     log.v(TAG, "send_vk clicked");
                     firebaseAnalyticsProvider.logBasicEvent(activity, "send vk clicked");
                     eventBus.fire(new OpenIntentEvent(new Intent(Intent.ACTION_VIEW, Uri.parse("https://vk.com/write9780714"))));
+                }));
+            }
+
+            View blockChangelog = fragment.container().findViewById(R.id.block_changelog);
+            if (blockChangelog != null) {
+                blockChangelog.setOnClickListener(v -> thread.standalone(() -> {
+                    log.v(TAG, "changelog clicked");
+                    firebaseAnalyticsProvider.logBasicEvent(activity, "changelog clicked");
+                    String changes = AssetUtils.readTextFile(activity, "changelog.txt");
+                    thread.runOnUI(() -> new AlertDialog.Builder(activity)
+                            .setIcon(R.drawable.ic_change_history)
+                            .setTitle(R.string.changelog)
+                            .setMessage(changes)
+                            .setNegativeButton(R.string.close, null)
+                            .create().show());
                 }));
             }
 
