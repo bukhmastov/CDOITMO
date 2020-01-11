@@ -75,8 +75,12 @@ public class CacheClearDialog extends Dialog {
         items.add(new Entry(activity.getString(R.string.schedule_exams), "schedule_exams", Storage.GLOBAL));
         items.add(new Entry(activity.getString(R.string.schedule_attestations), "schedule_attestations", Storage.GLOBAL));
         items.add(new Entry(activity.getString(R.string.room101), "room101", Storage.USER));
+        /* Disable isu section
         items.add(new Entry(activity.getString(R.string.study_groups), "group", Storage.USER));
+        */
+        /* Disable isu section
         items.add(new Entry(activity.getString(R.string.scholarship), "scholarship", Storage.USER));
+        */
         items.add(new Entry(activity.getString(R.string.university), "university", Storage.GLOBAL));
     }
 

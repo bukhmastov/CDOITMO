@@ -21,10 +21,12 @@ import com.bukhmastov.cdoitmo.util.NotificationMessage;
 import com.bukhmastov.cdoitmo.util.Static;
 import com.bukhmastov.cdoitmo.util.StoragePref;
 import com.bukhmastov.cdoitmo.util.Thread;
+import com.bukhmastov.cdoitmo.util.Time;
+import com.bukhmastov.cdoitmo.util.singleton.FileUtils;
 import com.bukhmastov.cdoitmo.util.singleton.LogMetrics;
 
 import java.io.File;
-import java.io.FileWriter;
+import java.nio.charset.StandardCharsets;
 
 import javax.inject.Inject;
 
@@ -51,6 +53,8 @@ public class LogFragmentPresenterImpl extends ConnectedFragmentPresenterImpl
     FirebaseCrashlyticsProvider firebaseCrashlyticsProvider;
     @Inject
     Lazy<Static> staticUtil;
+    @Inject
+    Lazy<Time> time;
 
     public LogFragmentPresenterImpl() {
         super();
@@ -254,15 +258,8 @@ public class LogFragmentPresenterImpl extends ConnectedFragmentPresenterImpl
     @Nullable
     private File getLogFile(String data) {
         try {
-            File temp = new File(new File(activity.getCacheDir(), "shared"), "log.tmp");
-            if (!temp.exists() && !temp.getParentFile().mkdirs() && !temp.createNewFile()) {
-                throw new Exception("Failed to create file: " + temp.getPath());
-            }
-            temp.deleteOnExit();
-            FileWriter fileWriter = new FileWriter(temp);
-            fileWriter.write(data);
-            fileWriter.close();
-            return temp;
+            byte[] bytes = data.getBytes(StandardCharsets.UTF_8);
+            return FileUtils.makeTempSharedFile(activity, "cdoitmo-" + (time.get().getTimeInMillis() / 1000L) + ".log", bytes);
         } catch (Exception e) {
             log.exception(e);
             notificationMessage.toast(activity, activity.getString(R.string.something_went_wrong));

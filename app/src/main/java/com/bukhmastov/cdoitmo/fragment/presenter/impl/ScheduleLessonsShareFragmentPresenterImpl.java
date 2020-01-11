@@ -41,11 +41,11 @@ import com.bukhmastov.cdoitmo.util.Thread;
 import com.bukhmastov.cdoitmo.util.Time;
 import com.bukhmastov.cdoitmo.util.singleton.CollectionUtils;
 import com.bukhmastov.cdoitmo.util.singleton.Color;
+import com.bukhmastov.cdoitmo.util.singleton.FileUtils;
 import com.bukhmastov.cdoitmo.util.singleton.StringUtils;
 
-import java.io.BufferedOutputStream;
 import java.io.File;
-import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -673,7 +673,7 @@ public class ScheduleLessonsShareFragmentPresenterImpl extends ConnectedFragment
         }
         thread.standalone(() -> {
             byte[] bytes = data.toJsonString().getBytes(StandardCharsets.UTF_8);
-            File file = makeFile(bytes);
+            File file = FileUtils.makeTempSharedFile(activity, "schedule-changes-" + (time.getTimeInMillis() / 1000L) + ".cdoitmo", bytes);
             Uri uri = FileProvider.getUriForFile(activity, "com.bukhmastov.cdoitmo.fileprovider", file);
             Intent intent = new Intent(Intent.ACTION_SEND);
             intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
@@ -780,23 +780,6 @@ public class ScheduleLessonsShareFragmentPresenterImpl extends ConnectedFragment
         flag_content.setBackgroundColor(backgroundColor);
         flag_content.setTextColor(textColor);
         return flagContainer;
-    }
-    
-    private File makeFile(byte[] data) throws Exception {
-        File file = new File(activity.getCacheDir(), "shared" + File.separator + "schedule_changes_" + (time.getTimeInMillis() / 1000L) + ".cdoitmo");
-        if (!file.exists()) {
-            if (!file.getParentFile().mkdirs() && !file.createNewFile()) {
-                throw new Exception("Failed to create file: " + file.getPath());
-            }
-        }
-        try (FileOutputStream fos = new FileOutputStream(file)) {
-            try (BufferedOutputStream bos = new BufferedOutputStream(fos)) {
-                bos.write(data);
-                bos.flush();
-            }
-        }
-        file.deleteOnExit();
-        return file;
     }
 
     private @Nullable SLesson getLessonByHash(SLessons schedule, Integer weekday, String customDay, String hash) {
