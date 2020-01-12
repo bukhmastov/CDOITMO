@@ -8,8 +8,8 @@ android {
         applicationId "com.bukhmastov.cdoitmo"
         minSdkVersion 21
         targetSdkVersion 29
-        versionCode 149
-        versionName "1.17.2"
+        versionCode 154
+        versionName "1.17.3"
     }
     buildTypes {
         debug {
