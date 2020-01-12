@@ -27,6 +27,10 @@ public class SLessonsAdded extends ScheduleJsonEntity {
         this.timestamp = timestamp;
     }
 
+    public String getDataSource() {
+        return "";
+    }
+
     public ArrayList<SDay> getSchedule() {
         return schedule;
     }

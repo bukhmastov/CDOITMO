@@ -618,7 +618,7 @@
     <string name="lesson_day_type">Тип раписания</string>
     <string name="lesson_day_type_regular">Обычное расписание</string>
     <string name="lesson_day_type_date">Расписание на определенный день</string>
-    <string name="unknown_day_about">Приложение не может отобразить день занятия, так как API ИТМО не возвращает дату для занятий с определенной датой. Вот так вот.</string>
+    <string name="unknown_day_about">Приложение не может отобразить день занятия, так как API ИТМО не возвращает дату для занятий с определенной датой. Вот так вот.\n\nПопробуйте сменить источник данных в настройках расписания занятий.</string>
 
     <string name="help_errors">Ошибки в приложении</string>
     <string name="help_error_servers">Происходят ошибки при загрузке данных с серверов</string>
@@ -640,5 +640,9 @@
 
     <string name="changelog">История изменений</string>
     <string name="changelog_desc">Приложения ЦДО ИТМО</string>
+    <string name="datasource_prefix">Источник данных</string>
+    <string name="datasource_isu">ИСУ</string>
+    <string name="datasource_ifmo">ИТМО</string>
+    <string name="datasource_deifmo">ЦДО ИТМО</string>
 
 </resources>

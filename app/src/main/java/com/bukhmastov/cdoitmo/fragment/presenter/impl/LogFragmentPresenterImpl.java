@@ -188,16 +188,17 @@ public class LogFragmentPresenterImpl extends ConnectedFragmentPresenterImpl
             if (genericSendLogs != null) {
                 genericSendLogs.setOnClickListener(v -> {
                     thread.standalone(() -> {
-                        File logFile = getLogFile(log.getLog(false));
-                        if (logFile != null) {
-                            Uri tempUri = FileProvider.getUriForFile(activity, "com.bukhmastov.cdoitmo.fileprovider", logFile);
+                        File file = getLogFile(log.getLog(false));
+                        if (file != null) {
+                            Uri uri = FileProvider.getUriForFile(activity, "com.bukhmastov.cdoitmo.fileprovider", file);
                             Intent intent = new Intent(Intent.ACTION_SEND);
                             intent.putExtra(Intent.EXTRA_EMAIL, new String[] {"bukhmastov-alex@ya.ru"});
                             intent.putExtra(Intent.EXTRA_SUBJECT, "CDOITMO - log report");
                             intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                            intent.setType(activity.getContentResolver().getType(tempUri));
-                            intent.putExtra(Intent.EXTRA_STREAM, tempUri);
-                            eventBus.fire(new OpenIntentEvent(Intent.createChooser(intent, activity.getString(R.string.send_mail) + "...")));
+                            intent.setType("text/plain" /*activity.getContentResolver().getType(uri)*/ );
+                            intent.putExtra(Intent.EXTRA_STREAM, uri);
+                            Intent chooserIntent = Intent.createChooser(intent, activity.getString(R.string.send_mail) + "...");
+                            eventBus.fire(new OpenIntentEvent(chooserIntent));
                         }
                     }, throwable -> {
                         log.exception(throwable);
@@ -208,14 +209,15 @@ public class LogFragmentPresenterImpl extends ConnectedFragmentPresenterImpl
             if (genericDownloadLogs != null) {
                 genericDownloadLogs.setOnClickListener(v -> {
                     thread.standalone(() -> {
-                        File logFile = getLogFile(log.getLog(false));
-                        if (logFile != null) {
-                            Uri tempUri = FileProvider.getUriForFile(activity, "com.bukhmastov.cdoitmo.fileprovider", logFile);
+                        File file = getLogFile(log.getLog(false));
+                        if (file != null) {
+                            Uri uri = FileProvider.getUriForFile(activity, "com.bukhmastov.cdoitmo.fileprovider", file);
                             Intent intent = new Intent(Intent.ACTION_SEND);
                             intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                            intent.setType(activity.getContentResolver().getType(tempUri));
-                            intent.putExtra(Intent.EXTRA_STREAM, tempUri);
-                            eventBus.fire(new OpenIntentEvent(Intent.createChooser(intent, activity.getString(R.string.share) + "...")));
+                            intent.setType("text/plain" /*activity.getContentResolver().getType(uri)*/ );
+                            intent.putExtra(Intent.EXTRA_STREAM, uri);
+                            Intent chooserIntent = Intent.createChooser(intent, activity.getString(R.string.share) + "...");
+                            eventBus.fire(new OpenIntentEvent(chooserIntent));
                         }
                     }, throwable -> {
                         log.exception(throwable);

@@ -269,7 +269,7 @@ public class ScheduleLessonsImpl extends ScheduleImpl<SLessons> implements Sched
         SLessons schedule = new ScheduleLessonsIsuConverter(isuSchedule)
                 .setType(type)
                 .convert();
-        return setupSchedule(schedule, type, query);
+        return setupSchedule(schedule, type, query, SOURCE.ISU);
     }
 
     private SLessons convertIfmoSchedule(String type, String query, ITMOSLessons itmoSchedule) {
@@ -278,10 +278,10 @@ public class ScheduleLessonsImpl extends ScheduleImpl<SLessons> implements Sched
         }
         SLessons schedule = new ScheduleLessonsItmoConverter(itmoSchedule)
                 .convert();
-        return setupSchedule(schedule, type, query);
+        return setupSchedule(schedule, type, query, SOURCE.IFMO);
     }
 
-    private SLessons setupSchedule(SLessons schedule, String type, String query) {
+    private SLessons setupSchedule(SLessons schedule, String type, String query, String source) {
         if (schedule == null) {
             return null;
         }
@@ -294,6 +294,7 @@ public class ScheduleLessonsImpl extends ScheduleImpl<SLessons> implements Sched
         schedule.setQuery(query);
         schedule.setType(type);
         schedule.setTimestamp(time.getTimeInMillis());
+        schedule.setDataSource(source);
         return schedule;
     }
 

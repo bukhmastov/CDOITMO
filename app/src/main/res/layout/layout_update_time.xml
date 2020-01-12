@@ -20,7 +20,8 @@
 
     </FrameLayout>
 
-    <FrameLayout
+    <LinearLayout
+        android:orientation="vertical"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="center_vertical"
@@ -37,6 +38,14 @@
             android:textSize="@dimen/font_size_14"
             android:text="@string/lorem_ipsum"/>
 
-    </FrameLayout>
+        <TextView
+            android:id="@+id/data_source"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="?android:attr/textColorSecondary"
+            android:textSize="@dimen/font_size_14"
+            android:text="@string/lorem_ipsum"/>
+
+    </LinearLayout>
 
 </LinearLayout>

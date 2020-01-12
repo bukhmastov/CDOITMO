@@ -70,6 +70,7 @@ public class ScheduleAttestationsImpl extends ScheduleImpl<SAttestations> implem
                                 schedule.setType("group");
                                 schedule.setTitle(StringUtils.prettifyGroupNumber(group));
                                 schedule.setTimestamp(time.getTimeInMillis());
+                                schedule.setDataSource(source);
                                 handler.onSuccess(code, headers, schedule);
                             }
                         });

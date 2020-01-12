@@ -610,7 +610,7 @@
     <string name="lesson_day_type">Schedule type</string>
     <string name="lesson_day_type_regular">Regular schedule</string>
     <string name="lesson_day_type_date">Schedule for defined day</string>
-    <string name="unknown_day_about">Application cannot display the lesson day as the ITMO API does not provide date for defined-date-lessons.</string>
+    <string name="unknown_day_about">Application cannot display the lesson day as the ITMO API does not provide date for date-defined lessons.\n\nYou can try to change the data source in the lesson schedule settings.</string>
 
     <string name="help_errors">App displays errors</string>
     <string name="help_error_servers">Errors occur when downloading data from servers</string>
@@ -632,5 +632,9 @@
 
     <string name="changelog">Changelog</string>
     <string name="changelog_desc">Of application CDE ITMO</string>
+    <string name="datasource_prefix">Data source</string>
+    <string name="datasource_isu">ISU</string>
+    <string name="datasource_ifmo">ITMO</string>
+    <string name="datasource_deifmo">CDE ITMO</string>
 
 </resources>

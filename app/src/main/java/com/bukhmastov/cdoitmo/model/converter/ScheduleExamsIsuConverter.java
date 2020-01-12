@@ -65,7 +65,7 @@ public class ScheduleExamsIsuConverter extends Converter<ISUScheduleApiResponse,
 
     private SSubject convertExam(ISUExam isuExam, String group) {
         SSubject subject = new SSubject();
-        subject.setType(isuExam.getType() == 6 ? "credit" : "exam");
+        subject.setType(getType(isuExam.getType()));
         subject.setSubject(isuExam.getSubject());
         subject.setGroup(group);
         if (CollectionUtils.isNotEmpty(isuExam.getTeachers())) {
@@ -103,5 +103,15 @@ public class ScheduleExamsIsuConverter extends Converter<ISUScheduleApiResponse,
         }
         subject.setAdvice(advice);
         return subject;
+    }
+
+    private String getType(int type) {
+        if (type == 9) {
+            return "diffcredit";
+        }
+        if (type == 6) {
+            return "credit";
+        }
+        return "exam";
     }
 }

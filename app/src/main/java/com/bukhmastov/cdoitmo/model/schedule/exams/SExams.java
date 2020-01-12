@@ -24,6 +24,9 @@ public class SExams extends ScheduleJsonEntity {
     @JsonProperty("timestamp")
     private long timestamp;
 
+    @JsonProperty("datasource")
+    private String dataSource;
+
     @JsonProperty("schedule")
     private ArrayList<SSubject> schedule;
 
@@ -71,6 +74,14 @@ public class SExams extends ScheduleJsonEntity {
         this.timestamp = timestamp;
     }
 
+    public String getDataSource() {
+        return dataSource;
+    }
+
+    public void setDataSource(String dataSource) {
+        this.dataSource = dataSource;
+    }
+
     public ArrayList<SSubject> getSchedule() {
         return schedule;
     }
@@ -104,12 +115,13 @@ public class SExams extends ScheduleJsonEntity {
                 Objects.equals(type, sExams.type) &&
                 Objects.equals(title, sExams.title) &&
                 Objects.equals(schedule, sExams.schedule) &&
-                Objects.equals(teachers, sExams.teachers);
+                Objects.equals(teachers, sExams.teachers) &&
+                Objects.equals(dataSource, sExams.dataSource);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(scheduleType, query, type, title, timestamp, schedule, teachers);
+        return Objects.hash(scheduleType, query, type, title, timestamp, schedule, teachers, dataSource);
     }
 
     @Override
@@ -120,6 +132,7 @@ public class SExams extends ScheduleJsonEntity {
                 ", type='" + type + '\'' +
                 ", title='" + title + '\'' +
                 ", timestamp=" + timestamp +
+                ", dataSource='" + dataSource + '\'' +
                 ", schedule=" + schedule +
                 ", teachers=" + teachers +
                 '}';

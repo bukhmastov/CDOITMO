@@ -16,12 +16,14 @@ import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.model.rva.RVADualValue;
 import com.bukhmastov.cdoitmo.model.rva.RVALessons;
 import com.bukhmastov.cdoitmo.model.rva.RVASingleValue;
+import com.bukhmastov.cdoitmo.model.schedule.ScheduleJsonEntity;
 import com.bukhmastov.cdoitmo.model.schedule.lessons.SDay;
 import com.bukhmastov.cdoitmo.model.schedule.lessons.SLesson;
 import com.bukhmastov.cdoitmo.model.schedule.lessons.SLessons;
 import com.bukhmastov.cdoitmo.model.schedule.teachers.STeacher;
 import com.bukhmastov.cdoitmo.object.schedule.ScheduleLessons;
 import com.bukhmastov.cdoitmo.object.schedule.ScheduleLessonsHelper;
+import com.bukhmastov.cdoitmo.object.schedule.impl.ScheduleImpl;
 import com.bukhmastov.cdoitmo.util.Static;
 import com.bukhmastov.cdoitmo.util.Time;
 import com.bukhmastov.cdoitmo.util.singleton.CollectionUtils;
@@ -274,9 +276,13 @@ public class ScheduleLessonsRVA extends RVA<RVALessons> {
             log.get().exception(e);
         }
     }
-    private void bindUpdateTime(View container, Item<RVASingleValue> item) {
+    private void bindUpdateTime(View container, Item<RVADualValue> item) {
         try {
-            ((TextView) container.findViewById(R.id.update_time)).setText(StringUtils.isNotBlank(item.data.getValue()) ? item.data.getValue() : Static.GLITCH);
+            String updateTime = StringUtils.isNotBlank(item.data.getFirst()) ? item.data.getFirst() : Static.GLITCH;
+            String dataSource = StringUtils.isNotBlank(item.data.getSecond()) ? item.data.getSecond() : "";
+            ((TextView) container.findViewById(R.id.update_time)).setText(updateTime);
+            ((TextView) container.findViewById(R.id.data_source)).setText(dataSource);
+            ((TextView) container.findViewById(R.id.data_source)).setVisibility(StringUtils.isEmpty(dataSource) ? View.GONE : View.VISIBLE);
         } catch (Exception e) {
             log.get().exception(e);
         }
@@ -419,7 +425,10 @@ public class ScheduleLessonsRVA extends RVA<RVALessons> {
             if (month == Calendar.AUGUST && day > 21 || month == Calendar.SEPTEMBER && day < 21 || month == Calendar.JANUARY && day > 14 || month == Calendar.FEBRUARY && day < 14) {
                 dataset.add(new Item<>(TYPE_NOTIFICATION, new RVASingleValue(context.getString(R.string.schedule_lessons_unstable_warning))));
             }
-            dataset.add(new Item<>(TYPE_UPDATE_TIME, new RVASingleValue(context.getString(R.string.update_date) + " " + time.getUpdateTime(context, schedule.getTimestamp()))));
+            // update time
+            String updateTime = context.getString(R.string.update_date) + " " + time.getUpdateTime(context, schedule.getTimestamp());
+            String dataSource = makeDataSource(schedule);
+            dataset.add(new Item<>(TYPE_UPDATE_TIME, new RVADualValue(updateTime, dataSource)));
         }
         // that's all folks
         return dataset;
@@ -507,5 +516,18 @@ public class ScheduleLessonsRVA extends RVA<RVALessons> {
             return null;
         }
         return inflater.inflate(layout, null);
+    }
+
+    private String makeDataSource(ScheduleJsonEntity schedule) {
+        if (StringUtils.isBlank(schedule.getDataSource())) {
+            return "";
+        }
+        String dataSource = context.getString(R.string.datasource_prefix) + ": ";
+        switch (schedule.getDataSource()) {
+            case ScheduleImpl.SOURCE.ISU: return dataSource + context.getString(R.string.datasource_isu);
+            case ScheduleImpl.SOURCE.IFMO: return dataSource + context.getString(R.string.datasource_ifmo);
+            case ScheduleImpl.SOURCE.DE_IFMO: return dataSource + context.getString(R.string.datasource_deifmo);
+            default: return "";
+        }
     }
 }

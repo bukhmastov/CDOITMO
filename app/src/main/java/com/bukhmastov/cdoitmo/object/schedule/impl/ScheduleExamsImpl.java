@@ -193,6 +193,7 @@ public class ScheduleExamsImpl extends ScheduleImpl<SExams> implements ScheduleE
                                 schedule.setQuery(query);
                                 schedule.setType("teachers");
                                 schedule.setTimestamp(time.getTimeInMillis());
+                                schedule.setDataSource(source);
                                 schedule.setTeachers(response);
                                 handler.onSuccess(code, headers, schedule);
                             }
@@ -244,14 +245,14 @@ public class ScheduleExamsImpl extends ScheduleImpl<SExams> implements ScheduleE
         SExams schedule = new ScheduleExamsIsuConverter(isuSchedule)
                 .setType(type)
                 .convert();
-        return setupSchedule(schedule, type, query);
+        return setupSchedule(schedule, type, query, SOURCE.ISU);
     }
 
     private SExams convertIfmoSchedule(String type, String query, SExams itmoSchedule) {
-        return setupSchedule(itmoSchedule, type, query);
+        return setupSchedule(itmoSchedule, type, query, SOURCE.IFMO);
     }
 
-    private SExams setupSchedule(SExams schedule, String type, String query) {
+    private SExams setupSchedule(SExams schedule, String type, String query, String source) {
         if ("personal".equals(type)) {
             schedule.setTitle(context.getString(R.string.personal_schedule));
         } else if (StringUtils.isBlank(schedule.getTitle())) {
@@ -260,6 +261,7 @@ public class ScheduleExamsImpl extends ScheduleImpl<SExams> implements ScheduleE
         schedule.setQuery(query);
         schedule.setType(type);
         schedule.setTimestamp(time.getTimeInMillis());
+        schedule.setDataSource(source);
         return schedule;
     }
 

@@ -12,10 +12,12 @@ import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.model.rva.RVAAttestations;
 import com.bukhmastov.cdoitmo.model.rva.RVADualValue;
 import com.bukhmastov.cdoitmo.model.rva.RVASingleValue;
+import com.bukhmastov.cdoitmo.model.schedule.ScheduleJsonEntity;
 import com.bukhmastov.cdoitmo.model.schedule.attestations.SAttestation;
 import com.bukhmastov.cdoitmo.model.schedule.attestations.SAttestations;
 import com.bukhmastov.cdoitmo.model.schedule.attestations.SSubject;
 import com.bukhmastov.cdoitmo.object.schedule.ScheduleAttestations;
+import com.bukhmastov.cdoitmo.object.schedule.impl.ScheduleImpl;
 import com.bukhmastov.cdoitmo.util.Static;
 import com.bukhmastov.cdoitmo.util.Time;
 import com.bukhmastov.cdoitmo.util.singleton.CollectionUtils;
@@ -121,9 +123,13 @@ public class ScheduleAttestationsRVA extends RVA<RVAAttestations> {
             log.get().exception(e);
         }
     }
-    private void bindUpdateTime(View container, Item<RVASingleValue> item) {
+    private void bindUpdateTime(View container, Item<RVADualValue> item) {
         try {
-            ((TextView) container.findViewById(R.id.update_time)).setText(StringUtils.isNotBlank(item.data.getValue()) ? item.data.getValue() : Static.GLITCH);
+            String updateTime = StringUtils.isNotBlank(item.data.getFirst()) ? item.data.getFirst() : Static.GLITCH;
+            String dataSource = StringUtils.isNotBlank(item.data.getSecond()) ? item.data.getSecond() : "";
+            ((TextView) container.findViewById(R.id.update_time)).setText(updateTime);
+            ((TextView) container.findViewById(R.id.data_source)).setText(dataSource);
+            ((TextView) container.findViewById(R.id.data_source)).setVisibility(StringUtils.isEmpty(dataSource) ? View.GONE : View.VISIBLE);
         } catch (Exception e) {
             log.get().exception(e);
         }
@@ -170,11 +176,26 @@ public class ScheduleAttestationsRVA extends RVA<RVAAttestations> {
                 dataset.add(new Item(TYPE_NO_ATTESTATIONS));
             } else {
                 // update time
-                dataset.add(new Item<>(TYPE_UPDATE_TIME, new RVASingleValue(context.getString(R.string.update_date) + " " + time.getUpdateTime(context, schedule.getTimestamp()))));
+                String updateTime = context.getString(R.string.update_date) + " " + time.getUpdateTime(context, schedule.getTimestamp());
+                String dataSource = makeDataSource(schedule);
+                dataset.add(new Item<>(TYPE_UPDATE_TIME, new RVADualValue(updateTime, dataSource)));
             }
         } catch (Exception e) {
             log.get().exception(e);
         }
         return dataset;
+    }
+
+    private String makeDataSource(ScheduleJsonEntity schedule) {
+        if (StringUtils.isBlank(schedule.getDataSource())) {
+            return "";
+        }
+        String dataSource = context.getString(R.string.datasource_prefix) + ": ";
+        switch (schedule.getDataSource()) {
+            case ScheduleImpl.SOURCE.ISU: return dataSource + context.getString(R.string.datasource_isu);
+            case ScheduleImpl.SOURCE.IFMO: return dataSource + context.getString(R.string.datasource_ifmo);
+            case ScheduleImpl.SOURCE.DE_IFMO: return dataSource + context.getString(R.string.datasource_deifmo);
+            default: return "";
+        }
     }
 }

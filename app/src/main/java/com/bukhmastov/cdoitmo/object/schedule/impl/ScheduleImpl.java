@@ -131,11 +131,11 @@ public abstract class ScheduleImpl<T extends ScheduleJsonEntity> extends Schedul
      */
     @Retention(RetentionPolicy.SOURCE)
     @StringDef({SOURCE.ISU, SOURCE.IFMO, SOURCE.DE_IFMO})
-    protected @interface Source {}
-    protected static class SOURCE {
-        protected static final String ISU = "isu";
-        protected static final String IFMO = "ifmo";
-        protected static final String DE_IFMO = "de.ifmo";
+    public @interface Source {}
+    public static class SOURCE {
+        public static final String ISU = "isu";
+        public static final String IFMO = "ifmo";
+        public static final String DE_IFMO = "de.ifmo";
     }
 
     /**
